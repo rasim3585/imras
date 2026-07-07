@@ -1,10 +1,21 @@
 import type { Match, Market } from '../lib/types';
 import { formatKickoff, formatOdds, impliedProb } from '../lib/format';
+import { teamColor, teamInitial } from '../lib/teams';
+import { BallIcon } from './icons';
 import { useCart } from '../coupon/CartContext';
+
+function TeamBadge({ name }: { name: string }) {
+  return (
+    <span className="team-badge" style={{ background: teamColor(name) }} aria-hidden="true">
+      {teamInitial(name)}
+    </span>
+  );
+}
 
 function MarketSection({ match, market }: { match: Match; market: Market }) {
   const { isSelected, select } = useCart();
   const allOdds = market.options.map((o) => o.odds);
+  const favOdds = Math.min(...allOdds); // lowest odds = favourite
 
   return (
     <div className="market-section">
@@ -17,11 +28,12 @@ function MarketSection({ match, market }: { match: Match; market: Market }) {
       >
         {market.options.map((o) => {
           const picked = isSelected(o.id);
+          const fav = !picked && o.odds === favOdds;
           return (
             <button
               key={o.id}
               type="button"
-              className={`outcome ${picked ? 'sel' : ''}`}
+              className={`outcome ${picked ? 'sel' : ''} ${fav ? 'fav' : ''}`}
               aria-pressed={picked}
               onClick={() =>
                 select({
@@ -47,15 +59,25 @@ function MarketSection({ match, market }: { match: Match; market: Market }) {
 }
 
 export default function MatchCard({ match }: { match: Match }) {
+  const sportLabel = match.sport.charAt(0).toUpperCase() + match.sport.slice(1);
+
   return (
     <div className="card contract">
       <div className="contract-head">
-        <span className="tag">{match.sport}</span>
+        <span className="sport-pill"><BallIcon /> {sportLabel}</span>
         <span className="contract-time tnum">{formatKickoff(match.starts_at)}</span>
       </div>
 
       <div className="matchup">
-        {match.home_team}<span className="at">vs</span>{match.away_team}
+        <span className="team team-home">
+          <TeamBadge name={match.home_team} />
+          <span className="team-name">{match.home_team}</span>
+        </span>
+        <span className="vs">vs</span>
+        <span className="team team-away">
+          <span className="team-name">{match.away_team}</span>
+          <TeamBadge name={match.away_team} />
+        </span>
       </div>
 
       {match.markets.map((m) => (

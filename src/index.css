@@ -8,19 +8,29 @@
    ========================================================================== */
 
 :root {
-  /* ground — stadium night (not flat black) */
-  --bg: #0b1712;
-  --bg-radial-top: #12281c;
-  --bg-deep: #081310;
+  /* ground — stadium night (not flat black), livelier centre glow */
+  --bg: #0c1a12;
+  --bg-radial-top: #16301f;
+  --bg-deep: #08130d;
 
   /* surfaces that lift off the ground */
-  --surface: #0f1f16;
+  --surface: #122018;
   --surface-2: #16261c;
   --surface-3: #101c15;
 
   /* lines */
-  --line: #1f3327;
+  --line: #234230;
   --line-2: #24352b;
+
+  /* cards + odds cells (brighter, more contrast) */
+  --card: #122018;
+  --card-line: #234230;
+  --cell: #13221a;
+  --cell-line: #23382b;
+  --cell-sel: #1b3324;
+  --cell-sel-line: #34d17e;
+  --odds-bright: #4fe89a;
+  --odds-plain: #e8f0ea;
 
   /* grass-green accent */
   --accent: #2fbf6f;
@@ -90,7 +100,7 @@ html, body, #root { margin: 0; min-height: 100svh; }
 
 /* stadium-night ground */
 body {
-  background: radial-gradient(120% 80% at 50% 0%, var(--bg-radial-top) 0%, var(--bg) 55%, var(--bg-deep) 100%);
+  background: radial-gradient(130% 90% at 50% 0%, var(--bg-radial-top) 0%, var(--bg) 55%, var(--bg-deep) 100%);
   background-attachment: fixed;
 }
 /* very faint field lines, behind all content */
@@ -185,7 +195,7 @@ a:hover { color: var(--accent); }
 
 /* --- Card --------------------------------------------------------------- */
 
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.card { background: var(--card); border: 1px solid var(--card-line); border-radius: var(--radius); }
 
 /* --- Buttons ------------------------------------------------------------ */
 
@@ -271,26 +281,44 @@ a:hover { color: var(--accent); }
 .contract { padding: var(--s4); }
 .contract-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--s3); }
 .contract-time { font-size: 0.8rem; color: var(--text-mut); }
-.matchup { font-size: 1rem; font-weight: 500; letter-spacing: -0.01em; margin-bottom: var(--s3); }
-.matchup .at { color: var(--text-dim); font-weight: 400; margin: 0 6px; }
+
+.sport-pill {
+  display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 7px;
+  border-radius: var(--radius-pill); background: var(--accent-soft);
+  color: var(--text-2); font-size: 0.72rem; font-weight: 500;
+}
+.sport-pill svg { width: 14px; height: 14px; color: var(--accent); }
+
+.matchup { display: flex; align-items: center; gap: var(--s2); margin-bottom: var(--s4); }
+.matchup .team { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+.matchup .team-away { justify-content: flex-end; }
+.matchup .team-name { font-size: 0.98rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.matchup .vs { color: var(--text-dim); font-size: 0.8rem; flex-shrink: 0; }
+.team-badge {
+  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 600; font-size: 14px; line-height: 1;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
 
 .market-section + .market-section { margin-top: var(--s3); padding-top: var(--s3); border-top: 1px solid var(--line); }
 .market-name { display: block; margin-bottom: var(--s2); }
 .market { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); }
 
 .outcome {
-  appearance: none; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 3px;
-  padding: 11px 6px; background: var(--surface-3); border: 1px solid var(--line-2);
+  appearance: none; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 11px 6px; background: var(--cell); border: 1px solid var(--cell-line);
   border-radius: var(--radius-sm); cursor: pointer;
   transition: background 0.14s ease, border-color 0.14s ease, transform 0.06s ease;
 }
-.outcome:hover:not(:disabled) { background: var(--surface-2); border-color: var(--line-2); }
+.outcome:hover:not(:disabled) { background: var(--surface-2); border-color: var(--cell-sel-line); }
 .outcome:active:not(:disabled) { transform: scale(0.98); }
-.outcome.sel { background: var(--surface-2); border: 1.5px solid var(--accent); padding: 10.5px 6px; }
+.outcome.sel { background: var(--cell-sel); border: 1.5px solid var(--cell-sel-line); padding: 10.5px 6px; }
 .outcome-name { font-size: 0.78rem; color: var(--text-mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .outcome.sel .outcome-name { color: var(--text-2); }
-.outcome-odds { font-family: var(--mono); font-size: 1.02rem; font-weight: 500; color: var(--text); font-variant-numeric: tabular-nums; }
-.outcome.sel .outcome-odds { color: var(--win); }
+.outcome-odds { font-family: var(--mono); font-size: 1.25rem; font-weight: 600; color: var(--odds-plain); font-variant-numeric: tabular-nums; }
+.outcome.fav .outcome-odds { color: var(--odds-bright); }
+.outcome.sel .outcome-odds { color: var(--odds-bright); }
 .outcome-prob { font-size: 0.7rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
 
 /* --- Coupon slip bar --------------------------------------------------- */

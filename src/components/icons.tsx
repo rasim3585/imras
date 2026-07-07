@@ -9,6 +9,17 @@ export function MarketsIcon() {
   );
 }
 
+export function BallIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+         strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7.3l3.4 2.5-1.3 4h-4.2l-1.3-4z" />
+      <path d="M12 7.3V4M15.4 9.8l2.9-1M14.1 13.8l1.8 2.7M9.9 13.8l-1.8 2.7M8.6 9.8l-2.9-1" />
+    </svg>
+  );
+}
+
 export function CouponIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
