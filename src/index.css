@@ -1,0 +1,247 @@
+/* ==========================================================================
+   pickplay.ai — design system
+   A prediction / skill game. Deliberately NOT a betting UI:
+   deep analytic navy base + a single confident accent, and a distinct
+   celebration color for the "I was right" moment. No money-green, no
+   casino-gold, no coupon/odds chrome.
+   ========================================================================== */
+
+:root {
+  /* Surfaces — deep analytic navy, layered */
+  --bg: #0b1220;
+  --surface: #121b2e;
+  --surface-2: #1a2740;
+  --surface-3: #22314f;
+  --border: #263450;
+  --border-strong: #33456a;
+
+  /* Text */
+  --text: #eaf0fb;
+  --text-muted: #93a2c0;
+  --text-dim: #6a7a9c;
+
+  /* Brand accent — an "insight" indigo. Used for identity + primary action. */
+  --accent: #7c74ff;
+  --accent-strong: #948dff;
+  --accent-bg: rgba(124, 116, 255, 0.12);
+  --accent-border: rgba(124, 116, 255, 0.45);
+
+  /* The celebration color for a correct call — electric cyan reads as
+     "data / signal / correct", never money-green. */
+  --hit: #22d3ee;
+  --hit-bg: rgba(34, 211, 238, 0.12);
+  --hit-border: rgba(34, 211, 238, 0.5);
+
+  /* A miss is quiet, not punishing — muted slate, no aggressive casino-red. */
+  --miss: #7c8bab;
+  --miss-bg: rgba(124, 139, 171, 0.1);
+
+  /* Streak / momentum highlight */
+  --streak: #ffb454;
+
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-lg: 20px;
+  --shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 24px 60px -20px rgba(0, 0, 0, 0.7);
+
+  --sans: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, 'Cascadia Code', Consolas, monospace;
+
+  color-scheme: dark;
+  font: 16px/1.5 var(--sans);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100svh;
+}
+
+body {
+  background:
+    radial-gradient(1100px 600px at 85% -10%, rgba(124, 116, 255, 0.08), transparent 60%),
+    radial-gradient(900px 500px at 0% 0%, rgba(34, 211, 238, 0.05), transparent 55%),
+    var(--bg);
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+h1 { font-size: 1.9rem; line-height: 1.15; }
+h2 { font-size: 1.3rem; }
+h3 { font-size: 1.05rem; }
+
+p { margin: 0; }
+
+a {
+  color: var(--accent-strong);
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+
+/* --- Layout ------------------------------------------------------------- */
+
+.app-shell {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 16px 96px;
+}
+
+.page-head {
+  padding: 28px 4px 12px;
+}
+.page-head .eyebrow {
+  color: var(--accent-strong);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.page-head .sub {
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+/* --- Cards -------------------------------------------------------------- */
+
+.card {
+  background: linear-gradient(180deg, var(--surface), var(--surface) 60%, rgba(18, 27, 46, 0.6));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* --- Buttons ------------------------------------------------------------ */
+
+.btn {
+  appearance: none;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  padding: 11px 18px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: transform 0.08s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.btn:hover { border-color: var(--border-strong); background: var(--surface-3); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-primary {
+  background: linear-gradient(180deg, var(--accent-strong), var(--accent));
+  border-color: transparent;
+  color: #0b0f1f;
+  font-weight: 700;
+}
+.btn-primary:hover { filter: brightness(1.06); background: linear-gradient(180deg, var(--accent-strong), var(--accent)); }
+
+.btn-ghost {
+  background: transparent;
+  border-color: var(--border);
+}
+.btn-block { width: 100%; }
+
+/* --- Form fields -------------------------------------------------------- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.field label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.input {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font: inherit;
+}
+.input:focus {
+  outline: none;
+  border-color: var(--accent-border);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+/* --- Pills / badges ----------------------------------------------------- */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.pill-hit { color: var(--hit); background: var(--hit-bg); border-color: var(--hit-border); }
+.pill-miss { color: var(--miss); background: var(--miss-bg); }
+.pill-streak { color: var(--streak); background: rgba(255, 180, 84, 0.1); border-color: rgba(255, 180, 84, 0.3); }
+
+/* --- States ------------------------------------------------------------- */
+
+.empty-state {
+  text-align: center;
+  padding: 56px 20px;
+  color: var(--text-muted);
+}
+.empty-state .glyph { font-size: 2.4rem; margin-bottom: 10px; }
+
+.spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2.5px solid var(--border-strong);
+  border-top-color: var(--accent);
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.center-screen {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+/* --- Utilities ---------------------------------------------------------- */
+
+.muted { color: var(--text-muted); }
+.dim { color: var(--text-dim); }
+.row { display: flex; align-items: center; gap: 10px; }
+.spread { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.stack { display: flex; flex-direction: column; }
+.mono { font-family: var(--mono); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
