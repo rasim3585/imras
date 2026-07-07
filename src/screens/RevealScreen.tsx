@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { matchProvider } from '../lib/matchProvider';
 import { useAuth } from '../auth/AuthContext';
@@ -41,11 +41,13 @@ export default function RevealScreen() {
   const [flash, setFlash] = useState<Outcome | null>(null);
   const [minute, setMinute] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const ranRef = useRef(false);
 
   useEffect(() => {
-    if (!matchId || ranRef.current) return;
-    ranRef.current = true;
+    if (!matchId) return;
+    // Per-run guard only. Under StrictMode the first run is cancelled on the
+    // dev remount; the second run completes. reveal_match is idempotent server
+    // -side, so being called on both runs is safe (a ranRef guard here would
+    // wedge the screen, because run 1 gets cancelled and run 2 is skipped).
     let cancelled = false;
 
     (async () => {
