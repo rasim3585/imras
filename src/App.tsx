@@ -3,7 +3,9 @@ import { useAuth } from './auth/AuthContext';
 import AuthScreen from './screens/AuthScreen';
 import UsernameScreen from './screens/UsernameScreen';
 import FeedScreen from './screens/FeedScreen';
-import RevealScreen from './screens/RevealScreen';
+import CouponScreen from './screens/CouponScreen';
+import MyCouponsScreen from './screens/MyCouponsScreen';
+import SettleScreen from './screens/SettleScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import NavBar from './components/NavBar';
 
@@ -27,7 +29,9 @@ function App() {
       <main className="app-main">
         <Routes>
           <Route path="/" element={<FeedScreen />} />
-          <Route path="/reveal/:matchId" element={<RevealScreen />} />
+          <Route path="/coupon" element={<CouponScreen />} />
+          <Route path="/coupons" element={<MyCouponsScreen />} />
+          <Route path="/settle/:couponId" element={<SettleScreen />} />
           <Route path="/profile" element={<ProfileScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

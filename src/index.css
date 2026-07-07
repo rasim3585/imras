@@ -556,6 +556,163 @@ a:hover { color: var(--accent); }
 .row { display: flex; align-items: center; gap: var(--s2); }
 .stack { display: flex; flex-direction: column; }
 
+/* --- Coupon slip bar (floats above the tab bar on the feed) ------------- */
+
+.app-main { padding-bottom: calc(var(--tabbar-h) + 92px); }
+
+.coupon-bar {
+  position: fixed;
+  left: 0; right: 0;
+  bottom: var(--tabbar-h);
+  z-index: 25;
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+}
+.coupon-bar-inner {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.coupon-bar-info { display: flex; align-items: center; gap: var(--s3); }
+.coupon-bar-odds { font-size: 0.9rem; }
+.coupon-bar-odds b { font-size: 1.05rem; }
+
+/* --- Coupon (slip) screen ---------------------------------------------- */
+
+.slip-list { display: flex; flex-direction: column; gap: var(--s2); margin-bottom: var(--s4); }
+.slip-leg {
+  padding: 12px var(--s4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+}
+.slip-leg-match { font-size: 0.92rem; font-weight: 600; }
+.slip-leg-pick { font-size: 0.82rem; margin-top: 2px; }
+.slip-remove {
+  appearance: none;
+  border: 1px solid var(--border-2);
+  background: var(--surface-2);
+  color: var(--muted);
+  width: 30px; height: 30px;
+  border-radius: var(--r-sm);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.slip-remove:hover { color: var(--neg); border-color: var(--neg-line); }
+
+.slip-summary { padding: var(--s4); }
+.slip-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 0.92rem;
+}
+.slip-stake { margin: var(--s3) 0; padding: var(--s3) 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.slip-stake label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 6px; }
+.stake-quick { display: flex; gap: 6px; margin-top: 8px; }
+.stake-quick .btn { flex: 1; }
+.stake-balance { margin-top: 8px; font-size: 0.8rem; }
+.slip-payout { font-size: 1rem; }
+.slip-payout b { color: var(--pos); font-size: 1.15rem; }
+
+/* --- My coupons -------------------------------------------------------- */
+
+.coupon-list { display: flex; flex-direction: column; gap: var(--s3); }
+.coupon-card { padding: var(--s4); }
+.coupon-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--s3);
+}
+.coupon-legs {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.coupon-leg {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: 9px 12px;
+  font-size: 0.85rem;
+  border-left: 2px solid transparent;
+}
+.coupon-leg + .coupon-leg { border-top: 1px solid var(--border); }
+.coupon-leg .leg-match { color: var(--text); font-weight: 500; }
+.coupon-leg .leg-pick { color: var(--muted); white-space: nowrap; }
+.coupon-leg.leg-hit { border-left-color: var(--pos); }
+.coupon-leg.leg-miss { border-left-color: var(--neg); }
+.coupon-leg.leg-miss .leg-pick { color: var(--neg); }
+
+.coupon-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  margin-top: var(--s3);
+}
+.coupon-foot-metrics { display: flex; gap: var(--s4); font-size: 0.84rem; }
+.coupon-foot-metrics b { font-weight: 650; }
+
+/* --- Settlement (coupon reveal) ---------------------------------------- */
+
+.settle-shell { padding-top: var(--s6); }
+.settle-top { display: flex; justify-content: center; margin-bottom: var(--s5); }
+.settle-legs { display: flex; flex-direction: column; gap: var(--s2); }
+.settle-leg {
+  padding: 12px var(--s4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  border-left: 3px solid transparent;
+  transition: border-color 0.3s ease, opacity 0.3s ease;
+}
+.settle-leg.wait { opacity: 0.55; }
+.settle-leg.hit { border-left-color: var(--pos); }
+.settle-leg.miss { border-left-color: var(--neg); }
+.settle-leg-match { font-size: 0.92rem; font-weight: 600; }
+.settle-leg-pick { font-size: 0.8rem; margin-top: 2px; }
+.settle-leg-right { display: flex; align-items: center; gap: var(--s3); flex-shrink: 0; }
+.settle-leg-score { font-family: var(--mono); font-size: 0.95rem; }
+
+/* --- Gold panel (profile) ---------------------------------------------- */
+
+.gold-panel {
+  padding: var(--s5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  flex-wrap: wrap;
+}
+.gold-main { display: flex; flex-direction: column; gap: 4px; }
+.gold-value { font-size: 2.1rem; font-weight: 700; letter-spacing: -0.02em; }
+.gold-actions { display: flex; gap: var(--s2); align-items: center; flex-wrap: wrap; }
+
+/* clickable history rows */
+.trow-btn {
+  appearance: none;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.trow-btn:hover { background: var(--surface-2); }
+
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }

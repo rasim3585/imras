@@ -20,6 +20,64 @@ export interface Profile {
   current_streak: number;
   best_streak: number;
   skill_rating: number;
+  gold_balance: number;
+  last_daily_bonus_at: string | null;
+}
+
+export type CouponStatus = 'pending' | 'won' | 'lost';
+
+/** A selection while it lives in the client-side coupon cart (pre-placement). */
+export interface CartSelection {
+  match_id: string;
+  home_team: string;
+  away_team: string;
+  pick: Outcome;
+  odds: number;
+}
+
+export interface CouponSelectionRow {
+  id: string;
+  coupon_id: string;
+  match_id: string;
+  pick: Outcome;
+  odds: number;
+  is_correct: boolean | null;
+  match: Match;
+}
+
+export interface Coupon {
+  id: string;
+  user_id: string;
+  stake: number;
+  total_odds: number;
+  potential_win: number;
+  status: CouponStatus;
+  created_at: string;
+  settled_at: string | null;
+  selections: CouponSelectionRow[];
+}
+
+/** One graded leg returned by settle_coupon (drives the sequential reveal). */
+export interface SettlementLeg {
+  match_id: string;
+  home_team: string;
+  away_team: string;
+  pick: Outcome;
+  odds: number;
+  result: Outcome | null;
+  home_score: number | null;
+  away_score: number | null;
+  is_correct: boolean | null;
+}
+
+export interface CouponSettlement {
+  coupon_id: string;
+  status: CouponStatus;
+  stake: number;
+  total_odds: number;
+  potential_win: number;
+  new_balance: number;
+  selections: SettlementLeg[];
 }
 
 export interface Match {
@@ -36,36 +94,3 @@ export interface Match {
   // true_probabilities intentionally absent: hidden server-side.
 }
 
-export interface Prediction {
-  id: string;
-  user_id: string;
-  match_id: string;
-  pick: Outcome;
-  created_at: string;
-  is_correct: boolean | null;
-  points_earned: number | null;
-}
-
-/** A match paired with the current user's prediction on it, if any. */
-export interface MatchWithPick extends Match {
-  myPick: Outcome | null;
-}
-
-/** A prediction paired with its match — used on the Profile history list. */
-export interface PredictionWithMatch extends Prediction {
-  match: Match;
-}
-
-/** Result payload returned by the reveal RPC, used by the Reveal screen. */
-export interface RevealResult {
-  match_id: string;
-  home_team: string;
-  away_team: string;
-  result: Outcome;
-  home_score: number;
-  away_score: number;
-  odds: Odds;
-  your_pick: Outcome | null;
-  is_correct: boolean | null;
-  points_earned: number | null;
-}

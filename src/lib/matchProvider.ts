@@ -1,34 +1,49 @@
 import type {
-  MatchWithPick,
   Match,
   Outcome,
-  PredictionWithMatch,
-  RevealResult,
+  Coupon,
+  CouponSettlement,
 } from './types';
 import { SupabaseMatchProvider } from './supabaseMatchProvider';
 
-// The seam between the UI and "where match data comes from". Screens depend
-// ONLY on this interface — never on Supabase, and never on the simulator. To
-// move off simulated matches later, implement this against a real sports API
-// and swap the singleton at the bottom; no screen changes.
+export interface PlacedCoupon {
+  coupon_id: string;
+  total_odds: number;
+  potential_win: number;
+  new_balance: number;
+}
+
+// The seam between the UI and "where match/coupon data comes from". Screens
+// depend ONLY on this interface — never on Supabase directly. Swapping the
+// simulator for a real sports API later means a new implementation here, no
+// screen changes.
 export interface MatchProvider {
-  /** Ensure there are enough upcoming matches to play (Phase 1: seeds sims). */
+  /** Ensure there are enough open markets to play (Phase 1: seeds sims). */
   ensureMatches(): Promise<void>;
 
-  /** Upcoming matches, each annotated with the current user's pick (if any). */
-  getUpcoming(): Promise<MatchWithPick[]>;
+  /** Matches still open for a pick (kickoff in the future). */
+  getUpcoming(): Promise<Match[]>;
 
-  /** A single match by id (any status). */
-  getMatch(matchId: string): Promise<Match | null>;
+  /** Place a coupon: server prices it, deducts stake, returns the summary. */
+  placeCoupon(
+    selections: { match_id: string; pick: Outcome }[],
+    stake: number,
+  ): Promise<PlacedCoupon>;
 
-  /** Record the user's pick for a match. Throws if not allowed. */
-  submitPrediction(matchId: string, pick: Outcome): Promise<void>;
+  /** The user's coupons, newest first, each with its graded selections. */
+  getMyCoupons(): Promise<Coupon[]>;
 
-  /** Open a match's result and score it; returns the caller's outcome. */
-  revealMatch(matchId: string): Promise<RevealResult>;
+  /** A single coupon by id. */
+  getCoupon(id: string): Promise<Coupon | null>;
 
-  /** The user's predictions, newest first, each with its match — for Profile. */
-  getMyPredictions(): Promise<PredictionWithMatch[]>;
+  /** Settle a coupon: finalize its matches, grade it, pay out on a full hit. */
+  settleCoupon(id: string): Promise<CouponSettlement>;
+
+  /** Daily retention bonus (+500, once per day). Returns the new balance. */
+  claimDailyBonus(): Promise<number>;
+
+  /** Safety-net refill when nearly broke. Returns the new balance. */
+  topupGold(): Promise<number>;
 }
 
 // --- Active provider --------------------------------------------------------
