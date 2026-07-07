@@ -1,23 +1,29 @@
-import { isSupabaseConfigured } from './lib/supabase';
+import { useAuth } from './auth/AuthContext';
+import AuthScreen from './screens/AuthScreen';
+import UsernameScreen from './screens/UsernameScreen';
 
-// Phase 1 placeholder. Routing, auth and the four screens (Feed / Reveal /
-// Profile / Auth) land in later phases and replace this.
+// Auth gate. Routing + the Feed/Reveal/Profile screens are added in Phase 5+.
 function App() {
+  const { loading, session, needsUsername } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="center-screen">
+        <div className="spinner" />
+      </div>
+    );
+  }
+
+  if (!session) return <AuthScreen />;
+  if (needsUsername) return <UsernameScreen />;
+
+  // Placeholder for the signed-in app until Phase 5 wires the router.
   return (
     <div className="center-screen">
-      <div className="card" style={{ maxWidth: 460, padding: '32px 28px', textAlign: 'center' }}>
-        <div className="pill" style={{ margin: '0 auto 16px' }}>PICKPLAY.AI</div>
-        <h1>predict. watch. be right.</h1>
-        <p className="muted" style={{ marginTop: 12 }}>
-          Turn what you know into a call, watch it play out minute by minute, and
-          see how sharp your read really is. No money. Just accuracy, streaks, and
-          the thrill of being right.
-        </p>
-        <p className="dim" style={{ marginTop: 24, fontSize: '0.85rem' }}>
-          {isSupabaseConfigured
-            ? 'Supabase connected — scaffolding ready.'
-            : 'Setup: copy .env.example → .env and add your Supabase keys.'}
-        </p>
+      <div className="card" style={{ padding: 28, textAlign: 'center' }}>
+        <div className="pill pill-hit" style={{ margin: '0 auto 12px' }}>SIGNED IN</div>
+        <h2>You're in.</h2>
+        <p className="muted" style={{ marginTop: 8 }}>Feed, Reveal and Profile land next.</p>
       </div>
     </div>
   );

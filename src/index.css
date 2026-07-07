@@ -242,6 +242,79 @@ a:hover { text-decoration: underline; }
 .stack { display: flex; flex-direction: column; }
 .mono { font-family: var(--mono); }
 
+/* --- Auth / onboarding -------------------------------------------------- */
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 28px 26px;
+}
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.brand-mark {
+  font-size: 1.9rem;
+  color: var(--accent-strong);
+  line-height: 1;
+}
+.brand-name { font-weight: 700; font-size: 1.15rem; letter-spacing: -0.02em; }
+.brand-tag { font-size: 0.8rem; }
+.auth-fineprint { text-align: center; margin-top: 18px; font-size: 0.8rem; }
+
+.seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  margin-bottom: 18px;
+}
+.seg-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: 600;
+  padding: 9px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.seg-btn.is-active { background: var(--surface-2); color: var(--text); }
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.banner {
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  margin-bottom: 14px;
+  border: 1px solid transparent;
+}
+.banner-error { background: rgba(244, 114, 129, 0.1); border-color: rgba(244, 114, 129, 0.35); color: #ffb3bd; }
+.banner-ok    { background: var(--hit-bg); border-color: var(--hit-border); color: var(--hit); }
+.banner-warn  { background: rgba(255, 180, 84, 0.1); border-color: rgba(255, 180, 84, 0.3); color: var(--streak); }
+.banner code  { font-family: var(--mono); font-size: 0.8em; }
+
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }
