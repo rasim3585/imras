@@ -1,8 +1,12 @@
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext';
 import AuthScreen from './screens/AuthScreen';
 import UsernameScreen from './screens/UsernameScreen';
+import FeedScreen from './screens/FeedScreen';
+import RevealScreen from './screens/RevealScreen';
+import ProfileScreen from './screens/ProfileScreen';
+import NavBar from './components/NavBar';
 
-// Auth gate. Routing + the Feed/Reveal/Profile screens are added in Phase 5+.
 function App() {
   const { loading, session, needsUsername } = useAuth();
 
@@ -17,15 +21,18 @@ function App() {
   if (!session) return <AuthScreen />;
   if (needsUsername) return <UsernameScreen />;
 
-  // Placeholder for the signed-in app until Phase 5 wires the router.
   return (
-    <div className="center-screen">
-      <div className="card" style={{ padding: 28, textAlign: 'center' }}>
-        <div className="pill pill-hit" style={{ margin: '0 auto 12px' }}>SIGNED IN</div>
-        <h2>You're in.</h2>
-        <p className="muted" style={{ marginTop: 8 }}>Feed, Reveal and Profile land next.</p>
-      </div>
-    </div>
+    <>
+      <NavBar />
+      <main className="app-main">
+        <Routes>
+          <Route path="/" element={<FeedScreen />} />
+          <Route path="/reveal/:matchId" element={<RevealScreen />} />
+          <Route path="/profile" element={<ProfileScreen />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+    </>
   );
 }
 
