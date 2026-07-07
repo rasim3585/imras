@@ -91,8 +91,11 @@ declare
 begin
   -- client-callable: cap how large the pool can be topped up to
   p_target := least(greatest(coalesce(p_target, 8), 0), 20);
+  -- only matches that are still OPEN for predictions count toward the target
+  -- (an 'upcoming' match whose kickoff has passed can no longer be picked)
   select count(*) into v_existing
-    from public.matches where status = 'upcoming';
+    from public.matches
+   where status = 'upcoming' and starts_at > now();
   v_needed := greatest(0, p_target - v_existing);
 
   for i in 1 .. v_needed loop
@@ -118,8 +121,9 @@ begin
       'football',
       v_teams[v_hi],
       v_teams[v_ai],
-      -- kicks off soon so the predict -> reveal loop is quick in Phase 1
-      now() + (make_interval(secs => 60 + floor(random() * 900)::int)),
+      -- generous prediction window (15 min .. 4 h) so calls don't expire before
+      -- the user makes them; the reveal is on-demand and not gated on this time
+      now() + make_interval(mins => 15 + floor(random() * 225)::int),
       'upcoming',
       jsonb_build_object('home', v_h, 'draw', v_d, 'away', v_a)
     );
