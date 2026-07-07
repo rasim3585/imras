@@ -40,11 +40,11 @@ export default function ProfileScreen() {
     const settled = coupons.filter((c) => c.status !== 'pending');
     const won = settled.filter((c) => c.status === 'won');
     const biggest = won.reduce((m, c) => Math.max(m, c.potential_win), 0);
-    // pick-level accuracy across all graded selections
+    // pick-level accuracy across all graded legs
     let legTotal = 0, legHit = 0;
     for (const c of coupons)
-      for (const s of c.selections)
-        if (s.is_correct !== null) { legTotal++; if (s.is_correct) legHit++; }
+      for (const s of c.legs)
+        if (s.status !== 'pending') { legTotal++; if (s.status === 'won') legHit++; }
     return {
       played: coupons.length,
       settled: settled.length,
@@ -139,7 +139,7 @@ export default function ProfileScreen() {
             >
               <div className="trow-main">
                 <div className="trow-match">
-                  {c.selections.length === 1 ? 'Single' : `${c.selections.length}-fold`} · {c.stake} gold
+                  {c.legs.length === 1 ? 'Single' : `${c.legs.length}-fold`} · {c.stake} gold
                 </div>
                 <div className="trow-sub">@ {formatOdds(c.total_odds)} · to win {c.potential_win}</div>
               </div>

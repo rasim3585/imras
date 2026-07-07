@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { matchProvider } from '../lib/matchProvider';
 import { useAuth } from '../auth/AuthContext';
 import type { CouponSettlement } from '../lib/types';
-import { formatOdds, outcomeLabel } from '../lib/format';
+import { formatOdds } from '../lib/format';
 
 type Phase = 'loading' | 'revealing' | 'final';
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -79,13 +79,14 @@ export default function SettleScreen() {
       <div className="settle-legs">
         {data.selections.map((s, i) => {
           const isRevealed = i < revealed;
-          const hit = s.is_correct === true;
+          const hit = s.status === 'won';
           return (
-            <div key={s.match_id} className={`card settle-leg ${isRevealed ? (hit ? 'hit' : 'miss') : 'wait'}`}>
+            <div key={s.selection_id} className={`card settle-leg ${isRevealed ? (hit ? 'hit' : 'miss') : 'wait'}`}>
               <div className="settle-leg-main">
                 <div className="settle-leg-match">{s.home_team} vs {s.away_team}</div>
                 <div className="settle-leg-pick muted tnum">
-                  {outcomeLabel(s.pick, s.home_team, s.away_team)} @ {formatOdds(s.odds)}
+                  <span className="tag" style={{ marginRight: 6 }}>{s.market_name}</span>
+                  {s.option_label} @ {formatOdds(s.odds)}
                 </div>
               </div>
               <div className="settle-leg-right">

@@ -1,9 +1,4 @@
-import type {
-  Match,
-  Outcome,
-  Coupon,
-  CouponSettlement,
-} from './types';
+import type { Match, Coupon, CouponSettlement } from './types';
 import { SupabaseMatchProvider } from './supabaseMatchProvider';
 
 export interface PlacedCoupon {
@@ -21,14 +16,11 @@ export interface MatchProvider {
   /** Ensure there are enough open markets to play (Phase 1: seeds sims). */
   ensureMatches(): Promise<void>;
 
-  /** Matches still open for a pick (kickoff in the future). */
+  /** Matches still open for a pick (kickoff in the future), with their markets. */
   getUpcoming(): Promise<Match[]>;
 
-  /** Place a coupon: server prices it, deducts stake, returns the summary. */
-  placeCoupon(
-    selections: { match_id: string; pick: Outcome }[],
-    stake: number,
-  ): Promise<PlacedCoupon>;
+  /** Place a coupon from selected market-option ids; server prices + settles. */
+  placeCoupon(optionIds: string[], stake: number): Promise<PlacedCoupon>;
 
   /** The user's coupons, newest first, each with its graded selections. */
   getMyCoupons(): Promise<Coupon[]>;

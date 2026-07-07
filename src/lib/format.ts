@@ -1,5 +1,3 @@
-import type { Odds, Outcome } from './types';
-
 /** Human "when does this kick off" label, relative to now. */
 export function formatKickoff(iso: string): string {
   const ms = new Date(iso).getTime() - Date.now();
@@ -21,17 +19,9 @@ export function formatOdds(n: number): string {
   return n.toFixed(2);
 }
 
-/** Market-style implied probability (%) for an outcome, normalised across the
- *  three so they read like a market book summing to ~100%. Display only. */
-export function impliedProb(odds: Odds, o: Outcome): number {
-  const inv = (k: Outcome) => 1 / odds[k];
-  const sum = inv('home') + inv('draw') + inv('away');
-  return Math.round((inv(o) / sum) * 100);
-}
-
-/** How each outcome reads in the UI, given the two team names. */
-export function outcomeLabel(o: Outcome, home: string, away: string): string {
-  if (o === 'home') return home;
-  if (o === 'away') return away;
-  return 'Draw';
+/** Market-style implied probability (%) for one option, normalised across the
+ *  market's options so they read like a book summing to ~100%. Display only. */
+export function impliedProb(odds: number, allOdds: number[]): number {
+  const sum = allOdds.reduce((acc, o) => acc + 1 / o, 0);
+  return Math.round((1 / odds / sum) * 100);
 }

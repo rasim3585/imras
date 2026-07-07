@@ -1,83 +1,41 @@
-// Shared domain types. Kept UI-facing and provider-agnostic: nothing here
-// knows whether a match came from the simulator or a future real sports API.
+// Shared domain types — provider-agnostic. Nothing here knows whether data came
+// from the simulator or a future real sports API.
 
 export type Sport = 'football' | 'basketball';
-
 export type Outcome = 'home' | 'draw' | 'away';
-
 export type MatchStatus = 'upcoming' | 'live' | 'finished';
-
-/** Informational decimal odds per outcome (e.g. 1.85). Display only — no money,
- *  no stake, no payout. Derived server-side from the hidden probabilities. */
-export type Odds = Record<Outcome, number>;
+export type MarketStatus = 'open' | 'closed' | 'settled';
+export type LegStatus = 'pending' | 'won' | 'lost';
+export type CouponStatus = 'pending' | 'won' | 'lost';
 
 export interface Profile {
   id: string;
   username: string;
   created_at: string;
-  total_predictions: number;
-  correct_predictions: number;
-  current_streak: number;
-  best_streak: number;
-  skill_rating: number;
   gold_balance: number;
   last_daily_bonus_at: string | null;
 }
 
-export type CouponStatus = 'pending' | 'won' | 'lost';
+// --- Markets (generic bet types) -------------------------------------------
 
-/** A selection while it lives in the client-side coupon cart (pre-placement). */
-export interface CartSelection {
-  match_id: string;
-  home_team: string;
-  away_team: string;
-  pick: Outcome;
-  odds: number;
-}
-
-export interface CouponSelectionRow {
+export interface MarketOption {
   id: string;
-  coupon_id: string;
-  match_id: string;
-  pick: Outcome;
+  market_id: string;
+  label: string;        // '1', 'X', '2', 'Over 2.5', 'Yes'
+  outcome_key: string;  // resolver key: 'home','draw','away', ...
   odds: number;
-  is_correct: boolean | null;
-  match: Match;
+  is_winner: boolean | null;
+  sort_order: number;
 }
 
-export interface Coupon {
+export interface Market {
   id: string;
-  user_id: string;
-  stake: number;
-  total_odds: number;
-  potential_win: number;
-  status: CouponStatus;
-  created_at: string;
-  settled_at: string | null;
-  selections: CouponSelectionRow[];
-}
-
-/** One graded leg returned by settle_coupon (drives the sequential reveal). */
-export interface SettlementLeg {
   match_id: string;
-  home_team: string;
-  away_team: string;
-  pick: Outcome;
-  odds: number;
-  result: Outcome | null;
-  home_score: number | null;
-  away_score: number | null;
-  is_correct: boolean | null;
-}
-
-export interface CouponSettlement {
-  coupon_id: string;
-  status: CouponStatus;
-  stake: number;
-  total_odds: number;
-  potential_win: number;
-  new_balance: number;
-  selections: SettlementLeg[];
+  market_type: string;  // 'match_result', 'over_under_2_5', ...
+  name: string;         // display name
+  status: MarketStatus;
+  sort_order: number;
+  options: MarketOption[];
 }
 
 export interface Match {
@@ -90,7 +48,77 @@ export interface Match {
   home_score: number | null;
   away_score: number | null;
   result: Outcome | null;
-  display_odds: Odds;
-  // true_probabilities intentionally absent: hidden server-side.
+  markets: Market[];    // populated on the feed
 }
 
+// --- Coupons ---------------------------------------------------------------
+
+/** A selection while it lives in the client-side cart (pre-placement). */
+export interface CartSelection {
+  option_id: string;
+  match_id: string;
+  home_team: string;
+  away_team: string;
+  market_name: string;
+  option_label: string;
+  odds: number;
+}
+
+/** A coupon leg, flattened from the option/market/match graph for the UI. */
+export interface CouponLeg {
+  id: string;
+  odds: number;
+  status: LegStatus;
+  option_label: string;
+  outcome_key: string;
+  is_winner: boolean | null;
+  market_name: string;
+  market_type: string;
+  match: {
+    id: string;
+    home_team: string;
+    away_team: string;
+    result: Outcome | null;
+    home_score: number | null;
+    away_score: number | null;
+  };
+}
+
+export interface Coupon {
+  id: string;
+  user_id: string;
+  stake: number;
+  total_odds: number;
+  potential_win: number;
+  status: CouponStatus;
+  created_at: string;
+  settled_at: string | null;
+  legs: CouponLeg[];
+}
+
+/** One graded leg returned by settle_coupon (drives the sequential reveal). */
+export interface SettlementLeg {
+  selection_id: string;
+  match_id: string;
+  home_team: string;
+  away_team: string;
+  market_name: string;
+  market_type: string;
+  option_label: string;
+  outcome_key: string;
+  odds: number;
+  status: LegStatus;
+  result: Outcome | null;
+  home_score: number | null;
+  away_score: number | null;
+}
+
+export interface CouponSettlement {
+  coupon_id: string;
+  status: CouponStatus;
+  stake: number;
+  total_odds: number;
+  potential_win: number;
+  new_balance: number;
+  selections: SettlementLeg[];
+}

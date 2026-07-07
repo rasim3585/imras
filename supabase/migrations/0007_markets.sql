@@ -1,0 +1,462 @@
+-- ============================================================================
+-- pickplay.ai — 0007: generic markets + option-based coupons
+-- ----------------------------------------------------------------------------
+-- Supersedes 0006's coupon design. Makes every match hold MANY markets (bet
+-- types), each with MANY options — so adding a new bet type later is DATA, not
+-- schema. Phase 1 populates only 'match_result' (1/X/2); the structure is ready
+-- for first_half, both_teams_score, over_under_2_5, corners, cards, ...
+--
+--   matches ──1:N── markets ──1:N── market_options
+--   coupons ──1:N── coupon_selections ──> market_options
+--
+-- A coupon_selection wins iff its option.is_winner. A coupon wins iff ALL its
+-- selections win. Settlement is generic: _finalize_match resolves each market
+-- (only match_result has a resolver in Phase 1; new types add one small branch).
+--
+-- Self-contained from 0001-0005 (does not require 0006). Idempotent-ish:
+-- coupon tables are dropped+recreated (test data only). Pure ASCII.
+-- ============================================================================
+
+-- 0) gold columns (same as 0006; safe if already present) --------------------
+alter table public.profiles
+  add column if not exists gold_balance        int not null default 1000,
+  add column if not exists last_daily_bonus_at timestamptz;
+
+-- 1) markets + options --------------------------------------------------------
+create table if not exists public.markets (
+  id          uuid primary key default gen_random_uuid(),
+  match_id    uuid not null references public.matches (id) on delete cascade,
+  market_type text not null,             -- machine key: 'match_result', ...
+  name        text not null,             -- display: 'Match Result'
+  status      text not null default 'open' check (status in ('open', 'closed', 'settled')),
+  sort_order  int not null default 0,
+  unique (match_id, market_type)
+);
+create index if not exists idx_markets_match on public.markets (match_id);
+
+create table if not exists public.market_options (
+  id          uuid primary key default gen_random_uuid(),
+  market_id   uuid not null references public.markets (id) on delete cascade,
+  label       text not null,             -- '1', 'X', '2', 'Over 2.5', 'Yes'
+  outcome_key text not null,             -- resolver key: 'home','draw','away', ...
+  odds        numeric(8, 2) not null,
+  is_winner   boolean,                   -- null until the market settles
+  sort_order  int not null default 0
+);
+create index if not exists idx_options_market on public.market_options (market_id);
+
+-- 2) coupons + option-based selections (fresh, deterministic shape) -----------
+drop table if exists public.coupon_selections cascade;
+drop table if exists public.coupons cascade;
+
+create table public.coupons (
+  id            uuid primary key default gen_random_uuid(),
+  user_id       uuid not null references public.profiles (id) on delete cascade,
+  stake         int not null check (stake > 0),
+  total_odds    numeric(12, 2) not null,
+  potential_win int not null,
+  status        text not null default 'pending' check (status in ('pending', 'won', 'lost')),
+  created_at    timestamptz not null default now(),
+  settled_at    timestamptz
+);
+create index idx_coupons_user on public.coupons (user_id, created_at desc);
+
+create table public.coupon_selections (
+  id               uuid primary key default gen_random_uuid(),
+  coupon_id        uuid not null references public.coupons (id) on delete cascade,
+  market_option_id uuid not null references public.market_options (id),
+  odds             numeric(8, 2) not null,
+  status           text not null default 'pending' check (status in ('pending', 'won', 'lost')),
+  unique (coupon_id, market_option_id)
+);
+create index idx_sel_coupon on public.coupon_selections (coupon_id);
+create index idx_sel_option on public.coupon_selections (market_option_id);
+
+-- 3) RLS + grants -------------------------------------------------------------
+alter table public.markets           enable row level security;
+alter table public.market_options    enable row level security;
+alter table public.coupons           enable row level security;
+alter table public.coupon_selections enable row level security;
+
+drop policy if exists markets_read on public.markets;
+create policy markets_read on public.markets for select to authenticated using (true);
+drop policy if exists options_read on public.market_options;
+create policy options_read on public.market_options for select to authenticated using (true);
+
+drop policy if exists coupons_select_own on public.coupons;
+create policy coupons_select_own on public.coupons
+  for select to authenticated using (auth.uid() = user_id);
+
+drop policy if exists sel_select_own on public.coupon_selections;
+create policy sel_select_own on public.coupon_selections
+  for select to authenticated
+  using (exists (select 1 from public.coupons c
+                 where c.id = coupon_selections.coupon_id and c.user_id = auth.uid()));
+
+revoke all on public.markets, public.market_options,
+              public.coupons, public.coupon_selections from anon, authenticated;
+grant select on public.markets           to authenticated;
+grant select on public.market_options    to authenticated;
+grant select on public.coupons           to authenticated;
+grant select on public.coupon_selections to authenticated;
+
+-- 4) market generation (Phase 1: match_result) -------------------------------
+-- Creates the markets/options for a match if missing. Reuses the hidden-prob
+-- derived odds. Adding a new bet type = add another block here + a resolver.
+create or replace function public._ensure_markets(p_match_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_match  public.matches;
+  v_odds   jsonb;
+  v_market uuid;
+begin
+  select * into v_match from public.matches where id = p_match_id;
+  if not found then return; end if;
+
+  if not exists (select 1 from public.markets
+                  where match_id = p_match_id and market_type = 'match_result') then
+    v_odds := coalesce(
+      v_match.display_odds,
+      public._make_display_odds(
+        (v_match.true_probabilities ->> 'home')::double precision,
+        (v_match.true_probabilities ->> 'draw')::double precision,
+        (v_match.true_probabilities ->> 'away')::double precision));
+
+    insert into public.markets (match_id, market_type, name, status, sort_order)
+      values (p_match_id, 'match_result', 'Match Result', 'open', 0)
+      returning id into v_market;
+
+    insert into public.market_options (market_id, label, outcome_key, odds, sort_order) values
+      (v_market, '1', 'home', (v_odds ->> 'home')::numeric, 0),
+      (v_market, 'X', 'draw', (v_odds ->> 'draw')::numeric, 1),
+      (v_market, '2', 'away', (v_odds ->> 'away')::numeric, 2);
+  end if;
+end;
+$fn$;
+
+-- backfill markets for every existing match
+select public._ensure_markets(id) from public.matches;
+
+-- 5) seed_matches now also stamps markets on each new match ------------------
+create or replace function public.seed_matches(p_target int default 8)
+returns int
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_existing int;
+  v_needed   int;
+  v_teams    text[] := array[
+    'Arsenal','Chelsea','Liverpool','Man City','Man United','Tottenham',
+    'Newcastle','Aston Villa','Brighton','West Ham','Everton','Leeds',
+    'Real Madrid','Barcelona','Atletico','Sevilla','Valencia','Villarreal',
+    'Bayern','Dortmund','Leipzig','Leverkusen','Juventus','Inter','Milan',
+    'Napoli','Roma','PSG','Marseille','Lyon','Ajax','Porto','Benfica','Celtic'
+  ];
+  v_n   int := array_length(v_teams, 1);
+  v_hi  int;
+  v_ai  int;
+  v_h   double precision;
+  v_d   double precision;
+  v_a   double precision;
+  v_sum double precision;
+  v_id  uuid;
+  i     int;
+begin
+  p_target := least(greatest(coalesce(p_target, 8), 0), 20);
+  select count(*) into v_existing
+    from public.matches where status = 'upcoming' and starts_at > now();
+  v_needed := greatest(0, p_target - v_existing);
+
+  for i in 1 .. v_needed loop
+    v_hi := 1 + floor(random() * v_n)::int;
+    loop v_ai := 1 + floor(random() * v_n)::int; exit when v_ai <> v_hi; end loop;
+
+    v_h := 0.20 + random() * 0.45;
+    v_d := 0.15 + random() * 0.25;
+    v_a := 0.15 + random() * 0.45;
+    v_sum := v_h + v_d + v_a;
+    v_h := round((v_h / v_sum)::numeric, 4);
+    v_d := round((v_d / v_sum)::numeric, 4);
+    v_a := round((1 - v_h - v_d)::numeric, 4);
+
+    insert into public.matches
+      (sport, home_team, away_team, starts_at, status, true_probabilities, display_odds)
+    values (
+      'football', v_teams[v_hi], v_teams[v_ai],
+      now() + make_interval(mins => 15 + floor(random() * 225)::int),
+      'upcoming',
+      jsonb_build_object('home', v_h, 'draw', v_d, 'away', v_a),
+      public._make_display_odds(v_h, v_d, v_a))
+    returning id into v_id;
+
+    perform public._ensure_markets(v_id);
+  end loop;
+
+  return v_needed;
+end;
+$fn$;
+
+-- 6) generic market resolver (called when a match finalizes) ------------------
+create or replace function public._settle_markets(p_match_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_match public.matches;
+  mk      record;
+begin
+  select * into v_match from public.matches where id = p_match_id;
+  if v_match.result is null then return; end if;
+
+  for mk in select * from public.markets where match_id = p_match_id and status <> 'settled' loop
+    if mk.market_type = 'match_result' then
+      update public.market_options
+         set is_winner = (outcome_key = v_match.result)
+       where market_id = mk.id;
+      update public.markets set status = 'settled' where id = mk.id;
+    -- FUTURE bet types add a branch here, e.g.:
+    --   elsif mk.market_type = 'over_under_2_5' then
+    --     update market_options set is_winner =
+    --       (outcome_key = case when v_match.home_score + v_match.away_score > 2 then 'over' else 'under' end)
+    --     where market_id = mk.id;
+    --     update markets set status='settled' where id = mk.id;
+    end if;
+  end loop;
+end;
+$fn$;
+
+-- 7) shared match finalizer (result + scores + market settlement) -------------
+create or replace function public._finalize_match(p_match_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_match  public.matches;
+  v_r      double precision;
+  v_ph     double precision;
+  v_pd     double precision;
+  v_result text;
+  v_hs     int;
+  v_as     int;
+begin
+  select * into v_match from public.matches where id = p_match_id for update;
+  if not found or v_match.status = 'finished' then return; end if;
+
+  v_ph := (v_match.true_probabilities ->> 'home')::double precision;
+  v_pd := (v_match.true_probabilities ->> 'draw')::double precision;
+  v_r  := random();
+  if v_r < v_ph then v_result := 'home';
+  elsif v_r < v_ph + v_pd then v_result := 'draw';
+  else v_result := 'away'; end if;
+
+  if v_result = 'home' then
+    v_hs := 1 + floor(random() * 3)::int; v_as := floor(random() * v_hs)::int;
+  elsif v_result = 'away' then
+    v_as := 1 + floor(random() * 3)::int; v_hs := floor(random() * v_as)::int;
+  else
+    v_hs := floor(random() * 4)::int; v_as := v_hs;
+  end if;
+
+  update public.matches
+     set status = 'finished', result = v_result, home_score = v_hs, away_score = v_as
+   where id = p_match_id;
+
+  perform public._score_match(p_match_id);    -- legacy predictions, harmless
+  perform public._settle_markets(p_match_id); -- generic option grading
+end;
+$fn$;
+
+-- 8) place a coupon (option-based, server-priced) ----------------------------
+drop function if exists public.place_coupon(jsonb, int);
+create or replace function public.place_coupon(p_option_ids uuid[], p_stake int)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_uid     uuid := auth.uid();
+  v_balance int;
+  v_count   int;
+  v_total   numeric := 1;
+  v_pot     int;
+  v_coupon  uuid;
+  v_oid     uuid;
+  rec       record;
+  v_seen    uuid[] := '{}';
+begin
+  if v_uid is null then raise exception 'Not authenticated'; end if;
+  if p_stake is null or p_stake <= 0 then raise exception 'Stake must be positive'; end if;
+
+  v_count := coalesce(array_length(p_option_ids, 1), 0);
+  if v_count < 1 then raise exception 'Add at least one selection'; end if;
+  if v_count > 10 then raise exception 'A coupon can hold at most 10 selections'; end if;
+
+  select gold_balance into v_balance from public.profiles where id = v_uid for update;
+  if v_balance < p_stake then raise exception 'Not enough gold'; end if;
+
+  foreach v_oid in array p_option_ids loop
+    select mo.odds as odds, mk.match_id as match_id, mk.status as mkt_status,
+           m.status as match_status, m.starts_at as starts_at,
+           m.home_team as home_team, m.away_team as away_team
+      into rec
+      from public.market_options mo
+      join public.markets mk on mk.id = mo.market_id
+      join public.matches m  on m.id  = mk.match_id
+     where mo.id = v_oid
+     for update of mo;
+    if not found then raise exception 'Selection not found'; end if;
+    if rec.mkt_status <> 'open' or rec.match_status <> 'upcoming' or rec.starts_at <= now() then
+      raise exception 'Market closed: % vs %', rec.home_team, rec.away_team;
+    end if;
+    if rec.match_id = any(v_seen) then
+      raise exception 'Only one pick per match is allowed on a coupon';
+    end if;
+    v_seen  := array_append(v_seen, rec.match_id);
+    v_total := v_total * rec.odds;
+  end loop;
+
+  v_total := round(v_total, 2);
+  v_pot   := round(p_stake * v_total)::int;
+
+  insert into public.coupons (user_id, stake, total_odds, potential_win, status)
+    values (v_uid, p_stake, v_total, v_pot, 'pending') returning id into v_coupon;
+
+  foreach v_oid in array p_option_ids loop
+    insert into public.coupon_selections (coupon_id, market_option_id, odds)
+      values (v_coupon, v_oid, (select odds from public.market_options where id = v_oid));
+  end loop;
+
+  update public.profiles set gold_balance = gold_balance - p_stake where id = v_uid;
+
+  return jsonb_build_object('coupon_id', v_coupon, 'total_odds', v_total,
+    'potential_win', v_pot, 'new_balance', v_balance - p_stake);
+end;
+$fn$;
+
+-- 9) settle a coupon (finalize its matches, grade legs, pay full hits) --------
+create or replace function public.settle_coupon(p_coupon_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_uid    uuid := auth.uid();
+  v_coupon public.coupons;
+  r        record;
+  v_all_ok boolean := true;
+  v_sels   jsonb;
+  v_bal    int;
+begin
+  if v_uid is null then raise exception 'Not authenticated'; end if;
+  select * into v_coupon from public.coupons where id = p_coupon_id and user_id = v_uid for update;
+  if not found then raise exception 'Coupon not found'; end if;
+
+  if v_coupon.status = 'pending' then
+    for r in
+      select distinct mk.match_id
+        from public.coupon_selections cs
+        join public.market_options mo on mo.id = cs.market_option_id
+        join public.markets mk on mk.id = mo.market_id
+       where cs.coupon_id = p_coupon_id
+    loop
+      perform public._finalize_match(r.match_id);
+    end loop;
+
+    for r in
+      select cs.id, mo.is_winner
+        from public.coupon_selections cs
+        join public.market_options mo on mo.id = cs.market_option_id
+       where cs.coupon_id = p_coupon_id
+    loop
+      update public.coupon_selections
+         set status = case when r.is_winner is true then 'won' else 'lost' end
+       where id = r.id;
+      if r.is_winner is not true then v_all_ok := false; end if;
+    end loop;
+
+    update public.coupons
+       set status = case when v_all_ok then 'won' else 'lost' end, settled_at = now()
+     where id = p_coupon_id;
+    if v_all_ok then
+      update public.profiles set gold_balance = gold_balance + v_coupon.potential_win where id = v_uid;
+    end if;
+
+    select * into v_coupon from public.coupons where id = p_coupon_id;
+  end if;
+
+  select gold_balance into v_bal from public.profiles where id = v_uid;
+
+  select jsonb_agg(jsonb_build_object(
+           'selection_id', cs.id, 'match_id', mk.match_id,
+           'home_team', m.home_team, 'away_team', m.away_team,
+           'market_name', mk.name, 'market_type', mk.market_type,
+           'option_label', mo.label, 'outcome_key', mo.outcome_key,
+           'odds', cs.odds, 'status', cs.status, 'result', m.result,
+           'home_score', m.home_score, 'away_score', m.away_score)
+           order by cs.id)
+    into v_sels
+    from public.coupon_selections cs
+    join public.market_options mo on mo.id = cs.market_option_id
+    join public.markets mk on mk.id = mo.market_id
+    join public.matches m  on m.id  = mk.match_id
+   where cs.coupon_id = p_coupon_id;
+
+  return jsonb_build_object(
+    'coupon_id', v_coupon.id, 'status', v_coupon.status, 'stake', v_coupon.stake,
+    'total_odds', v_coupon.total_odds, 'potential_win', v_coupon.potential_win,
+    'new_balance', v_bal, 'selections', v_sels);
+end;
+$fn$;
+
+-- 10) gold top-ups (unchanged from 0006; redefined so 0007 stands alone) ------
+create or replace function public.claim_daily_bonus()
+returns jsonb language plpgsql security definer set search_path = public as $fn$
+declare v_uid uuid := auth.uid(); v_last timestamptz; v_bal int;
+begin
+  if v_uid is null then raise exception 'Not authenticated'; end if;
+  select last_daily_bonus_at, gold_balance into v_last, v_bal
+    from public.profiles where id = v_uid for update;
+  if v_last is not null and v_last::date >= now()::date then
+    raise exception 'Daily bonus already claimed today';
+  end if;
+  update public.profiles set gold_balance = gold_balance + 500, last_daily_bonus_at = now()
+   where id = v_uid;
+  return jsonb_build_object('new_balance', v_bal + 500, 'awarded', 500);
+end; $fn$;
+
+create or replace function public.topup_gold()
+returns jsonb language plpgsql security definer set search_path = public as $fn$
+declare v_uid uuid := auth.uid(); v_bal int;
+begin
+  if v_uid is null then raise exception 'Not authenticated'; end if;
+  select gold_balance into v_bal from public.profiles where id = v_uid for update;
+  if v_bal >= 100 then raise exception 'Top-up is only available under 100 gold'; end if;
+  update public.profiles set gold_balance = 500 where id = v_uid;
+  return jsonb_build_object('new_balance', 500);
+end; $fn$;
+
+-- 11) privileges --------------------------------------------------------------
+revoke all on function public._ensure_markets(uuid)         from public, anon, authenticated;
+revoke all on function public._settle_markets(uuid)         from public, anon, authenticated;
+revoke all on function public._finalize_match(uuid)         from public, anon, authenticated;
+revoke all on function public.place_coupon(uuid[], int)     from public, anon;
+revoke all on function public.settle_coupon(uuid)           from public, anon;
+revoke all on function public.claim_daily_bonus()           from public, anon;
+revoke all on function public.topup_gold()                  from public, anon;
+grant execute on function public.place_coupon(uuid[], int)  to authenticated;
+grant execute on function public.settle_coupon(uuid)        to authenticated;
+grant execute on function public.claim_daily_bonus()        to authenticated;
+grant execute on function public.topup_gold()               to authenticated;
+grant execute on function public.seed_matches(int)          to authenticated;

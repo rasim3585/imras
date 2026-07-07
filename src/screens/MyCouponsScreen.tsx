@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { matchProvider } from '../lib/matchProvider';
 import type { Coupon } from '../lib/types';
-import { formatOdds, outcomeLabel } from '../lib/format';
+import { formatOdds } from '../lib/format';
 
 function StatusChip({ c }: { c: Coupon }) {
   if (c.status === 'won') return <span className="chip chip-pos tnum">Won +{c.potential_win}</span>;
@@ -49,19 +49,18 @@ export default function MyCouponsScreen() {
           {coupons.map((c) => (
             <div key={c.id} className="card coupon-card">
               <div className="coupon-card-head">
-                <span className="tag">{c.selections.length === 1 ? 'Single' : `${c.selections.length}-fold`}</span>
+                <span className="tag">{c.legs.length === 1 ? 'Single' : `${c.legs.length}-fold`}</span>
                 <StatusChip c={c} />
               </div>
 
               <div className="coupon-legs">
-                {c.selections.map((s) => {
-                  const mark =
-                    s.is_correct === null ? '' : s.is_correct ? 'leg-hit' : 'leg-miss';
+                {c.legs.map((s) => {
+                  const mark = s.status === 'pending' ? '' : s.status === 'won' ? 'leg-hit' : 'leg-miss';
                   return (
                     <div key={s.id} className={`coupon-leg ${mark}`}>
                       <span className="leg-match">{s.match.home_team} vs {s.match.away_team}</span>
                       <span className="leg-pick tnum">
-                        {outcomeLabel(s.pick, s.match.home_team, s.match.away_team)} @ {formatOdds(s.odds)}
+                        <span className="muted">{s.market_name}:</span> {s.option_label} @ {formatOdds(s.odds)}
                       </span>
                     </div>
                   );

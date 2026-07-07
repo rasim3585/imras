@@ -374,6 +374,8 @@ a:hover { color: var(--accent); }
 }
 .matchup .at { color: var(--dim); font-weight: 500; margin: 0 6px; }
 
+.market-section + .market-section { margin-top: var(--s3); padding-top: var(--s3); border-top: 1px solid var(--border); }
+.market-name { display: block; margin-bottom: var(--s2); }
 .market { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); }
 .outcome {
   appearance: none;

@@ -7,16 +7,18 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import type { CartSelection, Outcome } from '../lib/types';
+import type { CartSelection } from '../lib/types';
 
-const STORAGE_KEY = 'pickplay.cart.v1';
+const STORAGE_KEY = 'pickplay.cart.v2';
 
 interface CartState {
   selections: CartSelection[];
   count: number;
   totalOdds: number;
-  pickFor: (matchId: string) => Outcome | null;
-  /** Add a leg, or replace the pick if the match is already in the coupon. */
+  isSelected: (optionId: string) => boolean;
+  /** Which option (if any) is chosen for a match — one pick per match. */
+  optionForMatch: (matchId: string) => string | null;
+  /** Toggle an option: adds it, or replaces the match's pick, or removes it. */
   select: (leg: CartSelection) => void;
   remove: (matchId: string) => void;
   clear: () => void;
@@ -47,12 +49,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const select = useCallback((leg: CartSelection) => {
     setSelections((prev) => {
       const existing = prev.find((s) => s.match_id === leg.match_id);
-      // tapping the already-selected pick removes it (toggle off)
-      if (existing && existing.pick === leg.pick) {
+      // tapping the already-selected option clears the match
+      if (existing && existing.option_id === leg.option_id) {
         return prev.filter((s) => s.match_id !== leg.match_id);
       }
-      const without = prev.filter((s) => s.match_id !== leg.match_id);
-      return [...without, leg];
+      // one pick per match: replace any existing selection on this match
+      return [...prev.filter((s) => s.match_id !== leg.match_id), leg];
     });
   }, []);
 
@@ -62,8 +64,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clear = useCallback(() => setSelections([]), []);
 
-  const pickFor = useCallback(
-    (matchId: string) => selections.find((s) => s.match_id === matchId)?.pick ?? null,
+  const isSelected = useCallback(
+    (optionId: string) => selections.some((s) => s.option_id === optionId),
+    [selections],
+  );
+  const optionForMatch = useCallback(
+    (matchId: string) => selections.find((s) => s.match_id === matchId)?.option_id ?? null,
     [selections],
   );
 
@@ -76,7 +82,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     selections,
     count: selections.length,
     totalOdds,
-    pickFor,
+    isSelected,
+    optionForMatch,
     select,
     remove,
     clear,

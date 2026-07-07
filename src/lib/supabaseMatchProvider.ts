@@ -1,14 +1,20 @@
 import { supabase } from './supabase';
 import type { MatchProvider, PlacedCoupon } from './matchProvider';
-import type { Coupon, CouponSettlement, Match, Outcome } from './types';
+import type { Coupon, CouponLeg, CouponSettlement, Market, Match } from './types';
 
-// Explicit column list — omits `true_probabilities`, which the client isn't
-// granted anyway. Selecting `*` would try to read it and fail.
+// Explicit match columns — omits `true_probabilities` (hidden) and
+// `display_odds` (server-only seed input; odds are exposed via market_options).
 const MATCH_COLS =
-  'id,sport,home_team,away_team,starts_at,status,home_score,away_score,result,display_odds,created_at';
+  'id,sport,home_team,away_team,starts_at,status,home_score,away_score,result';
 
-/** Supabase-backed provider. All simulation (result generation, odds, stake
- *  math, settlement) happens server-side in Postgres RPCs — this only maps. */
+// Nested embed used for coupons: selection -> option -> market -> match.
+const COUPON_SELECT =
+  `*, coupon_selections(id, odds, status, ` +
+  `market_options(id, label, outcome_key, is_winner, ` +
+  `markets(name, market_type, matches(id, home_team, away_team, result, home_score, away_score))))`;
+
+/** Supabase-backed provider. All simulation (results, odds, stake math,
+ *  settlement) runs server-side in Postgres RPCs — this only maps data. */
 export class SupabaseMatchProvider implements MatchProvider {
   async ensureMatches(): Promise<void> {
     const { error } = await supabase.rpc('seed_matches', { p_target: 8 });
@@ -16,23 +22,32 @@ export class SupabaseMatchProvider implements MatchProvider {
   }
 
   async getUpcoming(): Promise<Match[]> {
-    // Only markets still open for a pick — kickoff must be in the future.
     const { data, error } = await supabase
       .from('matches')
-      .select(MATCH_COLS)
+      .select(`${MATCH_COLS}, markets(id, match_id, market_type, name, status, sort_order, ` +
+        `market_options(id, market_id, label, outcome_key, odds, is_winner, sort_order))`)
       .eq('status', 'upcoming')
       .gt('starts_at', new Date().toISOString())
       .order('starts_at', { ascending: true });
     if (error) throw new Error(error.message);
-    return (data ?? []) as Match[];
+
+    return ((data ?? []) as unknown[]).map((row): Match => {
+      const raw = row as Match & { markets: (Market & { market_options: unknown })[] };
+      const markets: Market[] = (raw.markets ?? [])
+        .map((m) => {
+          const opts = ((m as unknown as { market_options: Market['options'] }).market_options ?? [])
+            .map((o) => ({ ...o, odds: Number(o.odds) }))
+            .sort((a, b) => a.sort_order - b.sort_order);
+          return { ...m, options: opts } as Market;
+        })
+        .sort((a, b) => a.sort_order - b.sort_order);
+      return { ...(raw as Match), markets };
+    });
   }
 
-  async placeCoupon(
-    selections: { match_id: string; pick: Outcome }[],
-    stake: number,
-  ): Promise<PlacedCoupon> {
+  async placeCoupon(optionIds: string[], stake: number): Promise<PlacedCoupon> {
     const { data, error } = await supabase.rpc('place_coupon', {
-      p_selections: selections,
+      p_option_ids: optionIds,
       p_stake: stake,
     });
     if (error) throw new Error(error.message);
@@ -48,20 +63,20 @@ export class SupabaseMatchProvider implements MatchProvider {
   async getMyCoupons(): Promise<Coupon[]> {
     const { data, error } = await supabase
       .from('coupons')
-      .select(`*, selections:coupon_selections(*, match:matches(${MATCH_COLS}))`)
+      .select(COUPON_SELECT)
       .order('created_at', { ascending: false });
     if (error) throw new Error(error.message);
-    return (data ?? []).map(normalizeCoupon);
+    return (data ?? []).map(flattenCoupon);
   }
 
   async getCoupon(id: string): Promise<Coupon | null> {
     const { data, error } = await supabase
       .from('coupons')
-      .select(`*, selections:coupon_selections(*, match:matches(${MATCH_COLS}))`)
+      .select(COUPON_SELECT)
       .eq('id', id)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return data ? normalizeCoupon(data) : null;
+    return data ? flattenCoupon(data) : null;
   }
 
   async settleCoupon(id: string): Promise<CouponSettlement> {
@@ -91,14 +106,35 @@ export class SupabaseMatchProvider implements MatchProvider {
   }
 }
 
-// numeric columns can arrive as strings; coerce to numbers for the UI.
-function normalizeCoupon(row: unknown): Coupon {
-  const c = row as Coupon;
+// Flatten the nested PostgREST coupon graph into UI-friendly legs.
+function flattenCoupon(row: unknown): Coupon {
+  const c = row as Record<string, unknown>;
+  const rawLegs = (c.coupon_selections ?? []) as Record<string, unknown>[];
+  const legs: CouponLeg[] = rawLegs.map((cs) => {
+    const opt = cs.market_options as Record<string, unknown>;
+    const mk = opt.markets as Record<string, unknown>;
+    const match = mk.matches as CouponLeg['match'];
+    return {
+      id: cs.id as string,
+      odds: Number(cs.odds),
+      status: cs.status as CouponLeg['status'],
+      option_label: opt.label as string,
+      outcome_key: opt.outcome_key as string,
+      is_winner: (opt.is_winner as boolean | null) ?? null,
+      market_name: mk.name as string,
+      market_type: mk.market_type as string,
+      match,
+    };
+  });
   return {
-    ...c,
+    id: c.id as string,
+    user_id: c.user_id as string,
     stake: Number(c.stake),
     total_odds: Number(c.total_odds),
     potential_win: Number(c.potential_win),
-    selections: (c.selections ?? []).map((s) => ({ ...s, odds: Number(s.odds) })),
+    status: c.status as Coupon['status'],
+    created_at: c.created_at as string,
+    settled_at: (c.settled_at as string | null) ?? null,
+    legs,
   };
 }

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../coupon/CartContext';
 import { useAuth } from '../auth/AuthContext';
 import { matchProvider } from '../lib/matchProvider';
-import { formatOdds, outcomeLabel } from '../lib/format';
+import { formatOdds } from '../lib/format';
 
 const QUICK = [100, 250, 500];
 
@@ -25,7 +25,7 @@ export default function CouponScreen() {
     setBusy(true);
     try {
       await matchProvider.placeCoupon(
-        selections.map((s) => ({ match_id: s.match_id, pick: s.pick })),
+        selections.map((s) => s.option_id),
         stake,
       );
       clear();
@@ -64,7 +64,8 @@ export default function CouponScreen() {
             <div className="slip-leg-main">
               <div className="slip-leg-match">{s.home_team} vs {s.away_team}</div>
               <div className="slip-leg-pick muted">
-                {outcomeLabel(s.pick, s.home_team, s.away_team)}
+                <span className="tag" style={{ marginRight: 6 }}>{s.market_name}</span>
+                {s.option_label}
                 <span className="tnum"> @ {formatOdds(s.odds)}</span>
               </div>
             </div>
