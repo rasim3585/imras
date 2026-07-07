@@ -1,4 +1,4 @@
-import type { Outcome } from './types';
+import type { Odds, Outcome } from './types';
 
 /** Human "when does this kick off" label, relative to now. */
 export function formatKickoff(iso: string): string {
@@ -19,6 +19,14 @@ export function accuracyPct(correct: number, total: number): number {
 /** Decimal odds, always two places (e.g. 1.85). Informational only. */
 export function formatOdds(n: number): string {
   return n.toFixed(2);
+}
+
+/** Market-style implied probability (%) for an outcome, normalised across the
+ *  three so they read like a market book summing to ~100%. Display only. */
+export function impliedProb(odds: Odds, o: Outcome): number {
+  const inv = (k: Outcome) => 1 / odds[k];
+  const sum = inv('home') + inv('draw') + inv('away');
+  return Math.round((inv(o) / sum) * 100);
 }
 
 /** How each outcome reads in the UI, given the two team names. */

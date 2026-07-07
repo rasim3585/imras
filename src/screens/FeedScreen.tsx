@@ -48,11 +48,10 @@ export default function FeedScreen() {
   return (
     <div className="app-shell">
       <div className="page-head">
-        <div className="eyebrow">Today’s slate</div>
-        <h1>Make your calls</h1>
-        <p className="sub">
-          Back your read, then watch it play out. Points and streaks follow —
-          money never does.
+        <h1>Markets</h1>
+        <p className="page-sub">
+          Price your read on each match. Settle when you like — points and streak
+          follow accuracy, never money.
         </p>
       </div>
 
@@ -61,15 +60,12 @@ export default function FeedScreen() {
       {loading ? (
         <div className="center-pad"><div className="spinner" /></div>
       ) : matches.length === 0 ? (
-        <div className="empty-state">
-          <div className="glyph">◎</div>
-          <p>No matches on the board right now.</p>
-          <button className="btn" style={{ marginTop: 14 }} onClick={() => load(true)}>
-            Refresh
-          </button>
+        <div className="empty">
+          <p>No open markets right now.</p>
+          <button className="btn" onClick={() => load(true)}>Refresh</button>
         </div>
       ) : (
-        <div className="match-list">
+        <div className="market-list">
           {matches.map((m) => (
             <MatchCard
               key={m.id}

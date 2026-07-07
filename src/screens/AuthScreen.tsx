@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { Brand } from '../components/Brand';
 
 type Mode = 'signin' | 'signup';
 
@@ -54,31 +55,25 @@ export default function AuthScreen() {
   return (
     <div className="center-screen">
       <div className="auth-card card">
-        <div className="auth-brand">
-          <span className="brand-mark" aria-hidden="true">◎</span>
-          <div>
-            <div className="brand-name">pickplay</div>
-            <div className="brand-tag muted">predict. watch. be right.</div>
-          </div>
-        </div>
+        <Brand size={24} />
 
         {!isSupabaseConfigured && (
-          <div className="banner banner-warn">
+          <div className="banner">
             Supabase isn't configured yet. Add your keys to <code>.env</code> to
             sign in.
           </div>
         )}
 
-        <div className="seg">
+        <div className="segmented">
           <button
-            className={`seg-btn ${mode === 'signin' ? 'is-active' : ''}`}
+            className={`segmented-item ${mode === 'signin' ? 'active' : ''}`}
             onClick={() => setMode('signin')}
             type="button"
           >
             Sign in
           </button>
           <button
-            className={`seg-btn ${mode === 'signup' ? 'is-active' : ''}`}
+            className={`segmented-item ${mode === 'signup' ? 'active' : ''}`}
             onClick={() => setMode('signup')}
             type="button"
           >
@@ -114,14 +109,14 @@ export default function AuthScreen() {
           </div>
 
           {error && <div className="banner banner-error">{error}</div>}
-          {notice && <div className="banner banner-ok">{notice}</div>}
+          {notice && <div className="banner">{notice}</div>}
 
           <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
             {busy ? '…' : mode === 'signup' ? 'Create account' : 'Sign in'}
           </button>
         </form>
 
-        <div className="divider"><span>or</span></div>
+        <div className="divider">or</div>
 
         <button
           className="btn btn-block"
@@ -132,8 +127,8 @@ export default function AuthScreen() {
           Continue with Google
         </button>
 
-        <p className="dim auth-fineprint">
-          No money, no wagering — just your read of the game.
+        <p className="auth-legal">
+          No money, no wagering — accuracy is the only score.
         </p>
       </div>
     </div>

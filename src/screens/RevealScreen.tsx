@@ -103,83 +103,86 @@ export default function RevealScreen() {
 
   if (error) {
     return (
-      <div className="app-shell">
-        <div className="banner banner-error" style={{ marginTop: 24 }}>{error}</div>
-        <button className="btn" onClick={() => navigate('/')}>Back to feed</button>
+      <div className="app-shell" style={{ paddingTop: 'var(--s6)' }}>
+        <div className="banner banner-error">{error}</div>
+        <button className="btn btn-block" onClick={() => navigate('/')}>Back to markets</button>
       </div>
     );
   }
 
   if (!reveal || phase === 'loading') {
     return (
-      <div className="reveal-stage">
+      <div className="settle">
         <div className="spinner" />
-        <p className="muted" style={{ marginTop: 16 }}>Heading out to the pitch…</p>
+        <p className="settle-note">Opening the market…</p>
       </div>
     );
   }
 
   const correct = reveal.is_correct === true;
   const hasPick = reveal.your_pick !== null;
+  const showScore = phase !== 'anticipation';
 
   return (
-    <div className={`reveal-stage ${phase === 'final' ? (correct ? 'is-hit' : 'is-miss') : ''}`}>
-      <div className="reveal-status">
-        {phase === 'anticipation' && <span className="live-dot">KICK-OFF</span>}
-        {phase === 'playing' && <span className="live-dot is-live">LIVE · {minute}&apos;</span>}
-        {phase === 'final' && <span className="ft-tag">FULL TIME</span>}
+    <div className="settle">
+      <div className="settle-status">
+        {phase === 'anticipation' && <span className="chip">PENDING</span>}
+        {phase === 'playing' && (
+          <span className="chip chip-live"><span className="dot" />LIVE&nbsp;·&nbsp;<span className="tnum">{minute}&apos;</span></span>
+        )}
+        {phase === 'final' && <span className="chip">SETTLED</span>}
       </div>
 
-      <div className="reveal-teams">
-        <span className="reveal-team">{reveal.home_team}</span>
-        <div className={`reveal-score ${flash ? `flash-${flash}` : ''}`}>
-          <span className="rs-num">{phase === 'anticipation' ? '–' : score.h}</span>
-          <span className="rs-sep">:</span>
-          <span className="rs-num">{phase === 'anticipation' ? '–' : score.a}</span>
-        </div>
-        <span className="reveal-team">{reveal.away_team}</span>
+      <div className="scoreboard">
+        <span className="sb-team home">{reveal.home_team}</span>
+        <span className={`sb-score tnum ${flash ? `tick-${flash}` : 'tick'}`}>
+          <span className="sb-num">{showScore ? score.h : '–'}</span>
+          <span className="sb-sep">:</span>
+          <span className="sb-num">{showScore ? score.a : '–'}</span>
+        </span>
+        <span className="sb-team away">{reveal.away_team}</span>
       </div>
 
       {phase !== 'final' ? (
-        <p className="reveal-sub muted">
+        <p className="settle-note">
           {phase === 'anticipation'
-            ? 'You made your call. Now watch it happen.'
-            : 'The result is opening up…'}
+            ? 'Your position is locked. Settling the result…'
+            : 'Result is resolving…'}
         </p>
       ) : (
-        <div className="verdict">
-          <div className={`verdict-badge ${correct ? 'is-hit' : 'is-miss'}`}>
-            {hasPick ? (correct ? '✓ You called it' : '✕ Not this time') : 'Result'}
-          </div>
+        <div className="receipt">
+          <span className={`receipt-verdict ${correct ? 'won' : 'lost'}`}>
+            {hasPick ? (correct ? 'Won' : 'Missed') : 'Settled'}
+          </span>
 
-          <div className="verdict-lines">
+          <div className="receipt-rows">
             {hasPick && (
-              <div className="vline">
-                <span className="muted">Your call</span>
-                <strong>
+              <div className="receipt-row">
+                <span className="k">Your call</span>
+                <span className="v">
                   {outcomeLabel(reveal.your_pick as Outcome, reveal.home_team, reveal.away_team)}
-                  <span className="vline-odds mono">@ {formatOdds(reveal.odds[reveal.your_pick as Outcome])}</span>
-                </strong>
+                  <span className="odds tnum">@ {formatOdds(reveal.odds[reveal.your_pick as Outcome])}</span>
+                </span>
               </div>
             )}
-            <div className="vline">
-              <span className="muted">Result</span>
-              <strong>{outcomeLabel(reveal.result, reveal.home_team, reveal.away_team)}</strong>
+            <div className="receipt-row">
+              <span className="k">Result</span>
+              <span className="v">{outcomeLabel(reveal.result, reveal.home_team, reveal.away_team)}</span>
             </div>
-            {correct && reveal.points_earned != null && (
-              <div className="vline vline-points">
-                <span className="muted">Earned</span>
-                <strong className="points-pop">+{reveal.points_earned} points</strong>
-              </div>
-            )}
+            <div className={`receipt-row ${correct ? 'pts' : ''}`}>
+              <span className="k">Points</span>
+              <span className="v">
+                {correct && reveal.points_earned != null ? `+${reveal.points_earned}` : '0'}
+              </span>
+            </div>
           </div>
 
-          <div className="reveal-actions">
+          <div className="settle-actions">
             <button className="btn btn-primary btn-block" onClick={() => navigate('/')}>
-              Back to the slate
+              Back to markets
             </button>
             <button className="btn btn-ghost btn-block" onClick={() => navigate('/profile')}>
-              See my accuracy
+              View my record
             </button>
           </div>
         </div>

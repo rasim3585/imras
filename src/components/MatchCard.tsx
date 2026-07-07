@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import type { MatchWithPick, Outcome } from '../lib/types';
-import { formatKickoff, formatOdds } from '../lib/format';
+import { formatKickoff, formatOdds, impliedProb } from '../lib/format';
 
 const OPTIONS: Outcome[] = ['home', 'draw', 'away'];
 
@@ -16,59 +16,53 @@ export default function MatchCard({
   const navigate = useNavigate();
   const picked = match.myPick;
 
-  function labelFor(o: Outcome) {
-    if (o === 'home') return match.home_team;
-    if (o === 'away') return match.away_team;
-    return 'Draw';
-  }
+  const labelFor = (o: Outcome) =>
+    o === 'home' ? match.home_team : o === 'away' ? match.away_team : 'Draw';
 
   return (
-    <div className="card match-card">
-      <div className="match-meta">
-        <span className="pill">{match.sport}</span>
-        <span className="dim">{formatKickoff(match.starts_at)}</span>
+    <div className="card contract">
+      <div className="contract-head">
+        <span className="tag">{match.sport}</span>
+        <span className="contract-time tnum">{formatKickoff(match.starts_at)}</span>
       </div>
 
-      <div className="match-teams">
-        <span className="team">{match.home_team}</span>
-        <span className="vs">vs</span>
-        <span className="team team-away">{match.away_team}</span>
+      <div className="matchup">
+        {match.home_team}<span className="at">vs</span>{match.away_team}
       </div>
 
-      <div className="pick-label muted">
-        {picked ? 'Your call' : 'What’s your call?'}
-      </div>
-
-      <div className="pick-row" role="group" aria-label="Make your call">
+      <div className="market" role="group" aria-label="Outcomes">
         {OPTIONS.map((o) => {
           const isPicked = picked === o;
           return (
             <button
               key={o}
               type="button"
-              className={`pick-opt ${isPicked ? 'is-picked' : ''}`}
+              className={`outcome ${isPicked ? 'sel' : ''}`}
               disabled={pending || picked !== null}
               aria-pressed={isPicked}
               onClick={() => onPick(match.id, o)}
             >
-              <span className="pick-opt-name">{labelFor(o)}</span>
-              <span className="pick-opt-kind">
-                {o === 'draw' ? 'draw' : o === 'home' ? 'home win' : 'away win'}
-              </span>
-              <span className="pick-opt-odds mono">{formatOdds(match.display_odds[o])}</span>
+              <span className="outcome-name">{labelFor(o)}</span>
+              <span className="outcome-odds">{formatOdds(match.display_odds[o])}</span>
+              <span className="outcome-prob">{impliedProb(match.display_odds, o)}% chance</span>
             </button>
           );
         })}
       </div>
 
       {picked && (
-        <button
-          type="button"
-          className="btn btn-primary btn-block watch-cta"
-          onClick={() => navigate(`/reveal/${match.id}`)}
-        >
-          Watch it unfold →
-        </button>
+        <div className="position">
+          <span className="position-label">
+            Your call · <b>{labelFor(picked)} @ {formatOdds(match.display_odds[picked])}</b>
+          </span>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={() => navigate(`/reveal/${match.id}`)}
+          >
+            Watch result
+          </button>
+        </div>
       )}
     </div>
   );

@@ -27,10 +27,9 @@ export default function UsernameScreen() {
   return (
     <div className="center-screen">
       <div className="auth-card card">
-        <div className="page-head" style={{ padding: '4px 0 8px' }}>
-          <div className="eyebrow">One last thing</div>
-          <h1 style={{ marginTop: 6 }}>Pick your handle</h1>
-          <p className="sub">This is how your calls are tracked. 3–20 characters.</p>
+        <div style={{ marginBottom: 'var(--s5)' }}>
+          <h1 style={{ marginBottom: 6 }}>Choose your handle</h1>
+          <p className="page-sub">This is how your calls are tracked. 3–20 characters.</p>
         </div>
 
         <form onSubmit={submit}>
@@ -51,11 +50,11 @@ export default function UsernameScreen() {
           {error && <div className="banner banner-error">{error}</div>}
 
           <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
-            {busy ? '…' : 'Start playing'}
+            {busy ? '…' : 'Continue'}
           </button>
         </form>
 
-        <button className="btn btn-ghost btn-block" style={{ marginTop: 10 }} onClick={signOut}>
+        <button className="btn btn-ghost btn-block" style={{ marginTop: 'var(--s2)' }} onClick={signOut}>
           Sign out
         </button>
       </div>

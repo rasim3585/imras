@@ -1,38 +1,36 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { Brand } from './Brand';
+import { MarketsIcon, ProfileIcon } from './icons';
 
 export default function NavBar() {
   const { profile, signOut } = useAuth();
 
   return (
     <>
-      <header className="app-bar">
-        <div className="app-shell app-bar-inner">
-          <div className="row">
-            <span className="brand-mark" aria-hidden="true">◎</span>
-            <span className="brand-name">pickplay</span>
-          </div>
-          <div className="row">
+      <header className="topbar">
+        <div className="app-shell topbar-inner">
+          <Brand />
+          <div className="topbar-right">
             {profile && (
-              <span className="pill" title="Skill rating">
-                {profile.skill_rating} SR
+              <span className="chip" title="Skill rating">
+                <span className="tag" style={{ color: 'inherit' }}>SR</span>
+                {profile.skill_rating}
               </span>
             )}
-            <button className="btn btn-ghost btn-sm" onClick={signOut}>
-              Sign out
-            </button>
+            <button className="btn btn-ghost btn-sm" onClick={signOut}>Sign out</button>
           </div>
         </div>
       </header>
 
-      <nav className="tab-bar">
-        <div className="app-shell tab-bar-inner">
+      <nav className="tabbar">
+        <div className="app-shell tabbar-inner">
           <NavLink to="/" end className="tab">
-            <span className="tab-glyph" aria-hidden="true">◎</span>
-            Feed
+            <MarketsIcon />
+            Markets
           </NavLink>
           <NavLink to="/profile" className="tab">
-            <span className="tab-glyph" aria-hidden="true">◈</span>
+            <ProfileIcon />
             Profile
           </NavLink>
         </div>
