@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { Brand } from '../components/Brand';
+import { LogoMarkLarge, Wordmark } from '../components/Brand';
 
 type Mode = 'signin' | 'signup';
 
@@ -55,7 +55,10 @@ export default function AuthScreen() {
   return (
     <div className="center-screen">
       <div className="auth-card card">
-        <Brand size={24} />
+        <div className="auth-hero" style={{ flexDirection: 'column', gap: 'var(--s3)' }}>
+          <LogoMarkLarge size={72} />
+          <Wordmark size={22} />
+        </div>
 
         {!isSupabaseConfigured && (
           <div className="banner">

@@ -1,21 +1,57 @@
-// Brand mark — a small "trend line" glyph, reading as analytics/markets rather
-// than a game logo. Uses currentColor for the line so it can be recolored.
+// Brand: concentric black/off-white rings (dart target + referee jersey) with a
+// red bullseye ("hitting dead centre" = calling it exactly right). Colours are
+// FIXED regardless of theme — black #0a0a0a, off-white #f4f4f0, red #e0231c.
 
-export function LogoMark({ size = 22 }: { size?: number }) {
+const BLACK = '#0a0a0a';
+const CREAM = '#f4f4f0';
+const RED = '#e0231c';
+
+/** Clean small mark (nav, app icon) — fewer rings so it stays crisp. */
+export function LogoMark({ size = 26 }: { size?: number }) {
   return (
-    <svg className="brand-logo" width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="1" y="1" width="22" height="22" rx="6" fill="#3d7bff" fillOpacity="0.14" stroke="#3d7bff" strokeOpacity="0.5" />
-      <path d="M6 15.5 L10 11 L13 13.5 L18 7.5" stroke="#6296ff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="18" cy="7.5" r="1.7" fill="#6296ff" />
+    <svg className="brand-logo" width={size} height={size} viewBox="0 0 100 100" aria-label="pickplay">
+      <circle cx="50" cy="50" r="46" fill={CREAM} stroke={BLACK} strokeWidth="4" />
+      <circle cx="50" cy="50" r="36" fill={BLACK} />
+      <circle cx="50" cy="50" r="26" fill={CREAM} />
+      <circle cx="50" cy="50" r="14" fill={RED} />
     </svg>
   );
 }
 
-export function Brand({ size = 22 }: { size?: number }) {
+/** Full mark (hero / splash) — more rings, more detail. */
+export function LogoMarkLarge({ size = 88 }: { size?: number }) {
   return (
-    <span className="brand">
-      <LogoMark size={size} />
-      <span className="brand-word">pickplay</span>
+    <svg className="brand-logo" width={size} height={size} viewBox="0 0 100 100" aria-label="pickplay">
+      <circle cx="50" cy="50" r="46" fill={CREAM} stroke={BLACK} strokeWidth="3" />
+      <circle cx="50" cy="50" r="37" fill={BLACK} />
+      <circle cx="50" cy="50" r="29" fill={CREAM} />
+      <circle cx="50" cy="50" r="21" fill={BLACK} />
+      <circle cx="50" cy="50" r="13" fill={CREAM} />
+      <circle cx="50" cy="50" r="7" fill={RED} />
+    </svg>
+  );
+}
+
+/** Wordmark: "pickplay" where the first "i" dot is a tiny target. */
+export function Wordmark({ size = 18 }: { size?: number }) {
+  return (
+    <span className="wordmark" style={{ fontSize: size }}>
+      <span>p</span>
+      <span className="wm-i" aria-hidden="true">
+        <svg width="0.32em" height="0.32em" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="46" fill={CREAM} stroke={BLACK} strokeWidth="5" />
+          <circle cx="50" cy="50" r="34" fill={BLACK} />
+          <circle cx="50" cy="50" r="22" fill={CREAM} />
+          <circle cx="50" cy="50" r="11" fill={RED} />
+        </svg>
+        <span className="stem">ı</span>
+      </span>
+      <span>ckplay</span>
     </span>
   );
+}
+
+/** Default brand lockup for the top bar. */
+export function Brand({ size = 18 }: { size?: number }) {
+  return <Wordmark size={size} />;
 }

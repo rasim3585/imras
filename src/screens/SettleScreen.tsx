@@ -96,6 +96,7 @@ export default function SettleScreen() {
                   <>
                     <span className="settle-leg-score tnum">{s.home_score} : {s.away_score}</span>
                     <span className={`chip ${hit ? 'chip-pos' : 'chip-neg'}`}>
+                      <span className={`mark ${hit ? 'win' : 'loss'}`}>{hit ? '✓' : '✗'}</span>
                       {hit ? 'Hit' : 'Miss'}
                     </span>
                   </>
@@ -107,7 +108,22 @@ export default function SettleScreen() {
       </div>
 
       {phase === 'final' && (
-        <div className="receipt" style={{ maxWidth: '100%' }}>
+        <>
+          <div className={`settle-headline ${won ? 'win' : 'loss'}`}>
+            {won ? (
+              <>
+                <span className="payout">+{data.potential_win.toLocaleString()}</span>
+                <div className="caption">gold — you called it.</div>
+              </>
+            ) : (
+              <>
+                <span className="verdict-x">✗</span>
+                <div className="caption">Not this time. You got {data.selections.filter((s) => s.status === 'won').length}/{total} right.</div>
+              </>
+            )}
+          </div>
+
+          <div className="receipt" style={{ maxWidth: '100%' }}>
           <div className="receipt-rows">
             <div className="receipt-row">
               <span className="k">Stake</span>
@@ -136,6 +152,7 @@ export default function SettleScreen() {
             </button>
           </div>
         </div>
+        </>
       )}
     </div>
   );
