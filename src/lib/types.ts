@@ -7,6 +7,10 @@ export type Outcome = 'home' | 'draw' | 'away';
 
 export type MatchStatus = 'upcoming' | 'live' | 'finished';
 
+/** Informational decimal odds per outcome (e.g. 1.85). Display only — no money,
+ *  no stake, no payout. Derived server-side from the hidden probabilities. */
+export type Odds = Record<Outcome, number>;
+
 export interface Profile {
   id: string;
   username: string;
@@ -28,6 +32,7 @@ export interface Match {
   home_score: number | null;
   away_score: number | null;
   result: Outcome | null;
+  display_odds: Odds;
   // true_probabilities intentionally absent: hidden server-side.
 }
 
@@ -59,6 +64,7 @@ export interface RevealResult {
   result: Outcome;
   home_score: number;
   away_score: number;
+  odds: Odds;
   your_pick: Outcome | null;
   is_correct: boolean | null;
   points_earned: number | null;

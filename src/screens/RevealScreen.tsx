@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { matchProvider } from '../lib/matchProvider';
 import { useAuth } from '../auth/AuthContext';
 import type { Outcome, RevealResult } from '../lib/types';
-import { outcomeLabel } from '../lib/format';
+import { outcomeLabel, formatOdds } from '../lib/format';
 
 type Phase = 'loading' | 'anticipation' | 'playing' | 'final';
 
@@ -154,7 +154,10 @@ export default function RevealScreen() {
             {hasPick && (
               <div className="vline">
                 <span className="muted">Your call</span>
-                <strong>{outcomeLabel(reveal.your_pick as Outcome, reveal.home_team, reveal.away_team)}</strong>
+                <strong>
+                  {outcomeLabel(reveal.your_pick as Outcome, reveal.home_team, reveal.away_team)}
+                  <span className="vline-odds mono">@ {formatOdds(reveal.odds[reveal.your_pick as Outcome])}</span>
+                </strong>
               </div>
             )}
             <div className="vline">

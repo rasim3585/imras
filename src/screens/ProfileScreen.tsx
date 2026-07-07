@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { matchProvider } from '../lib/matchProvider';
 import type { PredictionWithMatch } from '../lib/types';
-import { accuracyPct, outcomeLabel } from '../lib/format';
+import { accuracyPct, outcomeLabel, formatOdds } from '../lib/format';
 
 const SPORT_LABEL: Record<string, string> = {
   football: 'Football',
@@ -131,6 +131,7 @@ export default function ProfileScreen() {
                   </span>
                   <span className="hist-detail muted">
                     Called {outcomeLabel(p.pick, m.home_team, m.away_team)}
+                    <span className="mono"> @ {formatOdds(m.display_odds[p.pick])}</span>
                     {scored && (
                       <>
                         {' · '}

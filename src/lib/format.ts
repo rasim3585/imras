@@ -16,6 +16,11 @@ export function accuracyPct(correct: number, total: number): number {
   return total === 0 ? 0 : Math.round((correct / total) * 100);
 }
 
+/** Decimal odds, always two places (e.g. 1.85). Informational only. */
+export function formatOdds(n: number): string {
+  return n.toFixed(2);
+}
+
 /** How each outcome reads in the UI, given the two team names. */
 export function outcomeLabel(o: Outcome, home: string, away: string): string {
   if (o === 'home') return home;

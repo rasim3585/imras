@@ -10,7 +10,7 @@ import type {
 
 // Explicit column list — deliberately omits `true_probabilities`, which the
 // client isn't granted anyway. Selecting `*` would try to read it and fail.
-const MATCH_COLS = 'id,sport,home_team,away_team,starts_at,status,home_score,away_score,result,created_at';
+const MATCH_COLS = 'id,sport,home_team,away_team,starts_at,status,home_score,away_score,result,display_odds,created_at';
 
 /**
  * Supabase-backed provider. All the "simulation" (result generation, scoring)

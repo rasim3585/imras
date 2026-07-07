@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import type { MatchWithPick, Outcome } from '../lib/types';
-import { formatKickoff } from '../lib/format';
+import { formatKickoff, formatOdds } from '../lib/format';
 
 const OPTIONS: Outcome[] = ['home', 'draw', 'away'];
 
@@ -55,6 +55,7 @@ export default function MatchCard({
               <span className="pick-opt-kind">
                 {o === 'draw' ? 'draw' : o === 'home' ? 'home win' : 'away win'}
               </span>
+              <span className="pick-opt-odds mono">{formatOdds(match.display_odds[o])}</span>
             </button>
           );
         })}
