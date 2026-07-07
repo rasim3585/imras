@@ -453,6 +453,161 @@ a:hover { text-decoration: underline; }
 
 .watch-cta { margin-top: 14px; }
 
+/* --- Reveal (the heart) ------------------------------------------------- */
+
+.reveal-stage {
+  min-height: calc(100svh - 56px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px 120px;
+  text-align: center;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.6s ease;
+}
+/* a soft field of light that intensifies on a hit */
+.reveal-stage.is-hit {
+  background: radial-gradient(600px 400px at 50% 30%, var(--hit-bg), transparent 70%);
+}
+.reveal-stage.is-miss {
+  background: radial-gradient(600px 400px at 50% 30%, rgba(124, 139, 171, 0.08), transparent 70%);
+}
+
+.reveal-status { height: 24px; }
+.live-dot {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+}
+.live-dot.is-live { color: var(--hit); }
+.live-dot.is-live::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--hit);
+  margin-right: 7px;
+  vertical-align: middle;
+  animation: pulse 1s ease-in-out infinite;
+}
+.ft-tag {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.reveal-teams {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+  max-width: 520px;
+}
+.reveal-team {
+  flex: 1;
+  font-size: 1.05rem;
+  font-weight: 650;
+  color: var(--text);
+}
+.reveal-score {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+  padding: 6px 4px;
+  border-radius: 12px;
+  transition: transform 0.15s ease;
+}
+.rs-num {
+  font-size: 3.4rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  min-width: 1.2ch;
+  display: inline-block;
+}
+.rs-sep { font-size: 2.2rem; color: var(--text-dim); }
+/* a goal just went in — pop the score */
+.reveal-score.flash-home,
+.reveal-score.flash-away {
+  animation: score-pop 0.4s ease;
+}
+@keyframes score-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.18); color: var(--hit); }
+  100% { transform: scale(1); }
+}
+
+.reveal-sub { max-width: 340px; }
+
+/* --- Verdict ------------------------------------------------------------ */
+
+.verdict {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: rise 0.45s ease both;
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.verdict-badge {
+  align-self: center;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+}
+.verdict-badge.is-hit {
+  color: var(--hit);
+  background: var(--hit-bg);
+  border-color: var(--hit-border);
+  box-shadow: 0 0 30px -6px var(--hit-border);
+}
+.verdict-badge.is-miss {
+  color: var(--miss);
+  background: var(--miss-bg);
+}
+
+.verdict-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.vline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  background: var(--surface);
+}
+.vline strong { font-weight: 700; }
+.vline-points strong { color: var(--hit); }
+.points-pop { animation: rise 0.5s 0.15s ease both; }
+
+.reveal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }
