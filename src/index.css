@@ -608,6 +608,77 @@ a:hover { text-decoration: underline; }
   margin-top: 4px;
 }
 
+/* --- Profile ------------------------------------------------------------ */
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.stat-tile {
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.stat-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.stat-hero {
+  grid-column: span 3;
+  background:
+    radial-gradient(400px 160px at 20% 0%, var(--accent-bg), transparent 70%),
+    var(--surface);
+}
+.stat-hero .stat-value { font-size: 2.4rem; color: var(--accent-strong); }
+.streak-flame { font-size: 1rem; }
+
+.section-title { margin: 28px 0 12px; }
+.section-empty { padding: 8px 2px 4px; }
+
+.dna-card { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.dna-row { display: flex; flex-direction: column; gap: 8px; }
+.dna-head {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 650;
+  font-size: 0.9rem;
+}
+.dna-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+.dna-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--hit));
+  transition: width 0.6s ease;
+}
+
+.history-list { display: flex; flex-direction: column; gap: 8px; }
+.history-row {
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.hist-teams { font-weight: 600; font-size: 0.95rem; }
+.hist-detail { font-size: 0.8rem; }
+.hist-right { flex-shrink: 0; }
+.hist-right a.pill:hover { text-decoration: none; color: var(--accent-strong); border-color: var(--accent-border); }
+
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }
