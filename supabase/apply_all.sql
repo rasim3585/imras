@@ -2131,6 +2131,7 @@ create or replace function public.preview_live_odds(
 returns jsonb
 language sql
 immutable
+security definer   -- runs as owner so it may call the internal _live_odds
 set search_path = public
 as $$ select public._live_odds(p_probs, p_minute, p_home, p_away); $$;
 
