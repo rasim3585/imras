@@ -115,13 +115,17 @@ begin
           join public.league_members m on m.user_id = c.user_id and m.league_id = p_league_id
          where c.settled_at >= v_week
          group by c.user_id
+      ),
+      ranked as (
+        select p.username, coalesce(n.net, 0) as value,
+               rank() over (order by coalesce(n.net, 0) desc) as rnk
+          from public.league_members lm
+          join public.profiles p on p.id = lm.user_id
+          left join net n on n.user_id = lm.user_id
+         where lm.league_id = p_league_id
       )
-      select jsonb_agg(jsonb_build_object('username', p.username, 'value', coalesce(n.net,0),
-               'rank', rank() over (order by coalesce(n.net,0) desc)) order by coalesce(n.net,0) desc)
-        from public.league_members lm
-        join public.profiles p on p.id = lm.user_id
-        left join net n on n.user_id = lm.user_id
-       where lm.league_id = p_league_id), '[]'::jsonb));
+      select jsonb_agg(jsonb_build_object('username', username, 'value', value, 'rank', rnk) order by rnk)
+        from ranked), '[]'::jsonb));
 end;
 $fn$;
 
