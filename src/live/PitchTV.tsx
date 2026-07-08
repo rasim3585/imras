@@ -51,7 +51,6 @@ export default function PitchTV({
   const secondHalf = minute >= 45;
 
   const [ball, setBall] = useState<XY>([50, 50]);
-  const [momentum, setMomentum] = useState<string>('Kick-off');
   const [overlay, setOverlay] = useState<{ kind: 'goal' | 'card'; text: string; sub: string } | null>(null);
   const [sound, setSound] = useState(false);
   const zoneRef = useRef<XY>([50, 50]);
@@ -73,28 +72,25 @@ export default function PitchTV({
   // move the ball to a sensible zone for the current line (a soft indicator)
   useEffect(() => {
     if (!line || line.team == null) return;
-    const t = line.team; const d = dir(t); const teamName = t === 'home' ? home : away;
-    const boxX = d > 0 ? 82 : 18; const top = line.minute % 2 === 0;
-    let zone: XY = [50, 50]; let mo = momentum;
-
+    const t = line.team; const d = dir(t); const boxX = d > 0 ? 82 : 18; const top = line.minute % 2 === 0;
+    let zone: XY = [50, 50];
     switch (line.kind) {
-      case 'calm': case 'mark': zone = [clamp(50 + d * 4, 38, 62), top ? 44 : 56]; mo = 'Midfield battle'; break;
-      case 'buildup': zone = [d > 0 ? 62 : 38, top ? 42 : 58]; mo = `▶ ${teamName} building`; break;
-      case 'chance': zone = [clamp(boxX - d * 6), top ? 44 : 56]; mo = `▶ ${teamName} pressing`; break;
-      case 'shot': zone = [boxX, 50]; mo = `▶ ${teamName} shooting`; break;
-      case 'miss': zone = [d > 0 ? 20 : 80, 50]; mo = 'Goal kick'; break;
-      case 'foul': zone = [clamp(50 + d * 8, 24, 76), top ? 40 : 60]; mo = `Free-kick ${teamName}`; break;
-      case 'freekick': zone = [clamp(boxX - d * 8), top ? 42 : 58]; mo = `Free-kick ${teamName}`; break;
-      case 'corner': zone = [d > 0 ? 94 : 6, top ? 12 : 88]; mo = `Corner ${teamName}`; break;
+      case 'calm': case 'mark': zone = [clamp(50 + d * 4, 38, 62), top ? 44 : 56]; break;
+      case 'buildup': zone = [d > 0 ? 62 : 38, top ? 42 : 58]; break;
+      case 'chance': zone = [clamp(boxX - d * 6), top ? 44 : 56]; break;
+      case 'shot': zone = [boxX, 50]; break;
+      case 'miss': zone = [d > 0 ? 20 : 80, 50]; break;
+      case 'foul': zone = [clamp(50 + d * 8, 24, 76), top ? 40 : 60]; break;
+      case 'freekick': zone = [clamp(boxX - d * 8), top ? 42 : 58]; break;
+      case 'corner': zone = [d > 0 ? 94 : 6, top ? 12 : 88]; break;
       case 'card':
-        mo = `${teamName} down to 10`;
-        setOverlay({ kind: 'card', text: 'RED CARD', sub: teamName });
+        setOverlay({ kind: 'card', text: 'RED CARD', sub: t === 'home' ? home : away });
         if (ovTimer.current) clearTimeout(ovTimer.current);
         ovTimer.current = window.setTimeout(() => setOverlay(null), 1700);
         break;
       case 'goal':
-        zone = [50, 50]; mo = `GOAL — ${teamName}!`;         // back to the centre for the restart
-        setOverlay({ kind: 'goal', text: 'GOAL!', sub: `${teamName} ${hs}-${as}` });
+        zone = [50, 50];
+        setOverlay({ kind: 'goal', text: 'GOAL!', sub: `${t === 'home' ? home : away} ${hs}-${as}` });
         cheer();
         if (ovTimer.current) clearTimeout(ovTimer.current);
         ovTimer.current = window.setTimeout(() => setOverlay(null), 1900);
@@ -102,8 +98,25 @@ export default function PitchTV({
     }
     zoneRef.current = zone;
     setBall(zone);
-    setMomentum(mo);
   }, [line?.minute, line?.sub, line?.kind]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // momentum is DERIVED from the current line every render -> always fresh
+  const momText = (): string => {
+    if (!line || line.team == null || phase !== 'live') return phase === 'finished' ? 'Full time' : 'Kick-off';
+    const t = line.team === 'home' ? home : away;
+    switch (line.kind) {
+      case 'buildup': return `▶ ${t} building`;
+      case 'chance': return `▶ ${t} pressing`;
+      case 'shot': return `▶ ${t} shooting`;
+      case 'miss': return 'Goal kick';
+      case 'foul': case 'freekick': return `Free-kick · ${t}`;
+      case 'corner': return `Corner · ${t}`;
+      case 'goal': return `GOAL — ${t}!`;
+      case 'card': return `${t} down to 10`;
+      default: return 'Midfield battle';
+    }
+  };
+  const momentum = momText();
 
   // gentle idle drift within the current zone (no teleport, soft transition)
   useEffect(() => {

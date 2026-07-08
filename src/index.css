@@ -96,6 +96,7 @@
   --topbar-h: 58px;
   --tabbar-h: 62px;
   --sidebar-w: 220px;
+  --coupon-w: 330px;
 
   color-scheme: light;
   font-family: var(--font);
@@ -577,10 +578,46 @@ a:hover { color: var(--win); }
   background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(12px);
   border-top: 1px solid var(--line);
 }
-.coupon-bar-inner { height: 60px; display: flex; align-items: center; justify-content: space-between; }
+.coupon-bar-inner { height: 60px; display: flex; align-items: center; justify-content: space-between; max-width: 680px; margin: 0 auto; padding: 0 var(--s4); }
 .coupon-bar-info { display: flex; align-items: center; gap: var(--s3); }
 .coupon-bar-odds { font-size: 0.9rem; color: var(--text-2); }
 .coupon-bar-odds b { font-family: var(--mono); font-size: 1.02rem; color: var(--win); }
+
+/* --- Coupon dock (desktop panel) + mobile sheet -------------------------- */
+.coupon-dock { display: none; }
+.cpn { display: flex; flex-direction: column; min-height: 0; }
+.cpn-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.cpn-title { font-weight: 700; font-size: 0.95rem; }
+.cpn-x { background: none; border: 0; color: var(--text-2); font: inherit; font-size: 0.82rem; cursor: pointer; padding: 2px 4px; }
+.cpn-x:hover { color: var(--text); }
+.cpn-empty { padding: var(--s6) var(--s4); text-align: center; display: flex; flex-direction: column; gap: var(--s3); align-items: center; }
+.cpn-ok { color: var(--win); font-weight: 700; }
+.cpn-legs { overflow-y: auto; padding: var(--s2) var(--s3); flex: 1; }
+.cpn-leg { display: flex; align-items: center; gap: var(--s2); padding: 8px 4px; border-bottom: 1px solid var(--line); }
+.cpn-leg-main { flex: 1; min-width: 0; }
+.cpn-leg-match { font-size: 0.8rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cpn-leg-pick { font-size: 0.76rem; color: var(--text-2); }
+.cpn-leg-pick b { color: var(--odds-bright); margin-left: 4px; }
+.cpn-rm { background: none; border: 0; color: var(--text-dim); font-size: 0.9rem; cursor: pointer; flex-shrink: 0; }
+.cpn-rm:hover { color: var(--loss); }
+.cpn-foot { padding: var(--s3) 14px 14px; border-top: 1px solid var(--line); background: var(--surface-2); }
+.cpn-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; margin-bottom: var(--s2); }
+.cpn-win { font-weight: 600; }
+.cpn-win b { color: var(--win); font-size: 1.05rem; }
+.cpn-stake { display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--s2); }
+.cpn-quick { display: flex; gap: 4px; }
+.cpn-quick .btn { flex: 1; }
+.cpn-bal { font-size: 0.76rem; text-align: right; }
+
+.coupon-sheet-back { position: fixed; inset: 0; z-index: 60; background: rgba(10, 20, 15, 0.45); display: flex; align-items: flex-end; }
+.coupon-sheet { width: 100%; max-height: 84svh; overflow: hidden; background: var(--surface); border-radius: var(--radius) var(--radius) 0 0; box-shadow: 0 -8px 30px -10px rgba(0,0,0,0.3); display: flex; flex-direction: column; animation: sheet-up 0.22s ease; }
+@keyframes sheet-up { from { transform: translateY(30px); opacity: 0.6; } to { transform: translateY(0); opacity: 1; } }
+
+@media (min-width: 1024px) {
+  .coupon-dock { display: block; position: fixed; top: var(--topbar-h); right: 0; bottom: 0; width: var(--coupon-w); z-index: 20; background: var(--surface); border-left: 1px solid var(--line); overflow-y: auto; }
+  .app-main { padding-right: var(--coupon-w); }
+  .coupon-bar, .coupon-sheet-back { display: none; }
+}
 
 /* --- Coupon (slip) screen ---------------------------------------------- */
 

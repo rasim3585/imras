@@ -15,7 +15,7 @@ import LeaderboardScreen from './screens/LeaderboardScreen';
 import SocialScreen from './screens/SocialScreen';
 import LeagueDetailScreen from './screens/LeagueDetailScreen';
 import NavBar from './components/NavBar';
-import CouponBar from './components/CouponBar';
+import CouponDock from './components/CouponDock';
 
 // Module-level (stable identity) so guarded routes don't remount every time the
 // auth context re-renders (that remount restarted screens like the settle reveal).
@@ -63,7 +63,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
-      <CouponBar />
+      <CouponDock />
     </>
   );
 }
