@@ -1,20 +1,29 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useCart } from '../coupon/CartContext';
 import CouponPanel from '../coupon/CouponPanel';
 import { formatOdds } from '../lib/format';
 
-// Nesine-style quick betting: a sticky "My coupon" panel on desktop, a bottom
-// bar that opens a sheet on mobile. Bet from the panel without changing screens.
+// Nesine-style quick betting: the "My coupon" panel appears when you have picks
+// (a sticky panel on desktop, a bottom bar+sheet on mobile) and disappears when
+// the coupon is empty or placed. Bet from it without changing screens.
 export default function CouponDock() {
   const { count, totalOdds } = useCart();
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
+
+  // reserve the desktop panel column only while the coupon has picks
+  useEffect(() => {
+    document.body.classList.toggle('has-coupon', count > 0);
+    return () => document.body.classList.remove('has-coupon');
+  }, [count]);
+
   if (pathname === '/coupon' || pathname.startsWith('/c/') || pathname.startsWith('/login')) return null;
+  if (count === 0) return null;
 
   return (
     <>
-      {/* desktop: reserved sticky panel */}
+      {/* desktop: sticky panel (shown while has-coupon) */}
       <aside className="coupon-dock"><CouponPanel /></aside>
 
       {/* mobile: compact bottom bar */}

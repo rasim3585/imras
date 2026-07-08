@@ -1,7 +1,7 @@
 import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { Brand } from './Brand';
-import { MarketsIcon, CouponIcon, RanksIcon, SocialIcon, ProfileIcon } from './icons';
+import { MarketsIcon, CouponIcon, RanksIcon, SocialIcon, ProfileIcon, HomeIcon } from './icons';
 
 const NAV = [
   { to: '/', end: true, label: 'Matches', Icon: MarketsIcon },
@@ -22,6 +22,7 @@ export default function NavBar() {
         <div className="topbar-inner">
           <Brand />
           <div className="topbar-right">
+            <NavLink to="/" end className="home-btn" title="Home" aria-label="Home"><HomeIcon /></NavLink>
             {profile ? (
               <>
                 <span className="gold-chip" title="Gold balance">

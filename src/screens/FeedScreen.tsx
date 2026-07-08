@@ -100,7 +100,7 @@ export default function FeedScreen() {
           const cnt = s.key === 'live' ? liveOnes.length : s.key === 'efootball' ? visible.length : null;
           return (
             <button key={s.key} className={`sport-tab ${sport === s.key ? 'active' : ''} ${s.soon ? 'soon' : ''}`} onClick={() => setSport(s.key)}>
-              {s.key === 'efootball' ? <EFootballIcon size={16} /> : <span className="sport-ic">{s.icon}</span>}
+              {s.key === 'efootball' ? <EFootballIcon size={19} /> : <span className="sport-ic">{s.icon}</span>}
               {s.label}
               {s.soon ? <span className="soon-badge">soon</span> : cnt != null ? <span className="sport-cnt">{cnt}</span> : null}
             </button>

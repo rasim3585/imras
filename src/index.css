@@ -166,6 +166,10 @@ a:hover { color: var(--win); }
   border-bottom: 1px solid var(--line);
 }
 .topbar-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--s4); }
+.home-btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 9px; color: var(--text-2); border: 1px solid var(--line); background: var(--surface); }
+.home-btn svg { width: 19px; height: 19px; }
+.home-btn:hover { background: var(--surface-2); color: var(--text); }
+.home-btn.active { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
 .gold-chip {
   display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px;
   border-radius: var(--radius-pill); background: var(--accent-soft); color: var(--accent);
@@ -336,7 +340,7 @@ a:hover { color: var(--win); }
 .ll-livechip { flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px; background: #e24b4a; color: #fff; font-size: 0.56rem; font-weight: 800; letter-spacing: 0.4px; padding: 2px 6px; border-radius: 4px; }
 .ll-livechip .pulse { width: 6px; height: 6px; border-radius: 50%; background: #fff; flex-shrink: 0; animation: livepulse 1.1s ease-in-out infinite; }
 @keyframes livepulse { 0%, 100% { opacity: 0.45; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.15); } }
-.ll-scorebox { flex-shrink: 0; font-family: var(--mono); font-size: 0.8rem; font-weight: 800; color: #0f6e56; background: var(--accent-soft); border-radius: 5px; padding: 1px 7px; }
+.ll-scorepill { flex-shrink: 0; font-family: var(--mono); font-size: 0.78rem; font-weight: 800; color: #0f6e56; background: var(--accent-soft); border: 1px solid var(--win-line); border-radius: 5px; padding: 1px 7px; margin: 0 1px; }
 .ll-odd { padding: 6px 2px; text-align: center; font-family: var(--mono); font-size: 0.82rem; font-weight: 700; color: var(--odds-plain); background: var(--cell); border: 1px solid var(--cell-line); border-radius: 6px; cursor: pointer; transition: border-color 0.12s ease, background 0.12s ease; }
 .ll-odd:hover:not(:disabled) { border-color: var(--cell-sel-line); background: var(--cell-sel); }
 .ll-odd.fav { color: var(--odds-bright); border-color: var(--win-line); }
@@ -358,7 +362,7 @@ a:hover { color: var(--win); }
 .sport-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: var(--shadow); }
 .sport-tab.active .dot { background: #fff; }
 .sport-tab.soon { color: var(--text-mut); }
-.sport-ic { font-size: 0.95rem; line-height: 1; }
+.sport-ic { font-size: 1.15rem; line-height: 1; }
 .sport-cnt { font-size: 0.62rem; font-weight: 800; background: var(--league); color: #cfe9dd; padding: 1px 6px; border-radius: 999px; margin-left: 1px; }
 .sport-tab.active .sport-cnt { background: rgba(255,255,255,0.25); color: #fff; }
 .soon-badge { font-size: 0.54rem; font-weight: 600; background: var(--surface-2); color: var(--text-dim); padding: 1px 5px; border-radius: 4px; margin-left: 1px; text-transform: uppercase; letter-spacing: 0.2px; }
@@ -589,7 +593,7 @@ a:hover { color: var(--win); }
 .coupon-bar-odds b { font-family: var(--mono); font-size: 1.02rem; color: var(--win); }
 
 /* --- Coupon dock (desktop panel) + mobile sheet -------------------------- */
-.coupon-dock { display: none; }
+.coupon-dock { display: none; position: fixed; top: var(--topbar-h); right: 0; bottom: 0; width: var(--coupon-w); z-index: 20; background: var(--surface); border-left: 1px solid var(--line); overflow-y: auto; }
 .cpn { display: flex; flex-direction: column; min-height: 0; }
 .cpn-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--line); }
 .cpn-title { font-weight: 700; font-size: 0.95rem; }
@@ -619,9 +623,9 @@ a:hover { color: var(--win); }
 @keyframes sheet-up { from { transform: translateY(30px); opacity: 0.6; } to { transform: translateY(0); opacity: 1; } }
 
 @media (min-width: 1024px) {
-  .coupon-dock { display: block; position: fixed; top: var(--topbar-h); right: 0; bottom: 0; width: var(--coupon-w); z-index: 20; background: var(--surface); border-left: 1px solid var(--line); overflow-y: auto; }
-  .app-main { padding-right: var(--coupon-w); }
   .coupon-bar, .coupon-sheet-back { display: none; }
+  body.has-coupon .coupon-dock { display: block; }
+  body.has-coupon .app-main { padding-right: var(--coupon-w); }
 }
 
 /* --- Coupon (slip) screen ---------------------------------------------- */

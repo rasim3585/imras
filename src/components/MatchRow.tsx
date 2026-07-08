@@ -50,12 +50,11 @@ export default function MatchRow({ match, live }: { match: Match; live?: LiveSta
           <span className="ll-teamline">
             <span className="ll-badge" style={{ background: teamColor(match.home_team) }}>{teamInitial(match.home_team)}</span>
             <span className="ll-name">{match.home_team} <i className="ll-pl">({hP})</i></span>
-            <span className="ll-sep">·</span>
+            {isLive ? <span className="ll-scorepill tnum">{live!.home_score}-{live!.away_score}</span> : <span className="ll-sep">·</span>}
             <span className="ll-badge" style={{ background: teamColor(match.away_team) }}>{teamInitial(match.away_team)}</span>
             <span className="ll-name">{match.away_team} <i className="ll-pl">({aP})</i></span>
           </span>
           {isLive && <span className="ll-livechip"><span className="pulse" />LIVE</span>}
-          {isLive && <span className="ll-scorebox tnum">{live!.home_score}-{live!.away_score}</span>}
         </Link>
 
         <Cell m={mr} k="home" /><Cell m={mr} k="draw" /><Cell m={mr} k="away" />
