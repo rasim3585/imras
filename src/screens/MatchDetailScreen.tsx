@@ -42,7 +42,7 @@ export default function MatchDetailScreen() {
       <div className="scoreboard card">
         <div className="sb-top">
           {isLive
-            ? <><span className="live-badge">CANLI</span><span className="minute-red tnum">{live!.minute}&apos;</span></>
+            ? <><span className="live-badge">LIVE</span><span className="minute-red tnum">{live!.minute}&apos;</span></>
             : isFinished
               ? <span className="tag">Full time</span>
               : <span className="soon-timer tnum">{formatKickoff(match.starts_at)}</span>}

@@ -27,7 +27,7 @@ export default function MatchCard({ match, live, primaryType = 'match_result' }:
     <div className="card contract">
       <div className="contract-head">
         {isLive
-          ? <span className="row" style={{ gap: 8 }}><span className="live-badge">CANLI</span><span className="minute-red tnum">{live!.minute}&apos;</span></span>
+          ? <span className="row" style={{ gap: 8 }}><span className="live-badge">LIVE</span><span className="minute-red tnum">{live!.minute}&apos;</span></span>
           : <span className="tag">{match.sport === 'football' ? 'Football' : match.sport}</span>}
         {isLive
           ? <Link className="watch-link" to={`/live/${match.id}`}>Watch &rsaquo;</Link>

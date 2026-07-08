@@ -11,7 +11,7 @@ const NAV = [
   { to: '/profile', end: false, label: 'Profile', Icon: ProfileIcon },
 ];
 
-const SOON = ['AI Predict', 'Watch Live', 'Lucky Games'];
+const SOON = ['AI Predict', 'Lucky Games'];
 
 export default function NavBar() {
   const { profile, signOut } = useAuth();
