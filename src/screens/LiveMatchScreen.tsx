@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLiveMatch } from '../live/useLiveMatch';
-import { useMatchReplay } from '../live/useMatchReplay';
-import type { LiveEvent, LiveOdds, WatchTimeline } from '../live/liveModel';
+import { atmosphereFor, isPenaltyGoal, isGoalType, type LiveEvent } from '../live/liveModel';
 import { matchProvider } from '../lib/matchProvider';
 import type { CouponLeg } from '../lib/types';
 import { formatOdds, impliedProb } from '../lib/format';
@@ -10,7 +9,6 @@ import { teamColor, teamInitial } from '../lib/teams';
 import { BallIcon, RedCardIcon, WhistleIcon, SparkIcon } from '../components/icons';
 
 type OutKey = 'home' | 'draw' | 'away';
-const isGoalType = (t: LiveEvent['type']) => t === 'goal' || t === 'penalty_goal';
 
 function Badge({ name, glow }: { name: string; glow?: boolean }) {
   return (
@@ -29,10 +27,18 @@ function EventIcon({ type }: { type: LiveEvent['type'] }) {
 
 type FeedRow = { key: string; minute: number; type: LiveEvent['type'] | 'mark'; text: string };
 
-function buildFeed(revealed: LiveEvent[], home: string, away: string, minute: number, finished: boolean): FeedRow[] {
+function buildFeed(
+  matchId: string, goals: { minute: number; team: 'home' | 'away' }[],
+  atmo: LiveEvent[], home: string, away: string, minute: number, finished: boolean,
+): FeedRow[] {
   const rows: FeedRow[] = [];
   let h = 0, a = 0;
-  for (const e of revealed) {
+  const merged: LiveEvent[] = [
+    ...goals.map((g) => ({ minute: g.minute, team: g.team, type: (isPenaltyGoal(matchId, g.minute) ? 'penalty_goal' : 'goal') as LiveEvent['type'] })),
+    ...atmo.filter((e) => e.minute <= minute),
+  ].sort((x, y) => x.minute - y.minute);
+
+  for (const e of merged) {
     const team = e.team === 'home' ? home : away;
     if (isGoalType(e.type)) {
       if (e.team === 'home') h++; else a++;
@@ -48,25 +54,27 @@ function buildFeed(revealed: LiveEvent[], home: string, away: string, minute: nu
   return rows.sort((x, y) => y.minute - x.minute);
 }
 
+function computePickState(pick: OutKey, hs: number, as: number): 'win' | 'lose' | 'level' {
+  const leader: OutKey = hs > as ? 'home' : as > hs ? 'away' : 'draw';
+  if (pick === 'draw') return hs === as ? 'win' : 'lose';
+  if (pick === leader) return 'win';
+  return hs === as ? 'level' : 'lose';
+}
+
 export default function LiveMatchScreen() {
   const { matchId } = useParams<{ matchId: string }>();
   const navigate = useNavigate();
+  const { state, minute, countdown } = useLiveMatch(matchId);
 
-  const [tl, setTl] = useState<WatchTimeline | null | undefined>(undefined);
   const [myLeg, setMyLeg] = useState<CouponLeg | null>(null);
   const [couponId, setCouponId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [goalFlash, setGoalFlash] = useState<{ team: 'home' | 'away'; penalty: boolean } | null>(null);
+  const [flashQueue, setFlashQueue] = useState<{ team: 'home' | 'away'; penalty: boolean }[]>([]);
   const [pickFlash, setPickFlash] = useState<string | null>(null);
-  const prevPick = useRef<string | null>(null);
+  const goalBaseline = useRef<number | null>(null);
+  const prevPickRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    if (!matchId) return;
-    (async () => {
-      try { setTl(await matchProvider.getWatchTimeline(matchId)); }
-      catch (e) { setError(e instanceof Error ? e.message : 'Could not open this match'); }
-    })();
-  }, [matchId]);
+  const atmo = useMemo(() => (matchId ? atmosphereFor(matchId) : []), [matchId]);
 
   useEffect(() => {
     (async () => {
@@ -82,57 +90,42 @@ export default function LiveMatchScreen() {
     })();
   }, [matchId]);
 
-  const replay = useMatchReplay(tl ?? null);
-  const server = useLiveMatch(tl === null && matchId ? matchId : undefined);
-
-  // fire the GOAL! overlay + pick-flip message when a goal is revealed
+  // enqueue a flash for every NEW goal since the last poll (queue = consistent,
+  // even for back-to-back goals). Goals present at join are baseline (no flash).
+  const goalCount = state?.events.length ?? 0;
   useEffect(() => {
-    const e = replay?.justEvent;
-    if (!e || !isGoalType(e.type)) return;
-    setGoalFlash({ team: e.team, penalty: e.type === 'penalty_goal' });
-    const timers = [setTimeout(() => setGoalFlash(null), 1200)];
-    if (myLeg && replay) {
-      const ps = computePickState(myLeg.outcome_key as OutKey, replay.home_score, replay.away_score);
-      const prev = prevPick.current;
-      if (prev && prev !== ps && ps !== 'level') {
-        setPickFlash(ps === 'win' ? 'That goal put you ahead!' : 'That goal put your coupon at risk!');
-        timers.push(setTimeout(() => setPickFlash(null), 2600));
-      }
-      prevPick.current = ps;
+    if (!state) return;
+    if (goalBaseline.current === null) { goalBaseline.current = goalCount; return; }
+    if (goalCount > goalBaseline.current) {
+      const fresh = state.events.slice(goalBaseline.current);
+      goalBaseline.current = goalCount;
+      setFlashQueue((q) => [...q, ...fresh.map((g) => ({ team: g.team, penalty: isPenaltyGoal(matchId!, g.minute) }))]);
     }
-    return () => timers.forEach(clearTimeout);
-  }, [replay?.justEvent, replay, myLeg]);
+  }, [goalCount, state, matchId]);
 
-  if (error) {
-    return (
-      <div className="app-shell" style={{ paddingTop: 'var(--s6)' }}>
-        <div className="banner banner-error">{error}</div>
-        <button className="btn btn-block" onClick={() => navigate(-1)}>Back</button>
-      </div>
-    );
+  // drain the queue one flash at a time
+  useEffect(() => {
+    if (goalFlash || flashQueue.length === 0) return;
+    const [next, ...rest] = flashQueue;
+    setGoalFlash(next);
+    setFlashQueue(rest);
+    if (myLeg && state) {
+      const ps = computePickState(myLeg.outcome_key as OutKey, state.home_score, state.away_score);
+      if (prevPickRef.current && prevPickRef.current !== ps && ps !== 'level') {
+        setPickFlash(ps === 'win' ? 'That goal put you ahead!' : 'That goal put your coupon at risk!');
+      }
+      prevPickRef.current = ps;
+    }
+    const t = setTimeout(() => setGoalFlash(null), 1300);
+    const t2 = setTimeout(() => setPickFlash(null), 2600);
+    return () => { clearTimeout(t); clearTimeout(t2); };
+  }, [goalFlash, flashQueue, myLeg, state]);
+
+  if (!state) {
+    return <div className="settle"><div className="spinner" /><p className="settle-note">Connecting to the match…</p></div>;
   }
 
-  type View = {
-    home: string; away: string; phase: 'upcoming' | 'live' | 'finished'; halfTime: boolean;
-    minute: number; hs: number; as: number; events: LiveEvent[];
-    odds: LiveOdds | null; countdown: number;
-  };
-  let view: View | null = null;
-  if (tl && replay) {
-    view = { home: tl.home_team, away: tl.away_team, phase: replay.phase, halfTime: replay.halfTime,
-      minute: replay.minute, hs: replay.home_score, as: replay.away_score, events: replay.revealed, odds: replay.live_odds, countdown: 0 };
-  } else if (tl === null && server.state) {
-    const s = server.state;
-    view = { home: s.home_team, away: s.away_team, phase: s.phase, halfTime: false, minute: server.minute,
-      hs: s.home_score, as: s.away_score, events: s.events.map((e) => ({ minute: e.minute, type: 'goal', team: e.team })),
-      odds: s.live_odds, countdown: server.countdown };
-  }
-
-  if (!view) {
-    return <div className="settle"><div className="spinner" /><p className="settle-note">Walking out to the pitch…</p></div>;
-  }
-
-  const { home, away, phase, halfTime, minute, hs, as, odds, countdown, events } = view;
+  const { home_team: home, away_team: away, phase, home_score: hs, away_score: as, live_odds: odds } = state;
   const finished = phase === 'finished';
   const shownMinute = phase === 'upcoming' ? 0 : finished ? 90 : minute;
 
@@ -140,7 +133,7 @@ export default function LiveMatchScreen() {
   const pickState = pick ? computePickState(pick, hs, as) : null;
   const pickLabel = { win: 'Winning', lose: 'Losing', level: 'On the line' } as const;
   const oddsArr = odds ? [odds.home, odds.draw, odds.away] : [];
-  const feed = buildFeed(events, home, away, shownMinute, finished);
+  const feed = buildFeed(matchId!, state.events, atmo, home, away, shownMinute, finished);
 
   return (
     <div className="app-shell live-screen">
@@ -153,8 +146,7 @@ export default function LiveMatchScreen() {
 
       <div className="live-statusbar">
         {phase === 'upcoming' && <span className="chip">Kick-off in {countdown}s</span>}
-        {phase === 'live' && !halfTime && <span className="chip chip-live"><span className="dot" />LIVE · {shownMinute < 45 ? '1st half' : '2nd half'}</span>}
-        {halfTime && <span className="chip">Half-time</span>}
+        {phase === 'live' && <span className="chip chip-live"><span className="dot" />LIVE · {shownMinute < 45 ? '1st half' : '2nd half'}</span>}
         {finished && <span className="chip">Full-time</span>}
       </div>
 
@@ -166,7 +158,7 @@ export default function LiveMatchScreen() {
             <span className="lb-sep">:</span>
             <span className="lb-num">{phase === 'upcoming' ? '–' : as}</span>
           </div>
-          <div className="lb-minute tnum">{phase === 'upcoming' ? 'soon' : halfTime ? 'HT' : finished ? "90'" : `${shownMinute}'`}</div>
+          <div className="lb-minute tnum">{phase === 'upcoming' ? 'soon' : finished ? "90'" : `${shownMinute}'`}</div>
         </div>
         <div className="lb-side lb-away"><span className="lb-team">{away}</span><Badge name={away} glow={goalFlash?.team === 'away'} /></div>
       </div>
@@ -196,16 +188,15 @@ export default function LiveMatchScreen() {
               </div>
             ))}
           </div>
-          <p className="dim live-odds-note">Live betting on these odds arrives next phase.</p>
         </>
       )}
 
       <div className="section-head"><h3>Match feed</h3></div>
       <div className="card live-feed">
         {feed.map((f) => (
-          <div key={f.key} className={`feed-item ${f.type === 'mark' ? 'mark' : 'ev'} ${isGoalType(f.type as LiveEvent['type']) ? 'goal' : ''}`}>
+          <div key={f.key} className={`feed-item ${f.type === 'mark' ? 'mark' : 'ev'} ${f.type !== 'mark' && isGoalType(f.type) ? 'goal' : ''}`}>
             <span className="feed-min tnum">{f.minute === 0 ? "0'" : f.minute === 91 ? "90'" : `${f.minute}'`}</span>
-            {f.type !== 'mark' && <EventIcon type={f.type as LiveEvent['type']} />}
+            {f.type !== 'mark' && <EventIcon type={f.type} />}
             <span className="feed-text">{f.text}</span>
           </div>
         ))}
@@ -217,11 +208,4 @@ export default function LiveMatchScreen() {
       <button className="btn btn-ghost btn-block" style={{ marginTop: 'var(--s2)' }} onClick={() => navigate(-1)}>Back</button>
     </div>
   );
-}
-
-function computePickState(pick: OutKey, hs: number, as: number): 'win' | 'lose' | 'level' {
-  const leader: OutKey = hs > as ? 'home' : as > hs ? 'away' : 'draw';
-  if (pick === 'draw') return hs === as ? 'win' : 'lose';
-  if (pick === leader) return 'win';
-  return hs === as ? 'level' : 'lose';
 }

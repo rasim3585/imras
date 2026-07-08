@@ -34,8 +34,8 @@ export default function CouponScreen() {
     } catch (err) {
       const raw = err instanceof Error ? err.message : '';
       setError(
-        raw.startsWith('Market closed')
-          ? 'One of your matches has already kicked off. Remove it and try again.'
+        raw.includes('market_closed')
+          ? 'A match on your coupon has closed for betting. Remove it and try again.'
           : raw.includes('Not enough gold')
             ? 'Not enough gold for that stake.'
             : raw || 'Could not place coupon',

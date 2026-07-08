@@ -1,7 +1,6 @@
 import { supabase } from './supabase';
 import type { MatchProvider, PlacedCoupon } from './matchProvider';
 import type { Coupon, CouponLeg, CouponSettlement, LiveState, Market, Match } from './types';
-import type { WatchTimeline } from '../live/liveModel';
 
 // Explicit match columns — omits `true_probabilities` (hidden) and
 // `display_odds` (server-only seed input; odds are exposed via market_options).
@@ -28,13 +27,14 @@ export class SupabaseMatchProvider implements MatchProvider {
     return Number(data ?? 0);
   }
 
-  async getUpcoming(): Promise<Match[]> {
+  async getBulletin(): Promise<Match[]> {
+    // everything still in play — upcoming AND live (Model A). Finished matches
+    // are excluded; the client drops any that read as over/closed via live state.
     const { data, error } = await supabase
       .from('matches')
       .select(`${MATCH_COLS}, markets(id, match_id, market_type, name, status, sort_order, ` +
         `market_options(id, market_id, label, outcome_key, odds, is_winner, sort_order))`)
-      .eq('status', 'upcoming')
-      .gt('starts_at', new Date().toISOString())
+      .neq('status', 'finished')
       .order('starts_at', { ascending: true });
     if (error) throw new Error(error.message);
 
@@ -57,15 +57,6 @@ export class SupabaseMatchProvider implements MatchProvider {
     const { data, error } = await supabase.rpc('get_live_state', { p_match_ids: matchIds });
     if (error) throw new Error(error.message);
     return (data ?? []) as LiveState[];
-  }
-
-  async getWatchTimeline(matchId: string): Promise<WatchTimeline | null> {
-    const { data, error } = await supabase.rpc('get_watch_timeline', { p_match_id: matchId });
-    if (error) {
-      if (error.message?.includes('no_bet_on_match')) return null; // not a bet match
-      throw new Error(error.message);
-    }
-    return data as WatchTimeline;
   }
 
   async placeCoupon(optionIds: string[], stake: number): Promise<PlacedCoupon> {
