@@ -58,13 +58,20 @@ export default function MyCouponsScreen() {
   const [cashouts, setCashouts] = useState<Record<string, { value: number; available: boolean }>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [shared, setShared] = useState<Set<string>>(new Set());
+  const [toast, setToast] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   async function share(couponId: string) {
-    try { await matchProvider.shareCoupon(couponId); setShared((s) => new Set(s).add(couponId)); }
-    catch (err) { setError(err instanceof Error ? err.message : 'Could not share'); }
+    try {
+      await matchProvider.shareCoupon(couponId);
+      setShared((s) => new Set(s).add(couponId));
+      setToast('Shared to the community feed');
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : 'Could not share');
+    }
+    window.setTimeout(() => setToast(null), 2500);
   }
 
   const load = useCallback(async () => {
@@ -142,6 +149,7 @@ export default function MyCouponsScreen() {
       </div>
 
       {error && <div className="banner banner-error">{error}</div>}
+      {toast && <div className="toast">{toast}</div>}
 
       {loading ? (
         <div className="center-pad"><div className="spinner" /></div>

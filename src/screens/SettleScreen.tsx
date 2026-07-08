@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { matchProvider } from '../lib/matchProvider';
 import { useAuth } from '../auth/AuthContext';
@@ -17,6 +17,12 @@ export default function SettleScreen() {
   const [data, setData] = useState<CouponSettlement | null>(null);
   const [revealed, setRevealed] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
+  // keep refreshProfile out of the effect deps: its identity can change (session
+  // updates) which otherwise re-runs the effect and restarts the reveal, making
+  // the page look like it re-opens over and over.
+  const refreshRef = useRef(refreshProfile);
+  refreshRef.current = refreshProfile;
 
   useEffect(() => {
     if (!couponId) return;
@@ -41,13 +47,13 @@ export default function SettleScreen() {
         await sleep(500);
         if (!alive) return;
         setPhase('final');
-        void refreshProfile();
+        void refreshRef.current();
       } catch (err) {
         if (alive) setError(err instanceof Error ? err.message : 'Could not settle this coupon');
       }
     })();
     return () => { alive = false; };
-  }, [couponId, refreshProfile]);
+  }, [couponId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (error) {
     return (
