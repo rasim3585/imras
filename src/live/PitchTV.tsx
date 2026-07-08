@@ -168,6 +168,7 @@ export default function PitchTV({
             {HD.map((p, i) => <span key={`h${i}`} className="dot" style={{ left: `${p[0]}%`, top: `${p[1]}%`, background: homeColor, animationDelay: `${i * 0.5}s` }} />)}
             {AD.map((p, i) => <span key={`a${i}`} className="dot" style={{ left: `${p[0]}%`, top: `${p[1]}%`, background: awayColor, animationDelay: `${i * 0.5 + 0.3}s` }} />)}
             <div className="pitch-ball" style={{ left: `${ball[0]}%`, top: `${ball[1]}%` }} />
+            {phase === 'live' && <div className="momentum">{momentum}</div>}
             {overlay && (
               <div className={`pitch-ov pitch-ov-${overlay.kind}`}>
                 <span className="pitch-ov-t">{overlay.text}</span>
@@ -178,8 +179,6 @@ export default function PitchTV({
           <Rail />
         </div>
       </div>
-
-      {phase === 'live' && <div className="momentum">{momentum}</div>}
     </div>
   );
 }
