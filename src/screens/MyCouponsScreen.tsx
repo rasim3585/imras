@@ -89,7 +89,7 @@ export default function MyCouponsScreen() {
       ) : (
         <div className="coupon-list">
           {coupons.map((c) => (
-            <div key={c.id} className="card coupon-card">
+            <div key={c.id} className={`card coupon-card cc-${c.status}`}>
               <div className="coupon-card-head">
                 <span className="tag">{c.legs.length === 1 ? 'Single' : `${c.legs.length}-fold`}</span>
                 <StatusChip c={c} />

@@ -54,12 +54,16 @@ function MarketSection({ match, market, live }: { match: Match; market: Market; 
   );
 }
 
-export default function MatchCard({ match, live }: { match: Match; live?: LiveState }) {
+export default function MatchCard({ match, live, primaryType = 'match_result' }: { match: Match; live?: LiveState; primaryType?: string }) {
   const [expanded, setExpanded] = useState(false);
   const sportLabel = match.sport.charAt(0).toUpperCase() + match.sport.slice(1);
   const isLive = live?.phase === 'live';
 
-  const markets = [...match.markets].sort((a, b) => a.sort_order - b.sort_order);
+  const markets = [...match.markets].sort((a, b) => {
+    if (a.market_type === primaryType) return -1;
+    if (b.market_type === primaryType) return 1;
+    return a.sort_order - b.sort_order;
+  });
   // keep cards compact: show the first market, reveal the rest on demand
   const visibleMarkets = expanded ? markets : markets.slice(0, 1);
   const moreCount = markets.length - visibleMarkets.length;

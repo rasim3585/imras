@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import MatchCard from '../components/MatchCard';
+import { BallIcon } from '../components/icons';
 import { matchProvider } from '../lib/matchProvider';
 import type { LiveState, Match } from '../lib/types';
 
 export default function FeedScreen() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [liveMap, setLiveMap] = useState<Record<string, LiveState>>({});
+  const [betType, setBetType] = useState('match_result');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const ids = useRef<string[]>([]);
@@ -55,11 +57,30 @@ export default function FeedScreen() {
     .sort((a, b) => (liveMap[b.id]!.minute) - (liveMap[a.id]!.minute));
   const upcoming = visible.filter((m) => liveMap[m.id]?.phase !== 'live');
 
+  const BET_TABS: { key: string; label: string }[] = [
+    { key: 'match_result', label: 'Match Result' },
+    { key: 'over_under_2_5', label: 'Goals O/U' },
+    { key: 'double_chance', label: 'Double Chance' },
+  ];
+
   return (
     <div className="app-shell">
-      <div className="page-head">
+      <div className="page-head" style={{ paddingBottom: 'var(--s3)' }}>
         <h1>Markets</h1>
-        <p className="page-sub">Tap odds to build your coupon — pre-match or live. Play with gold, never money.</p>
+      </div>
+
+      {/* sport category strip */}
+      <div className="cat-strip">
+        <button className="cat is-active"><span className="cat-ic"><BallIcon /></span>Football{liveOnes.length > 0 ? <span className="cat-live">{liveOnes.length}</span> : null}</button>
+        <button className="cat is-soon" disabled>Basketball</button>
+        <button className="cat is-soon" disabled>Tennis</button>
+      </div>
+
+      {/* bet-type tabs */}
+      <div className="bet-tabs">
+        {BET_TABS.map((t) => (
+          <button key={t.key} className={`bet-tab ${betType === t.key ? 'active' : ''}`} onClick={() => setBetType(t.key)}>{t.label}</button>
+        ))}
       </div>
 
       {error && <div className="banner banner-error">{error}</div>}
@@ -76,13 +97,13 @@ export default function FeedScreen() {
           {liveOnes.length > 0 && (
             <>
               <div className="section-head"><h3>Live now</h3><span className="chip chip-live"><span className="dot" />{liveOnes.length}</span></div>
-              <div className="market-list">{liveOnes.map((m) => <MatchCard key={m.id} match={m} live={liveMap[m.id]} />)}</div>
+              <div className="market-list">{liveOnes.map((m) => <MatchCard key={m.id} match={m} live={liveMap[m.id]} primaryType={betType} />)}</div>
             </>
           )}
           {upcoming.length > 0 && (
             <>
               <div className="section-head"><h3>Starting soon</h3></div>
-              <div className="market-list">{upcoming.map((m) => <MatchCard key={m.id} match={m} live={liveMap[m.id]} />)}</div>
+              <div className="market-list">{upcoming.map((m) => <MatchCard key={m.id} match={m} live={liveMap[m.id]} primaryType={betType} />)}</div>
             </>
           )}
         </>
