@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { teamColor, teamInitial } from '../lib/teams';
+import { toggleSfx, whistle, cheer } from '../lib/sfx';
 import type { LineKind } from './commentary';
 
 // ---------------------------------------------------------------------------
@@ -16,9 +17,9 @@ type XY = [number, number];
 type Side = 'home' | 'away';
 const clamp = (v: number, lo = 6, hi = 94) => Math.max(lo, Math.min(hi, v));
 
-// a few ambient dots per side (not a full team, just "players are here")
-const HOME_DOTS: XY[] = [[16, 32], [16, 68], [30, 50], [44, 38], [44, 62]];
-const AWAY_DOTS: XY[] = [[84, 32], [84, 68], [70, 50], [56, 38], [56, 62]];
+// 3 ambient dots per side (not a full team, just "players are here")
+const HOME_DOTS: XY[] = [[22, 42], [38, 56], [46, 44]];
+const AWAY_DOTS: XY[] = [[78, 42], [62, 56], [54, 44]];
 const mir = (F: XY[]): XY[] => F.map(([x, y]) => [100 - x, y]);
 
 type C3 = [number, number, number];
@@ -37,11 +38,11 @@ const PS = [{ s: '▲', c: '#4fe89a' }, { s: '✕', c: '#e24b4a' }, { s: '●', 
 function Rail() { return <div className="ps-rail" aria-hidden="true">{PS.map((p, i) => <span key={i} className="ps-sym" style={{ color: p.c, animationDelay: `${i * 0.4}s` }}>{p.s}</span>)}</div>; }
 
 export default function PitchTV({
-  home, away, hs, as, minute, phase, redHome, redAway, line,
+  home, away, hs, as, minute, phase, redHome, redAway, line, homePlayer, awayPlayer,
 }: {
   home: string; away: string; hs: number; as: number; minute: number;
   phase: 'upcoming' | 'live' | 'finished'; redHome: number; redAway: number;
-  flashTeam: 'home' | 'away' | null;
+  flashTeam: 'home' | 'away' | null; homePlayer?: string; awayPlayer?: string;
   line: { kind: LineKind; team?: Side; minute: number; sub: number } | null;
 }) {
   const homeColor = teamColor(home);
@@ -52,8 +53,19 @@ export default function PitchTV({
   const [ball, setBall] = useState<XY>([50, 50]);
   const [momentum, setMomentum] = useState<string>('Kick-off');
   const [overlay, setOverlay] = useState<{ kind: 'goal' | 'card'; text: string; sub: string } | null>(null);
+  const [sound, setSound] = useState(false);
   const zoneRef = useRef<XY>([50, 50]);
   const ovTimer = useRef<number | null>(null);
+  const prevPhase = useRef(phase);
+
+  // match sounds: kick-off / full-time whistle (goal cheer fires on the goal line)
+  useEffect(() => {
+    if (prevPhase.current !== phase) {
+      if (prevPhase.current === 'upcoming' && phase === 'live') whistle(false);
+      else if (phase === 'finished') whistle(true);
+      prevPhase.current = phase;
+    }
+  }, [phase]);
 
   // home attacks right in the 1st half, left in the 2nd
   const dir = (t: Side) => ((t === 'home') !== secondHalf ? 1 : -1);
@@ -83,6 +95,7 @@ export default function PitchTV({
       case 'goal':
         zone = [50, 50]; mo = `GOAL — ${teamName}!`;         // back to the centre for the restart
         setOverlay({ kind: 'goal', text: 'GOAL!', sub: `${teamName} ${hs}-${as}` });
+        cheer();
         if (ovTimer.current) clearTimeout(ovTimer.current);
         ovTimer.current = window.setTimeout(() => setOverlay(null), 1900);
         break;
@@ -110,13 +123,20 @@ export default function PitchTV({
 
   return (
     <div className="pitch-tv">
-      <div className="tv-scoreboard">
-        <span className="tvsb-badge" style={{ background: homeColor }}>{teamInitial(home)}</span>
-        <span className="tvsb-name">{home}</span>
-        <span className="tvsb-score tnum">{phase === 'upcoming' ? '– : –' : `${hs} - ${as}`}</span>
-        <span className="tvsb-name">{away}</span>
-        <span className="tvsb-badge" style={{ background: awayColor }}>{teamInitial(away)}</span>
-        <span className="tvsb-min tnum">{phase === 'upcoming' ? 'soon' : finished ? "90'" : `${minute}'`}</span>
+      <div className="sb2">
+        <button className={`sb2-sound ${sound ? 'on' : ''}`} title="Sound on/off" onClick={() => setSound(toggleSfx())}>♪</button>
+        <div className="sb2-team">
+          <span className="sb2-badge" style={{ background: homeColor }}>{teamInitial(home)}</span>
+          <span className="sb2-info"><span className="sb2-name">{home}</span>{homePlayer && <span className="sb2-pl">({homePlayer})</span>}</span>
+        </div>
+        <div className="sb2-center">
+          <span className="sb2-score tnum">{phase === 'upcoming' ? '– : –' : `${hs}-${as}`}</span>
+          <span className="sb2-clock tnum">{phase === 'upcoming' ? 'soon' : finished ? "FT" : <><span className="dot" />{minute}&apos;</>}</span>
+        </div>
+        <div className="sb2-team away">
+          <span className="sb2-info"><span className="sb2-name">{away}</span>{awayPlayer && <span className="sb2-pl">({awayPlayer})</span>}</span>
+          <span className="sb2-badge" style={{ background: awayColor }}>{teamInitial(away)}</span>
+        </div>
       </div>
       {redLine && (
         <div className="sb-sub">

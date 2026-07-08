@@ -4,7 +4,7 @@ import { Brand } from './Brand';
 import { MarketsIcon, CouponIcon, RanksIcon, SocialIcon, ProfileIcon } from './icons';
 
 const NAV = [
-  { to: '/', end: true, label: 'Markets', Icon: MarketsIcon },
+  { to: '/', end: true, label: 'Matches', Icon: MarketsIcon },
   { to: '/coupons', end: false, label: 'Coupons', Icon: CouponIcon },
   { to: '/ranks', end: false, label: 'Ranks', Icon: RanksIcon },
   { to: '/social', end: false, label: 'Social', Icon: SocialIcon },

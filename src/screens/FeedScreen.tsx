@@ -6,6 +6,17 @@ import { useAuth } from '../auth/AuthContext';
 import { matchProvider } from '../lib/matchProvider';
 import type { LiveState, Match } from '../lib/types';
 
+type SportKey = 'live' | 'football' | 'basketball' | 'efootball' | 'ebasket' | 'tennis' | 'volley';
+const SPORTS: { key: SportKey; label: string; soon?: boolean }[] = [
+  { key: 'live', label: 'Live' },
+  { key: 'football', label: 'Football', soon: true },
+  { key: 'basketball', label: 'Basketball', soon: true },
+  { key: 'efootball', label: 'E-Football' },
+  { key: 'ebasket', label: 'E-Basket', soon: true },
+  { key: 'tennis', label: 'Tennis', soon: true },
+  { key: 'volley', label: 'Volleyball', soon: true },
+];
+
 function Cols() {
   return (
     <div className="ll-cols">
@@ -21,6 +32,7 @@ export default function FeedScreen() {
   const { session } = useAuth();
   const [matches, setMatches] = useState<Match[]>([]);
   const [liveMap, setLiveMap] = useState<Record<string, LiveState>>({});
+  const [sport, setSport] = useState<SportKey>('efootball');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const ids = useRef<string[]>([]);
@@ -68,6 +80,7 @@ export default function FeedScreen() {
   const liveOnes = visible.filter((m) => liveMap[m.id]?.phase === 'live')
     .sort((a, b) => (liveMap[b.id]!.minute) - (liveMap[a.id]!.minute));
   const upcoming = visible.filter((m) => liveMap[m.id]?.phase !== 'live');
+  const isSoon = SPORTS.find((s) => s.key === sport)?.soon;
 
   return (
     <div className="app-shell app-shell-wide">
@@ -79,14 +92,27 @@ export default function FeedScreen() {
             <Link to="/login" className="btn btn-primary">Sign up free</Link>
             <Link to="/login" className="btn btn-ghost">Log in</Link>
           </div>
-          <span className="landing-note dim">Browse the bulletin below — sign up when you want to play.</span>
         </div>
       )}
 
+      <div className="sport-bar">
+        {SPORTS.map((s) => (
+          <button key={s.key} className={`sport-tab ${sport === s.key ? 'active' : ''}`} onClick={() => setSport(s.key)}>
+            {s.key === 'efootball' && <EFootballIcon size={16} />}
+            {s.key === 'live' && <span className="dot" />}
+            {s.label}{s.soon && <span className="soon-dot">soon</span>}
+          </button>
+        ))}
+      </div>
+
       {error && <div className="banner banner-error">{error}</div>}
 
-      {loading ? (
+      {isSoon ? (
+        <div className="empty"><p>{SPORTS.find((s) => s.key === sport)?.label} is coming soon.</p></div>
+      ) : loading ? (
         <div className="center-pad"><div className="spinner" /></div>
+      ) : (sport === 'live' && liveOnes.length === 0) ? (
+        <div className="empty"><p>No live matches right now. Check E-Football for what's starting soon.</p></div>
       ) : visible.length === 0 ? (
         <div className="empty">
           <p>No open markets right now.</p>
@@ -104,7 +130,7 @@ export default function FeedScreen() {
               {liveOnes.map((m) => <MatchRow key={m.id} match={m} live={liveMap[m.id]} />)}
             </>
           )}
-          {upcoming.length > 0 && (
+          {sport !== 'live' && upcoming.length > 0 && (
             <>
               <div className="ll-bar">
                 <span className="ll-bar-l"><EFootballIcon size={20} /> E-Football · starting soon</span>

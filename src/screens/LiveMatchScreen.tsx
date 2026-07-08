@@ -10,6 +10,7 @@ import { matchProvider } from '../lib/matchProvider';
 import type { CouponLeg, LiveState } from '../lib/types';
 import { formatOdds, impliedProb } from '../lib/format';
 import { teamColor } from '../lib/teams';
+import { playerName } from '../lib/playerNames';
 
 type OutKey = 'home' | 'draw' | 'away';
 
@@ -157,6 +158,7 @@ export default function LiveMatchScreen() {
         home={home} away={away} hs={phase === 'upcoming' ? 0 : hs} as={phase === 'upcoming' ? 0 : as}
         minute={shownMinute} phase={phase} redHome={state.red_home} redAway={state.red_away}
         flashTeam={flash?.team ?? null} line={curLine}
+        homePlayer={playerName(matchId + 'h')} awayPlayer={playerName(matchId + 'a')}
       />
 
       {myLeg && (
@@ -186,7 +188,7 @@ export default function LiveMatchScreen() {
         </>
       )}
 
-      <div className="section-head"><h3>Commentary</h3></div>
+      <div className="section-head"><h3>Key moments</h3></div>
       <div className="card cm-feed">
         {feed.length === 0 && <div className="cm-line"><span className="cm-text muted">The players are out…</span></div>}
         {feed.map((l) => (
