@@ -43,6 +43,11 @@
   --loss-bg: #fcebe8;
   --loss-line: #f4c6bd;
 
+  /* amber (kickoff timer / live coupon) */
+  --amber: #ba7517;
+  --amber-deep: #854f0b;
+  --amber-tint: #faeeda;
+
   /* text (dark ink on light) */
   --text: #14201a;
   --text-2: #55655c;
@@ -366,13 +371,51 @@ a:hover { color: var(--win); }
 }
 .outcome:hover:not(:disabled) { background: var(--surface-2); border-color: var(--cell-sel-line); }
 .outcome:active:not(:disabled) { transform: scale(0.98); }
-.outcome.sel { background: var(--cell-sel); border: 1.5px solid var(--cell-sel-line); padding: 10.5px 6px; }
+/* favourite (lowest odds): soft green tint */
+.outcome.fav { background: var(--cell-sel); border-color: var(--win-line); }
+.outcome.fav .outcome-name { color: var(--odds-bright); }
+/* selected (user pick): stronger green */
+.outcome.sel { background: #d6f2e5; border: 1.5px solid var(--cell-sel-line); padding: 10.5px 6px; }
+.outcome.sel .outcome-name { color: var(--odds-bright); }
 .outcome-name { font-size: 0.78rem; color: var(--text-mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.outcome.sel .outcome-name { color: var(--text-2); }
 .outcome-odds { font-family: var(--mono); font-size: 1.25rem; font-weight: 600; color: var(--odds-plain); font-variant-numeric: tabular-nums; }
-.outcome.fav .outcome-odds { color: var(--odds-bright); }
-.outcome.sel .outcome-odds { color: var(--odds-bright); }
+.outcome.fav .outcome-odds, .outcome.sel .outcome-odds { color: var(--odds-bright); }
 .outcome-prob { font-size: 0.7rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+
+/* live / upcoming card affordances (mockup) */
+.live-badge { font-size: 0.62rem; font-weight: 700; color: #fff; background: var(--loss); padding: 2px 7px; border-radius: 5px; letter-spacing: 0.3px; }
+.minute-red { font-size: 0.78rem; color: var(--loss); font-weight: 600; }
+.watch-link { font-size: 0.8rem; color: var(--accent); font-weight: 600; }
+.watch-link:hover { color: var(--win); }
+.matchup-rows { justify-content: space-between; margin-bottom: 0; }
+.matchup-rows .team { flex: 1; }
+.mc-score { font-family: var(--mono); font-size: 1.15rem; font-weight: 700; color: var(--text); }
+.contract .market-section:first-of-type { margin-top: var(--s4); }
+.soon-timer { font-family: var(--mono); font-size: 0.75rem; color: var(--amber-deep); background: var(--amber-tint); padding: 2px 9px; border-radius: 999px; }
+
+/* right-side auth links + landing hero */
+.top-auth { display: flex; align-items: center; gap: var(--s3); }
+.top-link { font-size: 0.9rem; color: var(--text-2); font-weight: 500; }
+.top-link:hover, .top-link.active { color: var(--text); }
+.landing-hero { padding: var(--s6); margin: var(--s5) 0 var(--s4); display: flex; flex-direction: column; gap: var(--s3); }
+.landing-hero h2 { font-size: 1.5rem; line-height: 1.15; letter-spacing: -0.02em; }
+.landing-hero p { color: var(--text-2); max-width: 42ch; }
+.landing-note { font-size: 0.8rem; }
+
+/* match detail */
+.app-shell-flush { padding-top: var(--s3); }
+.detail-back { background: none; border: 0; color: var(--text-2); font: inherit; font-weight: 500; cursor: pointer; padding: var(--s2) 0; margin-bottom: var(--s2); }
+.detail-back:hover { color: var(--text); }
+.scoreboard { padding: var(--s5) var(--s4); }
+.sb-top { display: flex; align-items: center; gap: var(--s2); margin-bottom: var(--s4); }
+.sb-teams { display: flex; align-items: center; justify-content: center; gap: var(--s5); }
+.sb-team { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; }
+.sb-badge { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; font-size: 1rem; text-shadow: 0 1px 1px rgba(0,0,0,0.3); }
+.sb-name { font-size: 0.9rem; font-weight: 600; text-align: center; }
+.sb-score { font-family: var(--mono); font-size: 1.8rem; font-weight: 700; flex-shrink: 0; }
+.detail-markets { margin-top: var(--s4); display: flex; flex-direction: column; gap: var(--s3); }
+.detail-markets .mkt-group { background: var(--card); border: 1px solid var(--card-line); border-radius: var(--radius); box-shadow: var(--shadow); padding: var(--s4); }
+.mkt-title { font-size: 0.82rem; font-weight: 600; color: var(--text-2); margin-bottom: var(--s3); }
 
 /* --- Coupon slip bar --------------------------------------------------- */
 

@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { Brand } from './Brand';
 import { MarketsIcon, CouponIcon, RanksIcon, SocialIcon, ProfileIcon } from './icons';
@@ -22,13 +22,21 @@ export default function NavBar() {
         <div className="topbar-inner">
           <Brand />
           <div className="topbar-right">
-            {profile && (
-              <span className="gold-chip" title="Gold balance">
-                <span className="gold-dot" aria-hidden="true" />
-                <span className="tnum">{profile.gold_balance.toLocaleString()}</span>
-              </span>
+            {profile ? (
+              <>
+                <span className="gold-chip" title="Gold balance">
+                  <span className="gold-dot" aria-hidden="true" />
+                  <span className="tnum">{profile.gold_balance.toLocaleString()}</span>
+                </span>
+                <button className="btn btn-ghost btn-sm" onClick={signOut}>Sign out</button>
+              </>
+            ) : (
+              <nav className="top-auth">
+                <NavLink to="/" end className="top-link">Home</NavLink>
+                <Link to="/login" className="top-link">Log in</Link>
+                <Link to="/login" className="btn btn-primary btn-sm">Sign up</Link>
+              </nav>
             )}
-            <button className="btn btn-ghost btn-sm" onClick={signOut}>Sign out</button>
           </div>
         </div>
       </header>

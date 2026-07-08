@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import MatchCard from '../components/MatchCard';
 import { BallIcon } from '../components/icons';
+import { useAuth } from '../auth/AuthContext';
 import { matchProvider } from '../lib/matchProvider';
 import type { LiveState, Match } from '../lib/types';
 
 export default function FeedScreen() {
+  const { session } = useAuth();
   const [matches, setMatches] = useState<Match[]>([]);
   const [liveMap, setLiveMap] = useState<Record<string, LiveState>>({});
   const [betType, setBetType] = useState('match_result');
@@ -65,6 +68,18 @@ export default function FeedScreen() {
 
   return (
     <div className="app-shell">
+      {!session && (
+        <div className="landing-hero card">
+          <h2>Real betting thrills, zero money.</h2>
+          <p>Predict virtual matches, watch them play out live, and compete with friends — all with symbolic gold. No wagering, ever.</p>
+          <div className="row" style={{ gap: 'var(--s2)' }}>
+            <Link to="/login" className="btn btn-primary">Sign up free</Link>
+            <Link to="/login" className="btn btn-ghost">Log in</Link>
+          </div>
+          <span className="landing-note dim">Browse the bulletin below — sign up when you want to play.</span>
+        </div>
+      )}
+
       <div className="page-head" style={{ paddingBottom: 'var(--s3)' }}>
         <h1>Markets</h1>
       </div>

@@ -9,7 +9,7 @@ const QUICK = [100, 250, 500];
 
 export default function CouponScreen() {
   const { selections, count, totalOdds, remove, clear } = useCart();
-  const { profile, refreshProfile } = useAuth();
+  const { profile, session, refreshProfile } = useAuth();
   const navigate = useNavigate();
 
   const balance = profile?.gold_balance ?? 0;
@@ -118,7 +118,7 @@ export default function CouponScreen() {
               Max
             </button>
           </div>
-          <div className="stake-balance dim tnum">Balance: {balance} gold</div>
+          {session && <div className="stake-balance dim tnum">Balance: {balance} gold</div>}
         </div>
 
         <div className="slip-row slip-payout">
@@ -127,18 +127,24 @@ export default function CouponScreen() {
         </div>
 
         {error && <div className="banner banner-error" style={{ marginTop: 'var(--s3)' }}>{error}</div>}
-        {!stakeValid && stake > balance && (
+        {session && !stakeValid && stake > balance && (
           <div className="banner" style={{ marginTop: 'var(--s3)' }}>Stake exceeds your balance.</div>
         )}
 
-        <button
-          className="btn btn-primary btn-block"
-          style={{ marginTop: 'var(--s3)' }}
-          disabled={busy || !stakeValid}
-          onClick={place}
-        >
-          {busy ? '…' : `Place coupon · ${stake} gold`}
-        </button>
+        {session ? (
+          <button
+            className="btn btn-primary btn-block"
+            style={{ marginTop: 'var(--s3)' }}
+            disabled={busy || !stakeValid}
+            onClick={place}
+          >
+            {busy ? '…' : `Place coupon · ${stake} gold`}
+          </button>
+        ) : (
+          <button className="btn btn-primary btn-block" style={{ marginTop: 'var(--s3)' }} onClick={() => navigate('/login')}>
+            Log in to play
+          </button>
+        )}
       </div>
     </div>
   );

@@ -55,6 +55,27 @@ export class SupabaseMatchProvider implements MatchProvider {
     });
   }
 
+  async getMatch(id: string): Promise<Match | null> {
+    const { data, error } = await supabase
+      .from('matches')
+      .select(`${MATCH_COLS}, markets(id, match_id, market_type, name, status, sort_order, ` +
+        `market_options(id, market_id, label, outcome_key, odds, is_winner, sort_order))`)
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) return null;
+    const raw = data as unknown as Match & { markets: (Market & { market_options: unknown })[] };
+    const markets: Market[] = (raw.markets ?? [])
+      .map((m) => {
+        const opts = ((m as unknown as { market_options: Market['options'] }).market_options ?? [])
+          .map((o) => ({ ...o, odds: Number(o.odds) }))
+          .sort((a, b) => a.sort_order - b.sort_order);
+        return { ...m, options: opts } as Market;
+      })
+      .sort((a, b) => a.sort_order - b.sort_order);
+    return { ...(raw as Match), markets };
+  }
+
   async getLiveStates(matchIds: string[]): Promise<LiveState[]> {
     if (matchIds.length === 0) return [];
     const { data, error } = await supabase.rpc('get_live_state', { p_match_ids: matchIds });

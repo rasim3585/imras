@@ -28,6 +28,9 @@ export interface MatchProvider {
   /** Wall-clock live state for a set of matches (phase/minute/score/goals/odds). */
   getLiveStates(matchIds: string[]): Promise<LiveState[]>;
 
+  /** One match with all its markets (for the match-detail screen). */
+  getMatch(id: string): Promise<Match | null>;
+
   /** Place a coupon from selected market-option ids; server prices + settles. */
   placeCoupon(optionIds: string[], stake: number): Promise<PlacedCoupon>;
 
