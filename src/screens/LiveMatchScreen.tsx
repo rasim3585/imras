@@ -43,6 +43,7 @@ export default function LiveMatchScreen() {
   const [myLeg, setMyLeg] = useState<CouponLeg | null>(null);
   const [couponId, setCouponId] = useState<string | null>(null);
   const [feed, setFeed] = useState<Line[]>([]);
+  const [curLine, setCurLine] = useState<Line | null>(null);
   const [score, setScore] = useState({ h: 0, a: 0 });
   const [flash, setFlash] = useState<{ team: 'home' | 'away'; penalty: boolean } | null>(null);
 
@@ -86,6 +87,7 @@ export default function LiveMatchScreen() {
         baselineGoals.current = st.events.length;
         setFeed(feedRef.current);
         setScore({ h: st.home_score, a: st.away_score });
+        setCurLine(lines[lines.length - 1] ?? null);
         seeded.current = true;
         return;
       }
@@ -110,6 +112,7 @@ export default function LiveMatchScreen() {
       if (next) {
         feedRef.current = [next, ...feedRef.current].slice(0, 60);
         setFeed(feedRef.current);
+        setCurLine(next);
         if (next.isGoal) {
           if (next.scoreH != null) setScore({ h: next.scoreH, a: next.scoreA! });
           setFlash({ team: next.team!, penalty: !!next.penalty });
@@ -153,7 +156,7 @@ export default function LiveMatchScreen() {
       <PitchTV
         home={home} away={away} hs={phase === 'upcoming' ? 0 : hs} as={phase === 'upcoming' ? 0 : as}
         minute={shownMinute} phase={phase} redHome={state.red_home} redAway={state.red_away}
-        flashTeam={flash?.team ?? null}
+        flashTeam={flash?.team ?? null} line={curLine}
       />
 
       {myLeg && (
