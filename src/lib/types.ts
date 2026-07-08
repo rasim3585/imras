@@ -14,7 +14,15 @@ export interface Profile {
   created_at: string;
   gold_balance: number;
   last_daily_bonus_at: string | null;
+  login_streak: number;
+  current_streak: number;
+  best_streak: number;
 }
+
+export interface DailyBonus { awarded: number; streak_day: number; login_streak: number; new_balance: number; }
+export interface Challenge { key: string; label: string; target: number; reward: number; progress: number; claimed: boolean; }
+export interface LeaderboardRow { username: string; net: number; rank: number; }
+export interface Leaderboard { rows: LeaderboardRow[]; me: { rank: number | null; net: number }; }
 
 /** A goal event on the match timeline (for virtual live playback). Half/full
  *  time markers are synthesized client-side. */

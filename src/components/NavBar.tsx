@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { Brand } from './Brand';
-import { MarketsIcon, CouponIcon, ProfileIcon } from './icons';
+import { MarketsIcon, CouponIcon, RanksIcon, ProfileIcon } from './icons';
 
 export default function NavBar() {
   const { profile, signOut } = useAuth();
@@ -32,6 +32,10 @@ export default function NavBar() {
           <NavLink to="/coupons" className="tab">
             <CouponIcon />
             Coupons
+          </NavLink>
+          <NavLink to="/ranks" className="tab">
+            <RanksIcon />
+            Ranks
           </NavLink>
           <NavLink to="/profile" className="tab">
             <ProfileIcon />

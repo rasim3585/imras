@@ -1,6 +1,9 @@
 import { supabase } from './supabase';
 import type { MatchProvider, PlacedCoupon } from './matchProvider';
-import type { Coupon, CouponLeg, CouponSettlement, LiveState, Market, Match } from './types';
+import type {
+  Coupon, CouponLeg, CouponSettlement, LiveState, Market, Match,
+  DailyBonus, Challenge, Leaderboard,
+} from './types';
 
 // Explicit match columns — omits `true_probabilities` (hidden) and
 // `display_odds` (server-only seed input; odds are exposed via market_options).
@@ -127,10 +130,28 @@ export class SupabaseMatchProvider implements MatchProvider {
     return Number(data ?? 0);
   }
 
-  async claimDailyBonus(): Promise<number> {
+  async claimDailyBonus(): Promise<DailyBonus> {
     const { data, error } = await supabase.rpc('claim_daily_bonus');
     if (error) throw new Error(error.message);
+    return data as DailyBonus;
+  }
+
+  async getChallenges(): Promise<Challenge[]> {
+    const { data, error } = await supabase.rpc('get_challenges');
+    if (error) throw new Error(error.message);
+    return (data ?? []) as Challenge[];
+  }
+
+  async claimChallenge(key: string): Promise<number> {
+    const { data, error } = await supabase.rpc('claim_challenge', { p_key: key });
+    if (error) throw new Error(error.message);
     return Number((data as { new_balance: number }).new_balance);
+  }
+
+  async getLeaderboard(): Promise<Leaderboard> {
+    const { data, error } = await supabase.rpc('get_leaderboard');
+    if (error) throw new Error(error.message);
+    return data as Leaderboard;
   }
 
   async topupGold(): Promise<number> {

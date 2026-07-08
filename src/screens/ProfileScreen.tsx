@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { matchProvider } from '../lib/matchProvider';
-import type { Coupon } from '../lib/types';
+import type { Challenge, Coupon } from '../lib/types';
 import { accuracyPct, formatOdds } from '../lib/format';
 
 function isBonusAvailable(last: string | null): boolean {
@@ -20,21 +20,34 @@ export default function ProfileScreen() {
   const { profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const loadChallenges = useCallback(async () => {
+    try { setChallenges(await matchProvider.getChallenges()); } catch { /* optional */ }
+  }, []);
 
   useEffect(() => {
     (async () => {
       try {
         setCoupons(await matchProvider.getMyCoupons());
+        await loadChallenges();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Could not load your history');
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [loadChallenges]);
+
+  async function claimChallenge(key: string) {
+    setBusy(true);
+    try { await matchProvider.claimChallenge(key); await refreshProfile(); await loadChallenges(); }
+    catch (err) { setError(err instanceof Error ? err.message : 'Could not claim'); }
+    finally { setBusy(false); }
+  }
 
   const stats = useMemo(() => {
     const settled = coupons.filter((c) => c.status !== 'pending');
@@ -88,7 +101,7 @@ export default function ProfileScreen() {
         <div className="gold-actions">
           {bonusReady && (
             <button className="btn btn-primary btn-sm" disabled={busy} onClick={claimBonus}>
-              Claim daily +500
+              Claim daily bonus
             </button>
           )}
           {canTopup && (
@@ -104,6 +117,16 @@ export default function ProfileScreen() {
 
       <div className="stat-grid" style={{ marginTop: 'var(--s2)' }}>
         <div className="stat">
+          <span className="stat-k">Win streak</span>
+          <span className={`stat-v tnum ${(profile?.current_streak ?? 0) > 0 ? 'pos' : ''}`}>
+            {profile?.current_streak ?? 0}{(profile?.current_streak ?? 0) > 0 ? ' \u{1F525}' : ''}
+          </span>
+        </div>
+        <div className="stat">
+          <span className="stat-k">Best streak</span>
+          <span className="stat-v tnum">{profile?.best_streak ?? 0}</span>
+        </div>
+        <div className="stat">
           <span className="stat-k">Pick accuracy</span>
           <span className="stat-v tnum">{stats.accuracy}%</span>
         </div>
@@ -115,10 +138,32 @@ export default function ProfileScreen() {
           <span className="stat-k">Coupons played</span>
           <span className="stat-v tnum">{stats.played}</span>
         </div>
-        <div className="stat" style={{ gridColumn: 'span 3' }}>
+        <div className="stat">
           <span className="stat-k">Biggest win</span>
-          <span className="stat-v tnum pos">{stats.biggest.toLocaleString()} gold</span>
+          <span className="stat-v tnum pos">{stats.biggest.toLocaleString()}</span>
         </div>
+      </div>
+
+      <div className="section-head"><h3>Today's challenges</h3></div>
+      <div className="card dna">
+        {challenges.map((ch) => {
+          const done = ch.progress >= ch.target;
+          return (
+            <div key={ch.key} className="dna-row">
+              <div className="dna-top">
+                <span className="name">{ch.label}</span>
+                {ch.claimed ? (
+                  <span className="chip chip-pos">Claimed</span>
+                ) : done ? (
+                  <button className="btn btn-primary btn-sm" disabled={busy} onClick={() => claimChallenge(ch.key)}>+{ch.reward}</button>
+                ) : (
+                  <span className="val tnum">{ch.progress}/{ch.target} · +{ch.reward}</span>
+                )}
+              </div>
+              <div className="dna-track"><div className="dna-fill" style={{ width: `${Math.min(100, (ch.progress / ch.target) * 100)}%` }} /></div>
+            </div>
+          );
+        })}
       </div>
 
       <div className="section-head"><h3>Recent coupons</h3></div>
@@ -148,6 +193,8 @@ export default function ProfileScreen() {
                   <span className="chip chip-pos tnum">+{c.potential_win}</span>
                 ) : c.status === 'lost' ? (
                   <span className="chip chip-neg">Lost</span>
+                ) : c.status === 'cashed_out' ? (
+                  <span className="chip chip-accent tnum">Cashed +{c.cashout_amount}</span>
                 ) : (
                   <span className="chip chip-accent">Open</span>
                 )}

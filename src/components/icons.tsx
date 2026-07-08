@@ -57,6 +57,17 @@ export function CouponIcon() {
   );
 }
 
+export function RanksIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+         strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4" y="12" width="4" height="8" rx="1" />
+      <rect x="10" y="6" width="4" height="14" rx="1" />
+      <rect x="16" y="9" width="4" height="11" rx="1" />
+    </svg>
+  );
+}
+
 export function ProfileIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"

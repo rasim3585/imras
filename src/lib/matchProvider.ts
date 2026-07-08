@@ -1,4 +1,6 @@
-import type { Match, Coupon, CouponSettlement, LiveState } from './types';
+import type {
+  Match, Coupon, CouponSettlement, LiveState, DailyBonus, Challenge, Leaderboard,
+} from './types';
 import { SupabaseMatchProvider } from './supabaseMatchProvider';
 
 export interface PlacedCoupon {
@@ -46,11 +48,20 @@ export interface MatchProvider {
   /** Cash out an open coupon at the current value; returns the new balance. */
   doCashout(couponId: string): Promise<number>;
 
-  /** Daily retention bonus (+500, once per day). Returns the new balance. */
-  claimDailyBonus(): Promise<number>;
+  /** Escalating daily login bonus (once per UTC day). */
+  claimDailyBonus(): Promise<DailyBonus>;
 
   /** Safety-net refill when nearly broke. Returns the new balance. */
   topupGold(): Promise<number>;
+
+  /** Today's daily challenges with progress. */
+  getChallenges(): Promise<Challenge[]>;
+
+  /** Claim a completed challenge's reward; returns the new balance. */
+  claimChallenge(key: string): Promise<number>;
+
+  /** Weekly net-gold leaderboard (top 50 + the caller's rank). */
+  getLeaderboard(): Promise<Leaderboard>;
 }
 
 // --- Active provider --------------------------------------------------------

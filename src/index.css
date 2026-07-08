@@ -544,6 +544,15 @@ a:hover { color: var(--accent); }
 @keyframes cmIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .redchip { color: var(--loss); font-size: 0.7em; }
 
+/* leaderboard */
+.lb-me { display: flex; align-items: center; gap: var(--s3); padding: 12px var(--s4); border-color: var(--accent-line); }
+.lb-me-name { flex: 1; font-weight: 600; }
+.lb-rank { min-width: 34px; color: var(--text-2); font-weight: 700; }
+.lb-net { font-weight: 700; font-variant-numeric: tabular-nums; }
+.lb-net.pos { color: var(--win); }
+.lb-net.neg { color: var(--loss); }
+.lb-row.is-me { background: var(--accent-soft); }
+
 /* feed event icons */
 .feed-ic { display: inline-flex; }
 .feed-ic svg { width: 15px; height: 15px; display: block; }
