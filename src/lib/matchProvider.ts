@@ -60,8 +60,8 @@ export interface MatchProvider {
   /** Claim a completed challenge's reward; returns the new balance. */
   claimChallenge(key: string): Promise<number>;
 
-  /** Weekly net-gold leaderboard (top 50 + the caller's rank). */
-  getLeaderboard(): Promise<Leaderboard>;
+  /** Leaderboard for a scope: 'day'/'week' (net gold) or 'wins' (won coupons). */
+  getLeaderboard(scope: 'day' | 'week' | 'wins'): Promise<Leaderboard>;
 }
 
 // --- Active provider --------------------------------------------------------

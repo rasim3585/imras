@@ -21,8 +21,13 @@ export interface Profile {
 
 export interface DailyBonus { awarded: number; streak_day: number; login_streak: number; new_balance: number; }
 export interface Challenge { key: string; label: string; target: number; reward: number; progress: number; claimed: boolean; }
-export interface LeaderboardRow { username: string; net: number; rank: number; }
-export interface Leaderboard { rows: LeaderboardRow[]; me: { rank: number | null; net: number }; }
+export type LeaderboardScope = 'day' | 'week' | 'wins';
+export interface LeaderboardRow { username: string; rank: number; value: number; played: number | null; }
+export interface Leaderboard {
+  scope: LeaderboardScope;
+  rows: LeaderboardRow[];
+  me: { rank: number | null; value: number; played: number | null };
+}
 
 /** A goal event on the match timeline (for virtual live playback). Half/full
  *  time markers are synthesized client-side. */

@@ -148,8 +148,8 @@ export class SupabaseMatchProvider implements MatchProvider {
     return Number((data as { new_balance: number }).new_balance);
   }
 
-  async getLeaderboard(): Promise<Leaderboard> {
-    const { data, error } = await supabase.rpc('get_leaderboard');
+  async getLeaderboard(scope: 'day' | 'week' | 'wins'): Promise<Leaderboard> {
+    const { data, error } = await supabase.rpc('get_leaderboard', { p_scope: scope });
     if (error) throw new Error(error.message);
     return data as Leaderboard;
   }
