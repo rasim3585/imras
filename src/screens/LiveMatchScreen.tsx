@@ -5,20 +5,13 @@ import {
   atmosphereScript, goalBurst, goalHistoryLine, cardLine, type Line,
 } from '../live/commentary';
 import { isPenaltyGoal } from '../live/liveModel';
+import PitchTV from '../live/PitchTV';
 import { matchProvider } from '../lib/matchProvider';
 import type { CouponLeg, LiveState } from '../lib/types';
 import { formatOdds, impliedProb } from '../lib/format';
-import { teamColor, teamInitial } from '../lib/teams';
+import { teamColor } from '../lib/teams';
 
 type OutKey = 'home' | 'draw' | 'away';
-
-function Badge({ name, glow }: { name: string; glow?: boolean }) {
-  return (
-    <span className={`team-badge ${glow ? 'badge-glow' : ''}`} style={{ background: teamColor(name) }} aria-hidden="true">
-      {teamInitial(name)}
-    </span>
-  );
-}
 
 function computePickState(pick: OutKey, hs: number, as: number): 'win' | 'lose' | 'level' {
   const leader: OutKey = hs > as ? 'home' : as > hs ? 'away' : 'draw';
@@ -157,24 +150,11 @@ export default function LiveMatchScreen() {
         {finished && <span className="chip">Full-time</span>}
       </div>
 
-      <div className="card live-board">
-        <div className="lb-side">
-          <Badge name={home} glow={flash?.team === 'home'} />
-          <span className="lb-team">{home}{state.red_home > 0 ? <span className="redchip" title="Red card"> ▮</span> : null}</span>
-        </div>
-        <div className="lb-center">
-          <div className={`lb-score tnum ${flash ? 'pop' : ''}`} key={`${hs}-${as}`}>
-            <span className="lb-num">{phase === 'upcoming' ? '–' : hs}</span>
-            <span className="lb-sep">:</span>
-            <span className="lb-num">{phase === 'upcoming' ? '–' : as}</span>
-          </div>
-          <div className="lb-minute tnum">{phase === 'upcoming' ? 'soon' : finished ? "90'" : `${shownMinute}'`}</div>
-        </div>
-        <div className="lb-side lb-away">
-          <span className="lb-team">{state.red_away > 0 ? <span className="redchip" title="Red card">▮ </span> : null}{away}</span>
-          <Badge name={away} glow={flash?.team === 'away'} />
-        </div>
-      </div>
+      <PitchTV
+        home={home} away={away} hs={phase === 'upcoming' ? 0 : hs} as={phase === 'upcoming' ? 0 : as}
+        minute={shownMinute} phase={phase} redHome={state.red_home} redAway={state.red_away}
+        flashTeam={flash?.team ?? null}
+      />
 
       {myLeg && (
         <div className={`card betstatus ${pickState ?? ''}`}>
