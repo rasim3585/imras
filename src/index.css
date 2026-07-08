@@ -603,7 +603,30 @@ a:hover { color: var(--win); }
 .coupon-bar-odds b { font-family: var(--mono); font-size: 1.02rem; color: var(--win); }
 
 /* --- Coupon dock (desktop panel) + mobile sheet -------------------------- */
-.coupon-dock { display: none; position: fixed; top: var(--topbar-h); right: 0; bottom: 0; width: var(--coupon-w); z-index: 20; background: var(--surface); border-left: 1px solid var(--line); overflow-y: auto; }
+.coupon-dock { display: none; position: fixed; top: var(--topbar-h); right: 0; bottom: 0; width: var(--coupon-w); z-index: 20; background: var(--bg); border-left: 1px solid var(--line); overflow-y: auto; }
+.dock-stack { display: flex; flex-direction: column; gap: 12px; padding: 12px; }
+.dock-stack .cpn { background: var(--card); border: 1px solid var(--card-line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+.dock-empty { padding: 44px 16px; text-align: center; }
+
+/* mini live-watch under the coupon */
+.minitv { background: #16241c; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+.mtv-sb { padding: 9px 12px; background: #1b2c22; border-bottom: 1px solid #24382c; }
+.mtv-lg { display: block; text-align: center; font-size: 0.6rem; color: #7d9488; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+.mtv-lg:hover { color: #cfe9dd; text-decoration: none; }
+.mtv-main { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px; }
+.mtv-t { font-size: 0.72rem; font-weight: 600; color: #eaf4ee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mtv-t.a { text-align: right; }
+.mtv-sc { font-family: var(--mono); font-size: 1.05rem; font-weight: 800; color: #eaf4ee; text-align: center; }
+.mtv-min { display: block; font-size: 0.56rem; color: #9fb4a8; font-weight: 700; text-align: center; margin-top: 1px; }
+.mtv-min.on { color: #e24b4a; }
+.mtv-pitch { height: 66px; position: relative; background: repeating-linear-gradient(90deg, #1f7a4d 0 20px, #1c7047 20px 40px); }
+.mtv-ml { position: absolute; left: 50%; top: 0; bottom: 0; border-left: 1px solid rgba(255,255,255,0.25); }
+.mtv-ball { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: #fff; box-shadow: 0 0 5px rgba(255,255,255,0.7); transform: translate(-50%, -50%); transition: left 1.5s ease-in-out, top 1.5s ease-in-out; }
+.mtv-feed { padding: 7px 12px 9px; }
+.mtv-fh { font-size: 0.56rem; color: #7d9488; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 5px; }
+.mtv-row { font-size: 0.7rem; color: #cfe9dd; padding: 2px 0; display: flex; gap: 6px; }
+.mtv-row .mn { font-family: var(--mono); color: #7d9488; font-size: 0.62rem; }
+.mtv-row.g { color: #4fe89a; font-weight: 600; }
 .cpn { display: flex; flex-direction: column; min-height: 0; }
 .cpn-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--line); }
 .cpn-title { font-weight: 700; font-size: 0.95rem; }
@@ -634,8 +657,8 @@ a:hover { color: var(--win); }
 
 @media (min-width: 1024px) {
   .coupon-bar, .coupon-sheet-back { display: none; }
-  body.has-coupon .coupon-dock { display: block; }
-  body.has-coupon .app-main { padding-right: var(--coupon-w); }
+  .coupon-dock { display: block; }          /* always reserved -> bulletin never shifts */
+  .app-main { padding-right: var(--coupon-w); }
 }
 
 /* --- Coupon (slip) screen ---------------------------------------------- */
