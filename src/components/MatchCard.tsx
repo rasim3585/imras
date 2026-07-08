@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import type { Match, Market } from '../lib/types';
 import { formatKickoff, formatOdds, impliedProb } from '../lib/format';
 import { teamColor, teamInitial } from '../lib/teams';
@@ -68,7 +69,7 @@ export default function MatchCard({ match }: { match: Match }) {
         <span className="contract-time tnum">{formatKickoff(match.starts_at)}</span>
       </div>
 
-      <div className="matchup">
+      <Link className="matchup" to={`/live/${match.id}`}>
         <span className="team team-home">
           <TeamBadge name={match.home_team} />
           <span className="team-name">{match.home_team}</span>
@@ -78,7 +79,7 @@ export default function MatchCard({ match }: { match: Match }) {
           <span className="team-name">{match.away_team}</span>
           <TeamBadge name={match.away_team} />
         </span>
-      </div>
+      </Link>
 
       {match.markets.map((m) => (
         <MarketSection key={m.id} match={match} market={m} />

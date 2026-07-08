@@ -6,6 +6,7 @@ import FeedScreen from './screens/FeedScreen';
 import CouponScreen from './screens/CouponScreen';
 import MyCouponsScreen from './screens/MyCouponsScreen';
 import SettleScreen from './screens/SettleScreen';
+import LiveMatchScreen from './screens/LiveMatchScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import NavBar from './components/NavBar';
 
@@ -32,6 +33,7 @@ function App() {
           <Route path="/coupon" element={<CouponScreen />} />
           <Route path="/coupons" element={<MyCouponsScreen />} />
           <Route path="/settle/:couponId" element={<SettleScreen />} />
+          <Route path="/live/:matchId" element={<LiveMatchScreen />} />
           <Route path="/profile" element={<ProfileScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { matchProvider } from '../lib/matchProvider';
 import type { Coupon } from '../lib/types';
 import { formatOdds } from '../lib/format';
@@ -56,16 +56,26 @@ export default function MyCouponsScreen() {
               <div className="coupon-legs">
                 {c.legs.map((s) => {
                   const mark = s.status === 'pending' ? '' : s.status === 'won' ? 'leg-hit' : 'leg-miss';
-                  return (
-                    <div key={s.id} className={`coupon-leg ${mark}`}>
+                  const inner = (
+                    <>
                       <span className="leg-match">{s.match.home_team} vs {s.match.away_team}</span>
                       <span className="leg-pick tnum">
                         <span className="muted">{s.market_name}:</span> {s.option_label} @ {formatOdds(s.odds)}
                       </span>
-                    </div>
+                    </>
+                  );
+                  // open coupons: tap a leg to watch that match live
+                  return c.status === 'pending' ? (
+                    <Link key={s.id} className={`coupon-leg leg-link ${mark}`} to={`/live/${s.match.id}`}>{inner}</Link>
+                  ) : (
+                    <div key={s.id} className={`coupon-leg ${mark}`}>{inner}</div>
                   );
                 })}
               </div>
+
+              {c.status === 'pending' && (
+                <div className="dim leg-hint">Tap a match to watch it live</div>
+              )}
 
               <div className="coupon-card-foot">
                 <div className="coupon-foot-metrics">
@@ -77,8 +87,8 @@ export default function MyCouponsScreen() {
                   </span>
                 </div>
                 {c.status === 'pending' && (
-                  <button className="btn btn-primary btn-sm" onClick={() => navigate(`/settle/${c.id}`)}>
-                    Watch result
+                  <button className="btn btn-ghost btn-sm" onClick={() => navigate(`/settle/${c.id}`)}>
+                    Settle now
                   </button>
                 )}
               </div>
