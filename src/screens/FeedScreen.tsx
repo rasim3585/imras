@@ -7,14 +7,14 @@ import { matchProvider } from '../lib/matchProvider';
 import type { LiveState, Match } from '../lib/types';
 
 type SportKey = 'live' | 'football' | 'basketball' | 'efootball' | 'ebasket' | 'tennis' | 'volley';
-const SPORTS: { key: SportKey; label: string; soon?: boolean }[] = [
-  { key: 'live', label: 'Live' },
-  { key: 'football', label: 'Football', soon: true },
-  { key: 'basketball', label: 'Basketball', soon: true },
-  { key: 'efootball', label: 'E-Football' },
-  { key: 'ebasket', label: 'E-Basket', soon: true },
-  { key: 'tennis', label: 'Tennis', soon: true },
-  { key: 'volley', label: 'Volleyball', soon: true },
+const SPORTS: { key: SportKey; label: string; icon: string; soon?: boolean }[] = [
+  { key: 'live', label: 'Live', icon: '⚡' },
+  { key: 'football', label: 'Football', icon: '⚽', soon: true },
+  { key: 'basketball', label: 'Basketball', icon: '🏀', soon: true },
+  { key: 'efootball', label: 'E-Football', icon: '' },
+  { key: 'ebasket', label: 'E-Basket', icon: '🎮', soon: true },
+  { key: 'tennis', label: 'Tennis', icon: '🎾', soon: true },
+  { key: 'volley', label: 'Volleyball', icon: '🏐', soon: true },
 ];
 
 function Cols() {
@@ -96,13 +96,16 @@ export default function FeedScreen() {
       )}
 
       <div className="sport-bar">
-        {SPORTS.map((s) => (
-          <button key={s.key} className={`sport-tab ${sport === s.key ? 'active' : ''}`} onClick={() => setSport(s.key)}>
-            {s.key === 'efootball' && <EFootballIcon size={16} />}
-            {s.key === 'live' && <span className="dot" />}
-            {s.label}{s.soon && <span className="soon-dot">soon</span>}
-          </button>
-        ))}
+        {SPORTS.map((s) => {
+          const cnt = s.key === 'live' ? liveOnes.length : s.key === 'efootball' ? visible.length : null;
+          return (
+            <button key={s.key} className={`sport-tab ${sport === s.key ? 'active' : ''} ${s.soon ? 'soon' : ''}`} onClick={() => setSport(s.key)}>
+              {s.key === 'efootball' ? <EFootballIcon size={16} /> : <span className="sport-ic">{s.icon}</span>}
+              {s.label}
+              {s.soon ? <span className="soon-badge">soon</span> : cnt != null ? <span className="sport-cnt">{cnt}</span> : null}
+            </button>
+          );
+        })}
       </div>
 
       {error && <div className="banner banner-error">{error}</div>}
