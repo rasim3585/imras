@@ -21,6 +21,21 @@ export interface Profile {
 
 export interface DailyBonus { awarded: number; streak_day: number; login_streak: number; new_balance: number; }
 export interface Challenge { key: string; label: string; target: number; reward: number; progress: number; claimed: boolean; }
+export interface League { id: string; name: string; invite_code: string; members: number; is_owner: boolean; }
+export interface LeagueDetail { id: string; name: string; invite_code: string; rows: { username: string; value: number; rank: number }[]; }
+export interface Rival {
+  username: string; my_won: number; their_won: number; my_net: number; their_net: number;
+  h2h_me: number; h2h_them: number; leader: 'me' | 'them' | 'tie';
+}
+export interface SharedLeg {
+  option_id: string; match_id: string; odds: number; status: string;
+  market_name: string; option_label: string; home_team: string; away_team: string;
+}
+export interface SharedCoupon {
+  coupon_id: string; username: string; stake: number; total_odds: number; potential_win: number;
+  status: string; shared_at: string; legs: SharedLeg[];
+}
+
 export type LeaderboardScope = 'day' | 'week' | 'wins';
 export interface LeaderboardRow { username: string; rank: number; value: number; played: number | null; }
 export interface Leaderboard {

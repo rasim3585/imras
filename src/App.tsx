@@ -9,6 +9,8 @@ import SettleScreen from './screens/SettleScreen';
 import LiveMatchScreen from './screens/LiveMatchScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import LeaderboardScreen from './screens/LeaderboardScreen';
+import SocialScreen from './screens/SocialScreen';
+import LeagueDetailScreen from './screens/LeagueDetailScreen';
 import NavBar from './components/NavBar';
 import CouponBar from './components/CouponBar';
 
@@ -37,6 +39,8 @@ function App() {
           <Route path="/settle/:couponId" element={<SettleScreen />} />
           <Route path="/live/:matchId" element={<LiveMatchScreen />} />
           <Route path="/ranks" element={<LeaderboardScreen />} />
+          <Route path="/social" element={<SocialScreen />} />
+          <Route path="/league/:leagueId" element={<LeagueDetailScreen />} />
           <Route path="/profile" element={<ProfileScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

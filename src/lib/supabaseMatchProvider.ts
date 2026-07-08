@@ -2,7 +2,7 @@ import { supabase } from './supabase';
 import type { MatchProvider, PlacedCoupon } from './matchProvider';
 import type {
   Coupon, CouponLeg, CouponSettlement, LiveState, Market, Match,
-  DailyBonus, Challenge, Leaderboard,
+  DailyBonus, Challenge, Leaderboard, League, LeagueDetail, Rival, SharedCoupon,
 } from './types';
 
 // Explicit match columns — omits `true_probabilities` (hidden) and
@@ -152,6 +152,54 @@ export class SupabaseMatchProvider implements MatchProvider {
     const { data, error } = await supabase.rpc('get_leaderboard', { p_scope: scope });
     if (error) throw new Error(error.message);
     return data as Leaderboard;
+  }
+
+  // --- social ---
+  async createLeague(name: string): Promise<League> {
+    const { data, error } = await supabase.rpc('create_league', { p_name: name });
+    if (error) throw new Error(error.message);
+    return data as League;
+  }
+  async joinLeague(code: string): Promise<{ id: string; name: string }> {
+    const { data, error } = await supabase.rpc('join_league', { p_code: code });
+    if (error) throw new Error(error.message.includes('No league') ? 'No league with that code' : error.message);
+    return data as { id: string; name: string };
+  }
+  async leaveLeague(id: string): Promise<void> {
+    const { error } = await supabase.rpc('leave_league', { p_league_id: id });
+    if (error) throw new Error(error.message);
+  }
+  async getMyLeagues(): Promise<League[]> {
+    const { data, error } = await supabase.rpc('get_my_leagues');
+    if (error) throw new Error(error.message);
+    return (data ?? []) as League[];
+  }
+  async getLeague(id: string): Promise<LeagueDetail> {
+    const { data, error } = await supabase.rpc('get_league', { p_league_id: id });
+    if (error) throw new Error(error.message);
+    return data as LeagueDetail;
+  }
+  async addRival(username: string): Promise<void> {
+    const { error } = await supabase.rpc('add_rival', { p_username: username });
+    if (error) throw new Error(error.message.includes('No player') ? 'No player with that username' : error.message);
+  }
+  async removeRival(username: string): Promise<void> {
+    const { error } = await supabase.rpc('remove_rival', { p_username: username });
+    if (error) throw new Error(error.message);
+  }
+  async getRivals(): Promise<Rival[]> {
+    const { data, error } = await supabase.rpc('get_rivals');
+    if (error) throw new Error(error.message);
+    return (data ?? []) as Rival[];
+  }
+  async shareCoupon(couponId: string): Promise<void> {
+    const { error } = await supabase.rpc('share_coupon', { p_coupon_id: couponId });
+    if (error) throw new Error(error.message);
+  }
+  async getSharedFeed(): Promise<SharedCoupon[]> {
+    const { data, error } = await supabase.rpc('get_shared_feed');
+    if (error) throw new Error(error.message);
+    return (data ?? []) as SharedCoupon[];
   }
 
   async topupGold(): Promise<number> {

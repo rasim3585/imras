@@ -17,9 +17,15 @@ export default function MyCouponsScreen() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [cashouts, setCashouts] = useState<Record<string, { value: number; available: boolean }>>({});
   const [busy, setBusy] = useState<string | null>(null);
+  const [shared, setShared] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  async function share(couponId: string) {
+    try { await matchProvider.shareCoupon(couponId); setShared((s) => new Set(s).add(couponId)); }
+    catch (err) { setError(err instanceof Error ? err.message : 'Could not share'); }
+  }
 
   const load = useCallback(async () => {
     await matchProvider.settleDueCoupons().catch(() => 0); // auto-settle finished ones
@@ -122,16 +128,21 @@ export default function MyCouponsScreen() {
                     <b className="tnum">{c.potential_win}</b>
                   </span>
                 </div>
-                {c.status === 'pending' && cashouts[c.id]?.available && (
-                  <button className="btn btn-primary btn-sm" disabled={busy === c.id} onClick={() => cashout(c.id)}>
-                    {busy === c.id ? '…' : `Cash out ${cashouts[c.id].value}`}
+                <div className="row" style={{ gap: 'var(--s2)' }}>
+                  <button className="btn btn-ghost btn-sm" disabled={shared.has(c.id)} onClick={() => share(c.id)}>
+                    {shared.has(c.id) ? 'Shared' : 'Share'}
                   </button>
-                )}
-                {c.status !== 'pending' && (
-                  <button className="btn btn-ghost btn-sm" onClick={() => navigate(`/settle/${c.id}`)}>
-                    View result
-                  </button>
-                )}
+                  {c.status === 'pending' && cashouts[c.id]?.available && (
+                    <button className="btn btn-primary btn-sm" disabled={busy === c.id} onClick={() => cashout(c.id)}>
+                      {busy === c.id ? '…' : `Cash out ${cashouts[c.id].value}`}
+                    </button>
+                  )}
+                  {c.status !== 'pending' && (
+                    <button className="btn btn-ghost btn-sm" onClick={() => navigate(`/settle/${c.id}`)}>
+                      View result
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}

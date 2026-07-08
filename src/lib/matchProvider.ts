@@ -1,5 +1,6 @@
 import type {
   Match, Coupon, CouponSettlement, LiveState, DailyBonus, Challenge, Leaderboard,
+  League, LeagueDetail, Rival, SharedCoupon,
 } from './types';
 import { SupabaseMatchProvider } from './supabaseMatchProvider';
 
@@ -62,6 +63,18 @@ export interface MatchProvider {
 
   /** Leaderboard for a scope: 'day'/'week' (net gold) or 'wins' (won coupons). */
   getLeaderboard(scope: 'day' | 'week' | 'wins'): Promise<Leaderboard>;
+
+  // --- social ---
+  createLeague(name: string): Promise<League>;
+  joinLeague(code: string): Promise<{ id: string; name: string }>;
+  leaveLeague(id: string): Promise<void>;
+  getMyLeagues(): Promise<League[]>;
+  getLeague(id: string): Promise<LeagueDetail>;
+  addRival(username: string): Promise<void>;
+  removeRival(username: string): Promise<void>;
+  getRivals(): Promise<Rival[]>;
+  shareCoupon(couponId: string): Promise<void>;
+  getSharedFeed(): Promise<SharedCoupon[]>;
 }
 
 // --- Active provider --------------------------------------------------------
