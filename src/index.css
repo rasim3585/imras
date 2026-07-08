@@ -553,10 +553,11 @@ a:hover { color: var(--win); }
 @keyframes ps-pulse { 0%, 100% { opacity: 0.45; transform: scale(1); } 50% { opacity: 1; transform: scale(1.15); } }
 
 .pitch {
-  flex: 1; aspect-ratio: 16 / 11; border-radius: 6px; position: relative; overflow: hidden;
+  width: 100%; height: 200px; border-radius: 6px; position: relative; overflow: hidden;
   border: 2px solid rgba(255, 255, 255, 0.15);
   background: repeating-linear-gradient(90deg, #2e8b57 0, #2e8b57 11%, #267349 11%, #267349 22%);
 }
+@media (max-width: 480px) { .pitch { height: 168px; } }
 .pl { position: absolute; border: 2px solid rgba(255, 255, 255, 0.45); }
 .midline { left: 50%; top: 0; bottom: 0; width: 0; border: 0; border-left: 2px solid rgba(255, 255, 255, 0.45); }
 .circle { left: 50%; top: 50%; width: 26%; aspect-ratio: 1; border-radius: 50%; transform: translate(-50%, -50%); }
