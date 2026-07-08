@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Match, LiveState, Market } from '../lib/types';
 import { formatKickoff, formatOdds } from '../lib/format';
@@ -30,11 +30,34 @@ export default function MatchRow({ match, live }: { match: Match; live?: LiveSta
   const mrOdds = mr ? [oddsOf(mr, 'home'), oddsOf(mr, 'draw'), oddsOf(mr, 'away')] : [];
   const favMr = Math.min(...mrOdds.filter((x) => x > 0));
 
+  // odds-move arrows: on a live change, show ▲/▼ for ~5s (Nesine "breathing" feel)
+  const shownCells: [Market | undefined, string][] = [[mr, 'home'], [mr, 'draw'], [mr, 'away'], [ou, 'ou25_under'], [ou, 'ou25_over'], [kg, 'btts_yes']];
+  const prev = useRef<Record<string, number>>({});
+  const timers = useRef<Record<string, number>>({});
+  const [arrows, setArrows] = useState<Record<string, 'up' | 'down'>>({});
+  const oddsKey = shownCells.map(([m, k]) => oddsOf(m, k)).join(',');
+  useEffect(() => {
+    if (!isLive) return;
+    for (const [m, k] of shownCells) {
+      const cur = oddsOf(m, k); if (!(cur > 0)) continue;
+      const p = prev.current[k];
+      if (p != null && cur !== p) {
+        const dir = cur > p ? 'up' : 'down';
+        setArrows((a) => ({ ...a, [k]: dir }));
+        if (timers.current[k]) clearTimeout(timers.current[k]);
+        timers.current[k] = window.setTimeout(() => setArrows((a) => { const n = { ...a }; delete n[k]; return n; }), 5000);
+      }
+      prev.current[k] = cur;
+    }
+  }, [oddsKey, isLive]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => { Object.values(timers.current).forEach(clearTimeout); }, []);
+
   const Cell = ({ m, k, sec = false }: { m: Market | undefined; k: string; sec?: boolean }) => {
-    const o = opt(m, k); const odds = oddsOf(m, k); const on = o ? isSelected(o.id) : false;
+    const o = opt(m, k); const odds = oddsOf(m, k); const on = o ? isSelected(o.id) : false; const arr = arrows[k];
     return (
-      <button type="button" disabled={!o} className={`ll-odd ${sec ? 'll-sec' : ''} ${on ? 'sel' : ''} ${m === mr && odds === favMr ? 'fav' : ''}`} onClick={() => pick(m, k)}>
+      <button type="button" disabled={!o} className={`ll-odd ${sec ? 'll-sec' : ''} ${on ? 'sel' : ''} ${m === mr && odds === favMr ? 'fav' : ''} ${arr ? `chg-${arr}` : ''}`} onClick={() => pick(m, k)}>
         {o ? formatOdds(odds) : '–'}
+        {arr && <span className={`ll-arrow ${arr}`}>{arr === 'up' ? '▲' : '▼'}</span>}
       </button>
     );
   };
@@ -46,7 +69,12 @@ export default function MatchRow({ match, live }: { match: Match; live?: LiveSta
     <>
       <div className={`ll-row ${isLive ? 'is-live' : ''}`}>
         <Link className="ll-info" to={`/match/${match.id}`}>
-          <span className={`ll-time tnum ${isLive ? 'live' : ''}`}>{isLive ? `${live!.minute}'` : formatKickoff(match.starts_at)}</span>
+          <span className={`ll-time tnum ${isLive ? 'live' : (live && live.starts_in != null && live.starts_in <= 90) ? 'soon' : ''}`}>
+            {isLive ? `${live!.minute}'`
+              : (live && live.starts_in != null)
+                ? (live.starts_in < 60 ? `${live.starts_in}s` : `${Math.ceil(live.starts_in / 60)}m`)
+                : formatKickoff(match.starts_at)}
+          </span>
           <span className="ll-teamline">
             <span className="ll-badge" style={{ background: teamColor(match.home_team) }}>{teamInitial(match.home_team)}</span>
             <span className="ll-name">{match.home_team} <i className="ll-pl">({hP})</i></span>

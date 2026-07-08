@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import MatchRow from '../components/MatchRow';
 import { EFootballIcon } from '../components/icons';
@@ -80,7 +80,19 @@ export default function FeedScreen() {
   const liveOnes = visible.filter((m) => liveMap[m.id]?.phase === 'live')
     .sort((a, b) => (liveMap[b.id]!.minute) - (liveMap[a.id]!.minute));
   const upcoming = visible.filter((m) => liveMap[m.id]?.phase !== 'live');
+  const startingSoon = upcoming.filter((m) => (liveMap[m.id]?.starts_in ?? 9999) <= 90)
+    .sort((a, b) => (liveMap[a.id]?.starts_in ?? 0) - (liveMap[b.id]?.starts_in ?? 0));
+  const comingUp = upcoming.filter((m) => (liveMap[m.id]?.starts_in ?? 9999) > 90)
+    .sort((a, b) => (liveMap[a.id]?.starts_in ?? 0) - (liveMap[b.id]?.starts_in ?? 0));
   const isSoon = SPORTS.find((s) => s.key === sport)?.soon;
+
+  const wave = (title: string, right: ReactNode, list: Match[]) => list.length > 0 && (
+    <>
+      <div className="ll-bar"><span className="ll-bar-l"><EFootballIcon size={19} /> {title}</span>{right}</div>
+      <Cols />
+      {list.map((m) => <MatchRow key={m.id} match={m} live={liveMap[m.id]} />)}
+    </>
+  );
 
   return (
     <div className="app-shell app-shell-wide">
@@ -123,26 +135,9 @@ export default function FeedScreen() {
         </div>
       ) : (
         <div className="ll">
-          {liveOnes.length > 0 && (
-            <>
-              <div className="ll-bar">
-                <span className="ll-bar-l"><EFootballIcon size={20} /> E-Football · live</span>
-                <span className="ll-bar-r"><span className="dot" />{liveOnes.length} live</span>
-              </div>
-              <Cols />
-              {liveOnes.map((m) => <MatchRow key={m.id} match={m} live={liveMap[m.id]} />)}
-            </>
-          )}
-          {sport !== 'live' && upcoming.length > 0 && (
-            <>
-              <div className="ll-bar">
-                <span className="ll-bar-l"><EFootballIcon size={20} /> E-Football · starting soon</span>
-                <span className="ll-bar-r tnum">2 × ~50s</span>
-              </div>
-              <Cols />
-              {upcoming.map((m) => <MatchRow key={m.id} match={m} live={liveMap[m.id]} />)}
-            </>
-          )}
+          {wave('E-Football · live', <span className="ll-bar-r"><span className="dot" />{liveOnes.length} live</span>, liveOnes)}
+          {sport !== 'live' && wave('E-Football · starting soon', <span className="ll-bar-r">next up</span>, startingSoon)}
+          {sport !== 'live' && wave('E-Football · coming up', <span className="ll-bar-r tnum">2 × 4 min</span>, comingUp)}
         </div>
       )}
     </div>
