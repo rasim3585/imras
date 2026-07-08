@@ -5,13 +5,13 @@ import type { Coupon, CouponLeg, CouponSettlement, Market, Match } from './types
 // Explicit match columns — omits `true_probabilities` (hidden) and
 // `display_odds` (server-only seed input; odds are exposed via market_options).
 const MATCH_COLS =
-  'id,sport,home_team,away_team,starts_at,status,home_score,away_score,result';
+  'id,sport,home_team,away_team,starts_at,status,home_score,away_score,result,timeline';
 
 // Nested embed used for coupons: selection -> option -> market -> match.
 const COUPON_SELECT =
   `*, coupon_selections(id, odds, status, ` +
   `market_options(id, label, outcome_key, is_winner, ` +
-  `markets(name, market_type, matches(id, home_team, away_team, result, home_score, away_score))))`;
+  `markets(name, market_type, matches(id, home_team, away_team, result, home_score, away_score, timeline))))`;
 
 /** Supabase-backed provider. All simulation (results, odds, stake math,
  *  settlement) runs server-side in Postgres RPCs — this only maps data. */

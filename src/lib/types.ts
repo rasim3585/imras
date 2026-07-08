@@ -16,6 +16,14 @@ export interface Profile {
   last_daily_bonus_at: string | null;
 }
 
+/** A goal event on the match timeline (for virtual live playback). Half/full
+ *  time markers are synthesized client-side. */
+export interface MatchEvent {
+  minute: number;
+  type: 'goal';
+  team: 'home' | 'away';
+}
+
 // --- Markets (generic bet types) -------------------------------------------
 
 export interface MarketOption {
@@ -48,6 +56,7 @@ export interface Match {
   home_score: number | null;
   away_score: number | null;
   result: Outcome | null;
+  timeline?: MatchEvent[];   // goal events; present once finished
   markets: Market[];    // populated on the feed
 }
 
@@ -81,6 +90,7 @@ export interface CouponLeg {
     result: Outcome | null;
     home_score: number | null;
     away_score: number | null;
+    timeline?: MatchEvent[];
   };
 }
 
@@ -111,6 +121,7 @@ export interface SettlementLeg {
   result: Outcome | null;
   home_score: number | null;
   away_score: number | null;
+  timeline?: MatchEvent[];
 }
 
 export interface CouponSettlement {
