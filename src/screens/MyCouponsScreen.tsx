@@ -67,7 +67,7 @@ export default function MyCouponsScreen() {
     try {
       await matchProvider.shareCoupon(couponId);
       setShared((s) => new Set(s).add(couponId));
-      setToast('Shared to the community feed');
+      setToast('Shared — open Social › Feed to see it');
     } catch (err) {
       setToast(err instanceof Error ? err.message : 'Could not share');
     }
