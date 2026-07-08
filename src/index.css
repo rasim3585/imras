@@ -441,6 +441,7 @@ a:hover { color: var(--win); }
 .pl { position: absolute; border: 2px solid rgba(255, 255, 255, 0.45); }
 .midline { left: 50%; top: 0; bottom: 0; width: 0; border: 0; border-left: 2px solid rgba(255, 255, 255, 0.45); }
 .circle { left: 50%; top: 50%; width: 26%; aspect-ratio: 1; border-radius: 50%; transform: translate(-50%, -50%); }
+.spot { left: 50%; top: 50%; width: 4px; height: 4px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.5); transform: translate(-50%, -50%); }
 .box { top: 28%; height: 44%; width: 16%; }
 .box-l { left: 0; border-left: 0; } .box-r { right: 0; border-right: 0; }
 .goalbox { top: 40%; height: 20%; width: 5%; }
