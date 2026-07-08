@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLiveMatch } from '../live/useLiveMatch';
+import { useMatchReplay } from '../live/useMatchReplay';
+import type { WatchTimeline } from '../live/liveModel';
 import { matchProvider } from '../lib/matchProvider';
-import type { CouponLeg } from '../lib/types';
+import type { CouponLeg, MatchEvent } from '../lib/types';
 import { formatOdds, impliedProb } from '../lib/format';
 import { teamColor, teamInitial } from '../lib/teams';
 import { BallIcon } from '../components/icons';
@@ -17,22 +19,14 @@ function Badge({ name }: { name: string }) {
   );
 }
 
-// Build a chronological feed (newest first) with running score + half/full time.
-function buildFeed(
-  events: { minute: number; team: 'home' | 'away' }[],
-  home: string, away: string, minute: number, finished: boolean,
-) {
+function buildFeed(events: MatchEvent[], home: string, away: string, minute: number, finished: boolean) {
   const items: { key: string; minute: number; text: string; kind: 'goal' | 'mark' }[] = [];
   let h = 0, a = 0;
   for (const e of events) {
     if (e.team === 'home') h++; else a++;
-    items.push({
-      key: `g${e.minute}${e.team}`, minute: e.minute, kind: 'goal',
-      text: `${e.team === 'home' ? home : away} — ${h}-${a}`,
-    });
+    items.push({ key: `g${e.minute}${e.team}`, minute: e.minute, kind: 'goal', text: `${e.team === 'home' ? home : away} — ${h}-${a}` });
   }
-  if (minute >= 45 || finished)
-    items.push({ key: 'ht', minute: 45, kind: 'mark', text: 'Half-time' });
+  if (minute >= 45 || finished) items.push({ key: 'ht', minute: 45, kind: 'mark', text: 'Half-time' });
   items.push({ key: 'ko', minute: 0, kind: 'mark', text: 'Kick-off' });
   if (finished) items.push({ key: 'ft', minute: 91, kind: 'mark', text: 'Full-time' });
   return items.sort((x, y) => y.minute - x.minute);
@@ -41,23 +35,41 @@ function buildFeed(
 export default function LiveMatchScreen() {
   const { matchId } = useParams<{ matchId: string }>();
   const navigate = useNavigate();
-  const { state, minute, countdown, error } = useLiveMatch(matchId);
+
+  const [tl, setTl] = useState<WatchTimeline | null | undefined>(undefined); // undefined = loading
   const [myLeg, setMyLeg] = useState<CouponLeg | null>(null);
   const [couponId, setCouponId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // find this user's open pick on this match (for the live "are you winning" card)
+  // Try the personal replay (only for matches you've bet on).
+  useEffect(() => {
+    if (!matchId) return;
+    (async () => {
+      try {
+        setTl(await matchProvider.getWatchTimeline(matchId));
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Could not open this match');
+      }
+    })();
+  }, [matchId]);
+
+  // Find the user's pick on this match (for the live "are you winning" card).
   useEffect(() => {
     (async () => {
       try {
         const coupons = await matchProvider.getMyCoupons();
+        let found: { leg: CouponLeg; cid: string } | null = null;
         for (const c of coupons) {
-          if (c.status !== 'pending') continue;
           const leg = c.legs.find((l) => l.match.id === matchId);
-          if (leg) { setMyLeg(leg); setCouponId(c.id); break; }
+          if (leg) { found = { leg, cid: c.id }; if (c.status === 'pending') break; }
         }
-      } catch { /* prediction card is optional */ }
+        if (found) { setMyLeg(found.leg); setCouponId(found.cid); }
+      } catch { /* optional */ }
     })();
   }, [matchId]);
+
+  const replay = useMatchReplay(tl ?? null);
+  const server = useLiveMatch(tl === null && matchId ? matchId : undefined);
 
   if (error) {
     return (
@@ -67,16 +79,32 @@ export default function LiveMatchScreen() {
       </div>
     );
   }
-  if (!state) {
-    return <div className="settle"><div className="spinner" /><p className="settle-note">Connecting to the match…</p></div>;
+
+  // Unify replay / server into one view.
+  type View = {
+    home: string; away: string; phase: 'upcoming' | 'live' | 'finished';
+    minute: number; hs: number; as: number; events: MatchEvent[];
+    odds: { home: number; draw: number; away: number } | null; countdown: number;
+  };
+  let view: View | null = null;
+  if (tl && replay) {
+    view = { home: tl.home_team, away: tl.away_team, phase: replay.phase, minute: replay.minute,
+      hs: replay.home_score, as: replay.away_score, events: replay.revealed, odds: replay.live_odds, countdown: 0 };
+  } else if (tl === null && server.state) {
+    const s = server.state;
+    view = { home: s.home_team, away: s.away_team, phase: s.phase, minute: server.minute,
+      hs: s.home_score, as: s.away_score, events: s.events, odds: s.live_odds, countdown: server.countdown };
   }
 
-  const { home_team: home, away_team: away, phase, home_score: hs, away_score: as, live_odds } = state;
+  if (!view) {
+    return <div className="settle"><div className="spinner" /><p className="settle-note">Walking out to the pitch…</p></div>;
+  }
+
+  const { home, away, phase, minute, hs, as, odds, countdown, events } = view;
   const finished = phase === 'finished';
   const shownMinute = phase === 'upcoming' ? 0 : finished ? 90 : minute;
   const half = shownMinute < 45 ? '1st half' : shownMinute < 90 ? '2nd half' : 'Full-time';
 
-  // pick status
   const pick = myLeg?.outcome_key as OutKey | undefined;
   const leader: OutKey = hs > as ? 'home' : as > hs ? 'away' : 'draw';
   let pickState: 'win' | 'lose' | 'level' | null = null;
@@ -87,51 +115,35 @@ export default function LiveMatchScreen() {
     else pickState = 'lose';
   }
   const pickLabel = { win: 'Winning', lose: 'Losing', level: 'On the line' } as const;
-
-  const odds = live_odds;
   const oddsArr = odds ? [odds.home, odds.draw, odds.away] : [];
-  const feed = buildFeed(state.events, home, away, shownMinute, finished);
+  const feed = buildFeed(events, home, away, shownMinute, finished);
 
   return (
     <div className="app-shell live-screen">
-      {/* status */}
       <div className="live-statusbar">
         {phase === 'upcoming' && <span className="chip">Kick-off in {countdown}s</span>}
         {phase === 'live' && <span className="chip chip-live"><span className="dot" />LIVE · {half}</span>}
         {finished && <span className="chip">Full-time</span>}
       </div>
 
-      {/* scoreboard */}
       <div className="card live-board">
-        <div className="lb-side">
-          <Badge name={home} />
-          <span className="lb-team">{home}</span>
-        </div>
+        <div className="lb-side"><Badge name={home} /><span className="lb-team">{home}</span></div>
         <div className="lb-center">
-          <div className="lb-score tnum">
-            {phase === 'upcoming' ? <span className="lb-num">–</span> : <span className="lb-num">{hs}</span>}
+          <div className="lb-score tnum" key={`${hs}-${as}`}>
+            <span className="lb-num">{phase === 'upcoming' ? '–' : hs}</span>
             <span className="lb-sep">:</span>
-            {phase === 'upcoming' ? <span className="lb-num">–</span> : <span className="lb-num">{as}</span>}
+            <span className="lb-num">{phase === 'upcoming' ? '–' : as}</span>
           </div>
-          <div className="lb-minute tnum">
-            {phase === 'upcoming' ? 'soon' : finished ? "90'" : `${shownMinute}'`}
-          </div>
+          <div className="lb-minute tnum">{phase === 'upcoming' ? 'soon' : finished ? "90'" : `${shownMinute}'`}</div>
         </div>
-        <div className="lb-side lb-away">
-          <span className="lb-team">{away}</span>
-          <Badge name={away} />
-        </div>
+        <div className="lb-side lb-away"><span className="lb-team">{away}</span><Badge name={away} /></div>
       </div>
 
-      {/* your bet, live */}
       {myLeg && (
         <div className={`card betstatus ${pickState ?? ''}`}>
           <div className="stack" style={{ gap: 2 }}>
             <span className="tag">Your pick</span>
-            <span className="betstatus-pick">
-              {myLeg.market_name}: {myLeg.option_label}
-              <span className="mono dim"> @ {formatOdds(myLeg.odds)}</span>
-            </span>
+            <span className="betstatus-pick">{myLeg.market_name}: {myLeg.option_label}<span className="mono dim"> @ {formatOdds(myLeg.odds)}</span></span>
           </div>
           {pickState && (
             <span className={`betstatus-flag ${pickState}`}>
@@ -141,13 +153,12 @@ export default function LiveMatchScreen() {
         </div>
       )}
 
-      {/* live odds */}
       {odds && !finished && (
         <>
           <div className="section-head"><h3>Match result · live</h3></div>
           <div className="market live-odds-row">
             {(['home', 'draw', 'away'] as OutKey[]).map((k) => (
-              <div key={k} className={`outcome ${myLeg?.outcome_key === k ? 'sel' : ''}`} style={{ cursor: 'default' }}>
+              <div key={k} className={`outcome ${myLeg?.outcome_key === k ? 'sel' : ''}`}>
                 <span className="outcome-name">{k === 'home' ? '1' : k === 'draw' ? 'X' : '2'}</span>
                 <span className="outcome-odds">{formatOdds(odds[k])}</span>
                 <span className="outcome-prob">{impliedProb(odds[k], oddsArr)}%</span>
@@ -158,7 +169,6 @@ export default function LiveMatchScreen() {
         </>
       )}
 
-      {/* event feed */}
       <div className="section-head"><h3>Match feed</h3></div>
       <div className="card live-feed">
         {feed.map((f) => (
@@ -175,9 +185,7 @@ export default function LiveMatchScreen() {
           Settle my coupon
         </button>
       )}
-      <button className="btn btn-ghost btn-block" style={{ marginTop: 'var(--s2)' }} onClick={() => navigate(-1)}>
-        Back
-      </button>
+      <button className="btn btn-ghost btn-block" style={{ marginTop: 'var(--s2)' }} onClick={() => navigate(-1)}>Back</button>
     </div>
   );
 }

@@ -32,7 +32,14 @@ export default function CouponScreen() {
       await refreshProfile();
       navigate('/coupons');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not place coupon');
+      const raw = err instanceof Error ? err.message : '';
+      setError(
+        raw.startsWith('Market closed')
+          ? 'One of your matches has already kicked off. Remove it and try again.'
+          : raw.includes('Not enough gold')
+            ? 'Not enough gold for that stake.'
+            : raw || 'Could not place coupon',
+      );
       setBusy(false);
     }
   }

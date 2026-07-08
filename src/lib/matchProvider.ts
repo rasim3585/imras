@@ -1,4 +1,5 @@
 import type { Match, Coupon, CouponSettlement, LiveState } from './types';
+import type { WatchTimeline } from '../live/liveModel';
 import { SupabaseMatchProvider } from './supabaseMatchProvider';
 
 export interface PlacedCoupon {
@@ -21,6 +22,10 @@ export interface MatchProvider {
 
   /** Wall-clock live state for a set of matches (phase/minute/score/goals). */
   getLiveStates(matchIds: string[]): Promise<LiveState[]>;
+
+  /** Full script for a match the user has bet on, for a personal replay.
+   *  Returns null if the user has no coupon on that match. */
+  getWatchTimeline(matchId: string): Promise<WatchTimeline | null>;
 
   /** Place a coupon from selected market-option ids; server prices + settles. */
   placeCoupon(optionIds: string[], stake: number): Promise<PlacedCoupon>;
