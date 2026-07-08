@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import MatchCard from '../components/MatchCard';
-import CouponBar from '../components/CouponBar';
 import { matchProvider } from '../lib/matchProvider';
 import type { LiveState, Match } from '../lib/types';
 
@@ -57,40 +56,37 @@ export default function FeedScreen() {
   const upcoming = visible.filter((m) => liveMap[m.id]?.phase !== 'live');
 
   return (
-    <>
-      <div className="app-shell">
-        <div className="page-head">
-          <h1>Markets</h1>
-          <p className="page-sub">Tap odds to build your coupon — pre-match or live. Play with gold, never money.</p>
-        </div>
-
-        {error && <div className="banner banner-error">{error}</div>}
-
-        {loading ? (
-          <div className="center-pad"><div className="spinner" /></div>
-        ) : visible.length === 0 ? (
-          <div className="empty">
-            <p>No open markets right now.</p>
-            <button className="btn" onClick={() => loadBulletin(true)}>Refresh</button>
-          </div>
-        ) : (
-          <>
-            {liveOnes.length > 0 && (
-              <>
-                <div className="section-head"><h3>Live now</h3><span className="chip chip-live"><span className="dot" />{liveOnes.length}</span></div>
-                <div className="market-list">{liveOnes.map((m) => <MatchCard key={m.id} match={m} live={liveMap[m.id]} />)}</div>
-              </>
-            )}
-            {upcoming.length > 0 && (
-              <>
-                <div className="section-head"><h3>Starting soon</h3></div>
-                <div className="market-list">{upcoming.map((m) => <MatchCard key={m.id} match={m} live={liveMap[m.id]} />)}</div>
-              </>
-            )}
-          </>
-        )}
+    <div className="app-shell">
+      <div className="page-head">
+        <h1>Markets</h1>
+        <p className="page-sub">Tap odds to build your coupon — pre-match or live. Play with gold, never money.</p>
       </div>
-      <CouponBar />
-    </>
+
+      {error && <div className="banner banner-error">{error}</div>}
+
+      {loading ? (
+        <div className="center-pad"><div className="spinner" /></div>
+      ) : visible.length === 0 ? (
+        <div className="empty">
+          <p>No open markets right now.</p>
+          <button className="btn" onClick={() => loadBulletin(true)}>Refresh</button>
+        </div>
+      ) : (
+        <>
+          {liveOnes.length > 0 && (
+            <>
+              <div className="section-head"><h3>Live now</h3><span className="chip chip-live"><span className="dot" />{liveOnes.length}</span></div>
+              <div className="market-list">{liveOnes.map((m) => <MatchCard key={m.id} match={m} live={liveMap[m.id]} />)}</div>
+            </>
+          )}
+          {upcoming.length > 0 && (
+            <>
+              <div className="section-head"><h3>Starting soon</h3></div>
+              <div className="market-list">{upcoming.map((m) => <MatchCard key={m.id} match={m} live={liveMap[m.id]} />)}</div>
+            </>
+          )}
+        </>
+      )}
+    </div>
   );
 }

@@ -9,6 +9,7 @@ import SettleScreen from './screens/SettleScreen';
 import LiveMatchScreen from './screens/LiveMatchScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import NavBar from './components/NavBar';
+import CouponBar from './components/CouponBar';
 
 function App() {
   const { loading, session, needsUsername } = useAuth();
@@ -38,6 +39,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+      <CouponBar />
     </>
   );
 }

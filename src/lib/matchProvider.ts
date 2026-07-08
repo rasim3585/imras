@@ -40,6 +40,12 @@ export interface MatchProvider {
   /** Auto-settle every pending coupon whose matches have all finished. */
   settleDueCoupons(): Promise<number>;
 
+  /** Current cash-out value of an open coupon (0 if unavailable). */
+  getCashoutValue(couponId: string): Promise<{ value: number; available: boolean }>;
+
+  /** Cash out an open coupon at the current value; returns the new balance. */
+  doCashout(couponId: string): Promise<number>;
+
   /** Daily retention bonus (+500, once per day). Returns the new balance. */
   claimDailyBonus(): Promise<number>;
 

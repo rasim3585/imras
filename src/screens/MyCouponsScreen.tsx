@@ -1,33 +1,68 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { matchProvider } from '../lib/matchProvider';
+import { useAuth } from '../auth/AuthContext';
 import type { Coupon } from '../lib/types';
 import { formatOdds } from '../lib/format';
 
 function StatusChip({ c }: { c: Coupon }) {
   if (c.status === 'won') return <span className="chip chip-pos tnum">Won +{c.potential_win}</span>;
   if (c.status === 'lost') return <span className="chip chip-neg">Lost</span>;
+  if (c.status === 'cashed_out') return <span className="chip chip-accent tnum">Cashed out +{c.cashout_amount}</span>;
   return <span className="chip">Open</span>;
 }
 
 export default function MyCouponsScreen() {
+  const { refreshProfile } = useAuth();
   const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [cashouts, setCashouts] = useState<Record<string, { value: number; available: boolean }>>({});
+  const [busy, setBusy] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    (async () => {
-      try {
-        await matchProvider.settleDueCoupons().catch(() => 0); // auto-settle finished ones
-        setCoupons(await matchProvider.getMyCoupons());
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Could not load coupons');
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const load = useCallback(async () => {
+    await matchProvider.settleDueCoupons().catch(() => 0); // auto-settle finished ones
+    setCoupons(await matchProvider.getMyCoupons());
   }, []);
+
+  useEffect(() => {
+    load()
+      .catch((err) => setError(err instanceof Error ? err.message : 'Could not load coupons'))
+      .finally(() => setLoading(false));
+  }, [load]);
+
+  // live cash-out values for open coupons
+  useEffect(() => {
+    const open = coupons.filter((c) => c.status === 'pending');
+    if (open.length === 0) return;
+    let alive = true;
+    const poll = async () => {
+      const entries = await Promise.all(open.map(async (c) => {
+        try { return [c.id, await matchProvider.getCashoutValue(c.id)] as const; }
+        catch { return [c.id, { value: 0, available: false }] as const; }
+      }));
+      if (alive) setCashouts(Object.fromEntries(entries));
+    };
+    void poll();
+    const id = setInterval(poll, 4000);
+    return () => { alive = false; clearInterval(id); };
+  }, [coupons]);
+
+  async function cashout(couponId: string) {
+    setBusy(couponId);
+    try {
+      await matchProvider.doCashout(couponId);
+      await refreshProfile();
+      await load();
+    } catch (err) {
+      setError(err instanceof Error && err.message.includes('cashout_unavailable')
+        ? 'Cash out is no longer available for this coupon.'
+        : err instanceof Error ? err.message : 'Could not cash out');
+    } finally {
+      setBusy(null);
+    }
+  }
 
   return (
     <div className="app-shell">
@@ -87,6 +122,11 @@ export default function MyCouponsScreen() {
                     <b className="tnum">{c.potential_win}</b>
                   </span>
                 </div>
+                {c.status === 'pending' && cashouts[c.id]?.available && (
+                  <button className="btn btn-primary btn-sm" disabled={busy === c.id} onClick={() => cashout(c.id)}>
+                    {busy === c.id ? '…' : `Cash out ${cashouts[c.id].value}`}
+                  </button>
+                )}
                 {c.status !== 'pending' && (
                   <button className="btn btn-ghost btn-sm" onClick={() => navigate(`/settle/${c.id}`)}>
                     View result

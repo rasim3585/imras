@@ -6,7 +6,7 @@ export type Outcome = 'home' | 'draw' | 'away';
 export type MatchStatus = 'upcoming' | 'live' | 'finished';
 export type MarketStatus = 'open' | 'closed' | 'settled';
 export type LegStatus = 'pending' | 'won' | 'lost';
-export type CouponStatus = 'pending' | 'won' | 'lost';
+export type CouponStatus = 'pending' | 'won' | 'lost' | 'cashed_out';
 
 export interface Profile {
   id: string;
@@ -125,6 +125,7 @@ export interface Coupon {
   total_odds: number;
   potential_win: number;
   status: CouponStatus;
+  cashout_amount: number | null;
   created_at: string;
   settled_at: string | null;
   legs: CouponLeg[];

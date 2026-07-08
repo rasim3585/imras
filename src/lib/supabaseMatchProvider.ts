@@ -108,6 +108,19 @@ export class SupabaseMatchProvider implements MatchProvider {
     };
   }
 
+  async getCashoutValue(couponId: string): Promise<{ value: number; available: boolean }> {
+    const { data, error } = await supabase.rpc('get_cashout_value', { p_coupon_id: couponId });
+    if (error) throw new Error(error.message);
+    const d = data as { value: number; available: boolean };
+    return { value: Number(d.value), available: Boolean(d.available) };
+  }
+
+  async doCashout(couponId: string): Promise<number> {
+    const { data, error } = await supabase.rpc('do_cashout', { p_coupon_id: couponId });
+    if (error) throw new Error(error.message);
+    return Number((data as { new_balance: number }).new_balance);
+  }
+
   async settleDueCoupons(): Promise<number> {
     const { data, error } = await supabase.rpc('settle_due_coupons');
     if (error) throw new Error(error.message);
@@ -154,6 +167,7 @@ function flattenCoupon(row: unknown): Coupon {
     total_odds: Number(c.total_odds),
     potential_win: Number(c.potential_win),
     status: c.status as Coupon['status'],
+    cashout_amount: (c.cashout_amount as number | null) ?? null,
     created_at: c.created_at as string,
     settled_at: (c.settled_at as string | null) ?? null,
     legs,
