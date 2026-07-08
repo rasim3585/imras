@@ -184,6 +184,9 @@ a:hover { color: var(--win); }
   font-weight: 700; font-size: 0.9rem; font-variant-numeric: tabular-nums;
 }
 .gold-dot { width: 12px; height: 12px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffe27a, #f4b400); box-shadow: 0 0 0 1px rgba(180,130,0,0.25); }
+/* inline gold coin next to amounts (consistent with the top-bar balance) */
+.coin { display: inline-block; width: 11px; height: 11px; border-radius: 50%; vertical-align: -1px; background: radial-gradient(circle at 35% 30%, #ffe27a, #f4b400); box-shadow: 0 0 0 1px rgba(180,130,0,0.28); }
+.coin-light { box-shadow: 0 0 0 1px rgba(255,255,255,0.4); }
 
 /* desktop sidebar (hidden on mobile) */
 .sidebar { display: none; }

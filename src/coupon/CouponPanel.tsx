@@ -76,13 +76,13 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
                 {session && <button className="btn btn-sm" disabled={balance <= 0} onClick={() => setStake(balance)}>Max</button>}
               </div>
             </div>
-            <div className="cpn-row cpn-win"><span>Potential win</span><b className="tnum">{potential}</b></div>
-            {session && <div className="cpn-bal dim tnum">Balance: {balance}</div>}
+            <div className="cpn-row cpn-win"><span>Potential win</span><b className="tnum">{potential} <span className="coin" aria-hidden="true" /></b></div>
+            {session && <div className="cpn-bal dim tnum">Balance: {balance} <span className="coin" aria-hidden="true" /></div>}
             {error && <div className="banner banner-error" style={{ marginTop: 'var(--s2)' }}>{error}</div>}
 
             {session ? (
               <button className="btn btn-primary btn-block" style={{ marginTop: 'var(--s2)' }} disabled={busy || !stakeValid} onClick={place}>
-                {busy ? '…' : `Play now · ${stake}`}
+                {busy ? '…' : <>Play now · {stake} <span className="coin coin-light" aria-hidden="true" /></>}
               </button>
             ) : (
               <button className="btn btn-primary btn-block" style={{ marginTop: 'var(--s2)' }} onClick={() => { onClose?.(); navigate('/login'); }}>
