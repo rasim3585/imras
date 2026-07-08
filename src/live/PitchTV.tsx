@@ -34,6 +34,8 @@ export default function PitchTV({
   const [sound, setSound] = useState(false);
   const ovTimer = useRef<number | null>(null);
   const prevPhase = useRef(phase);
+  const base = useRef<[number, number]>([50, 50]);
+  const clampB = (v: number) => Math.max(6, Math.min(94, v));
 
   // which way is play going? derived from the current line (never independent)
   const side: Side | 'mid' = (!line || line.team == null || phase !== 'live' || MID_KINDS.has(line.kind))
@@ -69,7 +71,7 @@ export default function PitchTV({
     if (!line || phase !== 'live' || line.team == null) return;
     const k = line.kind;
     if (k === 'goal') {
-      setBall([50, 50]);                                     // straight to the centre (kick-off)
+      base.current = [50, 50]; setBall([50, 50]);            // straight to the centre (kick-off)
       setOverlay({ kind: 'goal', text: 'GOAL!', sub: `${line.team === 'home' ? home : away} ${hs}-${as}` });
       cheer();
       if (ovTimer.current) clearTimeout(ovTimer.current);
@@ -82,8 +84,19 @@ export default function PitchTV({
       ovTimer.current = window.setTimeout(() => setOverlay(null), 1700);
     }
     const s: Side | 'mid' = MID_KINDS.has(k) ? 'mid' : line.team;
-    setBall(s === 'home' ? [72, 48] : s === 'away' ? [26, 52] : [50, 50]);
+    base.current = s === 'home' ? [70, 48] : s === 'away' ? [30, 52] : [50, 50];
+    setBall(base.current);
   }, [line?.minute, line?.sub, line?.kind]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // gentle idle drift around the current side so the ball is never frozen
+  useEffect(() => {
+    if (phase !== 'live') return;
+    const id = window.setInterval(() => {
+      const [bx, by] = base.current;
+      setBall([clampB(bx + (Math.random() - 0.5) * 12), clampB(by + (Math.random() - 0.5) * 14)]);
+    }, 2400);
+    return () => clearInterval(id);
+  }, [phase]);
 
   useEffect(() => () => { if (ovTimer.current) clearTimeout(ovTimer.current); }, []);
 

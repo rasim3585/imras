@@ -77,7 +77,7 @@ export function atmosphereScript(matchId: string, home: string, away: string): L
     } else {                                   // calm beat
       push(0, 'calm', pickFrom(rng, CALM));
     }
-    minute += 4 + Math.floor(rng() * 7);
+    minute += 2 + Math.floor(rng() * 3);  // denser beats (matches feel alive at the 8-min pace)
   }
   return lines.sort((a, b) => a.minute - b.minute || a.sub - b.sub);
 }

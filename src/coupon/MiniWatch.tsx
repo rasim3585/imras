@@ -33,6 +33,10 @@ export default function MiniWatch({ matchId }: { matchId: string }) {
   if (!st) return null;
   const live = st.phase === 'live';
   const label = st.phase === 'upcoming' ? 'Starting soon' : st.phase === 'finished' ? 'FT' : `${st.minute}'`;
+  // attack side follows the roaming ball (self-consistent, flavour only)
+  const side: 'home' | 'away' | 'mid' = !live ? 'mid' : ball[0] > 58 ? 'home' : ball[0] < 42 ? 'away' : 'mid';
+  const status = !live ? (st.phase === 'upcoming' ? 'Kick-off soon' : 'Full time')
+    : side === 'home' ? `▶ ${st.home_team}` : side === 'away' ? `◀ ${st.away_team}` : 'Midfield';
   const evs = [
     ...(st.events ?? []).map((e) => ({ m: e.minute, t: `Goal · ${e.team === 'home' ? st.home_team : st.away_team}`, g: true })),
     ...(st.cards ?? []).map((c) => ({ m: c.minute, t: `Red · ${c.team === 'home' ? st.home_team : st.away_team}`, g: false })),
@@ -49,8 +53,12 @@ export default function MiniWatch({ matchId }: { matchId: string }) {
         </div>
       </div>
       <div className="mtv-pitch">
-        <div className="mtv-ml" />
+        <div className="mtv-ml" /><div className="mtv-circ" />
+        <div className="mtv-goal l" /><div className="mtv-goal r" />
+        {live && (side === 'home' || side === 'mid') && <div className="arrow home" style={{ ['--ac' as string]: '#4aa3e2' }} />}
+        {live && (side === 'away' || side === 'mid') && <div className="arrow away" style={{ ['--ac' as string]: '#e2a04a' }} />}
         {(live || st.phase === 'finished') && <div className="mtv-ball" style={{ left: `${ball[0]}%`, top: `${ball[1]}%` }} />}
+        <div className="mtv-status">{status}</div>
       </div>
       <div className="mtv-feed">
         <div className="mtv-fh">Key attacks</div>
