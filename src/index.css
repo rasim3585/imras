@@ -117,7 +117,15 @@ body {
   background: radial-gradient(120% 70% at 50% 0%, var(--bg-radial-top) 0%, var(--bg) 60%);
   background-attachment: fixed;
 }
-#root { position: relative; z-index: 1; }
+#root { position: relative; z-index: 1; overflow-x: hidden; }
+
+/* mobile: keep the top bar from crowding on narrow phones */
+@media (max-width: 480px) {
+  .topbar-inner { padding: 0 var(--s3); }
+  .topbar-right { gap: 6px; }
+  .top-auth { gap: var(--s2); }
+  .wordmark { font-size: 17px !important; }
+}
 
 /* numeric data reads as data */
 .tnum { font-variant-numeric: tabular-nums; letter-spacing: 0; }
@@ -225,13 +233,9 @@ a:hover { color: var(--win); }
 
 .brand { display: inline-flex; align-items: center; gap: var(--s2); }
 .brand-logo { display: block; }
-.wordmark {
-  display: inline-flex; align-items: flex-end; font-weight: 600;
-  color: var(--text); letter-spacing: -0.01em; line-height: 1;
-}
-.wordmark .wm-i { display: inline-flex; flex-direction: column; align-items: center; }
-.wordmark .wm-i svg { margin-bottom: 0.08em; }
-.wordmark .wm-i .stem { line-height: 0.8; }
+.wordmark { display: inline-flex; align-items: baseline; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+.wm-pick { color: var(--text); }
+.wm-play { color: var(--accent); }
 
 /* --- Card --------------------------------------------------------------- */
 
