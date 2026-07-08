@@ -4457,10 +4457,10 @@ declare
   pw double precision := 0; pd double precision := 0; pl double precision := 0;
   o15 double precision := 0; o25 double precision := 0; o35 double precision := 0;
   bt double precision := 0; od double precision := 0;
-  -- time-aware 1X2 compression: strong early (a comeback is still plausible),
-  -- eased late so a lost cause drifts toward the 15 cap near full time.
-  -- ~0.30 pre-match, ~0.27 at 75', ~0.12 at 88'.
-  b double precision := least(0.30, 0.10 + r);
+  -- time-aware 1X2 compression, a hump peaking mid-late game: ~0 pre-match (so a
+  -- strong favourite stays sharp ~1.35), ~0.26 around 75' (a 0-2 deficit reads
+  -- ~10 not ~14), easing to ~0.15 by 88' so a lost cause drifts to the 15 cap.
+  b double precision := 0.28 * exp(- power(r - 0.25, 2) / 0.08);
   b2 double precision := 0.10;                -- 2-outcome compression
   m3 numeric[]; l15 numeric[]; l25 numeric[]; l35 numeric[]; lbt numeric[]; loe numeric[];
 begin
@@ -4531,7 +4531,7 @@ begin
   end loop;
   if s <= 0 then s := 1; end if;
   pw := pw / s; pd := pd / s; pl := pl / s; ov := ov / s;
-  m3  := public._odds_line(array[pw*0.7+0.10, pd*0.7+0.10, pl*0.7+0.10], 0.06);
+  m3  := public._odds_line(array[pw*0.88+0.04, pd*0.88+0.04, pl*0.88+0.04], 0.06);
   lov := public._odds_line(array[ov*0.9+0.05, (1-ov)*0.9+0.05], 0.04);
   return jsonb_build_object(
     'ht_home', m3[1], 'ht_draw', m3[2], 'ht_away', m3[3],
