@@ -16,6 +16,13 @@ import LeagueDetailScreen from './screens/LeagueDetailScreen';
 import NavBar from './components/NavBar';
 import CouponBar from './components/CouponBar';
 
+// Module-level (stable identity) so guarded routes don't remount every time the
+// auth context re-renders (that remount restarted screens like the settle reveal).
+function RequireAuth({ children }: { children: ReactNode }) {
+  const { session } = useAuth();
+  return session ? <>{children}</> : <Navigate to="/login" replace />;
+}
+
 function App() {
   const { loading, session, needsUsername } = useAuth();
 
@@ -25,10 +32,6 @@ function App() {
 
   // signed in but no username yet -> must pick one before anything else
   if (session && needsUsername) return <UsernameScreen />;
-
-  // browse freely; auth-required routes send you to /login (the commitment point)
-  const RequireAuth = ({ children }: { children: ReactNode }) =>
-    (session ? <>{children}</> : <Navigate to="/login" replace />);
 
   return (
     <>
