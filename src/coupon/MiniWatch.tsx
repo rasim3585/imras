@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { matchProvider } from '../lib/matchProvider';
+import { atmosphereScript } from '../live/commentary';
 import type { LiveState } from '../lib/types';
 
 // Compact live view of the coupon's LAST-ADDED match: mini scoreboard + a tiny
@@ -30,6 +31,18 @@ export default function MiniWatch({ matchId }: { matchId: string }) {
     return () => clearInterval(id);
   }, [st?.phase]);
 
+  // same deterministic commentary as the full watch screen (synced), revealed up
+  // to the current minute -> goals/cards + atmosphere, newest first.
+  const evs = useMemo(() => {
+    if (!st) return [] as { m: number; t: string; g: boolean }[];
+    const mn = st.minute;
+    let h = 0, a = 0;
+    const goals = (st.events ?? []).map((e) => { if (e.team === 'home') h++; else a++; return { m: e.minute, t: `GOAL — ${e.team === 'home' ? st.home_team : st.away_team} ${h}-${a}`, g: true }; });
+    const cards = (st.cards ?? []).map((c) => ({ m: c.minute, t: `Red card — ${c.team === 'home' ? st.home_team : st.away_team}`, g: false }));
+    const atmo = atmosphereScript(matchId, st.home_team, st.away_team).map((l) => ({ m: l.minute, t: l.text, g: false }));
+    return [...goals, ...cards, ...atmo].filter((x) => x.m <= mn).sort((a1, b1) => b1.m - a1.m).slice(0, 4);
+  }, [matchId, st?.home_team, st?.minute, st?.events?.length, st?.cards?.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!st) return null;
   const live = st.phase === 'live';
   const label = st.phase === 'upcoming' ? 'Starting soon' : st.phase === 'finished' ? 'FT' : `${st.minute}'`;
@@ -37,10 +50,6 @@ export default function MiniWatch({ matchId }: { matchId: string }) {
   const side: 'home' | 'away' | 'mid' = !live ? 'mid' : ball[0] > 58 ? 'home' : ball[0] < 42 ? 'away' : 'mid';
   const status = !live ? (st.phase === 'upcoming' ? 'Kick-off soon' : 'Full time')
     : side === 'home' ? `▶ ${st.home_team}` : side === 'away' ? `◀ ${st.away_team}` : 'Midfield';
-  const evs = [
-    ...(st.events ?? []).map((e) => ({ m: e.minute, t: `Goal · ${e.team === 'home' ? st.home_team : st.away_team}`, g: true })),
-    ...(st.cards ?? []).map((c) => ({ m: c.minute, t: `Red · ${c.team === 'home' ? st.home_team : st.away_team}`, g: false })),
-  ].sort((a, b) => b.m - a.m).slice(0, 3);
 
   return (
     <div className="minitv">
@@ -54,6 +63,7 @@ export default function MiniWatch({ matchId }: { matchId: string }) {
       </div>
       <div className="mtv-pitch">
         <div className="mtv-ml" /><div className="mtv-circ" />
+        <div className="mtv-box l" /><div className="mtv-box r" />
         <div className="mtv-goal l" /><div className="mtv-goal r" />
         {live && (side === 'home' || side === 'mid') && <div className="arrow home" style={{ ['--ac' as string]: '#4aa3e2' }} />}
         {live && (side === 'away' || side === 'mid') && <div className="arrow away" style={{ ['--ac' as string]: '#e2a04a' }} />}
