@@ -4,38 +4,18 @@ import { toggleSfx, whistle, cheer } from '../lib/sfx';
 import type { LineKind } from './commentary';
 
 // ---------------------------------------------------------------------------
-// Scoreboard-first LIGHT model (industry "good enough": 1X2Gaming / Golden Race
-// retail style). NO per-player AI, NO physics -- a bettor mostly reads the
-// result. Layers: (1) a clear scoreboard = the match truth (score/minute/cards
-// from the deterministic timeline), (2) a light pitch with a few ambient dots
-// and ONE ball that softly indicates where play is, (3) event overlays
-// (goal / red card) + a momentum strip, (4) the CM commentary feed (elsewhere).
-// Pure visual; score/goals/cards stay server-authoritative.
+// Arrow-based pitch (NO players). Just the field + one ball + an attack-DIRECTION
+// arrow. Everything is derived from the SAME commentary line (team + kind), so
+// the arrow, the ball and the goal can never contradict: "home attacking" ->
+// blue arrow left->right, ball to the right; "away" -> orange arrow right->left,
+// ball left; midfield -> both arrows meet in the centre. Home attacks right.
+// Pure visual; score/goals/cards come from the deterministic timeline.
 // ---------------------------------------------------------------------------
 
-type XY = [number, number];
 type Side = 'home' | 'away';
-const clamp = (v: number, lo = 6, hi = 94) => Math.max(lo, Math.min(hi, v));
-
-// 3 ambient dots per side (not a full team, just "players are here")
-const HOME_DOTS: XY[] = [[22, 42], [38, 56], [46, 44]];
-const AWAY_DOTS: XY[] = [[78, 42], [62, 56], [54, 44]];
-const mir = (F: XY[]): XY[] => F.map(([x, y]) => [100 - x, y]);
-
-type C3 = [number, number, number];
-const hx = (h: string): C3 => { let s = h.replace('#', ''); if (s.length === 3) s = s.split('').map((c) => c + c).join(''); return [parseInt(s.slice(0, 2), 16), parseInt(s.slice(2, 4), 16), parseInt(s.slice(4, 6), 16)]; };
-const toHex = (c: C3) => '#' + c.map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
-const mixc = (a: C3, b: C3, t: number): C3 => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
-const cdist = (a: C3, b: C3) => Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2);
-const clum = (c: C3) => 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2];
-function distinctAway(homeHex: string, awayHex: string): string {
-  const h = hx(homeHex), a = hx(awayHex);
-  if (cdist(h, a) > 112) return awayHex;
-  return clum(h) < 128 ? toHex(mixc(a, [255, 255, 255], 0.6)) : toHex(mixc(a, [12, 22, 44], 0.62));
-}
-
-const PS = [{ s: '▲', c: '#4fe89a' }, { s: '✕', c: '#e24b4a' }, { s: '●', c: '#4aa3e2' }, { s: '■', c: '#d4537e' }];
-function Rail() { return <div className="ps-rail" aria-hidden="true">{PS.map((p, i) => <span key={i} className="ps-sym" style={{ color: p.c, animationDelay: `${i * 0.4}s` }}>{p.s}</span>)}</div>; }
+const HOME_ARROW = '#4aa3e2';
+const AWAY_ARROW = '#e2a04a';
+const MID_KINDS = new Set<LineKind>(['calm', 'mark', 'miss', 'card']);
 
 export default function PitchTV({
   home, away, hs, as, minute, phase, redHome, redAway, line, homePlayer, awayPlayer,
@@ -46,63 +26,21 @@ export default function PitchTV({
   line: { kind: LineKind; team?: Side; minute: number; sub: number } | null;
 }) {
   const homeColor = teamColor(home);
-  const awayColor = distinctAway(homeColor, teamColor(away));
+  const awayColor = teamColor(away);
   const finished = phase === 'finished';
-  const secondHalf = minute >= 45;
 
-  const [ball, setBall] = useState<XY>([50, 50]);
+  const [ball, setBall] = useState<[number, number]>([50, 50]);
   const [overlay, setOverlay] = useState<{ kind: 'goal' | 'card'; text: string; sub: string } | null>(null);
   const [sound, setSound] = useState(false);
-  const zoneRef = useRef<XY>([50, 50]);
   const ovTimer = useRef<number | null>(null);
   const prevPhase = useRef(phase);
 
-  // match sounds: kick-off / full-time whistle (goal cheer fires on the goal line)
-  useEffect(() => {
-    if (prevPhase.current !== phase) {
-      if (prevPhase.current === 'upcoming' && phase === 'live') whistle(false);
-      else if (phase === 'finished') whistle(true);
-      prevPhase.current = phase;
-    }
-  }, [phase]);
+  // which way is play going? derived from the current line (never independent)
+  const side: Side | 'mid' = (!line || line.team == null || phase !== 'live' || MID_KINDS.has(line.kind))
+    ? 'mid' : line.team;
 
-  // home attacks right in the 1st half, left in the 2nd
-  const dir = (t: Side) => ((t === 'home') !== secondHalf ? 1 : -1);
-
-  // move the ball to a sensible zone for the current line (a soft indicator)
-  useEffect(() => {
-    if (!line || line.team == null) return;
-    const t = line.team; const d = dir(t); const boxX = d > 0 ? 82 : 18; const top = line.minute % 2 === 0;
-    let zone: XY = [50, 50];
-    switch (line.kind) {
-      case 'calm': case 'mark': zone = [clamp(50 + d * 4, 38, 62), top ? 44 : 56]; break;
-      case 'buildup': zone = [d > 0 ? 62 : 38, top ? 42 : 58]; break;
-      case 'chance': zone = [clamp(boxX - d * 6), top ? 44 : 56]; break;
-      case 'shot': zone = [boxX, 50]; break;
-      case 'miss': zone = [d > 0 ? 20 : 80, 50]; break;
-      case 'foul': zone = [clamp(50 + d * 8, 24, 76), top ? 40 : 60]; break;
-      case 'freekick': zone = [clamp(boxX - d * 8), top ? 42 : 58]; break;
-      case 'corner': zone = [d > 0 ? 94 : 6, top ? 12 : 88]; break;
-      case 'card':
-        setOverlay({ kind: 'card', text: 'RED CARD', sub: t === 'home' ? home : away });
-        if (ovTimer.current) clearTimeout(ovTimer.current);
-        ovTimer.current = window.setTimeout(() => setOverlay(null), 1700);
-        break;
-      case 'goal':
-        zone = [50, 50];
-        setOverlay({ kind: 'goal', text: 'GOAL!', sub: `${t === 'home' ? home : away} ${hs}-${as}` });
-        cheer();
-        if (ovTimer.current) clearTimeout(ovTimer.current);
-        ovTimer.current = window.setTimeout(() => setOverlay(null), 1900);
-        break;
-    }
-    zoneRef.current = zone;
-    setBall(zone);
-  }, [line?.minute, line?.sub, line?.kind]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // momentum is DERIVED from the current line every render -> always fresh
-  const momText = (): string => {
-    if (!line || line.team == null || phase !== 'live') return phase === 'finished' ? 'Full time' : 'Kick-off';
+  const momentum = (() => {
+    if (!line || line.team == null || phase !== 'live') return finished ? 'Full time' : 'Kick-off';
     const t = line.team === 'home' ? home : away;
     switch (line.kind) {
       case 'buildup': return `▶ ${t} building`;
@@ -115,24 +53,39 @@ export default function PitchTV({
       case 'card': return `${t} down to 10`;
       default: return 'Midfield battle';
     }
-  };
-  const momentum = momText();
+  })();
 
-  // gentle idle drift within the current zone (no teleport, soft transition)
+  // match sounds: kick-off / full-time whistle
   useEffect(() => {
-    if (phase !== 'live') return;
-    const id = window.setInterval(() => {
-      const z = zoneRef.current;
-      setBall([clamp(z[0] + (Math.random() - 0.5) * 10, 8, 92), clamp(z[1] + (Math.random() - 0.5) * 10, 8, 92)]);
-    }, 1900);
-    return () => clearInterval(id);
+    if (prevPhase.current !== phase) {
+      if (prevPhase.current === 'upcoming' && phase === 'live') whistle(false);
+      else if (phase === 'finished') whistle(true);
+      prevPhase.current = phase;
+    }
   }, [phase]);
 
-  useEffect(() => () => { if (ovTimer.current) clearTimeout(ovTimer.current); }, []);
+  // enact the line: move the ball to the attacking side, overlays for goal/card
+  useEffect(() => {
+    if (!line || phase !== 'live' || line.team == null) return;
+    const k = line.kind;
+    if (k === 'goal') {
+      setBall([50, 50]);                                     // straight to the centre (kick-off)
+      setOverlay({ kind: 'goal', text: 'GOAL!', sub: `${line.team === 'home' ? home : away} ${hs}-${as}` });
+      cheer();
+      if (ovTimer.current) clearTimeout(ovTimer.current);
+      ovTimer.current = window.setTimeout(() => setOverlay(null), 1900);
+      return;
+    }
+    if (k === 'card') {
+      setOverlay({ kind: 'card', text: 'RED CARD', sub: line.team === 'home' ? home : away });
+      if (ovTimer.current) clearTimeout(ovTimer.current);
+      ovTimer.current = window.setTimeout(() => setOverlay(null), 1700);
+    }
+    const s: Side | 'mid' = MID_KINDS.has(k) ? 'mid' : line.team;
+    setBall(s === 'home' ? [72, 48] : s === 'away' ? [26, 52] : [50, 50]);
+  }, [line?.minute, line?.sub, line?.kind]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const HD = secondHalf ? mir(HOME_DOTS) : HOME_DOTS;
-  const AD = secondHalf ? mir(AWAY_DOTS) : AWAY_DOTS;
-  const redLine = redHome > 0 || redAway > 0;
+  useEffect(() => () => { if (ovTimer.current) clearTimeout(ovTimer.current); }, []);
 
   return (
     <div className="pitch-tv">
@@ -144,14 +97,14 @@ export default function PitchTV({
         </div>
         <div className="sb2-center">
           <span className="sb2-score tnum">{phase === 'upcoming' ? '– : –' : `${hs}-${as}`}</span>
-          <span className="sb2-clock tnum">{phase === 'upcoming' ? 'soon' : finished ? "FT" : <><span className="dot" />{minute}&apos;</>}</span>
+          <span className="sb2-clock tnum">{phase === 'upcoming' ? 'soon' : finished ? 'FT' : <><span className="dot" />{minute}&apos;</>}</span>
         </div>
         <div className="sb2-team away">
           <span className="sb2-info"><span className="sb2-name">{away}</span>{awayPlayer && <span className="sb2-pl">({awayPlayer})</span>}</span>
           <span className="sb2-badge" style={{ background: awayColor }}>{teamInitial(away)}</span>
         </div>
       </div>
-      {redLine && (
+      {(redHome > 0 || redAway > 0) && (
         <div className="sb-sub">
           {redHome > 0 && <span className="sb-red">● {home} down to 10</span>}
           {redAway > 0 && <span className="sb-red">● {away} down to 10</span>}
@@ -159,24 +112,23 @@ export default function PitchTV({
       )}
 
       <div className="tv-bezel">
-        <div className="pitch-area">
-          <Rail />
-          <div className={`pitch ${overlay?.kind === 'goal' ? 'pitch-flash' : ''}`}>
-            <div className="pl midline" /><div className="pl circle" /><div className="pl spot" />
-            <div className="pl box box-l" /><div className="pl box box-r" />
-            <div className="pl goalbox goal-l" /><div className="pl goalbox goal-r" />
-            {HD.map((p, i) => <span key={`h${i}`} className="dot" style={{ left: `${p[0]}%`, top: `${p[1]}%`, background: homeColor, animationDelay: `${i * 0.5}s` }} />)}
-            {AD.map((p, i) => <span key={`a${i}`} className="dot" style={{ left: `${p[0]}%`, top: `${p[1]}%`, background: awayColor, animationDelay: `${i * 0.5 + 0.3}s` }} />)}
-            <div className="pitch-ball" style={{ left: `${ball[0]}%`, top: `${ball[1]}%` }} />
-            {phase === 'live' && <div className="momentum">{momentum}</div>}
-            {overlay && (
-              <div className={`pitch-ov pitch-ov-${overlay.kind}`}>
-                <span className="pitch-ov-t">{overlay.text}</span>
-                <span className="pitch-ov-s">{overlay.sub}</span>
-              </div>
-            )}
-          </div>
-          <Rail />
+        <div className={`pitch ${overlay?.kind === 'goal' ? 'pitch-flash' : ''}`}>
+          <div className="pl midline" /><div className="pl circle" /><div className="pl spot" />
+          <div className="pl box box-l" /><div className="pl box box-r" />
+          <div className="pgoal l" /><div className="pgoal r" />
+
+          {phase === 'live' && (side === 'home' || side === 'mid') && <div className="arrow home" style={{ ['--ac' as string]: HOME_ARROW }} />}
+          {phase === 'live' && (side === 'away' || side === 'mid') && <div className="arrow away" style={{ ['--ac' as string]: AWAY_ARROW }} />}
+
+          <div className="pitch-ball" style={{ left: `${ball[0]}%`, top: `${ball[1]}%` }}><span className="pent" /></div>
+
+          {phase === 'live' && <div className="momentum">{momentum}</div>}
+          {overlay && (
+            <div className={`pitch-ov pitch-ov-${overlay.kind}`}>
+              <span className="pitch-ov-t">{overlay.text}</span>
+              <span className="pitch-ov-s">{overlay.sub}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

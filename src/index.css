@@ -577,10 +577,25 @@ a:hover { color: var(--win); }
 .sent-off .pp-body { box-shadow: 0 0 0 2px #e24b4a; }
 
 .pitch-ball {
-  position: absolute; width: 9px; height: 9px; border-radius: 50%; background: #fff;
-  box-shadow: 0 0 4px rgba(255, 255, 255, 0.8); border: 1px solid rgba(0, 0, 0, 0.2);
-  transform: translate(-50%, -50%); transition: left 1.6s ease-in-out, top 1.6s ease-in-out; z-index: 5;
+  position: absolute; width: 13px; height: 13px; border-radius: 50%; background: #fff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8); border: 1px solid rgba(0, 0, 0, 0.2);
+  transform: translate(-50%, -50%); transition: left 1.4s ease-in-out, top 1.4s ease-in-out; z-index: 5;
 }
+.pitch-ball .pent { position: absolute; inset: 3px; background: #12130f; clip-path: polygon(50% 0, 100% 38%, 82% 100%, 18% 100%, 0 38%); }
+
+/* attack-direction arrows (colour via --ac) */
+.arrow { position: absolute; top: 50%; height: 4px; border-radius: 2px; transform: translateY(-50%); z-index: 3; background: linear-gradient(90deg, transparent, var(--ac)); }
+.arrow::after { content: ''; position: absolute; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 6px solid transparent; border-bottom: 6px solid transparent; }
+.arrow.home { left: 6%; animation: pushR 1.6s ease-in-out infinite; }
+.arrow.home::after { right: -2px; border-left: 9px solid var(--ac); }
+.arrow.away { right: 6%; background: linear-gradient(270deg, transparent, var(--ac)); animation: pushL 1.6s ease-in-out infinite; }
+.arrow.away::after { left: -2px; border-right: 9px solid var(--ac); }
+@keyframes pushR { 0% { width: 8%; opacity: 0.3; } 60% { opacity: 0.95; } 100% { width: 50%; opacity: 0.7; } }
+@keyframes pushL { 0% { width: 8%; opacity: 0.3; } 60% { opacity: 0.95; } 100% { width: 50%; opacity: 0.7; } }
+
+/* goals at the ends */
+.pgoal { position: absolute; top: 44%; height: 12%; width: 2.5%; background: rgba(255, 255, 255, 0.5); }
+.pgoal.l { left: 0; } .pgoal.r { right: 0; }
 
 /* light model: ambient dots, momentum, red-card line, event overlay */
 .dot { position: absolute; width: 11px; height: 11px; border-radius: 50%; transform: translate(-50%, -50%);
