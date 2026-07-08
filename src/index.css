@@ -447,7 +447,7 @@ a:hover { color: var(--win); }
 .goalbox { top: 40%; height: 20%; width: 5%; }
 .goal-l { left: 0; border-left: 0; } .goal-r { right: 0; border-right: 0; }
 
-.pitch-player { position: absolute; width: 16px; transform: translate(-50%, -50%); transition: left 1.2s ease-in-out, top 1.2s ease-in-out; z-index: 2; }
+.pitch-player { position: absolute; width: 16px; transform: translate(-50%, -50%); transition: left 0.7s ease-out, top 0.7s ease-out; z-index: 2; }
 .pp-body { display: block; width: 13px; height: 13px; border-radius: 50%; margin: 0 auto; border: 1.5px solid rgba(0, 0, 0, 0.25); }
 .pp-feet { display: flex; justify-content: center; gap: 3px; margin-top: 1px; }
 .pp-feet i { width: 2px; height: 4px; background: rgba(0, 0, 0, 0.55); border-radius: 1px; animation: pp-run 0.5s ease-in-out infinite alternate; }
@@ -460,7 +460,7 @@ a:hover { color: var(--win); }
 .pitch-ball {
   position: absolute; width: 9px; height: 9px; border-radius: 50%; background: #fff;
   box-shadow: 0 0 4px rgba(255, 255, 255, 0.8); border: 1px solid rgba(0, 0, 0, 0.2);
-  transform: translate(-50%, -50%); transition: left 0.55s cubic-bezier(0.4, 0, 0.2, 1), top 0.55s cubic-bezier(0.4, 0, 0.2, 1); z-index: 5;
+  transform: translate(-50%, -50%); transition: left 0.42s cubic-bezier(0.3, 0, 0.2, 1), top 0.42s cubic-bezier(0.3, 0, 0.2, 1); z-index: 5;
 }
 .pitch-flash { animation: pitch-goal 1.2s ease; }
 @keyframes pitch-goal {
