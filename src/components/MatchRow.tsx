@@ -41,7 +41,7 @@ export default function MatchRow({ match, live }: { match: Match; live?: LiveSta
     for (const [m, k] of shownCells) {
       const cur = oddsOf(m, k); if (!(cur > 0)) continue;
       const p = prev.current[k];
-      if (p != null && cur !== p) {
+      if (p != null && Math.abs(cur - p) >= 0.02) {          // ignore micro-drift
         const dir = cur > p ? 'up' : 'down';
         setArrows((a) => ({ ...a, [k]: dir }));
         if (timers.current[k]) clearTimeout(timers.current[k]);

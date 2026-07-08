@@ -80,11 +80,22 @@ export default function FeedScreen() {
   const liveOnes = visible.filter((m) => liveMap[m.id]?.phase === 'live')
     .sort((a, b) => (liveMap[b.id]!.minute) - (liveMap[a.id]!.minute));
   const upcoming = visible.filter((m) => liveMap[m.id]?.phase !== 'live');
-  const startingSoon = upcoming.filter((m) => (liveMap[m.id]?.starts_in ?? 9999) <= 90)
-    .sort((a, b) => (liveMap[a.id]?.starts_in ?? 0) - (liveMap[b.id]?.starts_in ?? 0));
-  const comingUp = upcoming.filter((m) => (liveMap[m.id]?.starts_in ?? 9999) > 90)
-    .sort((a, b) => (liveMap[a.id]?.starts_in ?? 0) - (liveMap[b.id]?.starts_in ?? 0));
   const isSoon = SPORTS.find((s) => s.key === sport)?.soon;
+
+  // group upcoming into rounds (4-min grid) under rotating league headers
+  const LEAGUES = ['Champions League', 'International', 'Premier League', 'La Liga', 'Bundesliga', 'Serie A', 'Europa League', 'Super Lig'];
+  const roundsMap = new Map<number, Match[]>();
+  for (const m of upcoming) {
+    const k = Math.floor(new Date(m.starts_at).getTime() / 240000);
+    if (!roundsMap.has(k)) roundsMap.set(k, []);
+    roundsMap.get(k)!.push(m);
+  }
+  const rounds = [...roundsMap.entries()].sort((a, b) => a[0] - b[0]);
+  const roundLabel = (list: Match[]) => {
+    const soon = Math.min(...list.map((m) => liveMap[m.id]?.starts_in ?? 9999));
+    if (soon <= 90) return soon < 60 ? `in ${soon}s` : `in ${Math.ceil(soon / 60)}m`;
+    return new Date(list[0].starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
   const wave = (title: string, right: ReactNode, list: Match[]) => list.length > 0 && (
     <>
@@ -136,8 +147,16 @@ export default function FeedScreen() {
       ) : (
         <div className="ll">
           {wave('E-Football · live', <span className="ll-bar-r"><span className="dot" />{liveOnes.length} live</span>, liveOnes)}
-          {sport !== 'live' && wave('E-Football · starting soon', <span className="ll-bar-r">next up</span>, startingSoon)}
-          {sport !== 'live' && wave('E-Football · coming up', <span className="ll-bar-r tnum">2 × 4 min</span>, comingUp)}
+          {sport !== 'live' && rounds.map(([k, list]) => (
+            <div key={k} className="ll-round">
+              <div className="ll-bar">
+                <span className="ll-bar-l"><EFootballIcon size={19} /> {LEAGUES[((k % LEAGUES.length) + LEAGUES.length) % LEAGUES.length]}</span>
+                <span className="ll-bar-r tnum">{roundLabel(list)} · {list.length}</span>
+              </div>
+              <Cols />
+              {list.map((m) => <MatchRow key={m.id} match={m} live={liveMap[m.id]} />)}
+            </div>
+          ))}
         </div>
       )}
     </div>
