@@ -316,17 +316,17 @@ a:hover { color: var(--win); }
 .auth-legal { text-align: center; margin-top: var(--s5); font-size: 0.78rem; color: var(--text-mut); }
 
 /* line-line bulletin (Nesine layout, our light/green theme) */
-.app-shell-wide { max-width: 800px; }
+.app-shell-wide { max-width: 900px; }
 .ll { border: 1px solid var(--card-line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); background: var(--surface); margin-top: var(--s3); }
 .ll-bar { display: flex; align-items: center; justify-content: space-between; background: var(--league); color: #cfe9dd; padding: 7px 12px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.3px; }
 .ll-bar-l { display: inline-flex; align-items: center; gap: 7px; }
 .ll-bar-r { display: inline-flex; align-items: center; gap: 6px; }
 .ll-bar-r .dot { width: 7px; height: 7px; border-radius: 50%; background: #e24b4a; animation: blink 1.1s ease-in-out infinite; }
 .ll-cols, .ll-row { display: grid; grid-template-columns: 1fr repeat(6, 46px) 32px; gap: 5px; align-items: center; }
-.ll-cols { padding: 5px 12px; background: var(--surface-2); font-size: 0.62rem; font-weight: 700; color: var(--text-mut); }
+.ll-cols { padding: 6px 14px; background: var(--surface-2); font-size: 0.62rem; font-weight: 700; color: var(--text-mut); }
 .ll-cols > span { text-align: center; }
 .ll-cols .lead { text-align: left; }
-.ll-row { padding: 7px 12px; border-top: 1px solid var(--line); background: var(--surface); border-left: 3px solid transparent; }
+.ll-row { padding: 9px 14px; border-top: 1px solid var(--line); background: var(--surface); border-left: 3px solid transparent; }
 .ll-row.is-live { background: color-mix(in srgb, #e24b4a 5%, var(--surface)); border-left-color: #e24b4a; }
 .ll-info { display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; color: inherit; }
 .ll-info:hover { text-decoration: none; }
@@ -503,16 +503,22 @@ a:hover { color: var(--win); }
 .app-shell-flush { padding-top: var(--s3); }
 .detail-back { background: none; border: 0; color: var(--text-2); font: inherit; font-weight: 500; cursor: pointer; padding: var(--s2) 0; margin-bottom: var(--s2); }
 .detail-back:hover { color: var(--text); }
-.scoreboard { padding: var(--s5) var(--s4); }
-.sb-top { display: flex; align-items: center; gap: var(--s2); margin-bottom: var(--s4); }
-.sb-teams { display: flex; align-items: center; justify-content: center; gap: var(--s5); }
-.sb-team { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; }
-.sb-badge { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; font-size: 1rem; text-shadow: 0 1px 1px rgba(0,0,0,0.3); }
-.sb-name { font-size: 0.9rem; font-weight: 600; text-align: center; }
-.sb-score { font-family: var(--mono); font-size: 1.8rem; font-weight: 700; flex-shrink: 0; }
-.detail-markets { margin-top: var(--s4); display: flex; flex-direction: column; gap: var(--s3); }
-.detail-markets .mkt-group { background: var(--card); border: 1px solid var(--card-line); border-radius: var(--radius); box-shadow: var(--shadow); padding: var(--s4); }
-.mkt-title { font-size: 0.82rem; font-weight: 600; color: var(--text-2); margin-bottom: var(--s3); }
+.scoreboard { padding: var(--s4); }
+.sb-top { display: flex; align-items: center; gap: var(--s2); margin-bottom: var(--s3); }
+.sb-teams { display: flex; align-items: center; justify-content: center; gap: var(--s4); }
+.sb-team { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1; }
+.sb-badge { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.85rem; text-shadow: 0 1px 1px rgba(0,0,0,0.3); }
+.sb-name { font-size: 0.85rem; font-weight: 600; text-align: center; }
+.sb-score { font-family: var(--mono); font-size: 1.4rem; font-weight: 800; flex-shrink: 0; }
+.detail-markets { margin-top: var(--s3); display: flex; flex-direction: column; gap: var(--s2); }
+.detail-markets .mkt-group { background: var(--card); border: 1px solid var(--card-line); border-radius: var(--radius-sm); box-shadow: var(--shadow); padding: 10px 12px; }
+.mkt-title { font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-mut); margin-bottom: 6px; }
+/* A6: compact odds cells on the detail page (bulletin density, not huge) */
+.detail-markets .market { gap: 5px; }
+.detail-markets .outcome { padding: 5px 4px; gap: 1px; border-radius: 6px; }
+.detail-markets .outcome-name { font-size: 0.68rem; }
+.detail-markets .outcome-odds { font-size: 0.95rem; }
+.detail-markets .outcome-prob { display: none; }
 
 /* --- Block 5: TV / pitch (live watch) ---------------------------------- */
 /* colours hardcoded (not tokens) so the pitch stays green in any theme */
