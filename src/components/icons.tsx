@@ -20,6 +20,33 @@ export function BallIcon() {
   );
 }
 
+export function RedCardIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="7" y="4" width="10" height="16" rx="2" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function WhistleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"
+         strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 10h11a4 4 0 1 1-4 4v-2H4z" />
+      <path d="M15 8V5h4" />
+    </svg>
+  );
+}
+
+export function SparkIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"
+         strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M13 3 5 13h6l-1 8 8-10h-6z" />
+    </svg>
+  );
+}
+
 export function CouponIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"

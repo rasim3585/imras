@@ -496,6 +496,41 @@ a:hover { color: var(--accent); }
 .live-odds-row .outcome { cursor: default; }
 .live-odds-note { font-size: 0.76rem; margin-top: 8px; }
 
+/* goal moment */
+.goal-flash {
+  position: fixed; inset: 0; z-index: 60; pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  background: radial-gradient(60% 50% at 50% 45%, color-mix(in srgb, var(--flash) 45%, transparent), transparent 70%);
+  animation: goalflash 1.2s ease forwards;
+}
+.goal-flash-word {
+  font-size: 3.4rem; font-weight: 800; letter-spacing: -0.02em;
+  color: var(--flash); text-shadow: 0 4px 30px color-mix(in srgb, var(--flash) 60%, transparent);
+}
+.goal-flash-team { font-size: 1.05rem; font-weight: 600; color: var(--text); }
+@keyframes goalflash {
+  0% { opacity: 0; transform: scale(0.9); }
+  15% { opacity: 1; transform: scale(1.04); }
+  70% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; }
+}
+.badge-glow { box-shadow: 0 0 0 3px color-mix(in srgb, var(--win) 55%, transparent), 0 0 22px var(--win); animation: badgepulse 0.8s ease; }
+@keyframes badgepulse { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.14); } }
+.lb-score.pop { animation: scorepop 0.4s ease; }
+@keyframes scorepop { 0% { transform: scale(1); } 45% { transform: scale(1.18); } 100% { transform: scale(1); } }
+
+.pick-flash { font-size: 0.82rem; color: var(--win); font-weight: 600; margin-top: 3px; animation: rise 0.3s ease; }
+.betstatus.lose .pick-flash { color: var(--loss); }
+@keyframes rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* feed event icons */
+.feed-ic { display: inline-flex; }
+.feed-ic svg { width: 15px; height: 15px; display: block; }
+.feed-ic.goal { color: var(--accent); }
+.feed-ic.red { color: var(--loss); }
+.feed-ic.warn { color: #d9a441; }
+.feed-item.ev.goal .feed-text { font-weight: 600; }
+
 /* event feed */
 .live-feed { padding: 4px 0; }
 .feed-item {
