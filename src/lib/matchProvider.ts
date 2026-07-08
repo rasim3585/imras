@@ -37,6 +37,9 @@ export interface MatchProvider {
   /** Settle a coupon: finalize its matches, grade it, pay out on a full hit. */
   settleCoupon(id: string): Promise<CouponSettlement>;
 
+  /** Auto-settle every pending coupon whose matches have all finished. */
+  settleDueCoupons(): Promise<number>;
+
   /** Daily retention bonus (+500, once per day). Returns the new balance. */
   claimDailyBonus(): Promise<number>;
 

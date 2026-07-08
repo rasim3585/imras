@@ -15,6 +15,7 @@ export default function FeedScreen() {
     try {
       setError(null);
       await matchProvider.finalizeDueMatches().catch(() => 0); // advance the world
+      await matchProvider.settleDueCoupons().catch(() => 0);   // auto-settle finished coupons
       if (seed) await matchProvider.ensureMatches();
       const ms = await matchProvider.getBulletin();
       setMatches(ms);

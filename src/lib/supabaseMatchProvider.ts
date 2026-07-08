@@ -108,6 +108,12 @@ export class SupabaseMatchProvider implements MatchProvider {
     };
   }
 
+  async settleDueCoupons(): Promise<number> {
+    const { data, error } = await supabase.rpc('settle_due_coupons');
+    if (error) throw new Error(error.message);
+    return Number(data ?? 0);
+  }
+
   async claimDailyBonus(): Promise<number> {
     const { data, error } = await supabase.rpc('claim_daily_bonus');
     if (error) throw new Error(error.message);

@@ -19,6 +19,7 @@ export default function MyCouponsScreen() {
   useEffect(() => {
     (async () => {
       try {
+        await matchProvider.settleDueCoupons().catch(() => 0); // auto-settle finished ones
         setCoupons(await matchProvider.getMyCoupons());
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Could not load coupons');
@@ -74,7 +75,7 @@ export default function MyCouponsScreen() {
               </div>
 
               {c.status === 'pending' && (
-                <div className="dim leg-hint">Tap a match to watch it live</div>
+                <div className="dim leg-hint">Tap a match to watch it live · settles automatically when they finish</div>
               )}
 
               <div className="coupon-card-foot">
@@ -86,9 +87,9 @@ export default function MyCouponsScreen() {
                     <b className="tnum">{c.potential_win}</b>
                   </span>
                 </div>
-                {c.status === 'pending' && (
+                {c.status !== 'pending' && (
                   <button className="btn btn-ghost btn-sm" onClick={() => navigate(`/settle/${c.id}`)}>
-                    Settle now
+                    View result
                   </button>
                 )}
               </div>

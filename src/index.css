@@ -523,6 +523,21 @@ a:hover { color: var(--accent); }
 .betstatus.lose .pick-flash { color: var(--loss); }
 @keyframes rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
+/* CM-style commentary feed */
+.cm-feed { padding: 6px 0; max-height: 52vh; overflow-y: auto; }
+.cm-line {
+  display: flex; gap: 10px; align-items: baseline;
+  padding: 7px var(--s4); font-size: 0.9rem; line-height: 1.35;
+  animation: cmIn 0.25s ease;
+}
+.cm-line + .cm-line { border-top: 1px solid var(--line); }
+.cm-min { color: var(--text-mut); font-size: 0.78rem; min-width: 26px; flex-shrink: 0; }
+.cm-text { color: var(--text); }
+.cm-goal .cm-text { font-weight: 700; color: var(--win); }
+.cm-card .cm-text { font-weight: 600; color: var(--loss); }
+@keyframes cmIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.redchip { color: var(--loss); font-size: 0.7em; }
+
 /* feed event icons */
 .feed-ic { display: inline-flex; }
 .feed-ic svg { width: 15px; height: 15px; display: block; }
