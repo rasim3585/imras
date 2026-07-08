@@ -148,6 +148,8 @@ export interface SettlementLeg {
 export interface CouponSettlement {
   coupon_id: string;
   status: CouponStatus;
+  /** True when some legs' matches are still playing — not settleable yet. */
+  in_progress?: boolean;
   stake: number;
   total_odds: number;
   potential_win: number;

@@ -12,6 +12,8 @@ export default function FeedScreen() {
   const load = useCallback(async (seed: boolean) => {
     try {
       setError(null);
+      // advance the world: finish any matches whose real time is over, then top up
+      await matchProvider.finalizeDueMatches().catch(() => 0);
       if (seed) await matchProvider.ensureMatches();
       setMatches(await matchProvider.getUpcoming());
     } catch (err) {

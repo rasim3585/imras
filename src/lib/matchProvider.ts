@@ -17,6 +17,9 @@ export interface MatchProvider {
   /** Ensure there are enough open markets to play (Phase 1: seeds sims). */
   ensureMatches(): Promise<void>;
 
+  /** Finish every match whose real time is over (advances the world). */
+  finalizeDueMatches(): Promise<number>;
+
   /** Matches still open for a pick (kickoff in the future), with their markets. */
   getUpcoming(): Promise<Match[]>;
 

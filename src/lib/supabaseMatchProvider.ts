@@ -22,6 +22,12 @@ export class SupabaseMatchProvider implements MatchProvider {
     if (error) throw new Error(error.message);
   }
 
+  async finalizeDueMatches(): Promise<number> {
+    const { data, error } = await supabase.rpc('finalize_due_matches');
+    if (error) throw new Error(error.message);
+    return Number(data ?? 0);
+  }
+
   async getUpcoming(): Promise<Match[]> {
     const { data, error } = await supabase
       .from('matches')
@@ -102,6 +108,7 @@ export class SupabaseMatchProvider implements MatchProvider {
     const d = data as CouponSettlement;
     return {
       ...d,
+      in_progress: Boolean(d.in_progress),
       stake: Number(d.stake),
       total_odds: Number(d.total_odds),
       potential_win: Number(d.potential_win),

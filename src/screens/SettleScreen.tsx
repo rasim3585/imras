@@ -28,6 +28,8 @@ export default function SettleScreen() {
         const s = await matchProvider.settleCoupon(couponId);
         if (!alive) return;
         setData(s);
+        // Model A: matches finish on the central clock — can't settle mid-play
+        if (s.in_progress) { setPhase('final'); return; }
         setPhase('revealing');
         for (let i = 0; i < s.selections.length; i++) {
           await sleep(1100);
@@ -61,6 +63,18 @@ export default function SettleScreen() {
       <div className="settle">
         <div className="spinner" />
         <p className="settle-note">Settling your coupon…</p>
+      </div>
+    );
+  }
+
+  if (data.in_progress) {
+    return (
+      <div className="app-shell settle-shell">
+        <div className="settle-top"><span className="chip chip-live"><span className="dot" />In progress</span></div>
+        <div className="empty" style={{ marginTop: 'var(--s4)' }}>
+          <p>Your matches are still playing. This coupon settles automatically once they finish — watch them live or check back.</p>
+          <button className="btn" onClick={() => navigate('/coupons')}>Back to coupons</button>
+        </div>
       </div>
     );
   }
