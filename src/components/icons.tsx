@@ -57,6 +57,28 @@ export function CouponIcon() {
   );
 }
 
+export function EFootballIcon({ size = 22 }: { size?: number }) {
+  const pad = 'M6 4 Q2 4 1.5 9 L0.5 17 Q0 21 4 21 Q6.5 21 7.5 18 L9 14 L15 14 L16.5 18 Q17.5 21 20 21 Q24 21 23.5 17 L22.5 9 Q22 4 18 4 Z';
+  return (
+    <svg width={size} height={size * 40 / 52} viewBox="0 0 52 40" aria-hidden="true">
+      <g transform="translate(2,8) rotate(-12 12 12)">
+        <path d={pad} fill="#2fbf6f" />
+        <rect x="9" y="8" width="2.2" height="6" rx="1" fill="#0f3d2b" />
+        <rect x="7" y="10" width="6" height="2.2" rx="1" fill="#0f3d2b" />
+        <circle cx="17" cy="9.5" r="1.3" fill="#0f3d2b" /><circle cx="19.5" cy="12" r="1.3" fill="#0f3d2b" />
+      </g>
+      <g transform="translate(28,8) rotate(12 12 12)">
+        <path d={pad} fill="#1d9e75" />
+        <rect x="9" y="8" width="2.2" height="6" rx="1" fill="#0f3d2b" />
+        <rect x="7" y="10" width="6" height="2.2" rx="1" fill="#0f3d2b" />
+        <circle cx="17" cy="9.5" r="1.3" fill="#0f3d2b" /><circle cx="19.5" cy="12" r="1.3" fill="#0f3d2b" />
+      </g>
+      <circle cx="26" cy="20" r="7" fill="#fff" stroke="#0f3d2b" strokeWidth="1" />
+      <polygon points="26,16 28.5,17.8 27.5,20.8 24.5,20.8 23.5,17.8" fill="#0f3d2b" />
+    </svg>
+  );
+}
+
 export function SocialIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"

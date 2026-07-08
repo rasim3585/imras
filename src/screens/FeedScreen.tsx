@@ -1,16 +1,26 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import MatchCard from '../components/MatchCard';
-import { BallIcon } from '../components/icons';
+import MatchRow from '../components/MatchRow';
+import { EFootballIcon } from '../components/icons';
 import { useAuth } from '../auth/AuthContext';
 import { matchProvider } from '../lib/matchProvider';
 import type { LiveState, Match } from '../lib/types';
+
+function Cols() {
+  return (
+    <div className="ll-cols">
+      <span className="lead">Match</span>
+      <span>1</span><span>X</span><span>2</span>
+      <span className="ll-c-sec">Alt</span><span className="ll-c-sec">Üst</span><span className="ll-c-sec">BTTS</span>
+      <span className="ll-c-plus">+</span>
+    </div>
+  );
+}
 
 export default function FeedScreen() {
   const { session } = useAuth();
   const [matches, setMatches] = useState<Match[]>([]);
   const [liveMap, setLiveMap] = useState<Record<string, LiveState>>({});
-  const [betType, setBetType] = useState('match_result');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const ids = useRef<string[]>([]);
@@ -18,8 +28,8 @@ export default function FeedScreen() {
   const loadBulletin = useCallback(async (seed: boolean) => {
     try {
       setError(null);
-      await matchProvider.finalizeDueMatches().catch(() => 0); // advance the world
-      await matchProvider.settleDueCoupons().catch(() => 0);   // auto-settle finished coupons
+      await matchProvider.finalizeDueMatches().catch(() => 0);
+      await matchProvider.settleDueCoupons().catch(() => 0);
       if (seed) await matchProvider.ensureMatches();
       const ms = await matchProvider.getBulletin();
       setMatches(ms);
@@ -43,12 +53,11 @@ export default function FeedScreen() {
 
   useEffect(() => {
     void loadBulletin(true).then(pollLive);
-    const refresh = setInterval(() => void loadBulletin(true).then(pollLive), 20000); // new matches / drop finished
-    const live = setInterval(() => void pollLive(), 2500); // live minutes + odds
+    const refresh = setInterval(() => void loadBulletin(true).then(pollLive), 20000);
+    const live = setInterval(() => void pollLive(), 2500);
     return () => { clearInterval(refresh); clearInterval(live); };
   }, [loadBulletin, pollLive]);
 
-  // hide matches that read as finished or in the closing minutes (unbettable)
   const visible = matches.filter((m) => {
     const s = liveMap[m.id];
     if (!s) return true;
@@ -60,14 +69,8 @@ export default function FeedScreen() {
     .sort((a, b) => (liveMap[b.id]!.minute) - (liveMap[a.id]!.minute));
   const upcoming = visible.filter((m) => liveMap[m.id]?.phase !== 'live');
 
-  const BET_TABS: { key: string; label: string }[] = [
-    { key: 'match_result', label: 'Match Result' },
-    { key: 'over_under_2_5', label: 'Goals O/U' },
-    { key: 'double_chance', label: 'Double Chance' },
-  ];
-
   return (
-    <div className="app-shell">
+    <div className="app-shell app-shell-wide">
       {!session && (
         <div className="landing-hero card">
           <h2>Real betting thrills, zero money.</h2>
@@ -80,24 +83,6 @@ export default function FeedScreen() {
         </div>
       )}
 
-      <div className="page-head" style={{ paddingBottom: 'var(--s3)' }}>
-        <h1>Markets</h1>
-      </div>
-
-      {/* sport category strip */}
-      <div className="cat-strip">
-        <button className="cat is-active"><span className="cat-ic"><BallIcon /></span>Football{liveOnes.length > 0 ? <span className="cat-live">{liveOnes.length}</span> : null}</button>
-        <button className="cat is-soon" disabled>Basketball</button>
-        <button className="cat is-soon" disabled>Tennis</button>
-      </div>
-
-      {/* bet-type tabs */}
-      <div className="bet-tabs">
-        {BET_TABS.map((t) => (
-          <button key={t.key} className={`bet-tab ${betType === t.key ? 'active' : ''}`} onClick={() => setBetType(t.key)}>{t.label}</button>
-        ))}
-      </div>
-
       {error && <div className="banner banner-error">{error}</div>}
 
       {loading ? (
@@ -108,20 +93,28 @@ export default function FeedScreen() {
           <button className="btn" onClick={() => loadBulletin(true)}>Refresh</button>
         </div>
       ) : (
-        <>
+        <div className="ll">
           {liveOnes.length > 0 && (
             <>
-              <div className="section-head"><h3>Live now</h3><span className="chip chip-live"><span className="dot" />{liveOnes.length}</span></div>
-              <div className="market-list">{liveOnes.map((m) => <MatchCard key={m.id} match={m} live={liveMap[m.id]} primaryType={betType} />)}</div>
+              <div className="ll-bar">
+                <span className="ll-bar-l"><EFootballIcon size={20} /> E-Football · live</span>
+                <span className="ll-bar-r"><span className="dot" />{liveOnes.length} live</span>
+              </div>
+              <Cols />
+              {liveOnes.map((m) => <MatchRow key={m.id} match={m} live={liveMap[m.id]} />)}
             </>
           )}
           {upcoming.length > 0 && (
             <>
-              <div className="section-head"><h3>Starting soon</h3></div>
-              <div className="market-list">{upcoming.map((m) => <MatchCard key={m.id} match={m} live={liveMap[m.id]} primaryType={betType} />)}</div>
+              <div className="ll-bar">
+                <span className="ll-bar-l"><EFootballIcon size={20} /> E-Football · starting soon</span>
+                <span className="ll-bar-r tnum">2 × ~50s</span>
+              </div>
+              <Cols />
+              {upcoming.map((m) => <MatchRow key={m.id} match={m} live={liveMap[m.id]} />)}
             </>
           )}
-        </>
+        </div>
       )}
     </div>
   );

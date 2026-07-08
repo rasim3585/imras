@@ -63,15 +63,24 @@ export default function MyCouponsScreen() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  const linkFor = (id: string) => `${window.location.origin}/c/${id}`;
+  const waHref = (id: string) => `https://wa.me/?text=${encodeURIComponent('Check out my pickplay coupon: ' + linkFor(id))}`;
+
   async function share(couponId: string) {
     try {
       await matchProvider.shareCoupon(couponId);
       setShared((s) => new Set(s).add(couponId));
-      setToast('Shared — open Social › Feed to see it');
+      setToast('Shared — copy the link or send it on WhatsApp');
     } catch (err) {
       setToast(err instanceof Error ? err.message : 'Could not share');
     }
-    window.setTimeout(() => setToast(null), 2500);
+    window.setTimeout(() => setToast(null), 2600);
+  }
+
+  async function copyLink(couponId: string) {
+    try { await navigator.clipboard.writeText(linkFor(couponId)); setToast('Link copied to clipboard'); }
+    catch { setToast(linkFor(couponId)); }
+    window.setTimeout(() => setToast(null), 2600);
   }
 
   const load = useCallback(async () => {
@@ -192,9 +201,14 @@ export default function MyCouponsScreen() {
                   </span>
                 </div>
                 <div className="row" style={{ gap: 'var(--s2)' }}>
-                  <button className="btn btn-ghost btn-sm" disabled={shared.has(c.id)} onClick={() => share(c.id)}>
-                    {shared.has(c.id) ? 'Shared' : 'Share'}
-                  </button>
+                  {shared.has(c.id) ? (
+                    <>
+                      <button className="btn btn-ghost btn-sm" onClick={() => copyLink(c.id)}>Copy link</button>
+                      <a className="btn btn-ghost btn-sm" href={waHref(c.id)} target="_blank" rel="noreferrer">WhatsApp</a>
+                    </>
+                  ) : (
+                    <button className="btn btn-ghost btn-sm" onClick={() => share(c.id)}>Share</button>
+                  )}
                   {c.status === 'pending' && cashouts[c.id]?.available && (
                     <button className="btn btn-primary btn-sm" disabled={busy === c.id} onClick={() => cashout(c.id)}>
                       {busy === c.id ? '…' : `Cash out ${cashouts[c.id].value}`}

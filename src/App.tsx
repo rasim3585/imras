@@ -1,6 +1,7 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { useAuth } from './auth/AuthContext';
+import SharedCouponScreen from './screens/SharedCouponScreen';
 import AuthScreen from './screens/AuthScreen';
 import UsernameScreen from './screens/UsernameScreen';
 import FeedScreen from './screens/FeedScreen';
@@ -25,6 +26,16 @@ function RequireAuth({ children }: { children: ReactNode }) {
 
 function App() {
   const { loading, session, needsUsername } = useAuth();
+  const loc = useLocation();
+
+  // public shared-coupon link: standalone, no nav, no auth gate
+  if (loc.pathname.startsWith('/c/')) {
+    return (
+      <Routes>
+        <Route path="/c/:token" element={<SharedCouponScreen />} />
+      </Routes>
+    );
+  }
 
   if (loading) {
     return <div className="center-screen"><div className="spinner" /></div>;

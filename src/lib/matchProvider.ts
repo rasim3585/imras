@@ -78,6 +78,9 @@ export interface MatchProvider {
   getRivals(): Promise<Rival[]>;
   shareCoupon(couponId: string): Promise<void>;
   getSharedFeed(): Promise<SharedCoupon[]>;
+
+  /** One shared coupon by id, for the public share link (null if not shared). */
+  getSharedCoupon(id: string): Promise<SharedCoupon | null>;
 }
 
 // --- Active provider --------------------------------------------------------

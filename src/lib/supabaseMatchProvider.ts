@@ -223,6 +223,12 @@ export class SupabaseMatchProvider implements MatchProvider {
     return (data ?? []) as SharedCoupon[];
   }
 
+  async getSharedCoupon(id: string): Promise<SharedCoupon | null> {
+    const { data, error } = await supabase.rpc('get_shared_coupon', { p_id: id });
+    if (error) throw new Error(error.message);
+    return (data ?? null) as SharedCoupon | null;
+  }
+
   async topupGold(): Promise<number> {
     const { data, error } = await supabase.rpc('topup_gold');
     if (error) throw new Error(error.message);
