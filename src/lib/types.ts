@@ -39,6 +39,9 @@ export interface LiveState {
   home_score: number;
   away_score: number;
   events: MatchEvent[];   // revealed goals only
+  /** Live 1/X/2 odds: recomputed while live, pre-match line while upcoming,
+   *  null once finished. */
+  live_odds: { home: number; draw: number; away: number } | null;
   result: Outcome | null; // only once finished
 }
 
