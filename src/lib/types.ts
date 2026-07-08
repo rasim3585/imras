@@ -24,6 +24,24 @@ export interface MatchEvent {
   team: 'home' | 'away';
 }
 
+export type LivePhase = 'upcoming' | 'live' | 'finished';
+
+/** Wall-clock-derived match state from get_live_state — only reveals what has
+ *  happened so far; the future stays hidden server-side. */
+export interface LiveState {
+  match_id: string;
+  home_team: string;
+  away_team: string;
+  phase: LivePhase;
+  minute: number;
+  starts_in: number;      // seconds until kickoff (0 once started)
+  duration_secs: number;  // virtual match length in wall-clock seconds
+  home_score: number;
+  away_score: number;
+  events: MatchEvent[];   // revealed goals only
+  result: Outcome | null; // only once finished
+}
+
 // --- Markets (generic bet types) -------------------------------------------
 
 export interface MarketOption {

@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import type { MatchProvider, PlacedCoupon } from './matchProvider';
-import type { Coupon, CouponLeg, CouponSettlement, Market, Match } from './types';
+import type { Coupon, CouponLeg, CouponSettlement, LiveState, Market, Match } from './types';
 
 // Explicit match columns — omits `true_probabilities` (hidden) and
 // `display_odds` (server-only seed input; odds are exposed via market_options).
@@ -43,6 +43,13 @@ export class SupabaseMatchProvider implements MatchProvider {
         .sort((a, b) => a.sort_order - b.sort_order);
       return { ...(raw as Match), markets };
     });
+  }
+
+  async getLiveStates(matchIds: string[]): Promise<LiveState[]> {
+    if (matchIds.length === 0) return [];
+    const { data, error } = await supabase.rpc('get_live_state', { p_match_ids: matchIds });
+    if (error) throw new Error(error.message);
+    return (data ?? []) as LiveState[];
   }
 
   async placeCoupon(optionIds: string[], stake: number): Promise<PlacedCoupon> {
