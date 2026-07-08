@@ -301,6 +301,12 @@ a:hover { color: var(--accent); }
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
 }
 
+.more-markets {
+  width: 100%; margin-top: var(--s3); padding: 8px; border: 1px solid var(--line);
+  background: transparent; color: var(--text-2); border-radius: var(--radius-sm);
+  font: inherit; font-size: 0.82rem; font-weight: 500; cursor: pointer;
+}
+.more-markets:hover { background: var(--surface-2); color: var(--text); }
 .market-section + .market-section { margin-top: var(--s3); padding-top: var(--s3); border-top: 1px solid var(--line); }
 .market-name { display: block; margin-bottom: var(--s2); }
 .market { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); }

@@ -42,9 +42,9 @@ export interface LiveState {
   cards: { minute: number; team: 'home' | 'away' }[]; // revealed red cards
   red_home: number;
   red_away: number;
-  /** Live 1/X/2 odds: recomputed while live (reflects red cards), pre-match line
-   *  while upcoming, null once finished. */
-  live_odds: { home: number; draw: number; away: number } | null;
+  /** Live odds map (outcome_key -> odds) for all full-time markets while live
+   *  (reflects red cards); null once finished / upcoming. Includes home/draw/away. */
+  live_odds: Record<string, number> | null;
   result: Outcome | null; // only once finished
 }
 

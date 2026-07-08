@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { Match, Market, LiveState, Outcome } from '../lib/types';
+import type { Match, Market, LiveState } from '../lib/types';
 import { formatKickoff, formatOdds, impliedProb } from '../lib/format';
 import { teamColor, teamInitial } from '../lib/teams';
 import { BallIcon } from './icons';
 import { useCart } from '../coupon/CartContext';
+
+const HT_MARKETS = new Set(['ht_result', 'ht_over_under_0_5']);
 
 function TeamBadge({ name }: { name: string }) {
   return (
@@ -13,8 +16,13 @@ function TeamBadge({ name }: { name: string }) {
 
 function MarketSection({ match, market, live }: { match: Match; market: Market; live?: LiveState }) {
   const { isSelected, select } = useCart();
-  const liveOdds = live && live.phase === 'live' && market.market_type === 'match_result' ? live.live_odds : null;
-  const oddsFor = (key: string) => (liveOdds ? liveOdds[key as Outcome] : market.options.find((o) => o.outcome_key === key)?.odds ?? 0);
+  const isLive = live?.phase === 'live';
+  // first-half markets are pre-match only: hide them once live
+  if (isLive && HT_MARKETS.has(market.market_type)) return null;
+
+  const liveOdds = isLive && !HT_MARKETS.has(market.market_type) ? live!.live_odds : null;
+  const oddsFor = (key: string) =>
+    (liveOdds?.[key] ?? market.options.find((o) => o.outcome_key === key)?.odds ?? 0);
   const allOdds = market.options.map((o) => oddsFor(o.outcome_key));
 
   return (
@@ -47,8 +55,14 @@ function MarketSection({ match, market, live }: { match: Match; market: Market; 
 }
 
 export default function MatchCard({ match, live }: { match: Match; live?: LiveState }) {
+  const [expanded, setExpanded] = useState(false);
   const sportLabel = match.sport.charAt(0).toUpperCase() + match.sport.slice(1);
   const isLive = live?.phase === 'live';
+
+  const markets = [...match.markets].sort((a, b) => a.sort_order - b.sort_order);
+  // keep cards compact: show the first market, reveal the rest on demand
+  const visibleMarkets = expanded ? markets : markets.slice(0, 1);
+  const moreCount = markets.length - visibleMarkets.length;
 
   return (
     <div className="card contract">
@@ -65,9 +79,18 @@ export default function MatchCard({ match, live }: { match: Match; live?: LiveSt
         <span className="team team-away"><span className="team-name">{match.away_team}</span><TeamBadge name={match.away_team} /></span>
       </Link>
 
-      {match.markets.map((m) => (
+      {visibleMarkets.map((m) => (
         <MarketSection key={m.id} match={match} market={m} live={live} />
       ))}
+
+      {moreCount > 0 && (
+        <button type="button" className="more-markets" onClick={() => setExpanded(true)}>
+          + {moreCount} more markets
+        </button>
+      )}
+      {expanded && markets.length > 1 && (
+        <button type="button" className="more-markets" onClick={() => setExpanded(false)}>Show less</button>
+      )}
     </div>
   );
 }
