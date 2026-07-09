@@ -37,15 +37,16 @@ export async function solveLambdas(client: SupabaseClient, provider: FixtureProv
         await logSync(client, { provider: provider.name, endpoint, http_status: 200, success: false, fixture_id: f.id, error_message: 'no odds' });
         continue;
       }
-      const sol = solveLambda(odds.homeWin, odds.draw, odds.awayWin);
+      const sol = solveLambda(odds);   // fits 1X2 + over/under together
 
-      // health WARNS but never eliminates -- a real 6-1 match can total >4.0, and
-      // dropping it would be throwing away correct data. But it must be seen.
+      // both checks WARN, neither ELIMINATES -- a real 6-1 can total >4.0, and a
+      // consistency gap means bad provider data, not a bad solve. Collect and
+      // print on ONE line; the warning also goes to provider_sync_log.
+      const warns: string[] = [];
       const health = lambdaHealth(sol);
-      if (!health.ok) {
-        console.warn(`[lambda] ${label} -> UYARI: ${health.reason} (yine de kaydedildi)`);
-        await logSync(client, { provider: provider.name, endpoint, http_status: 200, success: true, fixture_id: f.id, error_message: `suspect lambda: ${health.reason}` });
-      }
+      if (!health.ok) warns.push(health.reason ?? 'sağlıksız lambda');
+      if (sol.ouGap != null && sol.ouGap > 0.10) warns.push(`sağlayıcı tutarsız (2.5 üst farkı ${sol.ouGap.toFixed(2)})`);
+      const warnStr = warns.length ? ` UYARI: ${warns.join('; ')}` : '';
 
       const { error: uerr } = await client.from('real_fixtures')
         .update({ lambda_home: sol.lambdaHome, lambda_away: sol.lambdaAway, prematch_odds: odds, lambda_solved_at: new Date().toISOString() })
@@ -53,8 +54,8 @@ export async function solveLambdas(client: SupabaseClient, provider: FixtureProv
       if (uerr) throw new Error(uerr.message);
 
       solved++;
-      console.log(`[lambda] ${label} -> cozuldu (${sol.lambdaHome} / ${sol.lambdaAway})`);
-      await logSync(client, { provider: provider.name, endpoint, http_status: 200, success: true, fixture_id: f.id });
+      console.log(`[lambda] ${label} -> cozuldu (${sol.lambdaHome} / ${sol.lambdaAway})${warnStr}`);
+      await logSync(client, { provider: provider.name, endpoint, http_status: 200, success: true, fixture_id: f.id, error_message: warns.length ? warns.join('; ') : undefined });
     } catch (e) {
       skipped++;
       console.error(`[lambda] ${label} -> ATLANDI: ${errMsg(e)}`);
