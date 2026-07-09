@@ -1,6 +1,6 @@
 import type {
   Match, Coupon, CouponSettlement, LiveState, DailyBonus, Challenge, Leaderboard,
-  League, LeagueDetail, Rival, SharedCoupon,
+  League, LeagueDetail, Rival, SharedCoupon, BulletinMatch, CartSelection,
 } from './types';
 import { SupabaseMatchProvider } from './supabaseMatchProvider';
 
@@ -22,8 +22,8 @@ export interface MatchProvider {
   /** Finish every match whose real time is over (advances the world). */
   finalizeDueMatches(): Promise<number>;
 
-  /** All matches still in play (upcoming + live), with their markets. */
-  getBulletin(): Promise<Match[]>;
+  /** The unified bulletin (real fixtures + virtual matches) via get_bulletin. */
+  getBulletin(): Promise<BulletinMatch[]>;
 
   /** Wall-clock live state for a set of matches (phase/minute/score/goals/odds). */
   getLiveStates(matchIds: string[]): Promise<LiveState[]>;
@@ -31,8 +31,8 @@ export interface MatchProvider {
   /** One match with all its markets (for the match-detail screen). */
   getMatch(id: string): Promise<Match | null>;
 
-  /** Place a coupon from selected market-option ids; server prices + settles. */
-  placeCoupon(optionIds: string[], stake: number): Promise<PlacedCoupon>;
+  /** Place a coupon (real + virtual legs) via place_coupon_v2; server prices. */
+  placeCoupon(selections: CartSelection[], stake: number): Promise<PlacedCoupon>;
 
   /** The user's coupons, newest first, each with its graded selections. */
   getMyCoupons(): Promise<Coupon[]>;

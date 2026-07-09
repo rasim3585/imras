@@ -9,16 +9,18 @@ import {
 } from 'react';
 import type { CartSelection } from '../lib/types';
 
-const STORAGE_KEY = 'pickplay.cart.v2';
+const STORAGE_KEY = 'pickplay.cart.v3';   // v3: kind-aware, option_id nullable
+
+// A selection is identified by (match, market, outcome) -- NOT option_id, which
+// is null for real fixtures.
+const keyOf = (matchId: string, marketType: string, outcomeKey: string) => `${matchId}:${marketType}:${outcomeKey}`;
 
 interface CartState {
   selections: CartSelection[];
   count: number;
   totalOdds: number;
-  isSelected: (optionId: string) => boolean;
-  /** Which option (if any) is chosen for a match — one pick per match. */
-  optionForMatch: (matchId: string) => string | null;
-  /** Toggle an option: adds it, or replaces the match's pick, or removes it. */
+  isPicked: (matchId: string, marketType: string, outcomeKey: string) => boolean;
+  /** Toggle a leg: add it, replace the match's pick, or remove it (one per match). */
   select: (leg: CartSelection) => void;
   remove: (matchId: string) => void;
   clear: () => void;
@@ -29,7 +31,8 @@ const CartContext = createContext<CartState | undefined>(undefined);
 function load(): CartSelection[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as CartSelection[]) : [];
+    const arr = raw ? (JSON.parse(raw) as CartSelection[]) : [];
+    return arr.filter((s) => s && s.kind && s.match_id && s.market_type && s.outcome_key);
   } catch {
     return [];
   }
@@ -39,18 +42,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [selections, setSelections] = useState<CartSelection[]>(load);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(selections));
-    } catch {
-      /* ignore quota / private mode */
-    }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(selections)); }
+    catch { /* ignore quota / private mode */ }
   }, [selections]);
 
   const select = useCallback((leg: CartSelection) => {
+    const legKey = keyOf(leg.match_id, leg.market_type, leg.outcome_key);
     setSelections((prev) => {
       const existing = prev.find((s) => s.match_id === leg.match_id);
-      // tapping the already-selected option clears the match
-      if (existing && existing.option_id === leg.option_id) {
+      // tapping the already-selected leg clears the match
+      if (existing && keyOf(existing.match_id, existing.market_type, existing.outcome_key) === legKey) {
         return prev.filter((s) => s.match_id !== leg.match_id);
       }
       // one pick per match: replace any existing selection on this match
@@ -64,12 +65,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clear = useCallback(() => setSelections([]), []);
 
-  const isSelected = useCallback(
-    (optionId: string) => selections.some((s) => s.option_id === optionId),
-    [selections],
-  );
-  const optionForMatch = useCallback(
-    (matchId: string) => selections.find((s) => s.match_id === matchId)?.option_id ?? null,
+  const isPicked = useCallback(
+    (matchId: string, marketType: string, outcomeKey: string) =>
+      selections.some((s) => s.match_id === matchId && s.market_type === marketType && s.outcome_key === outcomeKey),
     [selections],
   );
 
@@ -82,8 +80,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     selections,
     count: selections.length,
     totalOdds,
-    isSelected,
-    optionForMatch,
+    isPicked,
     select,
     remove,
     clear,

@@ -77,6 +77,40 @@ export interface LiveState {
   result: Outcome | null; // only once finished
 }
 
+// --- Unified bulletin (real BSD fixtures + virtual matches) ----------------
+// One RPC (get_bulletin) returns both. Real: option_id null, league name, fewer
+// markets (5 without lambda, 7 with, no first-half). Virtual: option_id filled,
+// 9 markets. Closed markets are simply absent from `markets`.
+
+export type BulletinKind = 'real' | 'virtual';
+
+export interface BulletinOption {
+  outcome_key: string;
+  label: string;
+  odds: number;
+  option_id: string | null;   // null for real fixtures
+}
+export interface BulletinMarket {
+  market_type: string;
+  name: string;
+  options: BulletinOption[];
+}
+export interface BulletinMatch {
+  id: string;
+  kind: BulletinKind;
+  home_team: string;
+  away_team: string;
+  starts_at: string;
+  status: string;             // real: notstarted|inprogress|penalties|finished; virtual: upcoming|live|finished
+  home_score: number | null;
+  away_score: number | null;
+  minute: number | null;
+  period: string | null;
+  league: string | null;      // real only
+  is_derby: boolean;
+  markets: BulletinMarket[];
+}
+
 // --- Markets (generic bet types) -------------------------------------------
 
 export interface MarketOption {
@@ -115,10 +149,15 @@ export interface Match {
 
 // --- Coupons ---------------------------------------------------------------
 
-/** A selection while it lives in the client-side cart (pre-placement). */
+/** A selection while it lives in the client-side cart (pre-placement). Carries
+ *  what place_coupon_v2 needs for BOTH kinds: virtual legs go by option_id, real
+ *  legs by (fixture_id, market_type, outcome_key). */
 export interface CartSelection {
-  option_id: string;
-  match_id: string;
+  kind: BulletinKind;
+  match_id: string;            // fixture id (real) or match id (virtual)
+  option_id: string | null;    // virtual only
+  market_type: string;
+  outcome_key: string;
   home_team: string;
   away_team: string;
   market_name: string;

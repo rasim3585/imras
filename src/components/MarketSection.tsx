@@ -9,7 +9,7 @@ const HT_MARKETS = new Set(['ht_result', 'ht_over_under_0_5']);
 export default function MarketSection({
   match, market, live, showTitle = true,
 }: { match: Match; market: Market; live?: LiveState; showTitle?: boolean }) {
-  const { isSelected, select } = useCart();
+  const { isPicked, select } = useCart();
   const isLive = live?.phase === 'live';
   // first-half markets are bettable pre-match ONLY -> show only when we KNOW the
   // match is upcoming (live loaded); hidden while live is loading or once started.
@@ -36,7 +36,7 @@ export default function MarketSection({
               <span className="outcome-odds">Closed</span>
             </div>
           );
-          const picked = isSelected(o.id);
+          const picked = isPicked(match.id, market.market_type, o.outcome_key);
           const fav = !picked && odds === favOdds;
           return (
             <button
@@ -45,8 +45,8 @@ export default function MarketSection({
               className={`outcome ${picked ? 'sel' : ''} ${fav ? 'fav' : ''}`}
               aria-pressed={picked}
               onClick={() => select({
-                option_id: o.id, match_id: match.id, home_team: match.home_team, away_team: match.away_team,
-                market_name: market.name, option_label: o.label, odds,
+                kind: 'virtual', match_id: match.id, option_id: o.id, market_type: market.market_type, outcome_key: o.outcome_key,
+                home_team: match.home_team, away_team: match.away_team, market_name: market.name, option_label: o.label, odds,
               })}
             >
               <span className="outcome-name">{o.label}</span>

@@ -1,18 +1,19 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import MatchRow from '../components/MatchRow';
 import { EFootballIcon } from '../components/icons';
 import { useAuth } from '../auth/AuthContext';
 import { matchProvider } from '../lib/matchProvider';
-import type { LiveState, Match } from '../lib/types';
+import type { BulletinMatch } from '../lib/types';
 
-type SportKey = 'live' | 'football' | 'basketball' | 'efootball' | 'ebasket' | 'tennis' | 'volley';
+const LIVE = new Set(['inprogress', 'live', 'penalties']);
+
+type SportKey = 'live' | 'football' | 'efootball' | 'basketball' | 'tennis' | 'volley';
 const SPORTS: { key: SportKey; label: string; icon: string; soon?: boolean }[] = [
   { key: 'live', label: 'Live', icon: '⚡' },
-  { key: 'football', label: 'Football', icon: '⚽', soon: true },
-  { key: 'basketball', label: 'Basketball', icon: '🏀', soon: true },
+  { key: 'football', label: 'Football', icon: '⚽' },
   { key: 'efootball', label: 'E-Football', icon: '' },
-  { key: 'ebasket', label: 'E-Basket', icon: '🎮', soon: true },
+  { key: 'basketball', label: 'Basketball', icon: '🏀', soon: true },
   { key: 'tennis', label: 'Tennis', icon: '🎾', soon: true },
   { key: 'volley', label: 'Volleyball', icon: '🏐', soon: true },
 ];
@@ -30,22 +31,16 @@ function Cols() {
 
 export default function FeedScreen() {
   const { session } = useAuth();
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [liveMap, setLiveMap] = useState<Record<string, LiveState>>({});
-  const [sport, setSport] = useState<SportKey>('efootball');
+  const [matches, setMatches] = useState<BulletinMatch[]>([]);
+  const [sport, setSport] = useState<SportKey>('football');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const ids = useRef<string[]>([]);
 
-  const loadBulletin = useCallback(async (seed: boolean) => {
+  const poll = useCallback(async () => {
     try {
-      setError(null);
-      await matchProvider.finalizeDueMatches().catch(() => 0);
-      await matchProvider.settleDueCoupons().catch(() => 0);
-      if (seed) await matchProvider.ensureMatches();
       const ms = await matchProvider.getBulletin();
       setMatches(ms);
-      ids.current = ms.map((m) => m.id);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not load the bulletin');
     } finally {
@@ -53,64 +48,46 @@ export default function FeedScreen() {
     }
   }, []);
 
-  const pollLive = useCallback(async () => {
-    if (ids.current.length === 0) return;
-    try {
-      const states = await matchProvider.getLiveStates(ids.current);
-      const map: Record<string, LiveState> = {};
-      for (const s of states) map[s.match_id] = s;
-      setLiveMap(map);
-    } catch { /* transient */ }
-  }, []);
-
   useEffect(() => {
-    void loadBulletin(true).then(pollLive);
-    const refresh = setInterval(() => void loadBulletin(true).then(pollLive), 20000);
-    const live = setInterval(() => void pollLive(), 2500);
-    return () => { clearInterval(refresh); clearInterval(live); };
-  }, [loadBulletin, pollLive]);
+    // slower loop advances the virtual world (finish/settle/seed); fast loop just
+    // refreshes prices + scores.
+    const advance = async () => {
+      await matchProvider.finalizeDueMatches().catch(() => 0);
+      await matchProvider.settleDueCoupons().catch(() => 0);
+      await matchProvider.ensureMatches().catch(() => undefined);
+    };
+    void advance().then(poll);
+    const world = setInterval(() => void advance().then(poll), 20000);
+    const fast = setInterval(() => void poll(), 5000);
+    return () => { clearInterval(world); clearInterval(fast); };
+  }, [poll]);
 
-  const visible = matches.filter((m) => {
-    const s = liveMap[m.id];
-    if (!s) return true;
-    if (s.phase === 'finished') return false;
-    if (s.phase === 'live' && s.minute >= 85) return false;
-    return true;
-  });
-  const liveOnes = visible.filter((m) => liveMap[m.id]?.phase === 'live')
-    .sort((a, b) => (liveMap[b.id]!.minute) - (liveMap[a.id]!.minute));
-  const upcoming = visible.filter((m) => liveMap[m.id]?.phase !== 'live');
-  const isSoon = SPORTS.find((s) => s.key === sport)?.soon;
+  const notFinished = matches.filter((m) => m.status !== 'finished');
+  const liveAll = notFinished.filter((m) => LIVE.has(m.status));
+  const realOnes = notFinished.filter((m) => m.kind === 'real');
+  const virtualOnes = notFinished.filter((m) => m.kind === 'virtual');
 
-  // group upcoming into rounds (4-min grid) under rotating league headers
-  const LEAGUES = ['Champions League', 'International', 'Premier League', 'La Liga', 'Bundesliga', 'Serie A', 'Europa League', 'Super Lig'];
-  const roundsMap = new Map<number, Match[]>();
-  for (const m of upcoming) {
-    const k = Math.floor(new Date(m.starts_at).getTime() / 240000);
-    if (!roundsMap.has(k)) roundsMap.set(k, []);
-    roundsMap.get(k)!.push(m);
-  }
-  const rounds = [...roundsMap.entries()].sort((a, b) => a[0] - b[0]);
-  const roundLabel = (list: Match[]) => {
-    const soon = Math.min(...list.map((m) => liveMap[m.id]?.starts_in ?? 9999));
-    if (soon <= 90) return soon < 60 ? `in ${soon}s` : `in ${Math.ceil(soon / 60)}m`;
-    return new Date(list[0].starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+  const spec = SPORTS.find((s) => s.key === sport);
+  const set = sport === 'live' ? liveAll : sport === 'football' ? realOnes : sport === 'efootball' ? virtualOnes : [];
+  const live = set.filter((m) => LIVE.has(m.status)).sort((a, b) => (b.minute ?? 0) - (a.minute ?? 0));
+  const upcoming = set.filter((m) => !LIVE.has(m.status)).sort((a, b) => a.starts_at.localeCompare(b.starts_at));
 
-  const wave = (title: string, right: ReactNode, list: Match[]) => list.length > 0 && (
+  const section = (title: string, right: ReactNode, list: BulletinMatch[]) => list.length > 0 && (
     <>
       <div className="ll-bar"><span className="ll-bar-l"><EFootballIcon size={19} /> {title}</span>{right}</div>
       <Cols />
-      {list.map((m) => <MatchRow key={m.id} match={m} live={liveMap[m.id]} />)}
+      {list.map((m) => <MatchRow key={m.id} m={m} />)}
     </>
   );
+
+  const upTitle = sport === 'efootball' ? 'E-Football · 2×4 min' : sport === 'football' ? 'Football' : 'Upcoming';
 
   return (
     <div className="app-shell app-shell-wide">
       {!session && (
         <div className="landing-hero card">
           <h2>Real betting thrills, zero money.</h2>
-          <p>Predict virtual matches, watch them play out live, and compete with friends — all with symbolic gold. No wagering, ever.</p>
+          <p>Predict real & virtual matches, watch them play out live, and compete with friends — all with symbolic gold. No wagering, ever.</p>
           <div className="row" style={{ gap: 'var(--s2)' }}>
             <Link to="/login" className="btn btn-primary">Sign up free</Link>
             <Link to="/login" className="btn btn-ghost">Log in</Link>
@@ -120,7 +97,7 @@ export default function FeedScreen() {
 
       <div className="sport-bar">
         {SPORTS.map((s) => {
-          const cnt = s.key === 'live' ? liveOnes.length : s.key === 'efootball' ? visible.length : null;
+          const cnt = s.key === 'live' ? liveAll.length : s.key === 'football' ? realOnes.length : s.key === 'efootball' ? virtualOnes.length : null;
           return (
             <button key={s.key} className={`sport-tab ${sport === s.key ? 'active' : ''} ${s.soon ? 'soon' : ''}`} onClick={() => setSport(s.key)}>
               {s.key === 'efootball' ? <EFootballIcon size={19} /> : <span className="sport-ic">{s.icon}</span>}
@@ -133,30 +110,16 @@ export default function FeedScreen() {
 
       {error && <div className="banner banner-error">{error}</div>}
 
-      {isSoon ? (
-        <div className="empty"><p>{SPORTS.find((s) => s.key === sport)?.label} is coming soon.</p></div>
+      {spec?.soon ? (
+        <div className="empty"><p>{spec.label} is coming soon.</p></div>
       ) : loading ? (
         <div className="center-pad"><div className="spinner" /></div>
-      ) : (sport === 'live' && liveOnes.length === 0) ? (
-        <div className="empty"><p>No live matches right now. Check E-Football for what's starting soon.</p></div>
-      ) : visible.length === 0 ? (
-        <div className="empty">
-          <p>No open markets right now.</p>
-          <button className="btn" onClick={() => loadBulletin(true)}>Refresh</button>
-        </div>
+      ) : set.length === 0 ? (
+        <div className="empty"><p>{sport === 'live' ? 'No live matches right now.' : 'No open matches right now.'}</p></div>
       ) : (
         <div className="ll">
-          {wave('E-Football · live', <span className="ll-bar-r"><span className="dot" />{liveOnes.length} live</span>, liveOnes)}
-          {sport !== 'live' && rounds.map(([k, list]) => (
-            <div key={k} className="ll-round">
-              <div className="ll-bar">
-                <span className="ll-bar-l"><EFootballIcon size={19} /> {LEAGUES[((k % LEAGUES.length) + LEAGUES.length) % LEAGUES.length]}</span>
-                <span className="ll-bar-r tnum">{roundLabel(list)} · {list.length}</span>
-              </div>
-              <Cols />
-              {list.map((m) => <MatchRow key={m.id} match={m} live={liveMap[m.id]} />)}
-            </div>
-          ))}
+          {section('Live', <span className="ll-bar-r"><span className="dot" />{live.length} live</span>, live)}
+          {sport !== 'live' && section(upTitle, <span className="ll-bar-r">{sport === 'football' ? 'BSD' : 'sim'}</span>, upcoming)}
         </div>
       )}
     </div>

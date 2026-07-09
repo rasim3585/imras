@@ -161,9 +161,11 @@ function Feed() {
   function copy(c: SharedCoupon) {
     clear();
     for (const leg of c.legs) {
+      // shared coupons are virtual; placing a virtual leg goes by option_id, so
+      // market_type/outcome_key only need to be a stable cart key here.
       select({
-        option_id: leg.option_id, match_id: leg.match_id, home_team: leg.home_team, away_team: leg.away_team,
-        market_name: leg.market_name, option_label: leg.option_label, odds: leg.odds,
+        kind: 'virtual', match_id: leg.match_id, option_id: leg.option_id, market_type: 'shared', outcome_key: leg.option_id,
+        home_team: leg.home_team, away_team: leg.away_team, market_name: leg.market_name, option_label: leg.option_label, odds: leg.odds,
       });
     }
     navigate('/coupon');

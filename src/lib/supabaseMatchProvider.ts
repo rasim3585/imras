@@ -3,6 +3,7 @@ import type { MatchProvider, PlacedCoupon } from './matchProvider';
 import type {
   Coupon, CouponLeg, CouponSettlement, LiveState, Market, Match,
   DailyBonus, Challenge, Leaderboard, League, LeagueDetail, Rival, SharedCoupon,
+  BulletinMatch, CartSelection,
 } from './types';
 
 // Explicit match columns — omits `true_probabilities` (hidden) and
@@ -10,11 +11,26 @@ import type {
 const MATCH_COLS =
   'id,sport,home_team,away_team,starts_at,status,home_score,away_score,result,timeline';
 
-// Nested embed used for coupons: selection -> option -> market -> match.
+// Nested embed used for coupons. A leg is EITHER virtual (market_option_id ->
+// market_options -> markets -> matches) OR real (market_option_id null;
+// real_fixture_id + market_type + outcome_key on the selection -> real_fixtures).
+// Both embeds are LEFT joins (nullable FKs), so real legs are NOT dropped.
 const COUPON_SELECT =
-  `*, coupon_selections(id, odds, status, ` +
+  `*, coupon_selections(id, odds, status, market_type, outcome_key, real_fixture_id, ` +
   `market_options(id, label, outcome_key, is_winner, ` +
-  `markets(name, market_type, matches(id, home_team, away_team, result, home_score, away_score, timeline))))`;
+  `markets(name, market_type, matches(id, home_team, away_team, result, home_score, away_score, timeline))), ` +
+  `real_fixtures(id, home_team, away_team, home_score, away_score))`;
+
+// Human labels for real legs (virtual legs carry their own label/name).
+const MARKET_NAMES: Record<string, string> = {
+  match_result: 'Match Result', double_chance: 'Double Chance', both_teams_score: 'Both Teams to Score',
+  over_under_1_5: 'Total Goals 1.5', over_under_2_5: 'Total Goals 2.5', over_under_3_5: 'Total Goals 3.5', odd_even: 'Odd / Even',
+};
+const OUTCOME_LABELS: Record<string, string> = {
+  home: '1', draw: 'X', away: '2', dc_1x: '1X', dc_12: '12', dc_x2: 'X2', btts_yes: 'Yes', btts_no: 'No',
+  ou15_over: 'Over 1.5', ou15_under: 'Under 1.5', ou25_over: 'Over 2.5', ou25_under: 'Under 2.5',
+  ou35_over: 'Over 3.5', ou35_under: 'Under 3.5', oe_odd: 'Odd', oe_even: 'Even',
+};
 
 /** Supabase-backed provider. All simulation (results, odds, stake math,
  *  settlement) runs server-side in Postgres RPCs — this only maps data. */
@@ -30,29 +46,18 @@ export class SupabaseMatchProvider implements MatchProvider {
     return Number(data ?? 0);
   }
 
-  async getBulletin(): Promise<Match[]> {
-    // everything still in play — upcoming AND live (Model A). Finished matches
-    // are excluded; the client drops any that read as over/closed via live state.
-    const { data, error } = await supabase
-      .from('matches')
-      .select(`${MATCH_COLS}, markets(id, match_id, market_type, name, status, sort_order, ` +
-        `market_options(id, market_id, label, outcome_key, odds, is_winner, sort_order))`)
-      .neq('status', 'finished')
-      .order('starts_at', { ascending: true });
+  async getBulletin(): Promise<BulletinMatch[]> {
+    // one RPC returns real BSD fixtures + virtual matches, already priced for the
+    // current minute/score. Closed markets are omitted server-side.
+    const { data, error } = await supabase.rpc('get_bulletin');
     if (error) throw new Error(error.message);
-
-    return ((data ?? []) as unknown[]).map((row): Match => {
-      const raw = row as Match & { markets: (Market & { market_options: unknown })[] };
-      const markets: Market[] = (raw.markets ?? [])
-        .map((m) => {
-          const opts = ((m as unknown as { market_options: Market['options'] }).market_options ?? [])
-            .map((o) => ({ ...o, odds: Number(o.odds) }))
-            .sort((a, b) => a.sort_order - b.sort_order);
-          return { ...m, options: opts } as Market;
-        })
-        .sort((a, b) => a.sort_order - b.sort_order);
-      return { ...(raw as Match), markets };
-    });
+    return ((data ?? []) as BulletinMatch[]).map((m) => ({
+      ...m,
+      markets: (m.markets ?? []).map((mk) => ({
+        ...mk,
+        options: (mk.options ?? []).map((o) => ({ ...o, odds: Number(o.odds) })),
+      })),
+    }));
   }
 
   async getMatch(id: string): Promise<Match | null> {
@@ -83,11 +88,12 @@ export class SupabaseMatchProvider implements MatchProvider {
     return (data ?? []) as LiveState[];
   }
 
-  async placeCoupon(optionIds: string[], stake: number): Promise<PlacedCoupon> {
-    const { data, error } = await supabase.rpc('place_coupon', {
-      p_option_ids: optionIds,
-      p_stake: stake,
-    });
+  async placeCoupon(selections: CartSelection[], stake: number): Promise<PlacedCoupon> {
+    // virtual legs go by option_id; real legs by (fixture_id, market, outcome).
+    const p_legs = selections.map((s) => (s.kind === 'virtual'
+      ? { kind: 'virtual', option_id: s.option_id }
+      : { kind: 'real', fixture_id: s.match_id, market: s.market_type, outcome: s.outcome_key }));
+    const { data, error } = await supabase.rpc('place_coupon_v2', { p_legs, p_stake: stake });
     if (error) throw new Error(error.message);
     const d = data as PlacedCoupon;
     return {
@@ -241,19 +247,42 @@ function flattenCoupon(row: unknown): Coupon {
   const c = row as Record<string, unknown>;
   const rawLegs = (c.coupon_selections ?? []) as Record<string, unknown>[];
   const legs: CouponLeg[] = rawLegs.map((cs) => {
-    const opt = cs.market_options as Record<string, unknown>;
-    const mk = opt.markets as Record<string, unknown>;
-    const match = mk.matches as CouponLeg['match'];
+    const opt = cs.market_options as Record<string, unknown> | null;
+    if (opt) {                                        // virtual leg
+      const mk = opt.markets as Record<string, unknown>;
+      return {
+        id: cs.id as string,
+        odds: Number(cs.odds),
+        status: cs.status as CouponLeg['status'],
+        option_label: opt.label as string,
+        outcome_key: opt.outcome_key as string,
+        is_winner: (opt.is_winner as boolean | null) ?? null,
+        market_name: mk.name as string,
+        market_type: mk.market_type as string,
+        match: mk.matches as CouponLeg['match'],
+      };
+    }
+    // real leg: no market_option; use real_fixture + market_type/outcome_key
+    const rf = cs.real_fixtures as Record<string, unknown> | null;
+    const mt = cs.market_type as string;
+    const ok = cs.outcome_key as string;
     return {
       id: cs.id as string,
       odds: Number(cs.odds),
       status: cs.status as CouponLeg['status'],
-      option_label: opt.label as string,
-      outcome_key: opt.outcome_key as string,
-      is_winner: (opt.is_winner as boolean | null) ?? null,
-      market_name: mk.name as string,
-      market_type: mk.market_type as string,
-      match,
+      option_label: OUTCOME_LABELS[ok] ?? ok,
+      outcome_key: ok,
+      is_winner: null,
+      market_name: MARKET_NAMES[mt] ?? mt,
+      market_type: mt,
+      match: {
+        id: (rf?.id as string) ?? (cs.real_fixture_id as string),
+        home_team: (rf?.home_team as string) ?? '—',
+        away_team: (rf?.away_team as string) ?? '—',
+        result: null,
+        home_score: (rf?.home_score as number | null) ?? null,
+        away_score: (rf?.away_score as number | null) ?? null,
+      },
     };
   });
   return {

@@ -26,7 +26,7 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
   async function place() {
     setError(null); setBusy(true);
     try {
-      await matchProvider.placeCoupon(selections.map((s) => s.option_id), stake);
+      await matchProvider.placeCoupon(selections, stake);
       clear(); await refreshProfile(); setPlaced(true);
     } catch (err) {
       const raw = err instanceof Error ? err.message : '';
