@@ -49,12 +49,12 @@ export async function solveLambdas(client: SupabaseClient, provider: FixtureProv
       const warnStr = warns.length ? ` UYARI: ${warns.join('; ')}` : '';
 
       const { error: uerr } = await client.from('real_fixtures')
-        .update({ lambda_home: sol.lambdaHome, lambda_away: sol.lambdaAway, prematch_odds: odds, lambda_solved_at: new Date().toISOString() })
+        .update({ lambda_home: sol.lambdaHome, lambda_away: sol.lambdaAway, lambda_shared: sol.lambdaShared, prematch_odds: odds, lambda_solved_at: new Date().toISOString() })
         .eq('id', f.id);
       if (uerr) throw new Error(uerr.message);
 
       solved++;
-      console.log(`[lambda] ${label} -> cozuldu (${sol.lambdaHome} / ${sol.lambdaAway})${warnStr}`);
+      console.log(`[lambda] ${label} -> cozuldu (${sol.lambdaHome} / ${sol.lambdaAway}, l3=${sol.lambdaShared})${warnStr}`);
       await logSync(client, { provider: provider.name, endpoint, http_status: 200, success: true, fixture_id: f.id, error_message: warns.length ? warns.join('; ') : undefined });
     } catch (e) {
       skipped++;
