@@ -45,7 +45,7 @@ export async function solveLambdas(client: SupabaseClient, provider: FixtureProv
       const warns: string[] = [];
       const health = lambdaHealth(sol);
       if (!health.ok) warns.push(health.reason ?? 'sağlıksız lambda');
-      if (sol.ouGap != null && sol.ouGap > 0.10) warns.push(`sağlayıcı tutarsız (2.5 üst farkı ${sol.ouGap.toFixed(2)})`);
+      if (sol.ouGap != null && sol.ouGap > 0.30) warns.push(`poisson modeli 1X2 ile alt/üst'ü aynı anda tutturamıyor, beklenen (2.5 üst farkı ${sol.ouGap.toFixed(2)})`);
       const warnStr = warns.length ? ` UYARI: ${warns.join('; ')}` : '';
 
       const { error: uerr } = await client.from('real_fixtures')

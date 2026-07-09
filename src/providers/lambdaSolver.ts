@@ -30,8 +30,10 @@ export interface LambdaSolution {
   lambdaAway: number;    // l2 + l3
   lambdaShared: number;  // l3
   error: number;
-  /** |over-2.5 from a pure-Poisson 1X2-ONLY fit - the book's over-2.5|. Large =>
-   *  the provider's 1X2 and o/u disagree (bad data). null if the book has no o/u. */
+  /** |over-2.5 from a pure-Poisson 1X2-ONLY fit - the book's over-2.5|. A small
+   *  gap is EXPECTED -- pure Poisson under-predicts draws, so 1X2 and o/u can't
+   *  land on one lambda. Only a large gap (>0.30) hints at bad provider data.
+   *  null if the book has no o/u. */
   ouGap: number | null;
 }
 
@@ -66,14 +68,25 @@ function pairTarget(over?: number, under?: number): number | null {
 const OU_WEIGHT = 1.5;
 const L_MIN = 0.05;   // keep l1, l2 non-degenerate
 
-// bivariate search over (l1, l2, l3>=0). l3=0 is scanned. The DB constraint
-// lambda_shared <= min(lambda_home, lambda_away) holds automatically since
-// l3 <= l1+l3 and l3 <= l2+l3 for l1,l2 >= 0.
+// Sanity bounds -- mirror the DB constraint real_fixtures_lambda_sane_ck. Since
+// pre-match odds now come straight from BSD (prematch_odds), lambda only drives
+// LIVE pricing, so it must be plausible, not chase an unreachable book price.
+// An unconstrained solve found Qarabag 3.36/1.65 with l3=1.27 (Vestri's 1.65
+// goals "1.27 shared" -- absurd). A violating point is skipped, not priced.
+const MAX_TEAM = 4.0, MAX_TOTAL = 5.5, MAX_SHARED = 0.8;
+function feasible(l1: number, l2: number, l3: number): boolean {
+  const lh = l1 + l3, la = l2 + l3;
+  return lh <= MAX_TEAM && la <= MAX_TEAM && lh + la <= MAX_TOTAL && l3 <= MAX_SHARED;
+}
+
+// bivariate search over (l1, l2, l3>=0). l3=0 is scanned. lambda_shared <=
+// min(lambda_home, lambda_away) holds automatically (l3 <= l1+l3, l3 <= l2+l3).
 function grid3(err: (l1: number, l2: number, l3: number) => number): { l1: number; l2: number; l3: number } {
   let best = { e: Infinity, l1: 1.2, l2: 1.0, l3: 0 };
   for (let l1 = L_MIN; l1 <= 3.2; l1 += 0.08) {
     for (let l2 = L_MIN; l2 <= 3.2; l2 += 0.08) {
       for (let l3 = 0; l3 <= 1.6; l3 += 0.08) {
+        if (!feasible(l1, l2, l3)) continue;
         const e = err(l1, l2, l3); if (e < best.e) best = { e, l1, l2, l3 };
       }
     }
@@ -83,6 +96,7 @@ function grid3(err: (l1: number, l2: number, l3: number) => number): { l1: numbe
   for (let l1 = Math.max(L_MIN, a - 0.04); l1 <= a + 0.04; l1 += 0.01) {
     for (let l2 = Math.max(L_MIN, b - 0.04); l2 <= b + 0.04; l2 += 0.01) {
       for (let l3 = Math.max(0, c - 0.04); l3 <= c + 0.04; l3 += 0.01) {
+        if (!feasible(l1, l2, l3)) continue;
         const e = err(l1, l2, l3); if (e < best.e) best = { e, l1, l2, l3 };
       }
     }
