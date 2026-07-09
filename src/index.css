@@ -357,6 +357,8 @@ a:hover { color: var(--win); }
 .ll-plus.open { filter: brightness(0.9); }
 .ll-time.soon { color: var(--amber-deep); font-weight: 700; }
 .ll-tags { display: inline-flex; gap: 4px; align-items: center; margin-right: 4px; }
+.ll-real { font-size: 0.54rem; font-weight: 800; letter-spacing: 0.3px; color: #fff; background: var(--accent); border-radius: 4px; padding: 1px 5px; white-space: nowrap; }
+.ll-sim { font-size: 0.54rem; font-weight: 700; letter-spacing: 0.2px; color: var(--muted); background: var(--surface-2); border: 1px solid var(--card-line); border-radius: 4px; padding: 1px 5px; white-space: nowrap; }
 .ll-lg { font-size: 0.56rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: var(--muted); background: var(--surface-2); border-radius: 4px; padding: 1px 5px; white-space: nowrap; }
 .ll-derby { font-size: 0.56rem; font-weight: 800; letter-spacing: 0.3px; color: #fff; background: var(--loss); border-radius: 4px; padding: 1px 5px; }
 .ll-odd.ll-closed { display: flex; align-items: center; justify-content: center; font-size: 0.54rem; font-weight: 600; letter-spacing: 0.2px; color: var(--muted); background: repeating-linear-gradient(45deg, var(--surface-2) 0 4px, transparent 4px 8px); border-style: dashed; cursor: default; }

@@ -8,9 +8,10 @@ import type { BulletinMatch } from '../lib/types';
 
 const LIVE = new Set(['inprogress', 'live', 'penalties']);
 
-type SportKey = 'live' | 'football' | 'efootball' | 'basketball' | 'tennis' | 'volley';
+type SportKey = 'live' | 'all' | 'football' | 'efootball' | 'basketball' | 'tennis' | 'volley';
 const SPORTS: { key: SportKey; label: string; icon: string; soon?: boolean }[] = [
   { key: 'live', label: 'Live', icon: '⚡' },
+  { key: 'all', label: 'All', icon: '📋' },
   { key: 'football', label: 'Football', icon: '⚽' },
   { key: 'efootball', label: 'E-Football', icon: '' },
   { key: 'basketball', label: 'Basketball', icon: '🏀', soon: true },
@@ -32,7 +33,7 @@ function Cols() {
 export default function FeedScreen() {
   const { session } = useAuth();
   const [matches, setMatches] = useState<BulletinMatch[]>([]);
-  const [sport, setSport] = useState<SportKey>('football');
+  const [sport, setSport] = useState<SportKey>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,7 +69,8 @@ export default function FeedScreen() {
   const virtualOnes = notFinished.filter((m) => m.kind === 'virtual');
 
   const spec = SPORTS.find((s) => s.key === sport);
-  const set = sport === 'live' ? liveAll : sport === 'football' ? realOnes : sport === 'efootball' ? virtualOnes : [];
+  const set = sport === 'live' ? liveAll : sport === 'all' ? notFinished
+    : sport === 'football' ? realOnes : sport === 'efootball' ? virtualOnes : [];
   const live = set.filter((m) => LIVE.has(m.status)).sort((a, b) => (b.minute ?? 0) - (a.minute ?? 0));
   const upcoming = set.filter((m) => !LIVE.has(m.status)).sort((a, b) => a.starts_at.localeCompare(b.starts_at));
 
@@ -81,6 +83,7 @@ export default function FeedScreen() {
   );
 
   const upTitle = sport === 'efootball' ? 'E-Football · 2×4 min' : sport === 'football' ? 'Football' : 'Upcoming';
+  const upRight = sport === 'football' ? 'BSD' : sport === 'efootball' ? 'sim' : `${upcoming.length}`;
 
   return (
     <div className="app-shell app-shell-wide">
@@ -97,7 +100,8 @@ export default function FeedScreen() {
 
       <div className="sport-bar">
         {SPORTS.map((s) => {
-          const cnt = s.key === 'live' ? liveAll.length : s.key === 'football' ? realOnes.length : s.key === 'efootball' ? virtualOnes.length : null;
+          const cnt = s.key === 'live' ? liveAll.length : s.key === 'all' ? notFinished.length
+            : s.key === 'football' ? realOnes.length : s.key === 'efootball' ? virtualOnes.length : null;
           return (
             <button key={s.key} className={`sport-tab ${sport === s.key ? 'active' : ''} ${s.soon ? 'soon' : ''}`} onClick={() => setSport(s.key)}>
               {s.key === 'efootball' ? <EFootballIcon size={19} /> : <span className="sport-ic">{s.icon}</span>}
@@ -119,7 +123,7 @@ export default function FeedScreen() {
       ) : (
         <div className="ll">
           {section('Live', <span className="ll-bar-r"><span className="dot" />{live.length} live</span>, live)}
-          {sport !== 'live' && section(upTitle, <span className="ll-bar-r">{sport === 'football' ? 'BSD' : 'sim'}</span>, upcoming)}
+          {sport !== 'live' && section(upTitle, <span className="ll-bar-r">{upRight}</span>, upcoming)}
         </div>
       )}
     </div>

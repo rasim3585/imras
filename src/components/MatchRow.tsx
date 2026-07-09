@@ -73,12 +73,11 @@ export default function MatchRow({ m }: { m: BulletinMatch }) {
         {isLive ? `${m.minute ?? 0}'` : formatKickoff(m.starts_at)}
       </span>
       <span className="ll-teamline">
-        {(m.league || m.is_derby) && (
-          <span className="ll-tags">
-            {m.league && <span className="ll-lg">{m.league}</span>}
-            {m.is_derby && <span className="ll-derby">DERBY</span>}
-          </span>
-        )}
+        <span className="ll-tags">
+          {isVirtual ? <span className="ll-sim">SIM · 2×4min</span> : <span className="ll-real">REAL</span>}
+          {m.league && <span className="ll-lg">{m.league}</span>}
+          {m.is_derby && <span className="ll-derby">DERBY</span>}
+        </span>
         <span className="ll-badge" style={{ background: teamColor(m.home_team) }}>{teamInitial(m.home_team)}</span>
         <span className="ll-name">{m.home_team}{isVirtual && <i className="ll-pl"> ({playerName(m.id + 'h')})</i>}</span>
         {isLive ? <span className="ll-scorepill tnum">{m.home_score ?? 0}-{m.away_score ?? 0}</span> : <span className="ll-sep">·</span>}
