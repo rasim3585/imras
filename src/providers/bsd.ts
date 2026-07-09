@@ -8,8 +8,16 @@ import type { FixtureProvider, RawFixture, RawPrematchOdds, RawStatus } from './
 
 export interface BSDConfig { apiKey: string; baseUrl?: string }
 
-const STATUSES = new Set<RawStatus>(['notstarted', 'inprogress', 'penalties', 'finished']);
-const asStatus = (s: unknown): RawStatus => (typeof s === 'string' && STATUSES.has(s as RawStatus) ? (s as RawStatus) : 'notstarted');
+const STATUSES = new Set<RawStatus>([
+  'notstarted', 'inprogress', 'penalties', 'finished', 'postponed', 'cancelled', 'abandoned', 'unknown',
+]);
+// Unrecognised BSD status -> 'unknown' (never throw, never silently mis-map to
+// notstarted). The DB decides what to do with 'unknown'.
+const asStatus = (s: unknown): RawStatus => {
+  if (typeof s === 'string' && STATUSES.has(s as RawStatus)) return s as RawStatus;
+  console.warn(`[bsd] unknown status ${JSON.stringify(s)} -> 'unknown'`);
+  return 'unknown';
+};
 const numOrNull = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

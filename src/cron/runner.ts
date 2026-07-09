@@ -3,6 +3,7 @@ import { BSDProvider } from '../providers/bsd';
 import { syncFixtures } from './syncFixtures';
 import { solveLambdas } from './solveLambdas';
 import { syncLiveScores } from './syncLiveScores';
+import { settleFixtures } from './settleFixtures';
 
 // Node entry (Railway). The ONLY file that knows about scheduling + env. A long-
 // running process is deliberate: it can later hold the BSD live_websocket
@@ -21,9 +22,9 @@ const client = createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'
 const provider = new BSDProvider({ apiKey: env('BSD_API_KEY'), baseUrl: process.env.BSD_BASE_URL });
 
 // run a job, never let a failure kill the loop
-function safe(label: string, job: () => Promise<number>): void {
+function safe(label: string, job: () => Promise<unknown>): void {
   job()
-    .then((n) => console.log(`[cron:${label}] ok (${n})`))
+    .then((r) => console.log(`[cron:${label}] ok`, r ?? ''))
     .catch((e) => console.error(`[cron:${label}] failed:`, e instanceof Error ? e.message : e));
 }
 
@@ -46,9 +47,12 @@ setInterval(() => safe('lambda', () => solveLambdas(client, provider)), 15 * 60 
 // live score: every 30s (no-op when nothing is live)
 setInterval(() => safe('live', () => syncLiveScores(client, provider)), 30 * 1000);
 
+// settlement: every 60s (grade finished fixtures via settle_real_fixture)
+setInterval(() => safe('settle', () => settleFixtures(client)), 60 * 1000);
+
 // TODO(Faz2): stats/incidents every 60s for WATCHED matches only (needs a
 //   watched-fixtures signal + a provider.fetchIncidents endpoint).
 // TODO(Faz2): check docs/websocket -- if live_websocket works, replace the 30s
 //   live poll with a socket and sub-second updates.
 
-console.log('[cron] runner started (fixtures daily 03:00 UTC, lambda 15m, live 30s)');
+console.log('[cron] runner started (fixtures daily 03:00 UTC, lambda 15m, live 30s, settle 60s)');

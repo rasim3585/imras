@@ -3,7 +3,9 @@
 // tomorrow. If BSD (a single dev, likely scraping) goes down, we write another
 // FixtureProvider and the callers don't change.
 
-export type RawStatus = 'notstarted' | 'inprogress' | 'penalties' | 'finished';
+export type RawStatus =
+  | 'notstarted' | 'inprogress' | 'penalties' | 'finished'
+  | 'postponed' | 'cancelled' | 'abandoned' | 'unknown';
 
 export interface RawFixture {
   externalId: number;

@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "typecheck:cron": "tsc -p tsconfig.cron.json",
-    "cron": "tsx src/cron/runner.ts"
+    "cron": "tsx --env-file=.env src/cron/runner.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",
