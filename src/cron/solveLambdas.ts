@@ -21,9 +21,8 @@ export async function solveLambdas(client: SupabaseClient, provider: FixtureProv
     .from('real_fixtures')
     .select('id, external_id, home_team, away_team')
     .eq('status', 'notstarted')
-    // never priced, or its price is older than 6h, or age unknown (solved before
-    // this column existed) -> re-solve.
-    .or(`lambda_home.is.null,lambda_solved_at.is.null,lambda_solved_at.lt.${staleBefore}`);
+    // never priced, or its price is older than 6h -> re-solve.
+    .or(`lambda_home.is.null,lambda_solved_at.lt.${staleBefore}`);
   if (error) throw new Error(error.message);
 
   let solved = 0, skipped = 0;
