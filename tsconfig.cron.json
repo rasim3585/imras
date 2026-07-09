@@ -1,0 +1,18 @@
+{
+  "//": "Node-side sync jobs (Railway). Kept out of the browser build (tsconfig.app.json excludes src/cron). Typecheck: npm run typecheck:cron",
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["ES2023"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["src/cron"]
+}
