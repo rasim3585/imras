@@ -19,8 +19,8 @@ async function main(): Promise<void> {
       break;
     }
     case 'lambda': {
-      const n = await solveLambdas(client, makeProvider());
-      console.log(`[once:lambda] solved ${n} lambda(s)`);
+      const s = await solveLambdas(client, makeProvider());
+      console.log(`[once:lambda] ${s.solved} solved, ${s.skipped} skipped`);
       break;
     }
     case 'live': {
