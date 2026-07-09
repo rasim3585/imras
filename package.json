@@ -9,7 +9,12 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "typecheck:cron": "tsc -p tsconfig.cron.json",
-    "cron": "tsx --env-file=.env src/cron/runner.ts"
+    "cron": "tsx --env-file=.env src/cron/runner.ts",
+    "cron:check": "tsx --env-file=.env src/cron/check.ts",
+    "cron:sync": "tsx --env-file=.env src/cron/once.ts sync",
+    "cron:lambda": "tsx --env-file=.env src/cron/once.ts lambda",
+    "cron:live": "tsx --env-file=.env src/cron/once.ts live",
+    "cron:settle": "tsx --env-file=.env src/cron/once.ts settle"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",

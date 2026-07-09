@@ -1,25 +1,17 @@
-import { createClient } from '@supabase/supabase-js';
-import { BSDProvider } from '../providers/bsd';
+import { makeClient, makeProvider } from './_client';
 import { syncFixtures } from './syncFixtures';
 import { solveLambdas } from './solveLambdas';
 import { syncLiveScores } from './syncLiveScores';
 import { settleFixtures } from './settleFixtures';
 
-// Node entry (Railway). The ONLY file that knows about scheduling + env. A long-
+// Node entry (Railway). The ONLY file that knows about scheduling. A long-
 // running process is deliberate: it can later hold the BSD live_websocket
 // connection (see docs/websocket) and drop polling entirely.
-//
-// Required env (from Railway, never committed):
-//   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, BSD_API_KEY, [BSD_BASE_URL]
+// Env (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, BSD_API_KEY) is validated in
+// _client.ts -- a missing var fails loud there.
 
-function env(key: string): string {
-  const v = process.env[key];
-  if (!v) throw new Error(`Missing env ${key}`);
-  return v;
-}
-
-const client = createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'), { auth: { persistSession: false } });
-const provider = new BSDProvider({ apiKey: env('BSD_API_KEY'), baseUrl: process.env.BSD_BASE_URL });
+const client = makeClient();
+const provider = makeProvider();
 
 // run a job, never let a failure kill the loop
 function safe(label: string, job: () => Promise<unknown>): void {
