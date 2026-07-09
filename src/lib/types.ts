@@ -70,9 +70,10 @@ export interface LiveState {
   cards: { minute: number; team: 'home' | 'away' }[]; // revealed red cards
   red_home: number;
   red_away: number;
-  /** Live odds map (outcome_key -> odds) for all full-time markets while live
-   *  (reflects red cards); null once finished / upcoming. Includes home/draw/away. */
-  live_odds: Record<string, number> | null;
+  /** Live odds map (outcome_key -> odds) for full-time markets while live. A key
+   *  maps to `null` when the score has already CLOSED that market (e.g. o/u 1.5
+   *  once total >= 2); the whole map is null once finished / upcoming. */
+  live_odds: Record<string, number | null> | null;
   result: Outcome | null; // only once finished
 }
 

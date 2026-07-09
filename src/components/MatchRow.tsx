@@ -22,13 +22,18 @@ export default function MatchRow({ match, live }: { match: Match; live?: LiveSta
   const mr = byType('match_result'); const ou = byType('over_under_2_5'); const kg = byType('both_teams_score');
   const liveOdds = isLive ? live!.live_odds : null;
   const opt = (m: Market | undefined, key: string) => m?.options.find((o) => o.outcome_key === key);
-  const oddsOf = (m: Market | undefined, key: string) => (liveOdds?.[key] ?? opt(m, key)?.odds ?? 0);
+  // null => the score has CLOSED this market (no fake odds); a number => open;
+  // 0 => option doesn't exist here.
+  const oddsOf = (m: Market | undefined, key: string): number | null => {
+    if (liveOdds && key in liveOdds) return liveOdds[key];      // may be null (closed)
+    return opt(m, key)?.odds ?? 0;
+  };
   const pick = (m: Market | undefined, key: string) => {
-    const o = opt(m, key); if (!o || !m) return;
-    select({ option_id: o.id, match_id: match.id, home_team: match.home_team, away_team: match.away_team, market_name: m.name, option_label: o.label, odds: oddsOf(m, key) });
+    const o = opt(m, key); const odds = oddsOf(m, key); if (!o || !m || odds == null) return;
+    select({ option_id: o.id, match_id: match.id, home_team: match.home_team, away_team: match.away_team, market_name: m.name, option_label: o.label, odds });
   };
   const mrOdds = mr ? [oddsOf(mr, 'home'), oddsOf(mr, 'draw'), oddsOf(mr, 'away')] : [];
-  const favMr = Math.min(...mrOdds.filter((x) => x > 0));
+  const favMr = Math.min(...mrOdds.filter((x): x is number => x != null && x > 0));
 
   // odds-move arrows: on a live change, show ▲/▼ for ~5s (Nesine "breathing" feel)
   const shownCells: [Market | undefined, string][] = [[mr, 'home'], [mr, 'draw'], [mr, 'away'], [ou, 'ou25_under'], [ou, 'ou25_over'], [kg, 'btts_yes']];
@@ -39,7 +44,7 @@ export default function MatchRow({ match, live }: { match: Match; live?: LiveSta
   useEffect(() => {
     if (!isLive) return;
     for (const [m, k] of shownCells) {
-      const cur = oddsOf(m, k); if (!(cur > 0)) continue;
+      const cur = oddsOf(m, k); if (cur == null || cur <= 0) continue;
       const p = prev.current[k];
       if (p != null && Math.abs(cur - p) >= 0.02) {          // ignore micro-drift
         const dir = cur > p ? 'up' : 'down';
@@ -53,10 +58,12 @@ export default function MatchRow({ match, live }: { match: Match; live?: LiveSta
   useEffect(() => () => { Object.values(timers.current).forEach(clearTimeout); }, []);
 
   const Cell = ({ m, k, sec = false }: { m: Market | undefined; k: string; sec?: boolean }) => {
-    const o = opt(m, k); const odds = oddsOf(m, k); const on = o ? isSelected(o.id) : false; const arr = arrows[k];
+    const o = opt(m, k); const odds = oddsOf(m, k); const arr = arrows[k];
+    if (o && odds == null) return <span className={`ll-odd ll-closed ${sec ? 'll-sec' : ''}`}>Closed</span>;
+    const on = o ? isSelected(o.id) : false;
     return (
       <button type="button" disabled={!o} className={`ll-odd ${sec ? 'll-sec' : ''} ${on ? 'sel' : ''} ${m === mr && odds === favMr ? 'fav' : ''} ${arr ? `chg-${arr}` : ''}`} onClick={() => pick(m, k)}>
-        {o ? formatOdds(odds) : '–'}
+        {o ? formatOdds(odds ?? 0) : '–'}
         {arr && <span className={`ll-arrow ${arr}`}>{arr === 'up' ? '▲' : '▼'}</span>}
       </button>
     );
@@ -94,13 +101,17 @@ export default function MatchRow({ match, live }: { match: Match; live?: LiveSta
         <div className="ll-expand">
           {shownMarkets.map((m) => {
             const all = m.options.map((o) => oddsOf(m, o.outcome_key));
-            const fav = Math.min(...all.filter((x) => x > 0));
+            const openO = all.filter((x): x is number => x != null && x > 0);
+            const fav = openO.length ? Math.min(...openO) : Infinity;
             return (
               <div key={m.id} className="llx-mkt">
                 <div className="llx-h">{m.name}{isLive && !HT.has(m.market_type) ? <span className="llx-live">live</span> : null}</div>
                 <div className="llx-cells" style={{ gridTemplateColumns: `repeat(${m.options.length}, 1fr)` }}>
                   {m.options.map((o) => {
                     const odds = oddsOf(m, o.outcome_key); const on = isSelected(o.id);
+                    if (odds == null) return (
+                      <div key={o.id} className="llx-cell llx-closed"><span className="llx-k">{o.label}</span><span className="llx-v">Closed</span></div>
+                    );
                     return (
                       <button key={o.id} type="button" className={`llx-cell ${on ? 'sel' : ''} ${odds === fav ? 'fav' : ''}`}
                         onClick={() => select({ option_id: o.id, match_id: match.id, home_team: match.home_team, away_team: match.away_team, market_name: m.name, option_label: o.label, odds })}>

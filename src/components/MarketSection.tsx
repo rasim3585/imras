@@ -14,10 +14,13 @@ export default function MarketSection({
   if (isLive && HT_MARKETS.has(market.market_type)) return null; // first-half = pre-match only
 
   const liveOdds = isLive && !HT_MARKETS.has(market.market_type) ? live!.live_odds : null;
-  const oddsFor = (key: string) =>
-    (liveOdds?.[key] ?? market.options.find((o) => o.outcome_key === key)?.odds ?? 0);
-  const allOdds = market.options.map((o) => oddsFor(o.outcome_key));
-  const favOdds = Math.min(...allOdds);
+  // null => the score has CLOSED this outcome (show "Closed", no button)
+  const oddsFor = (key: string): number | null => {
+    if (liveOdds && key in liveOdds) return liveOdds[key];
+    return market.options.find((o) => o.outcome_key === key)?.odds ?? 0;
+  };
+  const openOdds = market.options.map((o) => oddsFor(o.outcome_key)).filter((x): x is number => x != null && x > 0);
+  const favOdds = openOdds.length ? Math.min(...openOdds) : Infinity;
 
   return (
     <div className="market-section">
@@ -25,6 +28,12 @@ export default function MarketSection({
       <div className="market" style={{ gridTemplateColumns: `repeat(${market.options.length}, 1fr)` }} role="group" aria-label={market.name}>
         {market.options.map((o) => {
           const odds = oddsFor(o.outcome_key);
+          if (odds == null) return (
+            <div key={o.id} className="outcome outcome-closed">
+              <span className="outcome-name">{o.label}</span>
+              <span className="outcome-odds">Closed</span>
+            </div>
+          );
           const picked = isSelected(o.id);
           const fav = !picked && odds === favOdds;
           return (
@@ -40,7 +49,7 @@ export default function MarketSection({
             >
               <span className="outcome-name">{o.label}</span>
               <span className="outcome-odds">{formatOdds(odds)}</span>
-              <span className="outcome-prob">{impliedProb(odds, allOdds)}%</span>
+              <span className="outcome-prob">{impliedProb(odds, openOdds)}%</span>
             </button>
           );
         })}

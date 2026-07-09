@@ -137,7 +137,7 @@ export default function LiveMatchScreen() {
   const pick = myLeg?.outcome_key as OutKey | undefined;
   const pickState = pick ? computePickState(pick, hs, as) : null;
   const pickLabel = { win: 'Winning', lose: 'Losing', level: 'On the line' } as const;
-  const oddsArr = odds ? [odds.home, odds.draw, odds.away] : [];
+  const oddsArr = odds ? [odds.home, odds.draw, odds.away].filter((x): x is number => x != null) : [];
 
   return (
     <div className="app-shell live-screen">
@@ -180,8 +180,8 @@ export default function LiveMatchScreen() {
             {(['home', 'draw', 'away'] as OutKey[]).map((k) => (
               <div key={k} className={`outcome ${myLeg?.outcome_key === k ? 'sel' : ''}`}>
                 <span className="outcome-name">{k === 'home' ? '1' : k === 'draw' ? 'X' : '2'}</span>
-                <span className="outcome-odds">{formatOdds(odds[k])}</span>
-                <span className="outcome-prob">{impliedProb(odds[k], oddsArr)}%</span>
+                <span className="outcome-odds">{formatOdds(odds[k] ?? 0)}</span>
+                <span className="outcome-prob">{impliedProb(odds[k] ?? 0, oddsArr)}%</span>
               </div>
             ))}
           </div>
