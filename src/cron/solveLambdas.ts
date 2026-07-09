@@ -54,7 +54,7 @@ export async function solveLambdas(client: SupabaseClient, provider: FixtureProv
       if (uerr) throw new Error(uerr.message);
 
       solved++;
-      console.log(`[lambda] ${label} -> cozuldu (${sol.lambdaHome} / ${sol.lambdaAway}, l3=${sol.lambdaShared})${warnStr}`);
+      console.log(`[lambda] ${label} -> cozuldu (${sol.lambdaHome} / ${sol.lambdaAway})${warnStr}`);
       await logSync(client, { provider: provider.name, endpoint, http_status: 200, success: true, fixture_id: f.id, error_message: warns.length ? warns.join('; ') : undefined });
     } catch (e) {
       skipped++;
