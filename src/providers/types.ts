@@ -48,4 +48,7 @@ export interface FixtureProvider {
   fetchPrematchOdds(externalId: number): Promise<RawPrematchOdds | null>;
   /** Currently in-progress fixtures (score + minute only; we never pull live odds). */
   fetchLiveFixtures(): Promise<RawFixture[]>;
+  /** Raw in-play incidents (goals/cards/VAR/...) for one fixture. Shape is
+   *  vendor-specific and UNCONFIRMED -- callers map defensively and keep the raw. */
+  fetchIncidents(externalId: number): Promise<unknown[]>;
 }

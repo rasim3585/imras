@@ -86,6 +86,14 @@ export class BSDProvider implements FixtureProvider {
     return (j.events ?? []).map(mapFixture);
   }
 
+  async fetchIncidents(externalId: number): Promise<unknown[]> {
+    // Shape UNCONFIRMED until the first live payload. Accept either envelope
+    // (`incidents` or `results`); callers map defensively and keep the raw item.
+    const j = await this.getJson(`${this.base}/api/v2/events/${externalId}/incidents/`) as
+      { incidents?: unknown[]; results?: unknown[] };
+    return (j.incidents ?? j.results ?? []) as unknown[];
+  }
+
   async fetchPrematchOdds(externalId: number): Promise<RawPrematchOdds | null> {
     const j = await this.getJson(`${this.base}/api/v2/events/${externalId}/odds/`) as { odds?: Record<string, number> };
     const o = j.odds;
