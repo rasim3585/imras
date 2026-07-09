@@ -69,7 +69,11 @@ export default function MatchRow({ match, live }: { match: Match; live?: LiveSta
     );
   };
 
-  const shownMarkets = [...match.markets].filter((m) => !(isLive && HT.has(m.market_type))).sort((a, b) => a.sort_order - b.sort_order);
+  // first-half markets are bettable pre-match ONLY. Show them only once we KNOW
+  // the match hasn't started (live loaded + upcoming); while live is still
+  // loading we hide them so they can't be tapped into a market_closed error.
+  const showHT = live?.phase === 'upcoming';
+  const shownMarkets = [...match.markets].filter((m) => showHT || !HT.has(m.market_type)).sort((a, b) => a.sort_order - b.sort_order);
   const moreCount = Math.max(0, shownMarkets.length - 1);
 
   return (

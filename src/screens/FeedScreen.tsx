@@ -22,7 +22,7 @@ function Cols() {
     <div className="ll-cols">
       <span className="lead">Match</span>
       <span>1</span><span>X</span><span>2</span>
-      <span className="ll-c-sec">Alt</span><span className="ll-c-sec">Üst</span><span className="ll-c-sec">BTTS</span>
+      <span className="ll-c-sec">Under</span><span className="ll-c-sec">Over</span><span className="ll-c-sec">BTTS</span>
       <span className="ll-c-plus">+</span>
     </div>
   );

@@ -11,7 +11,9 @@ export default function MarketSection({
 }: { match: Match; market: Market; live?: LiveState; showTitle?: boolean }) {
   const { isSelected, select } = useCart();
   const isLive = live?.phase === 'live';
-  if (isLive && HT_MARKETS.has(market.market_type)) return null; // first-half = pre-match only
+  // first-half markets are bettable pre-match ONLY -> show only when we KNOW the
+  // match is upcoming (live loaded); hidden while live is loading or once started.
+  if (HT_MARKETS.has(market.market_type) && live?.phase !== 'upcoming') return null;
 
   const liveOdds = isLive && !HT_MARKETS.has(market.market_type) ? live!.live_odds : null;
   // null => the score has CLOSED this outcome (show "Closed", no button)

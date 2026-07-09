@@ -11,8 +11,6 @@ const NAV = [
   { to: '/profile', end: false, label: 'Profile', Icon: ProfileIcon },
 ];
 
-const SOON = ['AI Predict', 'Lucky Games'];
-
 export default function NavBar() {
   const { profile, signOut } = useAuth();
 
@@ -50,10 +48,6 @@ export default function NavBar() {
             {label}
           </NavLink>
         ))}
-        <div className="side-soon">
-          <span className="tag">Coming soon</span>
-          {SOON.map((s) => <span key={s} className="side-item is-soon">{s}</span>)}
-        </div>
       </nav>
 
       {/* mobile bottom bar */}
