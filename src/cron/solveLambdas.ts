@@ -37,15 +37,15 @@ export async function solveLambdas(client: SupabaseClient, provider: FixtureProv
         await logSync(client, { provider: provider.name, endpoint, http_status: 200, success: false, fixture_id: f.id, error_message: 'no odds' });
         continue;
       }
-      const sol = solveLambda(odds);   // fits 1X2 + over/under together
+      const sol = solveLambda(odds);   // stage 1: T from over line, stage 2: split from 1X2
 
       // both checks WARN, neither ELIMINATES -- a real 6-1 can total >4.0, and a
-      // consistency gap means bad provider data, not a bad solve. Collect and
+      // btts gap means correlated/odd provider data, not a bad solve. Collect and
       // print on ONE line; the warning also goes to provider_sync_log.
       const warns: string[] = [];
       const health = lambdaHealth(sol);
       if (!health.ok) warns.push(health.reason ?? 'sağlıksız lambda');
-      if (sol.ouGap != null && sol.ouGap > 0.30) warns.push(`poisson modeli 1X2 ile alt/üst'ü aynı anda tutturamıyor, beklenen (2.5 üst farkı ${sol.ouGap.toFixed(2)})`);
+      if (sol.bttsGap != null && sol.bttsGap > 0.15) warns.push(`btts doğrulaması sapıyor (bağımsız poisson korelasyonu yok sayıyor; btts farkı ${sol.bttsGap.toFixed(2)})`);
       const warnStr = warns.length ? ` UYARI: ${warns.join('; ')}` : '';
 
       const { error: uerr } = await client.from('real_fixtures')
