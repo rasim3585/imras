@@ -17,10 +17,11 @@ const scoreStr = (h: number | null, a: number | null): string | null =>
 
 // BSD raw incident type -> our canonical type. CONFIRMED against live payloads
 // (2026-07-09): BSD emits `goal`, `card` (with a `card_type` sub-field), `sub-
-// stitution`, `period`, `injuryTime`. Cards are a SINGLE `card` type split by
-// `card_type` ("yellow"/"red"/...) -- handled in classify(), not this table.
-// `penalty`/`var` are NOT yet observed live (kept as guesses). Unknown -> 'other'
-// (never dropped); the full raw object always lands in live_incidents.detail.
+// stitution`, `period` -> 'period', `injuryTime` -> 'injury_time'. Cards are a
+// SINGLE `card` type split by `card_type` ("yellow"/"red"/...) -- handled in
+// classify(), not this table. `penalty`/`var` are NOT yet observed live (kept as
+// guesses). A genuinely unknown type -> 'other' (never dropped); the full raw
+// object always lands in live_incidents.detail.
 const INCIDENT_TYPE: Record<string, string> = {
   goal: 'goal', score: 'goal', goal_scored: 'goal',
   penalty: 'penalty_awarded', penalty_won: 'penalty_awarded', penalty_awarded: 'penalty_awarded',
@@ -28,8 +29,10 @@ const INCIDENT_TYPE: Record<string, string> = {
   var: 'var_review', var_check: 'var_review', var_review: 'var_review',
   yellow_card: 'yellow_card', yellowcard: 'yellow_card', yellow: 'yellow_card',
   substitution: 'substitution', sub: 'substitution', subst: 'substitution',
+  period: 'period',                                 // half/period markers (not betting-relevant)
+  injurytime: 'injury_time', injury_time: 'injury_time',
 };
-function classify(item: Raw): string {
+export function classify(item: Raw): string {
   const t = String(item?.type ?? item?.incident_type ?? item?.kind ?? '').toLowerCase().trim();
   if (t === 'card') {
     // BSD carries the colour in card_type, not the type. A second yellow is an
