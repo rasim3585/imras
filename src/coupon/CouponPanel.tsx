@@ -10,7 +10,7 @@ const QUICK = [100, 250, 500];
 // The slip itself: selections + stake + "Place now". Shared by the desktop dock
 // panel and the mobile bottom sheet — bet without leaving the bulletin.
 export default function CouponPanel({ onClose }: { onClose?: () => void }) {
-  const { selections, count, totalOdds, remove, clear } = useCart();
+  const { selections, count, totalOdds, remove, clear, saveDraft } = useCart();
   const { profile, session, refreshProfile } = useAuth();
   const navigate = useNavigate();
 
@@ -19,6 +19,13 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [placed, setPlaced] = useState(false);
+  const [savedMsg, setSavedMsg] = useState(false);
+
+  function save() {
+    saveDraft();
+    setSavedMsg(true);
+    window.setTimeout(() => setSavedMsg(false), 2200);
+  }
 
   const potential = Math.round(stake * totalOdds);
   const stakeValid = stake > 0 && stake <= balance;
@@ -89,6 +96,9 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
                 Log in to play
               </button>
             )}
+            <button className="btn btn-ghost btn-block btn-sm" style={{ marginTop: 'var(--s2)' }} onClick={save}>
+              {savedMsg ? 'Saved ✓' : 'Save for later'}
+            </button>
           </div>
         </>
       )}

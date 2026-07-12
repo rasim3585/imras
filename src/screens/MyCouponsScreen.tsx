@@ -2,14 +2,16 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { matchProvider } from '../lib/matchProvider';
 import { useAuth } from '../auth/AuthContext';
+import { useCart } from '../coupon/CartContext';
 import type { Coupon, CouponLeg, LiveState } from '../lib/types';
 import { formatOdds } from '../lib/format';
 import { legLiveStatus, type LegLive } from '../lib/legStatus';
 
-type Tab = 'ongoing' | 'won' | 'lost';
+type ResultTab = 'ongoing' | 'won' | 'lost';
+type Tab = ResultTab | 'saved';
 
 // cashed-out counts as won if you took at least your stake back, else lost
-function bucketOf(c: Coupon): Tab {
+function bucketOf(c: Coupon): ResultTab {
   if (c.status === 'pending') return 'ongoing';
   if (c.status === 'won') return 'won';
   if (c.status === 'lost') return 'lost';
@@ -67,6 +69,7 @@ export default function MyCouponsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { saved, loadDraft, deleteDraft } = useCart();
 
   const linkFor = (id: string) => `${window.location.origin}/c/${id}`;
   const waHref = (id: string) => `https://wa.me/?text=${encodeURIComponent('Check out my pickplay coupon: ' + linkFor(id))}`;
@@ -100,7 +103,7 @@ export default function MyCouponsScreen() {
   }, [load]);
 
   const buckets = useMemo(() => {
-    const b: Record<Tab, Coupon[]> = { ongoing: [], won: [], lost: [] };
+    const b: Record<ResultTab, Coupon[]> = { ongoing: [], won: [], lost: [] };
     for (const c of coupons) b[bucketOf(c)].push(c);
     return b;
   }, [coupons]);
@@ -143,12 +146,15 @@ export default function MyCouponsScreen() {
     }
   }
 
-  const shown = buckets[tab];
+  const shown = tab === 'saved' ? [] : buckets[tab];
   const TABS: { key: Tab; label: string }[] = [
     { key: 'ongoing', label: `Ongoing (${buckets.ongoing.length})` },
     { key: 'won', label: `Won (${buckets.won.length})` },
     { key: 'lost', label: `Lost (${buckets.lost.length})` },
+    { key: 'saved', label: `Saved (${saved.length})` },
   ];
+
+  const playDraft = (id: string) => { loadDraft(id); navigate('/coupon'); };
 
   return (
     <div className="app-shell">
@@ -167,6 +173,39 @@ export default function MyCouponsScreen() {
 
       {loading ? (
         <div className="center-pad"><div className="spinner" /></div>
+      ) : tab === 'saved' ? (
+        saved.length === 0 ? (
+          <div className="empty">
+            <p>No saved coupons. Build one and tap “Save for later”.</p>
+            <button className="btn" onClick={() => navigate('/')}>Go to markets</button>
+          </div>
+        ) : (
+          <div className="coupon-list">
+            {saved.map((d) => {
+              const odds = d.selections.reduce((a, s) => a * s.odds, 1);
+              return (
+                <div key={d.id} className="card coupon-card">
+                  <div className="coupon-card-head">
+                    <span className="tag">{d.selections.length === 1 ? 'Single' : `${d.selections.length}-fold`}</span>
+                    <span className="chip tnum">{formatOdds(odds)}</span>
+                  </div>
+                  <div className="coupon-legs">
+                    {d.selections.map((s) => (
+                      <div key={s.match_id} className="cleg">
+                        <div className="cleg-l"><span className="cleg-teams">{s.home_team} v {s.away_team}</span></div>
+                        <div className="cleg-pick tnum"><span className="muted">{s.market_name}:</span> {s.option_label} <b>{formatOdds(s.odds)}</b></div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="row" style={{ gap: 'var(--s2)', marginTop: 'var(--s2)' }}>
+                    <button className="btn btn-primary btn-sm" style={{ flex: 1 }} onClick={() => playDraft(d.id)}>Load &amp; play</button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => deleteDraft(d.id)}>Delete</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )
       ) : shown.length === 0 ? (
         <div className="empty">
           <p>{tab === 'ongoing' ? 'No open coupons. Build one from the markets.' : `No ${tab} coupons yet.`}</p>

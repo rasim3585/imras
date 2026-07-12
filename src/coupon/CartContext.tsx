@@ -10,6 +10,12 @@ import {
 import type { CartSelection } from '../lib/types';
 
 const STORAGE_KEY = 'pickplay.cart.v3';   // v3: kind-aware, option_id nullable
+const SAVED_KEY = 'pickplay.saved.v1';    // saved (un-played) coupon drafts
+
+/** A coupon built but not played — kept client-side for the "Saved" tab. */
+export interface SavedDraft { id: string; created_at: number; selections: CartSelection[]; }
+
+const newDraftId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
 // A selection is identified by (match, market, outcome) -- NOT option_id, which
 // is null for real fixtures.
@@ -24,6 +30,11 @@ interface CartState {
   select: (leg: CartSelection) => void;
   remove: (matchId: string) => void;
   clear: () => void;
+  // saved (un-played) drafts
+  saved: SavedDraft[];
+  saveDraft: () => void;
+  loadDraft: (id: string) => void;
+  deleteDraft: (id: string) => void;
 }
 
 const CartContext = createContext<CartState | undefined>(undefined);
@@ -38,13 +49,50 @@ function load(): CartSelection[] {
   }
 }
 
+function loadSaved(): SavedDraft[] {
+  try {
+    const raw = localStorage.getItem(SAVED_KEY);
+    const arr = raw ? (JSON.parse(raw) as SavedDraft[]) : [];
+    return arr.filter((d) => d && d.id && Array.isArray(d.selections) && d.selections.length > 0);
+  } catch {
+    return [];
+  }
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [selections, setSelections] = useState<CartSelection[]>(load);
+  const [saved, setSaved] = useState<SavedDraft[]>(loadSaved);
 
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(selections)); }
     catch { /* ignore quota / private mode */ }
   }, [selections]);
+
+  useEffect(() => {
+    try { localStorage.setItem(SAVED_KEY, JSON.stringify(saved)); }
+    catch { /* ignore */ }
+  }, [saved]);
+
+  const saveDraft = useCallback(() => {
+    setSelections((sel) => {
+      if (sel.length > 0) {
+        setSaved((prev) => [{ id: newDraftId(), created_at: Date.now(), selections: sel }, ...prev].slice(0, 30));
+      }
+      return sel;   // keep the cart; user may still play or clear it
+    });
+  }, []);
+
+  const loadDraft = useCallback((id: string) => {
+    setSaved((prev) => {
+      const d = prev.find((x) => x.id === id);
+      if (d) setSelections(d.selections);
+      return prev;
+    });
+  }, []);
+
+  const deleteDraft = useCallback((id: string) => {
+    setSaved((prev) => prev.filter((x) => x.id !== id));
+  }, []);
 
   const select = useCallback((leg: CartSelection) => {
     const legKey = keyOf(leg.match_id, leg.market_type, leg.outcome_key);
@@ -84,6 +132,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     select,
     remove,
     clear,
+    saved,
+    saveDraft,
+    loadDraft,
+    deleteDraft,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
