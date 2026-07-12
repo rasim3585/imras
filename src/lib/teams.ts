@@ -44,3 +44,54 @@ export function teamHash(name: string): number {
   for (const c of name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   return h;
 }
+
+// --- Crest style: real colour pairs + signature pattern per club -------------
+// Evokes the real club (legal: colours + generic patterns, NOT the trademarked
+// crest). `base` = shield colour, `alt` = accent, `ink` = monogram tone.
+export type CrestPattern = 'solid' | 'vstripes' | 'hoops' | 'sash' | 'halves' | 'band';
+export interface CrestStyle { base: string; alt: string; pattern: CrestPattern; ink: 'light' | 'dark'; }
+
+const TEAM_STYLE: Record<string, CrestStyle> = {
+  'Man City':   { base: '#6cabdd', alt: '#1c2c5b', pattern: 'solid',    ink: 'dark' },
+  'Real Madrid':{ base: '#f4f4f6', alt: '#00529f', pattern: 'band',     ink: 'dark' },
+  Bayern:       { base: '#dc052d', alt: '#0066b2', pattern: 'solid',    ink: 'light' },
+  Liverpool:    { base: '#c8102e', alt: '#00b2a9', pattern: 'solid',    ink: 'light' },
+  Barcelona:    { base: '#a50044', alt: '#004d98', pattern: 'vstripes', ink: 'light' },
+  PSG:          { base: '#0a2452', alt: '#da291c', pattern: 'band',     ink: 'light' },
+  Inter:        { base: '#0a67b1', alt: '#08090b', pattern: 'vstripes', ink: 'light' },
+  Arsenal:      { base: '#ef0107', alt: '#f5f5f5', pattern: 'sash',     ink: 'light' },
+  'Man United': { base: '#da291c', alt: '#ffe500', pattern: 'solid',    ink: 'light' },
+  Chelsea:      { base: '#034694', alt: '#f5f5f5', pattern: 'solid',    ink: 'light' },
+  Atletico:     { base: '#cb3524', alt: '#f5f5f5', pattern: 'vstripes', ink: 'light' },
+  Napoli:       { base: '#12a0d7', alt: '#f5f5f5', pattern: 'solid',    ink: 'light' },
+  Leverkusen:   { base: '#e32219', alt: '#08090b', pattern: 'band',     ink: 'light' },
+  Dortmund:     { base: '#fde100', alt: '#08090b', pattern: 'band',     ink: 'dark' },
+  Tottenham:    { base: '#eef0f4', alt: '#132257', pattern: 'solid',    ink: 'dark' },
+  Juventus:     { base: '#08090b', alt: '#f5f5f5', pattern: 'vstripes', ink: 'light' },
+  Milan:        { base: '#fb090b', alt: '#08090b', pattern: 'vstripes', ink: 'light' },
+  Newcastle:    { base: '#08090b', alt: '#f5f5f5', pattern: 'vstripes', ink: 'light' },
+  'Aston Villa':{ base: '#670e36', alt: '#95bfe5', pattern: 'band',     ink: 'light' },
+  Benfica:      { base: '#e00000', alt: '#f5f5f5', pattern: 'solid',    ink: 'light' },
+  Porto:        { base: '#00428c', alt: '#f5f5f5', pattern: 'vstripes', ink: 'light' },
+  Brighton:     { base: '#0057b8', alt: '#f5f5f5', pattern: 'vstripes', ink: 'light' },
+  'West Ham':   { base: '#7a263a', alt: '#1bb1e7', pattern: 'band',     ink: 'light' },
+  Villarreal:   { base: '#ffd200', alt: '#005187', pattern: 'solid',    ink: 'dark' },
+  Roma:         { base: '#8e1f2f', alt: '#f0bc42', pattern: 'band',     ink: 'light' },
+  Leipzig:      { base: '#dd0741', alt: '#001f47', pattern: 'solid',    ink: 'light' },
+  Ajax:         { base: '#f4f4f6', alt: '#d2122e', pattern: 'band',     ink: 'dark' },
+  Marseille:    { base: '#2faee0', alt: '#f5f5f5', pattern: 'solid',    ink: 'dark' },
+  Sevilla:      { base: '#d81920', alt: '#f5f5f5', pattern: 'solid',    ink: 'light' },
+  Lyon:         { base: '#f4f4f6', alt: '#da291c', pattern: 'band',     ink: 'dark' },
+  Celtic:       { base: '#018749', alt: '#f5f5f5', pattern: 'hoops',    ink: 'light' },
+  Everton:      { base: '#003399', alt: '#f5f5f5', pattern: 'solid',    ink: 'light' },
+  Valencia:     { base: '#eef0f4', alt: '#ee3524', pattern: 'band',     ink: 'dark' },
+  Leeds:        { base: '#eef0f4', alt: '#1d428a', pattern: 'band',     ink: 'dark' },
+};
+
+/** Crest style for a team: real club colours+pattern if known, else a stable
+ *  hash-derived solid (real BDM fixtures fall here). */
+export function teamStyle(name: string): CrestStyle {
+  const s = TEAM_STYLE[name];
+  if (s) return s;
+  return { base: teamColor(name), alt: 'rgba(0,0,0,0.26)', pattern: 'solid', ink: 'light' };
+}
