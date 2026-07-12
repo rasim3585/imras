@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { useCart } from '../coupon/CartContext';
 import { Brand } from './Brand';
 import { MarketsIcon, CouponIcon, RanksIcon, SocialIcon, ProfileIcon, HomeIcon, AviatorIcon } from './icons';
 
@@ -14,6 +16,15 @@ const NAV = [
 
 export default function NavBar() {
   const { profile, signOut } = useAuth();
+  const { count } = useCart();
+
+  // icon + an active-selection count badge on the Coupons item
+  const navIcon = (icon: ReactNode, to: string) => (
+    <span className="nav-ic">
+      {icon}
+      {to === '/coupons' && count > 0 && <span className="nav-badge tnum">{count}</span>}
+    </span>
+  );
 
   return (
     <>
@@ -45,7 +56,7 @@ export default function NavBar() {
       <nav className="sidebar">
         {NAV.map(({ to, end, label, Icon }) => (
           <NavLink key={to} to={to} end={end} className="side-item">
-            <Icon />
+            {navIcon(<Icon />, to)}
             {label}
           </NavLink>
         ))}
@@ -56,7 +67,7 @@ export default function NavBar() {
         <div className="tabbar-inner">
           {NAV.map(({ to, end, label, Icon }) => (
             <NavLink key={to} to={to} end={end} className="tab">
-              <Icon />
+              {navIcon(<Icon />, to)}
               {label}
             </NavLink>
           ))}
