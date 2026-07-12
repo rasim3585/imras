@@ -57,24 +57,19 @@ export function CouponIcon() {
   );
 }
 
+// E-Football: ONE clear gamepad with a football above it (virtual football).
 export function EFootballIcon({ size = 22 }: { size?: number }) {
-  const pad = 'M6 4 Q2 4 1.5 9 L0.5 17 Q0 21 4 21 Q6.5 21 7.5 18 L9 14 L15 14 L16.5 18 Q17.5 21 20 21 Q24 21 23.5 17 L22.5 9 Q22 4 18 4 Z';
   return (
-    <svg width={size} height={size * 40 / 52} viewBox="0 0 52 40" aria-hidden="true">
-      <g transform="translate(2,8) rotate(-12 12 12)">
-        <path d={pad} fill="#2fbf6f" />
-        <rect x="9" y="8" width="2.2" height="6" rx="1" fill="#0f3d2b" />
-        <rect x="7" y="10" width="6" height="2.2" rx="1" fill="#0f3d2b" />
-        <circle cx="17" cy="9.5" r="1.3" fill="#0f3d2b" /><circle cx="19.5" cy="12" r="1.3" fill="#0f3d2b" />
-      </g>
-      <g transform="translate(28,8) rotate(12 12 12)">
-        <path d={pad} fill="#1d9e75" />
-        <rect x="9" y="8" width="2.2" height="6" rx="1" fill="#0f3d2b" />
-        <rect x="7" y="10" width="6" height="2.2" rx="1" fill="#0f3d2b" />
-        <circle cx="17" cy="9.5" r="1.3" fill="#0f3d2b" /><circle cx="19.5" cy="12" r="1.3" fill="#0f3d2b" />
-      </g>
-      <circle cx="26" cy="20" r="7" fill="#fff" stroke="#0f3d2b" strokeWidth="1" />
-      <polygon points="26,16 28.5,17.8 27.5,20.8 24.5,20.8 23.5,17.8" fill="#0f3d2b" />
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      {/* football on top (brand red pentagon) */}
+      <circle cx="12" cy="5.4" r="3.8" fill="#fff" stroke="#0f3d2b" strokeWidth="1" />
+      <polygon points="12,2.9 14.1,4.4 13.3,6.9 10.7,6.9 9.9,4.4" fill="#e01e26" />
+      {/* gamepad */}
+      <path d="M7 11.4 Q3.3 11.4 2.7 15.4 L2 19 Q1.7 21.7 4.5 21.7 Q6.5 21.7 7.4 19.7 L8.3 17.9 L15.7 17.9 L16.6 19.7 Q17.5 21.7 19.5 21.7 Q22.3 21.7 22 19 L21.3 15.4 Q20.7 11.4 17 11.4 Z" fill="#1d9e75" />
+      {/* d-pad + action buttons */}
+      <rect x="6" y="14" width="1.7" height="4.6" rx="0.7" fill="#0b2c1f" />
+      <rect x="4.55" y="15.45" width="4.6" height="1.7" rx="0.7" fill="#0b2c1f" />
+      <circle cx="16.1" cy="15.3" r="1.05" fill="#0b2c1f" /><circle cx="18.2" cy="16.6" r="1.05" fill="#0b2c1f" />
     </svg>
   );
 }
