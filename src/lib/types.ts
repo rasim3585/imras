@@ -148,6 +148,40 @@ export interface Match {
   markets: Market[];    // populated on the feed
 }
 
+// --- Virtual-league statistics (from vmatch_stats RPC) ----------------------
+
+/** One team's standings row + recent form, for the match-detail Statistics tab. */
+export interface VTeamStat {
+  rank: number;
+  team_id: number;
+  name: string;
+  short_name: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  gf: number;
+  ga: number;
+  gd: number;
+  points: number;
+  form: ('W' | 'D' | 'L')[];   // most recent first
+}
+
+export interface VH2H {
+  starts_at: string;
+  home_team: string;
+  away_team: string;
+  home_score: number;
+  away_score: number;
+}
+
+/** Stats bundle for a virtual match; null for real/legacy matches (no team ids). */
+export interface MatchStats {
+  home: VTeamStat;
+  away: VTeamStat;
+  h2h: VH2H[];
+}
+
 // --- Coupons ---------------------------------------------------------------
 
 /** A selection while it lives in the client-side cart (pre-placement). Carries

@@ -1,6 +1,6 @@
 import type {
   Match, Coupon, CouponSettlement, LiveState, DailyBonus, Challenge, Leaderboard,
-  League, LeagueDetail, Rival, SharedCoupon, BulletinMatch, CartSelection,
+  League, LeagueDetail, Rival, SharedCoupon, BulletinMatch, CartSelection, MatchStats,
 } from './types';
 import { SupabaseMatchProvider } from './supabaseMatchProvider';
 
@@ -30,6 +30,9 @@ export interface MatchProvider {
 
   /** One match with all its markets (for the match-detail screen). */
   getMatch(id: string): Promise<Match | null>;
+
+  /** Virtual-league stats for a match (standings + form + H2H); null if none. */
+  getMatchStats(matchId: string): Promise<MatchStats | null>;
 
   /** Place a coupon (real + virtual legs) via place_coupon_v2; server prices. */
   placeCoupon(selections: CartSelection[], stake: number): Promise<PlacedCoupon>;

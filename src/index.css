@@ -555,6 +555,28 @@ a:hover { color: var(--win); }
 .mkt-cat { font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-2); padding: 8px 2px 0; }
 .mkt-cat:not(:first-child) { margin-top: var(--s2); }
 
+/* Faz 3c: virtual-league stats panel (standings + form + H2H) on match detail */
+.vstats { margin-top: var(--s3); padding: 10px 12px; }
+.vstats-head { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent); margin-bottom: 8px; }
+.vstat-teams { display: flex; flex-direction: column; gap: 6px; }
+.vstat-team { display: flex; align-items: center; gap: 8px; }
+.vstat-rank { flex-shrink: 0; min-width: 26px; font-size: 0.78rem; font-weight: 700; color: var(--text-mut); }
+.vstat-name { flex: 1; font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vstat-pts { flex-shrink: 0; font-size: 0.8rem; font-weight: 700; color: var(--text-2); }
+.vform { display: inline-flex; gap: 3px; flex-shrink: 0; }
+.vform-dot { width: 16px; height: 16px; border-radius: 4px; font-size: 0.6rem; font-weight: 800; color: #fff; display: inline-flex; align-items: center; justify-content: center; }
+.vform-W { background: var(--accent); }
+.vform-D { background: var(--text-mut); }
+.vform-L { background: var(--loss); }
+.vform-empty { color: var(--text-dim); font-size: 0.8rem; }
+.vstats-sub { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-mut); margin: 10px 0 5px; }
+.vstat-h2h { display: flex; flex-direction: column; gap: 3px; }
+.vh2h-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; font-size: 0.82rem; }
+.vh2h-team { color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vh2h-away { text-align: right; }
+.vh2h-score { font-family: var(--mono); font-weight: 800; color: var(--text); background: var(--surface-2); border-radius: 5px; padding: 1px 7px; }
+.vstat-note { font-size: 0.8rem; color: var(--text-mut); font-style: italic; margin-top: 6px; }
+
 /* --- Block 5: TV / pitch (live watch) ---------------------------------- */
 /* colours hardcoded (not tokens) so the pitch stays green in any theme */
 .pitch-tv { background: #0c1512; border-radius: 16px; padding: 10px; box-shadow: 0 10px 34px -12px rgba(0, 0, 0, 0.4); margin-bottom: var(--s4); }

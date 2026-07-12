@@ -4,6 +4,7 @@ import { matchProvider } from '../lib/matchProvider';
 import { teamColor, teamInitial } from '../lib/teams';
 import { formatKickoff } from '../lib/format';
 import MarketSection from '../components/MarketSection';
+import MatchStatsPanel from '../components/MatchStatsPanel';
 import type { LiveState, Match } from '../lib/types';
 
 // First-half markets are bettable pre-match ONLY (mirror of MarketSection's gate).
@@ -86,6 +87,8 @@ export default function MatchDetailScreen() {
           <Link className="btn btn-ghost btn-sm btn-block" style={{ marginTop: 'var(--s3)' }} to={`/live/${match.id}`}>Watch live</Link>
         )}
       </div>
+
+      <MatchStatsPanel matchId={match.id} />
 
       {groupsWith.length > 1 && (
         <div className="bet-tabs">
