@@ -179,10 +179,25 @@ a:hover { color: var(--win); }
 .home-btn:hover { background: var(--surface-2); color: var(--text); }
 .home-btn.active { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
 .gold-chip {
+  position: relative;
   display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px;
   border-radius: var(--radius-pill); background: var(--accent-soft); color: var(--accent);
   font-weight: 700; font-size: 0.9rem; font-variant-numeric: tabular-nums;
 }
+.gold-chip.is-gain { animation: goldpulse 0.55s ease; }
+.gold-gain {
+  position: absolute; top: calc(100% + 3px); right: 0; z-index: 5;
+  background: var(--accent); color: #fff; font-weight: 800; font-size: 0.72rem;
+  padding: 1px 8px; border-radius: 999px; white-space: nowrap; pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.22); animation: goldgain 2.6s ease forwards;
+}
+@keyframes goldgain {
+  0% { opacity: 0; transform: translateY(-5px); }
+  12% { opacity: 1; transform: translateY(0); }
+  78% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-2px); }
+}
+@keyframes goldpulse { 0%, 100% { transform: scale(1); } 45% { transform: scale(1.09); } }
 .gold-dot { width: 12px; height: 12px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffe27a, #f4b400); box-shadow: 0 0 0 1px rgba(180,130,0,0.25); }
 /* inline gold coin next to amounts (consistent with the top-bar balance) */
 .coin { display: inline-block; width: 11px; height: 11px; border-radius: 50%; vertical-align: -1px; background: radial-gradient(circle at 35% 30%, #ffe27a, #f4b400); box-shadow: 0 0 0 1px rgba(180,130,0,0.28); }
