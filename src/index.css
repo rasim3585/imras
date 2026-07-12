@@ -236,9 +236,9 @@ a:hover { color: var(--win); }
 
 .brand { display: inline-flex; align-items: center; gap: var(--s2); }
 .brand-logo { display: block; }
-.wordmark { display: inline-flex; align-items: baseline; font-weight: 900; font-style: italic; letter-spacing: -0.045em; line-height: 1; }
-.wm-pick { color: #e01e26; }
-.wm-play { color: #fff; margin-left: -0.14em; -webkit-text-stroke: 1.1px #111311; paint-order: stroke fill; text-shadow: 0 1px 0 rgba(0,0,0,0.25); }
+.wordmark { display: inline-flex; align-items: baseline; font-weight: 900; font-style: italic; letter-spacing: -0.035em; line-height: 1; }
+.wm-pick { color: #12a150; }
+.wm-play { color: #fff; margin-left: 0.01em; -webkit-text-stroke: 1.1px #111311; paint-order: stroke fill; text-shadow: 0 1px 0 rgba(0,0,0,0.25); }
 :root[data-theme="dark"] .wm-play { -webkit-text-stroke-width: 0.9px; }
 
 /* --- Card --------------------------------------------------------------- */
@@ -1042,7 +1042,7 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .av-title { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; }
 .av-title h1 { margin: 0; }
 .av-top-right { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; }
-.av-bal-chip { background: var(--surface-2); border: 1px solid var(--card-line); border-radius: 999px; padding: 3px 10px; font-weight: 700; font-size: 0.8rem; }
+.av-bal-chip { display: inline-flex; align-items: center; gap: 5px; background: var(--surface-2); border: 1px solid var(--card-line); border-radius: 999px; padding: 3px 10px; font-weight: 700; font-size: 0.8rem; }
 .av-fair { display: inline-flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: var(--text-mut); background: var(--surface-2); border: 1px solid var(--card-line); border-radius: 6px; padding: 3px 7px; cursor: help; }
 .av-fair-hash { color: var(--av-mid); }
 

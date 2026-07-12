@@ -123,7 +123,7 @@ export default function FeedScreen() {
     <>
       <div className="ll-bar"><span className="ll-bar-l">{icon} {title}</span>{right}</div>
       <Cols />
-      {list.map((m) => <MatchRow key={m.id} m={m} />)}
+      {list.map((m) => <MatchRow key={m.id} m={m} hideLeague />)}
     </>
   );
 
@@ -134,7 +134,7 @@ export default function FeedScreen() {
       {!session && (
         <div className="landing-hero card">
           <h2>Real betting thrills, zero money.</h2>
-          <p>Predict real & virtual matches, watch them play out live, and compete with friends — all with symbolic gold. No wagering, ever.</p>
+          <p>Predict real & virtual matches, watch them play out live, and compete with friends — all with free virtual coins. No real money, ever.</p>
           <div className="row" style={{ gap: 'var(--s2)' }}>
             <Link to="/login" className="btn btn-primary">Sign up free</Link>
             <Link to="/login" className="btn btn-ghost">Log in</Link>

@@ -6,6 +6,7 @@ import PitchCurve from '../aviator/PitchCurve';
 import BetPanel from '../aviator/BetPanel';
 import HistoryStrip from '../aviator/HistoryStrip';
 import PlayersList from '../aviator/PlayersList';
+import { CoinIcon } from '../components/icons';
 
 // Aviator screen. Public to WATCH (anon SELECT is open); betting is login-gated
 // per slot. The multiplier animates client-side; realtime drives phase + players.
@@ -29,7 +30,7 @@ export default function AviatorScreen() {
           <PhaseTag phase={phase} bettingEndsAtMs={bettingEndsAtMs} />
         </div>
         <div className="av-top-right">
-          {loggedIn && <span className="av-bal-chip tnum">{(profile?.gold_balance ?? 0).toLocaleString()} 🪙</span>}
+          {loggedIn && <span className="av-bal-chip tnum"><CoinIcon size={14} /> {(profile?.gold_balance ?? 0).toLocaleString()}</span>}
           {seed && (
             <span className="av-fair" title={`Provably fair · server seed hash:\n${seed}`}>
               🔒 doğrulanabilir <span className="av-fair-hash tnum">{seed.slice(0, 8)}…</span>

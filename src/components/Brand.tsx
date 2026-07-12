@@ -2,15 +2,15 @@
 // Wordmark: "pick" red + "play" white (black-outlined), tightly interlocked.
 
 const INK = '#111311';
-const RED = '#e01e26';
+const GREEN = '#12a150';
 // regular pentagon, point-up, centred (32,33) r≈15.5
 const PENTA = '32,17.5 46.7,28.2 41.1,45.5 22.9,45.5 17.3,28.2';
 
 function Logo({ size = 30 }: { size?: number }) {
   return (
     <svg className="brand-logo" width={size} height={size} viewBox="0 0 64 64" aria-label="pickplay" role="img">
-      <circle cx="32" cy="32" r="29" fill="#fff" stroke={INK} strokeWidth="3" />
-      <polygon points={PENTA} fill={RED} stroke={INK} strokeWidth="1.3" strokeLinejoin="round" />
+      <circle cx="32" cy="32" r="28" fill="#fff" stroke={INK} strokeWidth="4.5" />
+      <polygon points={PENTA} fill={GREEN} stroke={INK} strokeWidth="1.3" strokeLinejoin="round" />
     </svg>
   );
 }

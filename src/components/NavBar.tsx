@@ -3,7 +3,7 @@ import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useCart } from '../coupon/CartContext';
 import { Brand } from './Brand';
-import { MarketsIcon, CouponIcon, RanksIcon, SocialIcon, ProfileIcon, HomeIcon, AviatorIcon } from './icons';
+import { MarketsIcon, CouponIcon, RanksIcon, SocialIcon, ProfileIcon, HomeIcon, AviatorIcon, CoinIcon } from './icons';
 
 const NAV = [
   { to: '/', end: true, label: 'Matches', Icon: MarketsIcon },
@@ -35,8 +35,8 @@ export default function NavBar() {
             <NavLink to="/" end className="home-btn" title="Home" aria-label="Home"><HomeIcon /></NavLink>
             {profile ? (
               <>
-                <span className="gold-chip" title="Gold balance">
-                  <span className="gold-dot" aria-hidden="true" />
+                <span className="gold-chip" title="Virtual coins">
+                  <CoinIcon size={15} />
                   <span className="tnum">{profile.gold_balance.toLocaleString()}</span>
                 </span>
                 <button className="btn btn-ghost btn-sm" onClick={signOut}>Sign out</button>

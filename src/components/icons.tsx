@@ -74,6 +74,19 @@ export function EFootballIcon({ size = 22 }: { size?: number }) {
   );
 }
 
+// Virtual-money coin (green) — replaces the gold dot / coin emoji. Original art.
+export function CoinIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" fill="#12a150" />
+      <circle cx="12" cy="12" r="10" fill="none" stroke="#0b6e39" strokeWidth="1.6" />
+      <circle cx="12" cy="12" r="6.2" fill="none" stroke="#dff5e7" strokeWidth="1.4" opacity="0.9" />
+      <path d="M12 8.3v7.4M13.6 9.9h-2.3a1.5 1.5 0 0 0 0 3h1.4a1.5 1.5 0 0 1 0 3h-2.5"
+        fill="none" stroke="#eefaf2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function HomeIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
