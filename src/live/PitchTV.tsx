@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { teamColor, teamInitial } from '../lib/teams';
+import TeamCrest from '../components/TeamCrest';
 import { toggleSfx, whistle, cheer } from '../lib/sfx';
 import type { LineKind } from './commentary';
 
@@ -25,8 +25,6 @@ export default function PitchTV({
   flashTeam: 'home' | 'away' | null; homePlayer?: string; awayPlayer?: string;
   line: { kind: LineKind; team?: Side; minute: number; sub: number } | null;
 }) {
-  const homeColor = teamColor(home);
-  const awayColor = teamColor(away);
   const finished = phase === 'finished';
 
   const [ball, setBall] = useState<[number, number]>([50, 50]);
@@ -105,7 +103,7 @@ export default function PitchTV({
       <div className="sb2">
         <button className={`sb2-sound ${sound ? 'on' : ''}`} title="Sound on/off" onClick={() => setSound(toggleSfx())}>♪</button>
         <div className="sb2-team">
-          <span className="sb2-badge" style={{ background: homeColor }}>{teamInitial(home)}</span>
+          <TeamCrest name={home} size={32} className="sb2-badge" />
           <span className="sb2-info"><span className="sb2-name">{home}</span>{homePlayer && <span className="sb2-pl">({homePlayer})</span>}</span>
         </div>
         <div className="sb2-center">
@@ -114,7 +112,7 @@ export default function PitchTV({
         </div>
         <div className="sb2-team away">
           <span className="sb2-info"><span className="sb2-name">{away}</span>{awayPlayer && <span className="sb2-pl">({awayPlayer})</span>}</span>
-          <span className="sb2-badge" style={{ background: awayColor }}>{teamInitial(away)}</span>
+          <TeamCrest name={away} size={32} className="sb2-badge" />
         </div>
       </div>
       {(redHome > 0 || redAway > 0) && (

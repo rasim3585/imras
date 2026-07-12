@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { BulletinMatch, BulletinMarket, BulletinOption } from '../lib/types';
 import { formatKickoff, formatOdds } from '../lib/format';
-import { teamColor, teamInitial } from '../lib/teams';
+import TeamCrest from './TeamCrest';
 import { playerName } from '../lib/playerNames';
 import { useCart } from '../coupon/CartContext';
 import { EFootballIcon } from './icons';
@@ -83,10 +83,10 @@ export default function MatchRow({ m, hideLeague }: { m: BulletinMatch; hideLeag
           {!hideLeague && m.league && <span className="ll-lg">{m.league}</span>}
           {m.is_derby && <span className="ll-derby">DERBY</span>}
         </span>
-        <span className="ll-badge" style={{ background: teamColor(m.home_team) }}>{teamInitial(m.home_team)}</span>
+        <TeamCrest name={m.home_team} size={16} className="ll-badge" />
         <span className="ll-name">{m.home_team}{isVirtual && <i className="ll-pl"> ({playerName(m.id + 'h')})</i>}</span>
         {isLive ? <span className="ll-scorepill tnum">{m.home_score ?? 0}-{m.away_score ?? 0}</span> : <span className="ll-sep">·</span>}
-        <span className="ll-badge" style={{ background: teamColor(m.away_team) }}>{teamInitial(m.away_team)}</span>
+        <TeamCrest name={m.away_team} size={16} className="ll-badge" />
         <span className="ll-name">{m.away_team}{isVirtual && <i className="ll-pl"> ({playerName(m.id + 'a')})</i>}</span>
       </span>
       {isLive && <span className="ll-livechip"><span className="pulse" />LIVE</span>}

@@ -2,13 +2,11 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Match, LiveState } from '../lib/types';
 import { formatKickoff } from '../lib/format';
-import { teamColor, teamInitial } from '../lib/teams';
 import MarketSection from './MarketSection';
+import TeamCrest from './TeamCrest';
 
 function TeamBadge({ name }: { name: string }) {
-  return (
-    <span className="team-badge" style={{ background: teamColor(name) }} aria-hidden="true">{teamInitial(name)}</span>
-  );
+  return <TeamCrest name={name} size={30} className="team-badge" />;
 }
 
 export default function MatchCard({ match, live, primaryType = 'match_result' }: { match: Match; live?: LiveState; primaryType?: string }) {

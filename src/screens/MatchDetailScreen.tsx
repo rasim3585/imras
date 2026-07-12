@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { matchProvider } from '../lib/matchProvider';
-import { teamColor, teamInitial } from '../lib/teams';
 import { formatKickoff } from '../lib/format';
 import MarketSection from '../components/MarketSection';
 import MatchStatsPanel from '../components/MatchStatsPanel';
+import TeamCrest from '../components/TeamCrest';
 import type { LiveState, Match } from '../lib/types';
 
 // First-half markets are bettable pre-match ONLY (mirror of MarketSection's gate).
@@ -74,12 +74,12 @@ export default function MatchDetailScreen() {
         </div>
         <div className="sb-teams">
           <div className="sb-team">
-            <span className="sb-badge" style={{ background: teamColor(match.home_team) }}>{teamInitial(match.home_team)}</span>
+            <TeamCrest name={match.home_team} size={34} className="sb-badge" />
             <span className="sb-name">{match.home_team}</span>
           </div>
           <span className="sb-score tnum">{live && live.phase !== 'upcoming' ? `${live.home_score} - ${live.away_score}` : 'vs'}</span>
           <div className="sb-team">
-            <span className="sb-badge" style={{ background: teamColor(match.away_team) }}>{teamInitial(match.away_team)}</span>
+            <TeamCrest name={match.away_team} size={34} className="sb-badge" />
             <span className="sb-name">{match.away_team}</span>
           </div>
         </div>

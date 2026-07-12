@@ -577,6 +577,10 @@ a:hover { color: var(--win); }
 .vh2h-score { font-family: var(--mono); font-weight: 800; color: var(--text); background: var(--surface-2); border-radius: 5px; padding: 1px 7px; }
 .vstat-note { font-size: 0.8rem; color: var(--text-mut); font-style: italic; margin-top: 6px; }
 
+/* Faz B: generated team crest (shield SVG) — replaces flat initial badges */
+.crest { flex-shrink: 0; }
+svg.crest { background: none !important; border-radius: 0 !important; }
+
 /* --- Block 5: TV / pitch (live watch) ---------------------------------- */
 /* colours hardcoded (not tokens) so the pitch stays green in any theme */
 .pitch-tv { background: #0c1512; border-radius: 16px; padding: 10px; box-shadow: 0 10px 34px -12px rgba(0, 0, 0, 0.4); margin-bottom: var(--s4); }

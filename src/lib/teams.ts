@@ -29,3 +29,18 @@ export function teamColor(name: string): string {
 export function teamInitial(name: string): string {
   return (name.trim()[0] ?? '?').toUpperCase();
 }
+
+/** 2–3 char monogram for the crest: word initials for multi-word names
+ *  ("Man City" → "MC", "Real Madrid" → "RM"), else first 3 letters ("Arsenal" → "ARS"). */
+export function teamMonogram(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length >= 2) return words.slice(0, 3).map((w) => w[0]).join('').toUpperCase();
+  return (words[0] ?? '?').slice(0, 3).toUpperCase();
+}
+
+/** Stable small hash of a name, for deterministic crest pattern choice. */
+export function teamHash(name: string): number {
+  let h = 0;
+  for (const c of name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return h;
+}
