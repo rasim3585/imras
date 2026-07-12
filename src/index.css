@@ -597,62 +597,196 @@ a:hover { color: var(--win); }
 .crest { flex-shrink: 0; }
 svg.crest { background: none !important; border-radius: 0 !important; }
 
-/* --- Gates of Goal (slot) ---------------------------------------------------- */
-.gates { max-width: 560px; }
-.gates-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--s3); }
-.gates-title h1 { margin: 0; line-height: 1; }
-.gates-sub { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent); font-weight: 700; }
-.gates-board {
-  position: relative; border-radius: 16px; padding: 12px;
-  background: radial-gradient(120% 90% at 50% 0%, #12402c 0%, #0b2a1d 70%, #071c13 100%);
-  border: 1px solid #0a3b28; box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.25);
-}
-.gates-grid { display: grid; gap: 6px; }
-.gates-cell { position: relative; aspect-ratio: 1; border-radius: 10px; background: rgba(255,255,255,0.03); display: flex; align-items: center; justify-content: center; }
-.gates-cell.win { animation: gcell-win 0.72s ease; z-index: 2; }
-@keyframes gcell-win { 0% { transform: scale(1); } 35% { transform: scale(1.14); filter: drop-shadow(0 0 10px rgba(255,210,74,0.9)); } 100% { transform: scale(1); } }
-.slot-sym { width: 100%; height: 100%; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 -2px 0 rgba(0,0,0,0.22), inset 0 2px 0 rgba(255,255,255,0.14); }
-.slot-sym svg { width: 82%; height: 82%; }
-.slot-empty { width: 100%; height: 100%; }
-.slot-orb { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 0 8px rgba(255,207,58,0.7)); animation: orb-glow 1.4s ease-in-out infinite; }
-.slot-orb svg { width: 92%; height: 92%; }
-.slot-orb-x { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.9rem; color: #3a1c00; text-shadow: 0 1px 0 rgba(255,255,255,0.4); }
-@keyframes orb-glow { 0%,100% { filter: drop-shadow(0 0 6px rgba(255,207,58,0.6)); } 50% { filter: drop-shadow(0 0 12px rgba(255,207,58,1)); } }
-.gates-mult { position: absolute; top: 10px; right: 12px; background: #ffcf3a; color: #3a1c00; font-weight: 900; font-size: 1.1rem; padding: 3px 12px; border-radius: 999px; box-shadow: 0 3px 10px rgba(0,0,0,0.3); animation: pop-in 0.4s ease; }
-.gates-runwin { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); color: #eafcf7; background: rgba(0,0,0,0.35); font-weight: 800; padding: 3px 14px; border-radius: 999px; }
-.gates-banner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-.gates-banner span { background: linear-gradient(#ffe27a, #ffcf3a); color: #3a1c00; font-weight: 900; font-size: 1.6rem; padding: 10px 26px; border-radius: 14px; box-shadow: 0 6px 22px rgba(0,0,0,0.4); animation: pop-in 0.45s cubic-bezier(0.2,1.4,0.4,1); }
+/* --- Gates of Goal (slot) — premium tumble stage (original scene art) -------- */
+.go { max-width: 940px; margin: 0 auto; }
 @keyframes pop-in { 0% { transform: scale(0.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-.gates-controls { margin-top: var(--s3); display: flex; flex-direction: column; gap: var(--s2); }
-.gates-ante { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
-.gates-ante.on { color: var(--accent); }
-.gates-bet { display: flex; align-items: stretch; gap: var(--s2); }
-.gates-step { width: 44px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; font-size: 1.3rem; font-weight: 700; cursor: pointer; color: var(--text); }
-.gates-betval { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
-.gates-betval b { font-size: 1.1rem; }
-.gates-quick { display: flex; gap: 6px; flex-wrap: wrap; }
-.gates-spin { font-size: 1.05rem; padding: 14px; }
-.gates-buy {
-  font-size: 0.92rem; padding: 11px; font-weight: 800;
-  background: linear-gradient(#4a2d86, #38215f); color: #f0e9ff;
-  border: 1px solid #6a4bb0; box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+
+.go-topbanner {
+  text-align: center; font-weight: 800; letter-spacing: 1.5px; font-size: 0.82rem;
+  color: #6b4610; padding: 5px 0; margin-bottom: 10px; border-radius: 999px;
+  background: linear-gradient(#ffe9a8, #f3c73f 55%, #d69a24);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 3px 12px rgba(0,0,0,0.3);
 }
-.gates-buy:disabled { opacity: 0.5; }
+.go-topbanner span { color: #3a2408; }
 
-/* Scatter tile (GOAL) — glowing gate symbol */
+.go-stage { display: flex; align-items: stretch; gap: 12px; }
+
+/* left rail --------------------------------------------------------------- */
+.go-rail { width: 118px; flex: none; display: flex; flex-direction: column; gap: 10px; }
+.go-buy {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 6px;
+  border-radius: 14px; cursor: pointer; color: #fff2b0; font-weight: 900; line-height: 1.05;
+  background: radial-gradient(120% 100% at 50% 0%, #6a3fb0 0%, #46277d 60%, #2c1552 100%);
+  border: 2px solid #f3c73f; box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 6px 16px rgba(0,0,0,0.4);
+  transition: transform 0.1s ease, filter 0.15s ease;
+}
+.go-buy:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+.go-buy:disabled { opacity: 0.55; cursor: default; }
+.go-buy-t { font-size: 0.74rem; letter-spacing: 0.5px; }
+.go-buy-p { font-size: 1.02rem; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
+
+.go-double {
+  border-radius: 12px; padding: 10px 6px; text-align: center;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--line);
+}
+.go-double-h { font-size: 0.72rem; font-weight: 900; letter-spacing: 0.5px; color: #f3c73f; line-height: 1.05; margin-bottom: 8px; }
+.go-toggle {
+  display: inline-flex; align-items: center; gap: 6px; width: 100%; justify-content: center;
+  padding: 5px 8px; border-radius: 999px; cursor: pointer; font-weight: 800; font-size: 0.72rem;
+  background: #241a12; border: 1px solid #5a4a2a; color: #b9a880;
+}
+.go-toggle .go-toggle-knob { width: 10px; height: 10px; border-radius: 50%; background: #7a6a44; transition: all 0.15s ease; }
+.go-toggle.on { background: #3a2d0e; border-color: #f3c73f; color: #ffe27a; }
+.go-toggle.on .go-toggle-knob { background: #ffd24a; box-shadow: 0 0 8px #ffd24a; }
+.go-double-note { font-size: 0.64rem; color: var(--muted); margin-top: 6px; }
+
+.go-lastwin {
+  margin-top: auto; display: flex; flex-direction: column; gap: 2px; text-align: center;
+  border-radius: 12px; padding: 10px 6px; background: rgba(0,0,0,0.28); border: 1px solid var(--line);
+}
+.go-lastwin .muted { font-size: 0.62rem; letter-spacing: 0.5px; }
+.go-lastwin b { font-size: 1.15rem; color: #ffe27a; }
+
+/* center frame ------------------------------------------------------------ */
+.go-frame {
+  position: relative; flex: 1; min-width: 0; padding: 16px; border-radius: 24px;
+  background: linear-gradient(150deg, #ffe9a8 0%, #d69a24 22%, #8a5a12 50%, #b8801e 72%, #f3c73f 100%);
+  box-shadow: inset 0 0 0 2px rgba(90,58,14,0.7), inset 0 2px 3px rgba(255,255,255,0.5),
+              0 16px 44px rgba(0,0,0,0.5);
+}
+.go-reels {
+  position: relative; border-radius: 14px; padding: 12px; overflow: hidden;
+  background: radial-gradient(130% 100% at 50% -10%, #57318f 0%, #3a1f66 45%, #241245 78%, #170b2e 100%);
+  box-shadow: inset 0 3px 18px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05);
+}
+.go-frame.is-bonus .go-reels {
+  background: radial-gradient(130% 100% at 50% -10%, #8a4bd6 0%, #5a2ea0 45%, #38206e 78%, #1e0f3e 100%);
+}
+.go-grid { display: grid; gap: 7px; position: relative; z-index: 1; }
+
+.go-cell {
+  position: relative; aspect-ratio: 1; border-radius: 11px; display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.03); animation: go-drop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes go-drop {
+  0% { transform: translateY(-155%) scale(0.9); opacity: 0; }
+  55% { opacity: 1; }
+  78% { transform: translateY(7%) scale(1.03); }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+.go-sym-wrap { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; animation: go-sway 2.8s ease-in-out infinite; }
+@keyframes go-sway { 0%,100% { transform: translateY(0) rotate(-0.8deg); } 50% { transform: translateY(-2px) rotate(0.8deg); } }
+.go-cell.win { animation: go-pop 0.72s ease forwards; z-index: 3; }
+.go-cell.win .go-sym-wrap { animation: none; }
+@keyframes go-pop {
+  0% { transform: scale(1); } 26% { transform: scale(1.2); filter: drop-shadow(0 0 16px rgba(255,214,74,0.95)); }
+  46% { transform: scale(1.06); } 100% { transform: scale(0.24) rotate(8deg); opacity: 0; }
+}
+
+/* shared symbol tiles (used by SlotSymbol) */
+.slot-sym { width: 100%; height: 100%; border-radius: 11px; display: flex; align-items: center; justify-content: center;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,0.28), inset 0 2px 0 rgba(255,255,255,0.18); }
+.slot-sym svg { width: 80%; height: 80%; }
+.slot-empty { width: 100%; height: 100%; }
+.slot-orb { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+  filter: drop-shadow(0 0 8px rgba(255,207,58,0.7)); animation: orb-glow 1.4s ease-in-out infinite; }
+.slot-orb svg { width: 94%; height: 94%; }
+.slot-orb-x { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.92rem; color: #3a1c00; text-shadow: 0 1px 0 rgba(255,255,255,0.4); }
+@keyframes orb-glow { 0%,100% { filter: drop-shadow(0 0 6px rgba(255,207,58,0.6)); } 50% { filter: drop-shadow(0 0 13px rgba(255,207,58,1)); } }
 .slot-scatter { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
-  filter: drop-shadow(0 0 8px rgba(255,210,74,0.85)); animation: orb-glow 1.5s ease-in-out infinite; }
-.slot-scatter svg { width: 94%; height: 94%; }
-.slot-scatter-x { position: absolute; bottom: 16%; left: 0; right: 0; text-align: center; font-weight: 900;
-  font-size: 0.62rem; letter-spacing: 0.5px; color: #ffe27a; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
-.gates-cell.scat { z-index: 1; }
+  filter: drop-shadow(0 0 9px rgba(255,210,74,0.9)); animation: orb-glow 1.5s ease-in-out infinite; }
+.slot-scatter svg { width: 96%; height: 96%; }
+.slot-scatter-x { position: absolute; bottom: 15%; left: 0; right: 0; text-align: center; font-weight: 900;
+  font-size: 0.6rem; letter-spacing: 0.5px; color: #ffe27a; text-shadow: 0 1px 2px rgba(0,0,0,0.9); }
+.go-cell.scat { z-index: 2; }
 
-/* Free-spins bonus overlay + purple gate tint on the board */
-.gates-board.is-bonus { background: radial-gradient(120% 90% at 50% 0%, #3a2568 0%, #241546 70%, #140a2b 100%); border-color: #4a2d86; }
-.gates-fs { position: absolute; top: 8px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; pointer-events: none; z-index: 3; }
-.gates-fs-head { font-size: 0.72rem; font-weight: 800; letter-spacing: 1px; color: #ffe27a; text-shadow: 0 1px 3px rgba(0,0,0,0.7); }
-.gates-fs-mult { font-size: 2.2rem; font-weight: 900; line-height: 1; color: #fff; text-shadow: 0 2px 10px rgba(255,207,58,0.9), 0 0 4px rgba(0,0,0,0.6); animation: pop-in 0.3s ease; }
-.gates-fs-win { font-size: 0.95rem; font-weight: 800; color: #ffcf3a; background: rgba(0,0,0,0.35); padding: 2px 12px; border-radius: 999px; }
+/* corner ornaments + torches */
+.go-corner { position: absolute; width: 46px; height: 46px; z-index: 2; pointer-events: none; }
+.go-corner-svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5)); }
+.go-corner.tl { top: 2px; left: 2px; }
+.go-corner.tr { top: 2px; right: 2px; transform: scaleX(-1); }
+.go-corner.bl { bottom: 2px; left: 2px; transform: scaleY(-1); }
+.go-corner.br { bottom: 2px; right: 2px; transform: scale(-1, -1); }
+.go-torches { position: absolute; top: -14px; left: 30px; right: 30px; display: flex; justify-content: space-between; z-index: 3; pointer-events: none; }
+.go-torch { position: relative; width: 40px; }
+.go-bowl { width: 40px; height: 30px; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.5)); }
+.go-flame { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); width: 26px; height: 34px; }
+.go-flame span { position: absolute; bottom: 0; left: 50%; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  transform: translateX(-50%); filter: blur(0.4px); }
+.go-flame-a { width: 22px; height: 30px; background: radial-gradient(circle at 50% 80%, #ffd24a, #ff7a18 60%, #e0350f); animation: go-flick 0.5s ease-in-out infinite alternate; }
+.go-flame-b { width: 14px; height: 22px; background: radial-gradient(circle at 50% 80%, #fff2b0, #ffb43a 70%); animation: go-flick 0.4s ease-in-out infinite alternate-reverse; }
+.go-flame-c { width: 7px; height: 13px; background: #fff6d6; animation: go-flick 0.3s ease-in-out infinite alternate; }
+@keyframes go-flick { 0% { transform: translateX(-50%) scaleY(0.92) translateY(0); } 100% { transform: translateX(-52%) scaleY(1.12) translateY(-2px); } }
+
+/* overlays --------------------------------------------------------------- */
+.go-multbadge { position: absolute; top: 12px; right: 14px; z-index: 4; background: linear-gradient(#ffe27a, #f3c73f);
+  color: #3a1c00; font-weight: 900; font-size: 1.15rem; padding: 3px 13px; border-radius: 999px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.4); animation: pop-in 0.4s ease; }
+.go-runwin { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 4;
+  color: #fff; background: rgba(0,0,0,0.42); font-weight: 800; padding: 4px 16px; border-radius: 999px; }
+.go-fs { position: absolute; top: 12px; left: 0; right: 0; z-index: 4; display: flex; flex-direction: column; align-items: center; gap: 2px; pointer-events: none; }
+.go-fs-head { font-size: 0.74rem; font-weight: 900; letter-spacing: 1.5px; color: #ffe27a; text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
+.go-fs-mult { font-size: 2.6rem; font-weight: 900; line-height: 1; color: #fff; text-shadow: 0 2px 14px rgba(255,207,58,1), 0 0 5px rgba(0,0,0,0.7); animation: pop-in 0.3s ease; }
+.go-fs-win { font-size: 1rem; font-weight: 800; color: #ffcf3a; background: rgba(0,0,0,0.4); padding: 2px 14px; border-radius: 999px; }
+.go-banner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 5; pointer-events: none; }
+.go-banner span { background: linear-gradient(#fff2b0, #f3c73f); color: #3a1c00; font-weight: 900; font-size: 1.7rem;
+  letter-spacing: 1px; padding: 12px 30px; border-radius: 16px; box-shadow: 0 8px 26px rgba(0,0,0,0.5);
+  animation: pop-in 0.45s cubic-bezier(0.2,1.4,0.4,1); }
+.go-banner.big span { font-size: 2.2rem; animation: go-bigwin 0.6s cubic-bezier(0.2,1.4,0.4,1); }
+@keyframes go-bigwin { 0% { transform: scale(0.3) rotate(-6deg); opacity: 0; } 60% { transform: scale(1.15) rotate(3deg); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+
+/* mascot ------------------------------------------------------------------ */
+.go-mascot { width: 150px; flex: none; display: flex; align-items: flex-end; justify-content: center; position: relative; }
+.go-legend { position: relative; width: 100%; }
+.go-legend-svg { width: 100%; height: auto; filter: drop-shadow(0 6px 14px rgba(0,0,0,0.5)); animation: go-float 4s ease-in-out infinite; }
+@keyframes go-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.go-legend-aura { position: absolute; inset: 6% 0 10%; border-radius: 50%; z-index: -1;
+  background: radial-gradient(circle, rgba(243,199,63,0.35), rgba(243,199,63,0) 65%); animation: orb-glow 3s ease-in-out infinite; }
+.go-legend.is-excited .go-legend-svg { animation: go-legend-cheer 0.5s ease-in-out infinite alternate; }
+@keyframes go-legend-cheer { 0% { transform: translateY(0) rotate(-2deg) scale(1); } 100% { transform: translateY(-6px) rotate(2deg) scale(1.04); } }
+
+/* bottom bar -------------------------------------------------------------- */
+.go-err { margin-top: 10px; }
+.go-bar { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 10px 14px; border-radius: 16px;
+  background: linear-gradient(#241a12, #160f09); border: 1px solid #4a3a1e; box-shadow: 0 6px 18px rgba(0,0,0,0.35); }
+.go-credit { display: flex; flex-direction: column; line-height: 1.1; }
+.go-credit .muted { font-size: 0.6rem; letter-spacing: 1px; }
+.go-credit b { font-size: 1.1rem; color: #ffe27a; }
+.go-betbox { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.go-betstep { width: 38px; height: 38px; border-radius: 10px; border: 1px solid #5a4a2a; background: #2c2013;
+  color: #ffe27a; font-size: 1.3rem; font-weight: 800; cursor: pointer; }
+.go-betstep:disabled { opacity: 0.4; cursor: default; }
+.go-betval { display: flex; flex-direction: column; align-items: center; line-height: 1.05; min-width: 68px; }
+.go-betval .muted { font-size: 0.6rem; letter-spacing: 1px; }
+.go-betval b { font-size: 1.2rem; color: #fff; }
+.go-actions { display: flex; align-items: center; gap: 10px; }
+.go-auto { width: 54px; height: 54px; border-radius: 50%; border: 2px solid #5a4a2a; background: #2c2013;
+  color: #ffe27a; font-size: 0.72rem; font-weight: 900; letter-spacing: 0.5px; cursor: pointer; }
+.go-auto.on { border-color: #e0350f; color: #ff7a5a; box-shadow: 0 0 14px rgba(224,53,15,0.6); animation: go-autopulse 1s ease-in-out infinite; }
+@keyframes go-autopulse { 0%,100% { box-shadow: 0 0 8px rgba(224,53,15,0.4); } 50% { box-shadow: 0 0 18px rgba(224,53,15,0.8); } }
+.go-auto:disabled { opacity: 0.4; cursor: default; }
+.go-spin {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  width: 74px; height: 74px; border-radius: 50%; cursor: pointer; color: #3a2408; font-weight: 900; font-size: 0.78rem;
+  background: radial-gradient(circle at 50% 35%, #fff2b0, #f3c73f 55%, #c8891f 100%);
+  border: 3px solid #fff6d6; box-shadow: 0 6px 18px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.6);
+  transition: transform 0.1s ease, filter 0.15s ease;
+}
+.go-spin:hover:not(:disabled) { filter: brightness(1.08); }
+.go-spin:active:not(:disabled) { transform: scale(0.94); }
+.go-spin:disabled { opacity: 0.5; cursor: default; }
+.go-spin-ic { width: 20px; height: 20px; border-radius: 6px; border: 3px solid #3a2408; }
+.go-frame.is-spin .go-spin-ic { animation: go-spin-rot 0.8s linear infinite; }
+@keyframes go-spin-rot { to { transform: rotate(360deg); } }
+
+@media (max-width: 720px) {
+  .go-stage { flex-wrap: wrap; }
+  .go-mascot, .go-torches { display: none; }
+  .go-rail { width: 100%; flex-direction: row; align-items: stretch; order: 2; }
+  .go-frame { order: 1; flex-basis: 100%; padding: 12px; }
+  .go-lastwin { margin-top: 0; flex: 1; }
+  .go-buy, .go-double { flex: 1; }
+}
 
 /* Active-coupon count badge on the Coupons nav item */
 .nav-ic { position: relative; display: inline-flex; align-items: center; justify-content: center; }
