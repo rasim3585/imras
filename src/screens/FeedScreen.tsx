@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import MatchRow from '../components/MatchRow';
-import { EFootballIcon } from '../components/icons';
+import { EFootballIcon, BallIcon } from '../components/icons';
 import { useAuth } from '../auth/AuthContext';
 import { matchProvider } from '../lib/matchProvider';
 import type { BulletinMatch } from '../lib/types';
@@ -119,13 +119,15 @@ export default function FeedScreen() {
   const upcoming = set.filter((m) => !LIVE.has(m.status));
   const grouped = groupMatches(upcoming);
 
-  const section = (title: string, right: ReactNode, list: BulletinMatch[]) => list.length > 0 && (
+  const section = (title: string, right: ReactNode, list: BulletinMatch[], icon: ReactNode = <EFootballIcon size={19} />) => list.length > 0 && (
     <>
-      <div className="ll-bar"><span className="ll-bar-l"><EFootballIcon size={19} /> {title}</span>{right}</div>
+      <div className="ll-bar"><span className="ll-bar-l">{icon} {title}</span>{right}</div>
       <Cols />
       {list.map((m) => <MatchRow key={m.id} m={m} />)}
     </>
   );
+
+  const liveCount = (n: number) => <span className="ll-bar-r"><span className="dot" />{n} live</span>;
 
   return (
     <div className="app-shell app-shell-wide">
@@ -164,7 +166,8 @@ export default function FeedScreen() {
         <div className="empty"><p>{sport === 'live' ? 'No live matches right now.' : 'No open matches right now.'}</p></div>
       ) : (
         <div className="ll">
-          {section('Live', <span className="ll-bar-r"><span className="dot" />{live.length} live</span>, live)}
+          {section('Live · Football', liveCount(live.filter((m) => m.kind === 'real').length), live.filter((m) => m.kind === 'real'), <BallIcon size={18} />)}
+          {section('Live · E-Football', liveCount(live.filter((m) => m.kind === 'virtual').length), live.filter((m) => m.kind === 'virtual'))}
           {sport !== 'live' && (
             <>
               {grouped.countries.map((cg) => (

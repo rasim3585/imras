@@ -9,9 +9,9 @@ export function MarketsIcon() {
   );
 }
 
-export function BallIcon() {
+export function BallIcon({ size }: { size?: number } = {}) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
          strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="12" cy="12" r="9" />
       <path d="M12 7.3l3.4 2.5-1.3 4h-4.2l-1.3-4z" />
