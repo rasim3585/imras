@@ -1,0 +1,136 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
+import { matchProvider } from '../lib/matchProvider';
+import SlotSymbol from '../slot/symbols';
+import type { SlotResult } from '../lib/types';
+
+// Gates of Goal — original football-themed tumble slot. The server computes the
+// whole spin (provably fair); this screen animates the returned tumble steps.
+
+const COLS = 6, ROWS = 5;
+const QUICK = [10, 50, 100, 250, 500];
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function initialGrid(): number[] {
+  // pleasant resting board before the first spin (display only)
+  const g: number[] = [];
+  for (let i = 0; i < COLS * ROWS; i++) g.push(1 + Math.floor(Math.random() * 8));
+  return g;
+}
+
+function cleanErr(m: string): string {
+  if (m.includes('yetersiz')) return 'Not enough coins for that bet.';
+  if (m.includes('giris')) return 'Log in to play.';
+  if (m.includes('bet')) return 'Bet is out of range.';
+  return 'Spin failed. Try again.';
+}
+
+export default function GatesScreen() {
+  const { profile, session, refreshProfile } = useAuth();
+  const navigate = useNavigate();
+  const [grid, setGrid] = useState<number[]>(initialGrid);
+  const [winCells, setWinCells] = useState<Set<number>>(new Set());
+  const [busy, setBusy] = useState(false);
+  const [bet, setBet] = useState(50);
+  const [ante, setAnte] = useState(false);
+  const [runWin, setRunWin] = useState(0);
+  const [multSum, setMultSum] = useState(0);
+  const [banner, setBanner] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const balance = profile?.gold_balance ?? 0;
+  const stake = ante ? Math.round(bet * 1.25) : bet;
+  const step = (d: number) => setBet((b) => Math.max(10, Math.min(1000, b + d)));
+
+  async function animate(res: SlotResult) {
+    setGrid(res.steps[0]?.grid ?? grid);
+    let running = 0;
+    for (let i = 0; i < res.steps.length; i++) {
+      const st = res.steps[i];
+      if (st.win > 0) {
+        setWinCells(new Set(st.cells));
+        running += st.win;
+        setRunWin(running);
+        await wait(720);
+        if (i + 1 < res.steps.length) {
+          setWinCells(new Set());
+          setGrid(res.steps[i + 1].grid);
+          await wait(360);
+        }
+      }
+    }
+    setWinCells(new Set());
+    if (res.payout > 0) {
+      if (res.mult_sum > 0) { setMultSum(res.mult_sum); await wait(620); }
+      setBanner(`${res.payout.toLocaleString()} won${res.mult_sum > 0 ? ` · ×${res.mult_sum}` : ''}`);
+    }
+  }
+
+  async function spin() {
+    if (!session) { navigate('/login'); return; }
+    if (busy || stake > balance || stake <= 0) return;
+    setBusy(true); setErr(null); setBanner(null); setRunWin(0); setMultSum(0); setWinCells(new Set());
+    try {
+      const res = await matchProvider.slotSpin(bet, ante);
+      await animate(res);
+      await refreshProfile();
+    } catch (e) {
+      setErr(e instanceof Error ? cleanErr(e.message) : 'Spin failed');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="app-shell gates">
+      <div className="gates-top">
+        <div className="gates-title"><h1>Gates of Goal</h1><span className="gates-sub">football tumble</span></div>
+        {session && (
+          <span className="gold-chip" title="Virtual coins">
+            <span className="coin" aria-hidden="true" />
+            <span className="tnum">{balance.toLocaleString()}</span>
+          </span>
+        )}
+      </div>
+
+      <div className={`gates-board ${busy ? 'is-spin' : ''}`}>
+        <div className="gates-grid" style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}>
+          {grid.map((v, i) => (
+            <div key={i} className={`gates-cell ${winCells.has(i) ? 'win' : ''} ${v < 0 ? 'orb' : ''}`}>
+              <SlotSymbol v={v} />
+            </div>
+          ))}
+        </div>
+
+        {multSum > 0 && <div className="gates-mult tnum">×{multSum}</div>}
+        {runWin > 0 && !banner && <div className="gates-runwin tnum">+{runWin.toLocaleString()}</div>}
+        {banner && <div className="gates-banner"><span className="tnum">{banner}</span></div>}
+      </div>
+
+      {err && <div className="banner banner-error" style={{ marginTop: 'var(--s2)' }}>{err}</div>}
+
+      <div className="gates-controls">
+        <label className={`gates-ante ${ante ? 'on' : ''}`}>
+          <input type="checkbox" checked={ante} disabled={busy} onChange={(e) => setAnte(e.target.checked)} />
+          Ante bet <span className="muted">+25% · more orbs</span>
+        </label>
+
+        <div className="gates-bet">
+          <button className="gates-step" disabled={busy} onClick={() => step(-10)}>−</button>
+          <div className="gates-betval"><span className="muted">Bet</span><b className="tnum">{bet}</b></div>
+          <button className="gates-step" disabled={busy} onClick={() => step(10)}>+</button>
+        </div>
+        <div className="gates-quick">
+          {QUICK.map((q) => <button key={q} className="av-chip" disabled={busy} onClick={() => setBet(q)}>{q}</button>)}
+          {session && <button className="av-chip" disabled={busy || balance <= 0} onClick={() => setBet(Math.min(1000, Math.max(10, balance)))}>max</button>}
+        </div>
+
+        <button className="btn btn-primary btn-block gates-spin" disabled={busy || (!!session && stake > balance)} onClick={spin}>
+          {busy ? 'Spinning…' : !session ? 'Log in to play'
+            : <>Spin · {stake} <span className="coin coin-light" aria-hidden="true" /></>}
+        </button>
+      </div>
+    </div>
+  );
+}

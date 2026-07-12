@@ -182,6 +182,26 @@ export interface MatchStats {
   h2h: VH2H[];
 }
 
+// --- Gates of Goal (slot) ---------------------------------------------------
+
+/** One tumble step: the 6x5 grid (30 cells; 1-8 symbol, negative = multiplier
+ *  orb of that value, 0 = empty), the win it paid, and the winning cell indices. */
+export interface SlotStep { grid: number[]; win: number; cells: number[]; }
+
+/** Full outcome of a spin (server computes; client animates the steps). */
+export interface SlotResult {
+  spin_id: number;
+  bet: number;
+  ante: boolean;
+  stake: number;
+  steps: SlotStep[];
+  base_win: number;
+  mult_sum: number;
+  payout: number;
+  tumbles: number;
+  balance: number;
+}
+
 // --- Coupons ---------------------------------------------------------------
 
 /** A selection while it lives in the client-side cart (pre-placement). Carries

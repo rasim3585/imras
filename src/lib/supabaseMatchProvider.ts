@@ -3,7 +3,7 @@ import type { MatchProvider, PlacedCoupon } from './matchProvider';
 import type {
   Coupon, CouponLeg, CouponSettlement, LiveState, Market, Match,
   DailyBonus, Challenge, Leaderboard, League, LeagueDetail, Rival, SharedCoupon,
-  BulletinMatch, CartSelection, MatchStats,
+  BulletinMatch, CartSelection, MatchStats, SlotResult,
 } from './types';
 
 // Explicit match columns — omits `true_probabilities` (hidden) and
@@ -85,6 +85,12 @@ export class SupabaseMatchProvider implements MatchProvider {
     const { data, error } = await supabase.rpc('vmatch_stats', { p_match_id: matchId });
     if (error) throw new Error(error.message);
     return (data ?? null) as MatchStats | null;
+  }
+
+  async slotSpin(bet: number, ante: boolean): Promise<SlotResult> {
+    const { data, error } = await supabase.rpc('slot_spin', { p_bet: bet, p_ante: ante });
+    if (error) throw new Error(error.message);
+    return data as SlotResult;
   }
 
   async getLiveStates(matchIds: string[]): Promise<LiveState[]> {

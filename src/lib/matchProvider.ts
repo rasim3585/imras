@@ -1,6 +1,7 @@
 import type {
   Match, Coupon, CouponSettlement, LiveState, DailyBonus, Challenge, Leaderboard,
   League, LeagueDetail, Rival, SharedCoupon, BulletinMatch, CartSelection, MatchStats,
+  SlotResult,
 } from './types';
 import { SupabaseMatchProvider } from './supabaseMatchProvider';
 
@@ -33,6 +34,9 @@ export interface MatchProvider {
 
   /** Virtual-league stats for a match (standings + form + H2H); null if none. */
   getMatchStats(matchId: string): Promise<MatchStats | null>;
+
+  /** Gates of Goal: play one slot spin; server computes, client animates steps. */
+  slotSpin(bet: number, ante: boolean): Promise<SlotResult>;
 
   /** Place a coupon (real + virtual legs) via place_coupon_v2; server prices. */
   placeCoupon(selections: CartSelection[], stake: number): Promise<PlacedCoupon>;
