@@ -15,6 +15,9 @@ dist-ssr
 # Supabase CLI local state (machine-specific, never commit)
 supabase/.temp/
 
+# Claude Code personal/local settings (machine-specific, never commit)
+.claude/settings.local.json
+
 # Env / secrets — never commit these
 .env
 .env.*
