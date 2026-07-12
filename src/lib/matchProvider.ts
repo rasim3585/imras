@@ -36,7 +36,7 @@ export interface MatchProvider {
   getMatchStats(matchId: string): Promise<MatchStats | null>;
 
   /** Gates of Goal: play one slot spin; server computes, client animates steps. */
-  slotSpin(bet: number, ante: boolean): Promise<SlotResult>;
+  slotSpin(bet: number, ante: boolean, buy: boolean): Promise<SlotResult>;
 
   /** Place a coupon (real + virtual legs) via place_coupon_v2; server prices. */
   placeCoupon(selections: CartSelection[], stake: number): Promise<PlacedCoupon>;

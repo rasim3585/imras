@@ -87,8 +87,8 @@ export class SupabaseMatchProvider implements MatchProvider {
     return (data ?? null) as MatchStats | null;
   }
 
-  async slotSpin(bet: number, ante: boolean): Promise<SlotResult> {
-    const { data, error } = await supabase.rpc('slot_spin', { p_bet: bet, p_ante: ante });
+  async slotSpin(bet: number, ante: boolean, buy: boolean): Promise<SlotResult> {
+    const { data, error } = await supabase.rpc('slot_spin', { p_bet: bet, p_ante: ante, p_buy: buy });
     if (error) throw new Error(error.message);
     return data as SlotResult;
   }

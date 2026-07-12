@@ -184,21 +184,48 @@ export interface MatchStats {
 
 // --- Gates of Goal (slot) ---------------------------------------------------
 
-/** One tumble step: the 6x5 grid (30 cells; 1-8 symbol, negative = multiplier
- *  orb of that value, 0 = empty), the win it paid, and the winning cell indices. */
+/** One tumble step: the 6x5 grid (30 cells; 1-8 symbol, 9 = scatter, negative =
+ *  multiplier orb of that value, 0 = empty), the win it paid, and winning cells. */
 export interface SlotStep { grid: number[]; win: number; cells: number[]; }
 
-/** Full outcome of a spin (server computes; client animates the steps). */
+/** The base (paid) spin: its tumble steps, total symbol win, summed orb value
+ *  applied to it, scatter count (4+ triggers free spins) and its final payout. */
+export interface SlotBase {
+  steps: SlotStep[];
+  base_win: number;
+  mult_sum: number;
+  scatters: number;
+  payout: number;
+}
+
+/** One free spin inside the bonus: its tumbles, the win it paid (after the
+ *  accumulated multiplier), the running total multiplier, and its scatters. */
+export interface SlotBonusSpin {
+  steps: SlotStep[];
+  win: number;
+  total_mult: number;
+  scatters: number;
+}
+
+/** The free-spins round. `total_mult` accumulates every orb across all spins. */
+export interface SlotBonus {
+  triggered: boolean;
+  count: number;
+  spins: SlotBonusSpin[];
+  win: number;
+  total_mult: number;
+}
+
+/** Full outcome of a spin (server computes; client animates base then bonus). */
 export interface SlotResult {
   spin_id: number;
   bet: number;
   ante: boolean;
+  buy: boolean;
   stake: number;
-  steps: SlotStep[];
-  base_win: number;
-  mult_sum: number;
+  base: SlotBase;
+  bonus: SlotBonus;
   payout: number;
-  tumbles: number;
   balance: number;
 }
 

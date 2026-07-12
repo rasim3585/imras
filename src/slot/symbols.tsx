@@ -2,7 +2,9 @@
 // rounded tile + a simple football motif — our own identity, not a reskin.
 // Cell value: 1..8 = symbol, negative = multiplier orb of that value, 0 = empty.
 
-interface SymDef { bg: string; ink: string; body: JSX.Element; }
+import type { ReactNode } from 'react';
+
+interface SymDef { bg: string; ink: string; body: ReactNode; }
 
 const T = '#0c130f';   // dark ink outline
 
@@ -43,6 +45,23 @@ const SYMBOLS: SymDef[] = [
     <path d="M44 50h8v8h6v6H38v-6h6z" fill="#ffdd5c" stroke={T} strokeWidth="2.5" strokeLinejoin="round"/></> },
 ];
 
+// Scatter (value 9): a glowing golden match-ball stamped "GOAL". 4+ anywhere on
+// the base spin opens the free-spins gate. Our own symbol — not a reskin.
+function ScatterBall() {
+  return (
+    <div className="slot-scatter">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="40" fill="#0c130f" stroke="#ffd24a" strokeWidth="4" />
+        <circle cx="50" cy="50" r="40" fill="none" stroke="#fff2b0" strokeWidth="1.5" opacity="0.5" />
+        <polygon points="50,26 66,38 60,57 40,57 34,38" fill="#ffd24a" />
+        <path d="M34 38l-8-3M66 38l8-3M40 57l-6 9M60 57l6 9M50 26v-9"
+          stroke="#ffd24a" strokeWidth="3.5" strokeLinecap="round" />
+      </svg>
+      <span className="slot-scatter-x">GOAL</span>
+    </div>
+  );
+}
+
 function OrbBall({ value }: { value: number }) {
   return (
     <div className="slot-orb">
@@ -58,6 +77,7 @@ function OrbBall({ value }: { value: number }) {
 
 export default function SlotSymbol({ v }: { v: number }) {
   if (v === 0) return <span className="slot-empty" />;
+  if (v === 9) return <ScatterBall />;
   if (v < 0) return <OrbBall value={-v} />;
   const s = SYMBOLS[v - 1] ?? SYMBOLS[0];
   return (
