@@ -56,6 +56,10 @@ export async function syncLiveScores(client: SupabaseClient, provider: FixturePr
       }
     }
     await logSync(client, { provider: provider.name, endpoint, http_status: 200, success: true });
+    // Visible heartbeat: proves the 30s loop is alive even when nothing is live
+    // (live.length === 0). Grep Railway for "[live] synced" to see the cadence;
+    // provider_sync_log (endpoint '/api/v2/events/live/') is the DB-side mirror.
+    console.log(`[live] synced ${live.length} fixture(s) at ${new Date().toISOString().slice(11, 19)} UTC`);
     return live.length;
   } catch (e) {
     await logSync(client, { provider: provider.name, endpoint, http_status: errStatus(e), success: false, error_message: errMsg(e) });

@@ -2,11 +2,12 @@ import { makeClient, makeProvider } from './_client';
 import { syncFixtures } from './syncFixtures';
 import { solveLambdas } from './solveLambdas';
 import { syncLiveScores } from './syncLiveScores';
-import { settleFixtures } from './settleFixtures';
 
 // Run ONE job once and exit -- for manual triggering (the runner schedules the
 // same jobs on timers). Usage: tsx --env-file=.env src/cron/once.ts <job>
-const USAGE = 'usage: once.ts <sync|lambda|live|settle>';
+// NOTE: settle is intentionally absent -- it runs in Postgres via pg_cron
+// (pickplay_tick). Do not resurrect a Node settle path here.
+const USAGE = 'usage: once.ts <sync|lambda|live>';
 
 async function main(): Promise<void> {
   const job = process.argv[2];
@@ -26,11 +27,6 @@ async function main(): Promise<void> {
     case 'live': {
       const n = await syncLiveScores(client, makeProvider());
       console.log(`[once:live] updated ${n} live fixture(s)`);
-      break;
-    }
-    case 'settle': {
-      const s = await settleFixtures(client);
-      console.log('[once:settle]', s);
       break;
     }
     default:

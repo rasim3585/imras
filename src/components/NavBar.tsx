@@ -1,10 +1,11 @@
 import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { Brand } from './Brand';
-import { MarketsIcon, CouponIcon, RanksIcon, SocialIcon, ProfileIcon, HomeIcon } from './icons';
+import { MarketsIcon, CouponIcon, RanksIcon, SocialIcon, ProfileIcon, HomeIcon, AviatorIcon } from './icons';
 
 const NAV = [
   { to: '/', end: true, label: 'Matches', Icon: MarketsIcon },
+  { to: '/aviator', end: false, label: 'Aviator', Icon: AviatorIcon },
   { to: '/coupons', end: false, label: 'Coupons', Icon: CouponIcon },
   { to: '/ranks', end: false, label: 'Ranks', Icon: RanksIcon },
   { to: '/social', end: false, label: 'Social', Icon: SocialIcon },

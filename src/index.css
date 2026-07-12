@@ -329,6 +329,10 @@ a:hover { color: var(--win); }
 .ll-bar-l { display: inline-flex; align-items: center; gap: 7px; }
 .ll-bar-r { display: inline-flex; align-items: center; gap: 6px; }
 .ll-bar-r .dot { width: 7px; height: 7px; border-radius: 50%; background: #e24b4a; animation: blink 1.1s ease-in-out infinite; }
+/* country header sits ABOVE the (green) league bar -- two-level bulletin grouping */
+.ll-country { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: var(--surface-2); color: var(--text); font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; border-top: 1px solid var(--card-line); }
+.ll-cgrp:first-child .ll-country { border-top: none; }
+.ll-country-n { font-size: 0.62rem; font-weight: 700; color: var(--text-mut); background: var(--surface); border-radius: 5px; padding: 1px 7px; letter-spacing: 0; }
 .ll-cols, .ll-row { display: grid; grid-template-columns: 1fr repeat(6, 46px) 32px; gap: 5px; align-items: center; }
 .ll-cols { padding: 6px 14px; background: var(--surface-2); font-size: 0.62rem; font-weight: 700; color: var(--text-mut); }
 .ll-cols > span { text-align: center; }
@@ -358,7 +362,8 @@ a:hover { color: var(--win); }
 .ll-time.soon { color: var(--amber-deep); font-weight: 700; }
 .ll-tags { display: inline-flex; gap: 4px; align-items: center; margin-right: 4px; }
 .ll-real { font-size: 0.54rem; font-weight: 800; letter-spacing: 0.3px; color: #fff; background: var(--accent); border-radius: 4px; padding: 1px 5px; white-space: nowrap; }
-.ll-sim { font-size: 0.54rem; font-weight: 700; letter-spacing: 0.2px; color: var(--muted); background: var(--surface-2); border: 1px solid var(--card-line); border-radius: 4px; padding: 1px 5px; white-space: nowrap; }
+.ll-sim { display: inline-flex; align-items: center; line-height: 0; }
+.ll-sim svg { display: block; }
 .ll-lg { font-size: 0.56rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: var(--muted); background: var(--surface-2); border-radius: 4px; padding: 1px 5px; white-space: nowrap; }
 .ll-derby { font-size: 0.56rem; font-weight: 800; letter-spacing: 0.3px; color: #fff; background: var(--loss); border-radius: 4px; padding: 1px 5px; }
 .ll-odd.ll-closed { display: flex; align-items: center; justify-content: center; font-size: 0.54rem; font-weight: 600; letter-spacing: 0.2px; color: var(--muted); background: repeating-linear-gradient(45deg, var(--surface-2) 0 4px, transparent 4px 8px); border-style: dashed; cursor: default; }
@@ -984,3 +989,132 @@ a:hover { color: var(--win); }
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }
+
+/* ============================ AVIATOR ==================================== */
+.av-screen {
+  --av-low: #e2504a; --av-mid: #37d67a; --av-high: #a66cff; --av-accent: #37d67a;
+  display: flex; flex-direction: column; gap: var(--s3);
+}
+.av-c-low { color: var(--av-low); } .av-c-mid { color: var(--av-mid); } .av-c-high { color: var(--av-high); }
+
+.av-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s2); flex-wrap: wrap; }
+.av-title { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; }
+.av-title h1 { margin: 0; }
+.av-top-right { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; }
+.av-bal-chip { background: var(--surface-2); border: 1px solid var(--card-line); border-radius: 999px; padding: 3px 10px; font-weight: 700; font-size: 0.8rem; }
+.av-fair { display: inline-flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: var(--text-mut); background: var(--surface-2); border: 1px solid var(--card-line); border-radius: 6px; padding: 3px 7px; cursor: help; }
+.av-fair-hash { color: var(--av-mid); }
+
+.av-phase { display: inline-flex; align-items: center; gap: 6px; font-size: 0.7rem; font-weight: 700; border-radius: 999px; padding: 3px 10px; }
+.av-phase-bet { color: #0a1a11; background: var(--av-mid); }
+.av-phase-fly { color: #fff; background: color-mix(in srgb, var(--av-mid) 30%, transparent); border: 1px solid var(--av-mid); }
+.av-phase-fly .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--av-mid); }
+.av-phase-crash { color: #fff; background: color-mix(in srgb, var(--av-low) 25%, transparent); border: 1px solid var(--av-low); }
+
+.av-history { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0; }
+.av-hchip { flex: none; font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--card-line); }
+
+.av-main { display: grid; grid-template-columns: 1fr 260px; gap: var(--s3); align-items: stretch; }
+@media (max-width: 720px) { .av-main { grid-template-columns: 1fr; } }
+
+.av-stage { position: relative; border: 1px solid var(--card-line); border-radius: var(--radius); overflow: hidden; background: #0a1a11; box-shadow: var(--shadow); min-height: 240px; }
+.av-svg { display: block; width: 100%; height: 100%; }
+.av-mult-wrap { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; text-shadow: 0 2px 14px rgba(0,0,0,0.6); }
+.av-mult { font-size: clamp(2.4rem, 9vw, 4rem); font-weight: 900; letter-spacing: -1px; line-height: 1; font-variant-numeric: tabular-nums; }
+.av-mult-idle { color: rgba(255,255,255,0.55); }
+.av-mult-fly { color: #fff; }
+.av-x { font-size: 0.5em; font-weight: 800; opacity: 0.8; margin-left: 2px; }
+.av-flew { margin-top: 6px; font-size: 0.9rem; font-weight: 800; color: var(--av-low); letter-spacing: 0.5px; }
+.av-idle-note { margin-top: 6px; font-size: 0.72rem; font-weight: 700; color: rgba(255,255,255,0.6); }
+
+.av-ball { transition: transform 0.6s cubic-bezier(.4,0,.9,.3), opacity 0.6s; }
+.av-ball-gone { transform: translate(140px, -130px) scale(0.35); opacity: 0; }
+.av-trail { filter: drop-shadow(0 0 5px color-mix(in srgb, var(--av-mid) 60%, transparent)); }
+.av-trail-crashed { stroke: var(--av-low); filter: none; opacity: 0.5; }
+.av-kick { animation: avKick 0.4s ease-out forwards; }
+@keyframes avKick { from { transform: scale(0.3); opacity: 0.6; } to { transform: scale(2.4); opacity: 0; } }
+
+.av-players { border: 1px solid var(--card-line); border-radius: var(--radius); background: var(--surface); overflow: hidden; display: flex; flex-direction: column; }
+.av-players-head { display: flex; justify-content: space-between; padding: 8px 12px; background: var(--surface-2); font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-mut); }
+.av-players-empty { padding: 18px 12px; text-align: center; color: var(--text-mut); font-size: 0.78rem; }
+.av-players-list { overflow-y: auto; max-height: 260px; }
+.av-prow { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; padding: 6px 12px; border-top: 1px solid var(--line); font-size: 0.78rem; }
+.av-prow.is-me { background: color-mix(in srgb, var(--av-mid) 8%, transparent); }
+.av-pname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.av-pstake { color: var(--text-mut); font-variant-numeric: tabular-nums; }
+.av-pmult { font-variant-numeric: tabular-nums; font-weight: 700; }
+.av-prow.st-won .av-pmult { color: var(--av-mid); }
+.av-pmult-live { color: var(--text-mut); font-weight: 500; }
+.av-pmult-lost { color: var(--text-mut); opacity: 0.5; }
+.av-prow.st-lost { opacity: 0.55; }
+
+.av-bets { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
+@media (max-width: 560px) { .av-bets { grid-template-columns: 1fr; } }
+.av-panel { border: 1px solid var(--card-line); border-radius: var(--radius); background: var(--surface); padding: var(--s3); display: flex; flex-direction: column; gap: 8px; }
+.av-panel-won { border-color: color-mix(in srgb, var(--av-mid) 50%, var(--card-line)); }
+.av-panel-lost { border-color: color-mix(in srgb, var(--av-low) 40%, var(--card-line)); }
+.av-panel-head { display: flex; justify-content: space-between; align-items: center; }
+.av-slot { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-mut); }
+.av-bal { font-size: 0.72rem; color: var(--text-mut); }
+.av-stake-row { display: grid; grid-template-columns: 40px 1fr 40px; gap: 6px; }
+.av-stake-row.is-locked { opacity: 0.6; }
+.av-step { border: 1px solid var(--card-line); background: var(--surface-2); border-radius: 8px; font-size: 1.1rem; font-weight: 700; color: var(--text); cursor: pointer; }
+.av-step:disabled { cursor: default; opacity: 0.5; }
+.av-stake { text-align: center; font-size: 1.1rem; font-weight: 800; border: 1px solid var(--card-line); border-radius: 8px; background: var(--surface-2); color: var(--text); padding: 6px; font-variant-numeric: tabular-nums; }
+.av-quick { display: flex; gap: 5px; flex-wrap: wrap; }
+.av-chip { flex: 1; min-width: 40px; font-size: 0.72rem; font-weight: 700; border: 1px solid var(--card-line); background: var(--surface-2); color: var(--text-mut); border-radius: 6px; padding: 4px 0; cursor: pointer; }
+.av-chip:hover { color: var(--text); border-color: var(--av-mid); }
+.av-auto { display: flex; align-items: center; gap: 6px; font-size: 0.76rem; color: var(--text-mut); }
+.av-auto.is-locked { opacity: 0.6; }
+.av-auto-val { width: 56px; text-align: center; border: 1px solid var(--card-line); border-radius: 6px; background: var(--surface-2); color: var(--text); padding: 3px; font-variant-numeric: tabular-nums; }
+.av-btn { border: none; border-radius: 10px; padding: 12px; font-size: 0.95rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.av-btn:disabled { cursor: default; opacity: 0.55; }
+.av-btn-place { background: var(--av-mid); color: #06140c; }
+.av-btn-cash { background: #ffb020; color: #241500; animation: avCashPulse 1s ease-in-out infinite; }
+@keyframes avCashPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,176,32,0.5); } 50% { box-shadow: 0 0 0 6px rgba(255,176,32,0); } }
+.av-btn-login { background: var(--surface-2); color: var(--text); border: 1px solid var(--card-line); }
+.av-result { text-align: center; padding: 11px; border-radius: 10px; font-weight: 800; font-size: 0.9rem; }
+.av-won { background: color-mix(in srgb, var(--av-mid) 18%, transparent); color: var(--av-mid); }
+.av-lost { background: color-mix(in srgb, var(--av-low) 15%, transparent); color: var(--av-low); }
+.av-placed { background: var(--surface-2); color: var(--text-mut); }
+.av-err { font-size: 0.72rem; color: var(--av-low); text-align: center; }
+
+/* dual-bet clarity: per-slot accent colour + status pill */
+.av-panel-s1 { --slot: var(--av-mid); }
+.av-panel-s2 { --slot: #3aa0ff; }
+.av-panel { border-top: 3px solid var(--slot, var(--card-line)); }
+.av-slot { display: inline-flex; align-items: center; }
+.av-slot-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--slot, var(--text-mut)); margin-right: 6px; }
+.av-status { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; padding: 2px 8px; border-radius: 999px; }
+.av-status-idle { color: var(--text-mut); background: var(--surface-2); }
+.av-status-ready { color: #06140c; background: var(--av-mid); }
+.av-status-live { color: #ffb020; background: color-mix(in srgb, #ffb020 16%, transparent); border: 1px solid color-mix(in srgb, #ffb020 40%, transparent); }
+.av-status-won { color: var(--av-mid); background: color-mix(in srgb, var(--av-mid) 18%, transparent); }
+.av-status-lost { color: var(--av-low); background: color-mix(in srgb, var(--av-low) 15%, transparent); }
+
+/* big betting countdown */
+.av-count-big { font-size: clamp(3rem, 15vw, 6rem); font-weight: 900; color: #fff; line-height: 1; font-variant-numeric: tabular-nums; animation: avPop 0.42s ease-out; }
+.av-count-go { font-size: clamp(2rem, 11vw, 3.6rem); font-weight: 900; letter-spacing: 0.5px; color: var(--av-mid); animation: avPop 0.3s ease-out; }
+@keyframes avPop { from { transform: scale(1.5); opacity: 0.3; } to { transform: scale(1); opacity: 1; } }
+
+/* footballer runs up during betting; arrives as the window closes (kickoff) */
+.av-fig { animation-name: avApproach; animation-timing-function: cubic-bezier(.5,0,.85,.5); animation-fill-mode: forwards; }
+@keyframes avApproach {
+  0%   { transform: translate(-36px, 214px); }
+  80%  { transform: translate(9px, 214px); }
+  90%  { transform: translate(14px, 214px); }
+  100% { transform: translate(13px, 214px); }
+}
+
+/* air / contrail wake behind the flying ball */
+.av-plume { animation: avPlume 1.1s ease-in-out infinite; }
+@keyframes avPlume { 0%,100% { opacity: 0.12; } 50% { opacity: 0.4; } }
+.av-speed { animation: avSpeed 0.45s linear infinite; }
+@keyframes avSpeed { 0%,100% { opacity: 0.2; } 50% { opacity: 0.85; } }
+/* upgraded ball: spin while airborne, flickering flame wake, trailing sparks */
+.av-ball-spin { animation: avSpin 0.6s linear infinite; }
+@keyframes avSpin { to { transform: rotate(360deg); } }
+.av-flame { animation: avFlameFlick 0.5s ease-in-out infinite; }
+@keyframes avFlameFlick { 0%,100% { opacity: 0.95; } 50% { opacity: 0.74; } }
+.av-sparks circle { animation: avSpark 0.5s ease-in-out infinite; }
+@keyframes avSpark { 0%,100% { opacity: 0.2; } 45% { opacity: 0.9; } }

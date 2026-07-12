@@ -30,6 +30,43 @@ function Cols() {
   );
 }
 
+// Two-level bulletin grouping (Nesine/bet365 style): country > league. We do NOT
+// trust the backend's flow order -- get_bulletin returns by kickoff (sort_at), so
+// the same league appears scattered. We CONSOLIDATE every match of a league into
+// one group (find/merge) regardless of position, then sort deterministically:
+//   countries A-Z, leagues A-Z, matches within a league by kickoff.
+// Virtual matches (country null) collect under one "Simulated" bucket, pinned
+// last, sorted by kickoff.
+type LeagueGroup = { league: string; matches: BulletinMatch[] };
+type CountryGroup = { country: string; count: number; leagues: LeagueGroup[] };
+function groupMatches(list: BulletinMatch[]): { countries: CountryGroup[]; virtual: BulletinMatch[] } {
+  const countries: CountryGroup[] = [];
+  const virtual: BulletinMatch[] = [];
+  for (const m of list) {
+    // ONLY true virtual matches go to "Simulated". A real match with a missing
+    // country (backend data gap) still groups as real -- under "Other" -- never
+    // mislabelled as simulated.
+    if (m.kind === 'virtual') { virtual.push(m); continue; }
+    const cName = m.country ?? 'Other';
+    const lName = m.league ?? 'Other';
+    let cg = countries.find((c) => c.country === cName);
+    if (!cg) { cg = { country: cName, count: 0, leagues: [] }; countries.push(cg); }
+    cg.count++;
+    let lg = cg.leagues.find((l) => l.league === lName);
+    if (!lg) { lg = { league: lName, matches: [] }; cg.leagues.push(lg); }
+    lg.matches.push(m);
+  }
+  const byKickoff = (a: BulletinMatch, b: BulletinMatch) => a.starts_at.localeCompare(b.starts_at);
+  for (const cg of countries) {
+    for (const lg of cg.leagues) lg.matches.sort(byKickoff);
+    // busiest league first; alphabetical tiebreak keeps it deterministic
+    cg.leagues.sort((a, b) => b.matches.length - a.matches.length || a.league.localeCompare(b.league));
+  }
+  countries.sort((a, b) => b.count - a.count || a.country.localeCompare(b.country));
+  virtual.sort(byKickoff);
+  return { countries, virtual };
+}
+
 export default function FeedScreen() {
   const { session } = useAuth();
   const [matches, setMatches] = useState<BulletinMatch[]>([]);
@@ -71,8 +108,16 @@ export default function FeedScreen() {
   const spec = SPORTS.find((s) => s.key === sport);
   const set = sport === 'live' ? liveAll : sport === 'all' ? notFinished
     : sport === 'football' ? realOnes : sport === 'efootball' ? virtualOnes : [];
-  const live = set.filter((m) => LIVE.has(m.status)).sort((a, b) => (b.minute ?? 0) - (a.minute ?? 0));
-  const upcoming = set.filter((m) => !LIVE.has(m.status)).sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+  // Live stays a single flat section (few matches, cross-league). Upcoming keeps
+  // the backend's country>league>sort_at order untouched so the grouping headers
+  // fall in the right places -- no client re-sort.
+  // Live: REAL live matches first, then virtual live matches; minute desc within each.
+  const live = set.filter((m) => LIVE.has(m.status)).sort((a, b) => {
+    const ak = a.kind === 'virtual' ? 1 : 0, bk = b.kind === 'virtual' ? 1 : 0;
+    return ak - bk || (b.minute ?? 0) - (a.minute ?? 0);
+  });
+  const upcoming = set.filter((m) => !LIVE.has(m.status));
+  const grouped = groupMatches(upcoming);
 
   const section = (title: string, right: ReactNode, list: BulletinMatch[]) => list.length > 0 && (
     <>
@@ -81,9 +126,6 @@ export default function FeedScreen() {
       {list.map((m) => <MatchRow key={m.id} m={m} />)}
     </>
   );
-
-  const upTitle = sport === 'efootball' ? 'E-Football · 2×4 min' : sport === 'football' ? 'Football' : 'Upcoming';
-  const upRight = sport === 'football' ? 'BSD' : sport === 'efootball' ? 'sim' : `${upcoming.length}`;
 
   return (
     <div className="app-shell app-shell-wide">
@@ -123,7 +165,30 @@ export default function FeedScreen() {
       ) : (
         <div className="ll">
           {section('Live', <span className="ll-bar-r"><span className="dot" />{live.length} live</span>, live)}
-          {sport !== 'live' && section(upTitle, <span className="ll-bar-r">{upRight}</span>, upcoming)}
+          {sport !== 'live' && (
+            <>
+              {grouped.countries.map((cg) => (
+                <div key={cg.country} className="ll-cgrp">
+                  <div className="ll-country"><span>{cg.country}</span><span className="ll-country-n">{cg.count}</span></div>
+                  {cg.leagues.map((lg) => (
+                    <div key={lg.league}>
+                      <div className="ll-bar"><span className="ll-bar-l">{lg.league}</span><span className="ll-bar-r">{lg.matches.length}</span></div>
+                      <Cols />
+                      {lg.matches.map((m) => <MatchRow key={m.id} m={m} hideLeague />)}
+                    </div>
+                  ))}
+                </div>
+              ))}
+              {grouped.virtual.length > 0 && (
+                <div className="ll-cgrp">
+                  <div className="ll-country"><span>Simulated</span><span className="ll-country-n">{grouped.virtual.length}</span></div>
+                  <div className="ll-bar"><span className="ll-bar-l"><EFootballIcon size={19} /> E-Football · 2×4 min</span><span className="ll-bar-r">sim</span></div>
+                  <Cols />
+                  {grouped.virtual.map((m) => <MatchRow key={m.id} m={m} hideLeague />)}
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
     </div>

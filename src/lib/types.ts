@@ -106,7 +106,8 @@ export interface BulletinMatch {
   away_score: number | null;
   minute: number | null;
   period: string | null;
-  league: string | null;      // real only
+  league: string | null;      // real only (bsd_leagues.name)
+  country: string | null;     // real only (bsd_leagues.country)
   is_derby: boolean;
   markets: BulletinMarket[];
 }

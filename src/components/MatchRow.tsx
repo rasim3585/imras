@@ -5,13 +5,16 @@ import { formatKickoff, formatOdds } from '../lib/format';
 import { teamColor, teamInitial } from '../lib/teams';
 import { playerName } from '../lib/playerNames';
 import { useCart } from '../coupon/CartContext';
+import { EFootballIcon } from './icons';
 
 const LIVE = new Set(['inprogress', 'live', 'penalties']);
 
 // One compact bulletin line for a real OR virtual match. Real: real teams, no
 // fake players, league/derby chips. Virtual: fake players, "SIM". Closed markets
 // are simply absent from `markets` (server-decided) -> the cell shows "-".
-export default function MatchRow({ m }: { m: BulletinMatch }) {
+// `hideLeague` drops the inline league chip when a grouping header already names
+// the league (the bulletin's country>league sections) -- avoids the duplicate.
+export default function MatchRow({ m, hideLeague }: { m: BulletinMatch; hideLeague?: boolean }) {
   const { isPicked, select } = useCart();
   const [open, setOpen] = useState(false);
   const isLive = LIVE.has(m.status);
@@ -74,8 +77,10 @@ export default function MatchRow({ m }: { m: BulletinMatch }) {
       </span>
       <span className="ll-teamline">
         <span className="ll-tags">
-          {isVirtual ? <span className="ll-sim">SIM · 2×4min</span> : <span className="ll-real">REAL</span>}
-          {m.league && <span className="ll-lg">{m.league}</span>}
+          {isVirtual
+            ? <span className="ll-sim" title="Simulated match · E-Football 2×4 min"><EFootballIcon size={20} /></span>
+            : <span className="ll-real">REAL</span>}
+          {!hideLeague && m.league && <span className="ll-lg">{m.league}</span>}
           {m.is_derby && <span className="ll-derby">DERBY</span>}
         </span>
         <span className="ll-badge" style={{ background: teamColor(m.home_team) }}>{teamInitial(m.home_team)}</span>

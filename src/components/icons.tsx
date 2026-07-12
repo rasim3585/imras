@@ -121,3 +121,14 @@ export function ProfileIcon() {
     </svg>
   );
 }
+
+// Aviator: a ball riding a rising trail (crash game). Brand-free.
+export function AviatorIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+         strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 20 C8 19 13 14 18 6" strokeDasharray="2.5 2.5" />
+      <circle cx="18.5" cy="5.5" r="2.6" />
+    </svg>
+  );
+}
