@@ -74,13 +74,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [saved]);
 
   const saveDraft = useCallback(() => {
-    setSelections((sel) => {
-      if (sel.length > 0) {
-        setSaved((prev) => [{ id: newDraftId(), created_at: Date.now(), selections: sel }, ...prev].slice(0, 30));
-      }
-      return sel;   // keep the cart; user may still play or clear it
-    });
-  }, []);
+    if (selections.length === 0) return;
+    // Compute the draft ONCE, then a pure updater — no side effects inside a
+    // reducer (that double-fires under StrictMode → duplicate saves).
+    const draft: SavedDraft = { id: newDraftId(), created_at: Date.now(), selections };
+    setSaved((prev) => [draft, ...prev].slice(0, 30));
+  }, [selections]);
 
   const loadDraft = useCallback((id: string) => {
     setSaved((prev) => {
