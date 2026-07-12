@@ -167,6 +167,17 @@ export function useAviator(): AviatorState {
           pendingCrash.current[String(pl.round_id)] = pl.crash_point;
         }
       })
+      // LOW-LATENCY takeoff: fired by the backend AT betting->flying, ~780ms ahead
+      // of the postgres_changes 'flying' row. Carries flying_at so the flight anchor
+      // is set precisely -> the curve starts right on "Kalkış!", no startup lag.
+      .on('broadcast', { event: 'takeoff' }, (msg) => {
+        const pl = (msg as { payload?: { round_id?: string | number; flying_at?: string } }).payload;
+        if (!pl || pl.round_id == null || !pl.flying_at) return;
+        const cur = prevRound.current;
+        if (cur && String(pl.round_id) === String(cur.id) && cur.status === 'betting') {
+          applyRound({ ...cur, status: 'flying', flying_at: pl.flying_at });
+        }
+      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'aviator_bets' }, (p) => {
         const b = (p.new ?? p.old) as AviatorBet | undefined;
         if (!b) return;
