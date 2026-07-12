@@ -550,6 +550,10 @@ a:hover { color: var(--win); }
 .detail-markets .outcome-name { font-size: 0.68rem; }
 .detail-markets .outcome-odds { font-size: 0.95rem; }
 .detail-markets .outcome-prob { display: none; }
+/* Faz 1: grouped market tabs + category headers on the match detail */
+.app-shell-flush .bet-tabs { margin-top: var(--s3); margin-bottom: 0; }
+.mkt-cat { font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-2); padding: 8px 2px 0; }
+.mkt-cat:not(:first-child) { margin-top: var(--s2); }
 
 /* --- Block 5: TV / pitch (live watch) ---------------------------------- */
 /* colours hardcoded (not tokens) so the pitch stays green in any theme */

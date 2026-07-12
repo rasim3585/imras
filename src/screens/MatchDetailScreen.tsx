@@ -6,12 +6,27 @@ import { formatKickoff } from '../lib/format';
 import MarketSection from '../components/MarketSection';
 import type { LiveState, Match } from '../lib/types';
 
+// First-half markets are bettable pre-match ONLY (mirror of MarketSection's gate).
+const HT_MARKETS = new Set(['ht_result', 'ht_over_under_0_5']);
+
+// Nesine-style market grouping. Each market_type lands in one tab; anything
+// unmapped falls back to "Result" so a new market never disappears silently.
+const GROUPS = [
+  { key: 'result', label: 'Result', types: ['match_result', 'double_chance', 'ht_result'] },
+  { key: 'ou', label: 'Over/Under', types: ['over_under_1_5', 'over_under_2_5', 'over_under_3_5', 'ht_over_under_0_5'] },
+  { key: 'goals', label: 'Goals', types: ['both_teams_score', 'odd_even'] },
+] as const;
+type GroupKey = (typeof GROUPS)[number]['key'];
+const groupOf = (mt: string): GroupKey =>
+  GROUPS.find((g) => (g.types as readonly string[]).includes(mt))?.key ?? 'result';
+
 export default function MatchDetailScreen() {
   const { matchId } = useParams<{ matchId: string }>();
   const navigate = useNavigate();
   const [match, setMatch] = useState<Match | null>(null);
   const [live, setLive] = useState<LiveState | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<'all' | GroupKey>('all');
 
   useEffect(() => {
     if (!matchId) return;
@@ -33,7 +48,15 @@ export default function MatchDetailScreen() {
 
   const isLive = live?.phase === 'live';
   const isFinished = live?.phase === 'finished';
-  const markets = [...match.markets].sort((a, b) => a.sort_order - b.sort_order);
+
+  // Markets currently offerable: hide first-half markets once the match is no
+  // longer upcoming (they'd render as empty "Closed" boxes otherwise).
+  const markets = [...match.markets]
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .filter((m) => !HT_MARKETS.has(m.market_type) || live?.phase === 'upcoming');
+
+  const groupsWith = GROUPS.filter((g) => markets.some((m) => groupOf(m.market_type) === g.key));
+  const shownGroups = tab === 'all' ? groupsWith : groupsWith.filter((g) => g.key === tab);
 
   return (
     <div className="app-shell app-shell-flush">
@@ -64,13 +87,30 @@ export default function MatchDetailScreen() {
         )}
       </div>
 
+      {groupsWith.length > 1 && (
+        <div className="bet-tabs">
+          <button className={`bet-tab ${tab === 'all' ? 'active' : ''}`} onClick={() => setTab('all')}>All</button>
+          {groupsWith.map((g) => (
+            <button key={g.key} className={`bet-tab ${tab === g.key ? 'active' : ''}`} onClick={() => setTab(g.key)}>{g.label}</button>
+          ))}
+        </div>
+      )}
+
       <div className="detail-markets">
-        {markets.map((m) => (
-          <div key={m.id} className="mkt-group">
-            <div className="mkt-title">{m.name}{isLive && !m.market_type.startsWith('ht_') ? ' · live' : ''}</div>
-            <MarketSection match={match} market={m} live={live ?? undefined} showTitle={false} />
-          </div>
-        ))}
+        {shownGroups.flatMap((g) => {
+          const list = markets.filter((m) => groupOf(m.market_type) === g.key);
+          const els = [];
+          if (tab === 'all') els.push(<div key={`cat-${g.key}`} className="mkt-cat">{g.label}</div>);
+          for (const m of list) {
+            els.push(
+              <div key={m.id} className="mkt-group">
+                <div className="mkt-title">{m.name}{isLive && !HT_MARKETS.has(m.market_type) ? ' · live' : ''}</div>
+                <MarketSection match={match} market={m} live={live ?? undefined} showTitle={false} />
+              </div>,
+            );
+          }
+          return els;
+        })}
       </div>
     </div>
   );
