@@ -38,16 +38,21 @@ function LiveLeg({ leg, live }: { leg: CouponLeg; live?: LiveState }) {
     st = legLiveStatus(leg.outcome_key, live.home_score, live.away_score, htH, htA);
     label = live.phase === 'finished' ? `${live.home_score}-${live.away_score} FT` : `${live.home_score}-${live.away_score} · ${live.minute}'`;
   }
-  return (
-    <Link className="cleg leg-link" to={`/live/${leg.match.id}`}>
+  const inner = (
+    <>
       <div className="cleg-l">
         <span className="cleg-teams">{leg.match.home_team} v {leg.match.away_team}</span>
         <span className="cleg-state tnum">{label}</span>
       </div>
       <div className="cleg-pick tnum"><span className="muted">{leg.market_name}:</span> {leg.option_label}</div>
       <span className={`cleg-mark m-${st}`}>{MARK[st]}</span>
-    </Link>
+    </>
   );
+  // Only virtual matches have a live-watch screen; real legs are non-clickable
+  // (routing them to /live would hang on "Connecting to the match…").
+  return leg.kind === 'virtual'
+    ? <Link className="cleg leg-link" to={`/live/${leg.match.id}`}>{inner}</Link>
+    : <div className="cleg">{inner}</div>;
 }
 
 export default function MyCouponsScreen() {

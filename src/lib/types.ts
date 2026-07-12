@@ -203,6 +203,7 @@ export interface CartSelection {
 /** A coupon leg, flattened from the option/market/match graph for the UI. */
 export interface CouponLeg {
   id: string;
+  kind: BulletinKind;       // 'virtual' has a watch screen; 'real' does not
   odds: number;
   status: LegStatus;
   option_label: string;

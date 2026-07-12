@@ -258,6 +258,7 @@ function flattenCoupon(row: unknown): Coupon {
       const mk = opt.markets as Record<string, unknown>;
       return {
         id: cs.id as string,
+        kind: 'virtual',
         odds: Number(cs.odds),
         status: cs.status as CouponLeg['status'],
         option_label: opt.label as string,
@@ -274,6 +275,7 @@ function flattenCoupon(row: unknown): Coupon {
     const ok = cs.outcome_key as string;
     return {
       id: cs.id as string,
+      kind: 'real',
       odds: Number(cs.odds),
       status: cs.status as CouponLeg['status'],
       option_label: OUTCOME_LABELS[ok] ?? ok,

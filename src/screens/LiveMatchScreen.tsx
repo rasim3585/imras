@@ -39,7 +39,16 @@ function revealedLines(matchId: string, st: LiveState, minute: number, atmo: Lin
 export default function LiveMatchScreen() {
   const { matchId } = useParams<{ matchId: string }>();
   const navigate = useNavigate();
-  const { state, minute } = useLiveMatch(matchId);
+  const { state, minute, error } = useLiveMatch(matchId);
+  const [gaveUp, setGaveUp] = useState(false);
+
+  // Don't spin forever: the live-watch screen only serves virtual matches. If no
+  // state loads in a few seconds (e.g. a real fixture id), show a way out.
+  useEffect(() => {
+    if (state) { setGaveUp(false); return; }
+    const t = window.setTimeout(() => setGaveUp(true), 6000);
+    return () => window.clearTimeout(t);
+  }, [state, matchId]);
 
   const [myLeg, setMyLeg] = useState<CouponLeg | null>(null);
   const [couponId, setCouponId] = useState<string | null>(null);
@@ -125,6 +134,14 @@ export default function LiveMatchScreen() {
   }, [matchId, atmo]);
 
   if (!state) {
+    if (gaveUp || error) {
+      return (
+        <div className="app-shell" style={{ paddingTop: 'var(--s6)' }}>
+          <div className="banner banner-error">{error ?? 'Live view is only available for simulated matches.'}</div>
+          <button className="btn btn-block" onClick={() => navigate(-1)}>Back</button>
+        </div>
+      );
+    }
     return <div className="settle"><div className="spinner" /><p className="settle-note">Connecting to the match…</p></div>;
   }
 
