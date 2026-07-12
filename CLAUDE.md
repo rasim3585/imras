@@ -169,7 +169,7 @@ kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40
 ---
 
 ## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0082'den** devam, sıfır dolgulu 4 hane. (Aviator görsel
-senkron 0079–0081'de bitti.) Her önemli oturum
+Yeni migration'lar **0088'den** devam, sıfır dolgulu 4 hane. (Aviator görsel
+senkron 0079–0081; kalıcı sanal lig + settle/aviator düzeltmeleri 0082–0087.) Her önemli oturum
 sonunda `DEVIR/` klasörüne kısa devir notu yaz (tarih + ne yapıldı + açık
 konular) — böylece geçmiş kalıcı birikir.
