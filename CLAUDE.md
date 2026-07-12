@@ -110,7 +110,7 @@ bypass eder → editör testi dolu, anon (frontend) boş olabilir.
 Ödeme zinciri, Poisson oran motoru (10K kupon test, kasa marjı ~%3), lig
 gruplama (bsd_leagues), 9 aktif cron. Kendi kendine dönüyor.
 
-### Aviator — backend BİTTİ, tek açık: görsel senkron
+### Aviator — BİTTİ (görsel senkron dahil, 2026-07-12)
 - **Motor (0068-0071):** provably fair crash (`crash_point` SHA-256'dan),
   `_aviator_current_multiplier = exp(0.35*t)`, k=0.35 kalibre.
 - **Davranış yakalama (0072):** `aviator_bets`'te prev_result, prev_stake,
@@ -125,43 +125,26 @@ gruplama (bsd_leagues), 9 aktif cron. Kendi kendine dönüyor.
 - **Adalet mantığı deterministik:** crash zamanı = `flying_at + ln(cp)/0.35`.
   Para, tick gecikmesinden ve worker'dan bağımsız → saf Postgres.
 
-### ⚠️ TEK AÇIK SORUN — görsel senkron
-**Semptom:** eğri gerçek crash'i aşıyor (crash 6 → eğri 8; crash 1.0 → eğri 1.3).
-**Kanıtlanan kök neden (Claude Code, matematikle):** formül/zaman-birimi hatası
-DEĞİL — öyle olsaydı t≈0'da (crash 1.0) sapma sıfır olurdu. İki nokta da ~0.8s
-SABİT freeze gecikmesiyle açıklanıyor. Eğri doğru formülle gerçek crash'te
-doğru değerdeydi; durma sinyali ~0.8s geç geldiği için uçmaya devam etti.
-- Backend KUSURSUZ (defalarca ölçüldü, `crash_point = exp(0.35*(crashed_at-flying_at))`).
-- Anchor `flying_at` mutlak zamana bağlı (min-kalibre saat farkı) → anchor
-  overshoot üretemez (skew sadeleşir, sadece undershoot mümkün).
-- Teşhis logu ölçümü YAPILDI: freeze her zaman `via broadcast` (frontend
-  kusursuz, dokunma). Kalan gecikme değişken (0-0.68s), crash ne kadar erken
-  olursa o kadar geç → kök neden: **pg_cron 1sn tick jitter'ı**, crash'i geç
-  tespit ediyor. Kullanıcı bariz fark ediyor → DÜZELTİLECEK (inandırıcılık
-  şart, veri kalitesi önkoşulu).
-- **Postgres-only ARAŞTIRILDI ve fiziksel olarak İMKANSIZ olduğu kanıtlandı**
-  (kaynaklarla): pg_cron 1sn taban (sub-second/one-off yok), pg_net zamanlama
-  yok, pgmq/pg_later poller gerektiriyor (1sn jitter), pg_sleep bağlantı
-  bloke ediyor. Her yol 1sn polling'e dayanıyor. Sınır, zorluk değil.
+### ✅ Görsel senkron — ÇÖZÜLDÜ (0079–0081 + edge function)
+**Eski semptom:** eğri gerçek crash'i aşıyordu (crash 6 → eğri 8). **Kök neden:**
+pg_cron 1sn tick jitter'ı crash'i ~0.8s geç tespit ediyordu (formül/backend
+kusursuzdu). **Postgres-only fiziksel olarak imkansızdı** (pg_cron 1sn taban,
+sub-second yok) → ephemeral Supabase Edge Function seçildi.
 
-**SEÇİLEN ÇÖZÜM — ephemeral Supabase Edge Function** (Railway DEĞİL, Supabase
-içi; always-on DEĞİL; kritik iş bağlı DEĞİL):
-`supabase/functions/aviator-crash-timer/index.ts` yazıldı. Mimari:
-1. `aviator_fire_crash(round_id)` idempotent RPC (Postgres): flying'se crash
-   yazar + secret kopyalar + `realtime.send('crash','aviator')`; crashed ise
-   no-op. Mevcut tick'in settle/kaybeden-işaretleme mantığı buraya taşınacak —
-   **o mantığı görmeden yazma.**
-2. pg_cron tick bu RPC'yi due turlar için çağırır → FALLBACK (~1sn geç ama
-   para/history garantili).
-3. Betting→flying geçişinde pg_net edge function'ı tetikler, `crash_at =
-   flying_at + ln(cp)/0.35`'e kadar uyur, tam o an aynı RPC'yi çağırır. Hangisi
-   önce → o kazanır, diğeri no-op. Edge ölse → tick fallback, para güvende,
-   sadece o tur görseli tick'e düşer.
-Adımlar: (1) RPC yaz (2) tick'i RPC fallback'ine çevir (3) flying'de pg_net
-tetikle (4) `supabase functions deploy aviator-crash-timer --no-verify-jwt`
-(5) test: her turda freezeDelay≈0, ratio≈1.00 olmalı. **DURUM: edge function
-yazıldı, SQL adımları (1-3) + deploy + test BEKLİYOR.** Doğrulanınca dev
-logları temizle.
+**Uygulanan mimari (hepsi canlıda, ölçümle doğrulandı):**
+- **0079** `aviator_fire_crash(round_id)`: crash'in TEK idempotent kaynağı
+  (`for update` kilit, `status<>'flying'` ise no-op).
+- **Edge** `aviator-crash-timer` (`verify_jwt=false`): flying'de pg_net ile
+  tetiklenir, `crash_at = flying_at + ln(cp)/0.35`'e kadar uyur, tam o an RPC'yi
+  çağırır. **0080** tick'i bu RPC'ye delege etti + pg_net tetiğini ekledi.
+- Sonuç: freeze gecikmesi **46–104ms** (eskiden 0–1000ms), `ratio≈1.00`. Edge
+  her turda tick'i geçiyor; tick saf fallback (edge ölse para/history garantili).
+- **0081** patlama sonrası 3sn "Auta gitti!" duraklaması (eski ölü kod düzeltmesi):
+  tick artık en son turu alır, crashed ise `crashed_at + 3sn` bekler.
+
+**Bilinen kabul edilen sınır:** cp≈1.0 instacrash'te uçuş 0.1–0.3s; edge
+cold-start o kadar hızlı uyanamaz → o tur ~1sn tick fallback'e düşer (Rasim
+"direkt patlıyor, sorun yok" onayladı). Detay: `DEVIR/2026-07-12_*`.
 
 **Railway'e ASLA dönme.** Eski worker (runner.ts, Railway) kritik işi (para)
 kırılgan-sürekli-ölen sürece bağladığı için gömüldü. Edge function o üç günahı
@@ -186,6 +169,7 @@ kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40
 ---
 
 ## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0079'dan** devam, sıfır dolgulu 4 hane. Her önemli oturum
+Yeni migration'lar **0082'den** devam, sıfır dolgulu 4 hane. (Aviator görsel
+senkron 0079–0081'de bitti.) Her önemli oturum
 sonunda `DEVIR/` klasörüne kısa devir notu yaz (tarih + ne yapıldı + açık
 konular) — böylece geçmiş kalıcı birikir.

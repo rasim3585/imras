@@ -25,16 +25,10 @@ export function useLiveMultiplier(
   const [m, setM] = useState(1);
   useEffect(() => {
     if (phase === 'flying' && anchor) {
-      let raf = 0, logged5 = false;
+      let raf = 0;
       const tick = () => {
         const t = (Date.now() - anchor.flyingAtMs - anchor.clockOffset) / 1000;
-        const val = Math.min(cap, Math.exp(GROWTH * Math.max(0, t)));
-        // dev-only sync check: at +5.00s this should read ~5.75 (backend reference)
-        if (import.meta.env.DEV && !logged5 && t >= 5) {
-          logged5 = true;
-          console.log(`[aviator] +5.00s -> ${val.toFixed(3)}x (expect ~5.75)`);
-        }
-        setM(val);
+        setM(Math.min(cap, Math.exp(GROWTH * Math.max(0, t))));
         raf = requestAnimationFrame(tick);
       };
       raf = requestAnimationFrame(tick);
@@ -78,7 +72,6 @@ export function useAviator(): AviatorState {
   // flying event no longer drags the curve. Only ever decreases toward the truth.
   const clockOffset = useRef(Number.POSITIVE_INFINITY);
   const pendingCrash = useRef<Record<string, number>>({});   // crash that raced ahead of its flying event
-  const lastAnchor = useRef<FlightAnchor | null>(null);      // mirror of the current flight anchor (for freeze diagnostics)
   const refreshRef = useRef(refreshProfile);
   refreshRef.current = refreshProfile;
   const uidRef = useRef<string | undefined>(session?.user?.id);
@@ -92,7 +85,7 @@ export function useAviator(): AviatorState {
     }, 250);
   }, []);
 
-  const applyRound = useCallback((raw: AviatorRound, source: 'row' | 'broadcast' | 'fetch' = 'row') => {
+  const applyRound = useCallback((raw: AviatorRound) => {
     // DEFENCE IN DEPTH: strip crash_point from client state until crashed.
     const r: AviatorRound = raw.status === 'crashed' ? raw : { ...raw, crash_point: null };
     const prev = prevRound.current;
@@ -113,9 +106,7 @@ export function useAviator(): AviatorState {
     if (r.status === 'flying' && r.flying_at && anchoredRound.current !== String(r.id)) {
       anchoredRound.current = String(r.id);
       const offset = Number.isFinite(clockOffset.current) ? clockOffset.current : 0;
-      const a: FlightAnchor = { flyingAtMs: Date.parse(r.flying_at), clockOffset: offset };
-      lastAnchor.current = a;
-      setFlightAnchor(a);
+      setFlightAnchor({ flyingAtMs: Date.parse(r.flying_at), clockOffset: offset });
     } else if (r.status !== 'flying') {
       setFlightAnchor(null);   // betting resets; crashed reads the frozen value
     }
@@ -126,7 +117,7 @@ export function useAviator(): AviatorState {
       const pc = pendingCrash.current[String(r.id)];
       if (pc != null) {
         delete pendingCrash.current[String(r.id)];
-        applyRound({ ...r, status: 'crashed', crash_point: pc }, 'broadcast');
+        applyRound({ ...r, status: 'crashed', crash_point: pc });
         return;
       }
     }
@@ -137,16 +128,6 @@ export function useAviator(): AviatorState {
       setHistory((h) => [r, ...h.filter((x) => String(x.id) !== String(r.id))].slice(0, 12));
       refreshRef.current();
       reloadPlayers(r.id);
-      // DIAGNOSTIC (dev): what the curve showed the instant it froze vs the real
-      // crash point -> proves whether overshoot is freeze-delay (ratio>1, delay>0)
-      // and which signal froze it (broadcast fast, row slow).
-      if (import.meta.env.DEV && lastAnchor.current && typeof r.crash_point === 'number') {
-        const a = lastAnchor.current;
-        const et = (Date.now() - a.flyingAtMs - a.clockOffset) / 1000;
-        const curve = Math.exp(GROWTH * Math.max(0, et));
-        const trueEt = Math.log(r.crash_point) / GROWTH;
-        console.log(`[aviator] FREEZE via ${source} | cp=${r.crash_point} curve=${curve.toFixed(2)} ratio=${(curve / r.crash_point).toFixed(3)} | elapsed=${et.toFixed(2)}s trueCrash=${trueEt.toFixed(2)}s freezeDelay=${(et - trueEt).toFixed(2)}s | clockOffset=${a.clockOffset}ms`);
-      }
     }
   }, [reloadPlayers]);
 
@@ -158,7 +139,7 @@ export function useAviator(): AviatorState {
         if (!alive) return;
         if (c) setConfig(c);
         setHistory(h);
-        if (r) applyRound(r, 'fetch');
+        if (r) applyRound(r);
       } catch { /* realtime will catch us up */ }
     })();
     return () => { alive = false; };
@@ -168,7 +149,7 @@ export function useAviator(): AviatorState {
     const ch = supabase.channel('aviator')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'aviator_rounds' }, (p) => {
         const r = p.new as AviatorRound | undefined;
-        if (r && r.id != null) applyRound(r, 'row');
+        if (r && r.id != null) applyRound(r);
       })
       // LOW-LATENCY crash: a broadcast fired by the backend AT the crash instant
       // freezes the curve immediately, ahead of the ~780ms-late postgres_changes
@@ -178,10 +159,9 @@ export function useAviator(): AviatorState {
       .on('broadcast', { event: 'crash' }, (msg) => {
         const pl = (msg as { payload?: { round_id?: string | number; crash_point?: number } }).payload;
         if (!pl || typeof pl.crash_point !== 'number' || pl.round_id == null) return;
-        if (import.meta.env.DEV) console.log(`[aviator] crash BROADCAST recv @${Date.now()} round=${pl.round_id} cp=${pl.crash_point}`);
         const cur = prevRound.current;
         if (cur && String(pl.round_id) === String(cur.id)) {
-          if (cur.status !== 'crashed') applyRound({ ...cur, status: 'crashed', crash_point: pl.crash_point }, 'broadcast');
+          if (cur.status !== 'crashed') applyRound({ ...cur, status: 'crashed', crash_point: pl.crash_point });
         } else {
           // arrived before we processed this round's flying event -> buffer, applied on flying
           pendingCrash.current[String(pl.round_id)] = pl.crash_point;
