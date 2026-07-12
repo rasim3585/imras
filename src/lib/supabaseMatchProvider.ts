@@ -16,7 +16,7 @@ const MATCH_COLS =
 // real_fixture_id + market_type + outcome_key on the selection -> real_fixtures).
 // Both embeds are LEFT joins (nullable FKs), so real legs are NOT dropped.
 const COUPON_SELECT =
-  `*, coupon_selections(id, odds, status, market_type, outcome_key, real_fixture_id, ` +
+  `*, coupon_selections(id, odds, status, leg_status, market_type, outcome_key, real_fixture_id, ` +
   `market_options(id, label, outcome_key, is_winner, ` +
   `markets(name, market_type, matches(id, home_team, away_team, result, home_score, away_score, timeline))), ` +
   `real_fixtures(id, home_team, away_team, home_score, away_score))`;
@@ -260,7 +260,7 @@ function flattenCoupon(row: unknown): Coupon {
         id: cs.id as string,
         kind: 'virtual',
         odds: Number(cs.odds),
-        status: cs.status as CouponLeg['status'],
+        status: (cs.leg_status ?? cs.status) as CouponLeg['status'],
         option_label: opt.label as string,
         outcome_key: opt.outcome_key as string,
         is_winner: (opt.is_winner as boolean | null) ?? null,
@@ -277,7 +277,7 @@ function flattenCoupon(row: unknown): Coupon {
       id: cs.id as string,
       kind: 'real',
       odds: Number(cs.odds),
-      status: cs.status as CouponLeg['status'],
+      status: (cs.leg_status ?? cs.status) as CouponLeg['status'],
       option_label: OUTCOME_LABELS[ok] ?? ok,
       outcome_key: ok,
       is_winner: null,
