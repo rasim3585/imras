@@ -249,11 +249,12 @@ a:hover { color: var(--win); }
 
 /* --- Brand -------------------------------------------------------------- */
 
-.brand { display: inline-flex; align-items: center; gap: var(--s2); }
-.brand-logo { display: block; }
-.wordmark { display: inline-flex; align-items: baseline; font-weight: 900; font-style: italic; letter-spacing: -0.02em; line-height: 1; }
-.wm-pick { color: #12a150; -webkit-text-stroke: 1.8px #111311; paint-order: stroke fill; }
-.wm-play { color: #fff; margin-left: 0.1em; -webkit-text-stroke: 1.8px #111311; paint-order: stroke fill; text-shadow: 0 1px 0 rgba(0,0,0,0.25); }
+.brand { display: inline-block; white-space: nowrap; line-height: 1; }
+.brand-ball { height: 0.96em; width: 0.96em; vertical-align: -0.192em; margin-right: 0.05em; }
+.wordmark { font-family: 'Montserrat', system-ui, sans-serif; font-weight: 800; letter-spacing: -0.01em; line-height: 1; }
+.wm-pick { color: #12a150; }
+.wm-play { color: #16261c; }
+:root[data-theme="dark"] .wm-play { color: #eef2ee; }
 
 /* --- Card --------------------------------------------------------------- */
 
