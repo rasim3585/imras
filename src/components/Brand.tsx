@@ -1,23 +1,22 @@
-// Brand: a white football (single black pentagon + thin outline) sitting on two
-// thin green bars -- the ball is the bowl of the "p", the bars are the stems
-// (pp = pickplay). Wordmark: "pick" neutral (theme text), "play" grass green.
+// Brand: a white football (black outline) with a single RED centre pentagon.
+// Wordmark: "pick" red + "play" white (black-outlined), tightly interlocked.
 
-const BAR = '#0f6e56';   // deep grass green (reads well on the light theme)
-const INK = '#12130f';
+const INK = '#111311';
+const RED = '#e01e26';
+// regular pentagon, point-up, centred (32,33) r≈15.5
+const PENTA = '32,17.5 46.7,28.2 41.1,45.5 22.9,45.5 17.3,28.2';
 
-function Logo({ size = 26 }: { size?: number }) {
+function Logo({ size = 30 }: { size?: number }) {
   return (
-    <svg className="brand-logo" width={size} height={size * 92 / 80} viewBox="0 0 80 92" aria-label="pickplay" role="img">
-      <line x1="26" y1="30" x2="26" y2="84" stroke={BAR} strokeWidth="6.5" strokeLinecap="round" />
-      <line x1="37" y1="30" x2="37" y2="84" stroke={BAR} strokeWidth="6.5" strokeLinecap="round" />
-      <circle cx="47" cy="27" r="23" fill="#fff" stroke={INK} strokeWidth="1.5" />
-      <polygon points="47,15 57,22.3 53.2,34 40.8,34 37,22.3" fill={INK} />
+    <svg className="brand-logo" width={size} height={size} viewBox="0 0 64 64" aria-label="pickplay" role="img">
+      <circle cx="32" cy="32" r="29" fill="#fff" stroke={INK} strokeWidth="3" />
+      <polygon points={PENTA} fill={RED} stroke={INK} strokeWidth="1.3" strokeLinejoin="round" />
     </svg>
   );
 }
 
-export function LogoMark({ size = 26 }: { size?: number }) { return <Logo size={size} />; }
-export function LogoMarkLarge({ size = 72 }: { size?: number }) { return <Logo size={size} />; }
+export function LogoMark({ size = 30 }: { size?: number }) { return <Logo size={size} />; }
+export function LogoMarkLarge({ size = 76 }: { size?: number }) { return <Logo size={size} />; }
 
 export function Wordmark({ size = 20 }: { size?: number }) {
   return (
@@ -31,7 +30,7 @@ export function Wordmark({ size = 20 }: { size?: number }) {
 export function Brand({ size = 20 }: { size?: number }) {
   return (
     <span className="brand">
-      <LogoMark size={26} />
+      <LogoMark size={30} />
       <Wordmark size={size} />
     </span>
   );
