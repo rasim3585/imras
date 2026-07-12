@@ -251,10 +251,9 @@ a:hover { color: var(--win); }
 
 .brand { display: inline-flex; align-items: center; gap: var(--s2); }
 .brand-logo { display: block; }
-.wordmark { display: inline-flex; align-items: baseline; font-weight: 900; font-style: italic; letter-spacing: -0.035em; line-height: 1; }
-.wm-pick { color: #12a150; }
-.wm-play { color: #fff; margin-left: 0.01em; -webkit-text-stroke: 1.1px #111311; paint-order: stroke fill; text-shadow: 0 1px 0 rgba(0,0,0,0.25); }
-:root[data-theme="dark"] .wm-play { -webkit-text-stroke-width: 0.9px; }
+.wordmark { display: inline-flex; align-items: baseline; font-weight: 900; font-style: italic; letter-spacing: -0.02em; line-height: 1; }
+.wm-pick { color: #12a150; -webkit-text-stroke: 1.8px #111311; paint-order: stroke fill; }
+.wm-play { color: #fff; margin-left: 0.1em; -webkit-text-stroke: 1.8px #111311; paint-order: stroke fill; text-shadow: 0 1px 0 rgba(0,0,0,0.25); }
 
 /* --- Card --------------------------------------------------------------- */
 

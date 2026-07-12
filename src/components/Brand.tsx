@@ -26,11 +26,12 @@ export function Wordmark({ size = 20 }: { size?: number }) {
   );
 }
 
-/** Default brand lockup for the top bar: icon + wordmark. */
-export function Brand({ size = 20 }: { size?: number }) {
+/** Default brand lockup for the top bar: icon + wordmark. The ball height is tied
+ *  to the wordmark so it spans the p/y descenders up to the k/l ascenders. */
+export function Brand({ size = 22 }: { size?: number }) {
   return (
     <span className="brand">
-      <LogoMark size={30} />
+      <LogoMark size={Math.round(size * 1.15)} />
       <Wordmark size={size} />
     </span>
   );
