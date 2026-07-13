@@ -168,6 +168,13 @@ export interface VTeamStat {
   form: ('W' | 'D' | 'L')[];   // most recent first
 }
 
+/** One row of a full league table (from vleague_standings). Basketball reads
+ *  gf/ga as points-for/against and has no draws. */
+export interface StandingsRow {
+  rank: number; team_id: number; name: string; short_name: string; league: string | null;
+  played: number; won: number; drawn: number; lost: number; gf: number; ga: number; gd: number; points: number;
+}
+
 export interface VH2H {
   starts_at: string;
   home_team: string;
@@ -181,6 +188,7 @@ export interface MatchStats {
   home: VTeamStat;
   away: VTeamStat;
   h2h: VH2H[];
+  sport?: 'football' | 'basketball';
 }
 
 // --- Gates of Goal (slot) ---------------------------------------------------

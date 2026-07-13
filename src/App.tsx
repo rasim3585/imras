@@ -12,6 +12,7 @@ import SettleScreen from './screens/SettleScreen';
 import LiveMatchScreen from './screens/LiveMatchScreen';
 import AviatorScreen from './screens/AviatorScreen';
 import GatesScreen from './screens/GatesScreen';
+import StandingsScreen from './screens/StandingsScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import LeaderboardScreen from './screens/LeaderboardScreen';
 import SocialScreen from './screens/SocialScreen';
@@ -56,6 +57,7 @@ function App() {
           <Route path="/live/:matchId" element={<LiveMatchScreen />} />
           <Route path="/aviator" element={<AviatorScreen />} />
           <Route path="/gates" element={<GatesScreen />} />
+          <Route path="/standings" element={<StandingsScreen />} />
           <Route path="/coupon" element={<CouponScreen />} />
           <Route path="/login" element={session ? <Navigate to="/" replace /> : <AuthScreen />} />
           <Route path="/coupons" element={<RequireAuth><MyCouponsScreen /></RequireAuth>} />

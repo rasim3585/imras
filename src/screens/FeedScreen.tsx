@@ -168,6 +168,8 @@ export default function FeedScreen() {
         })}
       </div>
 
+      <div className="std-link-row"><Link to="/standings" className="std-link">League tables ›</Link></div>
+
       {error && <div className="banner banner-error">{error}</div>}
 
       {spec?.soon ? (

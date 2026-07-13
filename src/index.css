@@ -597,6 +597,24 @@ a:hover { color: var(--win); }
 .crest { flex-shrink: 0; }
 svg.crest { background: none !important; border-radius: 0 !important; }
 
+/* --- Standings (league tables) ---------------------------------------------- */
+.std-h1 { margin: 0 0 var(--s3); }
+.std-link-row { display: flex; justify-content: flex-end; margin: 6px 0 2px; }
+.std-link { font-size: 0.82rem; font-weight: 700; color: var(--accent); text-decoration: none; }
+.std-tabs { display: flex; gap: var(--s2); margin-bottom: var(--s3); }
+.std-tab { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--text); font-weight: 700; cursor: pointer; }
+.std-tab.active { border-color: var(--accent); color: var(--accent); }
+.std-league { margin-bottom: var(--s4); }
+.std-league-h { font-weight: 800; letter-spacing: 0.5px; margin: 0 0 8px; color: var(--accent); }
+.std-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+.std-table th { text-align: right; padding: 6px 8px; color: var(--muted); font-size: 0.72rem; font-weight: 700; border-bottom: 1px solid var(--line); }
+.std-table th.std-team-h { text-align: left; }
+.std-table td { text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--line); }
+.std-table td.std-team { text-align: left; display: flex; align-items: center; gap: 8px; }
+.std-crest { flex: none; }
+.std-table td.std-pts { font-weight: 800; color: var(--text); }
+
 /* --- Gates of Goal (slot) — premium tumble stage (original scene art) -------- */
 .go { max-width: 940px; margin: 0 auto; }
 @keyframes pop-in { 0% { transform: scale(0.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }

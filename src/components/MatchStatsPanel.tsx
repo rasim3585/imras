@@ -15,13 +15,13 @@ function FormDots({ form }: { form: ('W' | 'D' | 'L')[] }) {
   );
 }
 
-function TeamRow({ t }: { t: VTeamStat }) {
+function TeamRow({ t, bb }: { t: VTeamStat; bb?: boolean }) {
   return (
     <div className="vstat-team">
       <span className="vstat-rank tnum">#{t.rank}</span>
       <span className="vstat-name">{t.name}</span>
       <FormDots form={t.form} />
-      <span className="vstat-pts tnum">{t.points} pt</span>
+      <span className="vstat-pts tnum">{bb ? `${t.won}-${t.lost}` : `${t.points} pt`}</span>
     </div>
   );
 }
@@ -40,13 +40,14 @@ export default function MatchStatsPanel({ matchId }: { matchId: string }) {
   if (stats === null || stats === 'none') return null;   // loading, or real match → hide
 
   const played = stats.home.played + stats.away.played;
+  const bb = stats.sport === 'basketball';
 
   return (
     <div className="vstats card">
-      <div className="vstats-head">Simulated League</div>
+      <div className="vstats-head">{bb ? 'e-Basketball · Simulated League' : 'Simulated League'}</div>
       <div className="vstat-teams">
-        <TeamRow t={stats.home} />
-        <TeamRow t={stats.away} />
+        <TeamRow t={stats.home} bb={bb} />
+        <TeamRow t={stats.away} bb={bb} />
       </div>
       {played === 0 ? (
         <div className="vstat-note">New league — the table fills in as matches finish.</div>

@@ -10,16 +10,22 @@ import type { LiveState, Match } from '../lib/types';
 // First-half markets are bettable pre-match ONLY (mirror of MarketSection's gate).
 const HT_MARKETS = new Set(['ht_result', 'ht_over_under_0_5']);
 
-// Nesine-style market grouping. Each market_type lands in one tab; anything
-// unmapped falls back to "Result" so a new market never disappears silently.
-const GROUPS = [
+// Market grouping. Each market_type lands in one tab; unmapped falls back to the
+// first group so a new market never disappears silently. Football and basketball
+// have their own tab sets.
+type MarketGroup = { key: string; label: string; types: string[] };
+const GROUPS: MarketGroup[] = [
   { key: 'result', label: 'Result', types: ['match_result', 'double_chance', 'ht_result'] },
   { key: 'ou', label: 'Over/Under', types: ['over_under_1_5', 'over_under_2_5', 'over_under_3_5', 'ht_over_under_0_5'] },
   { key: 'goals', label: 'Goals', types: ['both_teams_score', 'odd_even'] },
-] as const;
-type GroupKey = (typeof GROUPS)[number]['key'];
-const groupOf = (mt: string): GroupKey =>
-  GROUPS.find((g) => (g.types as readonly string[]).includes(mt))?.key ?? 'result';
+];
+const BB_GROUPS: MarketGroup[] = [
+  { key: 'result', label: 'Winner', types: ['bb_moneyline'] },
+  { key: 'handicap', label: 'Handicap', types: ['bb_handicap'] },
+  { key: 'totals', label: 'Totals', types: ['bb_total', 'bb_total_home', 'bb_total_away'] },
+];
+const groupOf = (groups: MarketGroup[], mt: string): string =>
+  groups.find((g) => g.types.includes(mt))?.key ?? groups[0].key;
 
 export default function MatchDetailScreen() {
   const { matchId } = useParams<{ matchId: string }>();
@@ -27,7 +33,7 @@ export default function MatchDetailScreen() {
   const [match, setMatch] = useState<Match | null>(null);
   const [live, setLive] = useState<LiveState | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<'all' | GroupKey>('all');
+  const [tab, setTab] = useState<string>('all');
 
   useEffect(() => {
     if (!matchId) return;
@@ -56,7 +62,8 @@ export default function MatchDetailScreen() {
     .sort((a, b) => a.sort_order - b.sort_order)
     .filter((m) => !HT_MARKETS.has(m.market_type) || live?.phase === 'upcoming');
 
-  const groupsWith = GROUPS.filter((g) => markets.some((m) => groupOf(m.market_type) === g.key));
+  const groups = match.sport === 'basketball' ? BB_GROUPS : GROUPS;
+  const groupsWith = groups.filter((g) => markets.some((m) => groupOf(groups, m.market_type) === g.key));
   const shownGroups = tab === 'all' ? groupsWith : groupsWith.filter((g) => g.key === tab);
 
   return (
@@ -83,7 +90,7 @@ export default function MatchDetailScreen() {
             <span className="sb-name">{match.away_team}</span>
           </div>
         </div>
-        {(isLive || isFinished) && (
+        {match.sport !== 'basketball' && (isLive || isFinished) && (
           <Link className="btn btn-ghost btn-sm btn-block" style={{ marginTop: 'var(--s3)' }} to={`/live/${match.id}`}>Watch live</Link>
         )}
       </div>
@@ -101,7 +108,7 @@ export default function MatchDetailScreen() {
 
       <div className="detail-markets">
         {shownGroups.flatMap((g) => {
-          const list = markets.filter((m) => groupOf(m.market_type) === g.key);
+          const list = markets.filter((m) => groupOf(groups, m.market_type) === g.key);
           const els = [];
           if (tab === 'all') els.push(<div key={`cat-${g.key}`} className="mkt-cat">{g.label}</div>);
           for (const m of list) {
