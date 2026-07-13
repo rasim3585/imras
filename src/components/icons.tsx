@@ -127,14 +127,17 @@ export function EVolleyballIcon({ size = 22 }: { size?: number }) {
 }
 
 // Virtual-money coin (green) — replaces the gold dot / coin emoji. Original art.
+// Sanal para: üst üste sikke yığını + $ — tek disk yerine anında "para" okunur.
 export function CoinIcon({ size = 16 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" fill="#12a150" />
-      <circle cx="12" cy="12" r="10" fill="none" stroke="#0b6e39" strokeWidth="1.6" />
-      <circle cx="12" cy="12" r="6.2" fill="none" stroke="#dff5e7" strokeWidth="1.4" opacity="0.9" />
-      <path d="M12 8.3v7.4M13.6 9.9h-2.3a1.5 1.5 0 0 0 0 3h1.4a1.5 1.5 0 0 1 0 3h-2.5"
-        fill="none" stroke="#eefaf2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <g stroke="#0b6e39" strokeWidth="1.3" strokeLinejoin="round">
+        <ellipse cx="12" cy="16.6" rx="7.6" ry="3" fill="#0e8f47" />
+        <ellipse cx="12" cy="13" rx="7.6" ry="3" fill="#12a150" />
+        <ellipse cx="12" cy="9.4" rx="7.6" ry="3" fill="#1bbf63" />
+      </g>
+      <path d="M12 7.9v3M13 8.5h-1.5a0.8 0.8 0 0 0 0 1.6h1a0.8 0.8 0 0 1 0 1.6h-1.6"
+        fill="none" stroke="#eefaf2" strokeWidth="1.05" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
