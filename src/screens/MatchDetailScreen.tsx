@@ -4,6 +4,7 @@ import { matchProvider } from '../lib/matchProvider';
 import { formatKickoff, bballClock } from '../lib/format';
 import MarketSection from '../components/MarketSection';
 import MatchStatsPanel from '../components/MatchStatsPanel';
+import MatchChat from '../live/ChatPanel';
 import TeamCrest from '../components/TeamCrest';
 import { logEvent } from '../lib/behaviorLog';
 import { useI18n } from '../i18n/LanguageContext';
@@ -138,6 +139,8 @@ export default function MatchDetailScreen() {
           return els;
         })}
       </div>
+
+      <MatchChat matchId={match.id} />
     </div>
   );
 }

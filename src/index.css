@@ -375,7 +375,7 @@ a:hover { color: var(--win); }
 .ll-odd:disabled { color: var(--text-dim); opacity: 0.5; cursor: default; }
 .ll-plus { padding: 6px 0; border: 0; border-radius: 6px; background: var(--accent); color: #fff; font-weight: 700; font-size: 0.82rem; cursor: pointer; }
 .ll-plus.open { filter: brightness(0.9); }
-.ll-time.soon { color: var(--amber-deep); font-weight: 700; }
+.ll-time.soon { color: #e0952a; font-weight: 700; }
 .ll-tags { display: inline-flex; gap: 4px; align-items: center; margin-right: 4px; }
 .ll-real { font-size: 0.54rem; font-weight: 800; letter-spacing: 0.3px; color: #fff; background: var(--accent); border-radius: 4px; padding: 1px 5px; white-space: nowrap; }
 .ll-sim { display: inline-flex; align-items: center; line-height: 0; }

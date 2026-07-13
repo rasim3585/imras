@@ -5,6 +5,7 @@ import { formatKickoff, formatOdds, bballClock } from '../lib/format';
 import TeamCrest from './TeamCrest';
 import { playerName } from '../lib/playerNames';
 import { useCart } from '../coupon/CartContext';
+import { useI18n } from '../i18n/LanguageContext';
 import { EFootballIcon, EBasketballIcon, ETennisIcon, EVolleyballIcon } from './icons';
 
 const LIVE = new Set(['inprogress', 'live', 'penalties']);
@@ -16,6 +17,7 @@ const LIVE = new Set(['inprogress', 'live', 'penalties']);
 // the league (the bulletin's country>league sections) -- avoids the duplicate.
 export default function MatchRow({ m, hideLeague }: { m: BulletinMatch; hideLeague?: boolean }) {
   const { isPicked, select } = useCart();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const isLive = LIVE.has(m.status);
   const isVirtual = m.kind === 'virtual';
@@ -99,10 +101,16 @@ export default function MatchRow({ m, hideLeague }: { m: BulletinMatch; hideLeag
   };
 
   const moreCount = Math.max(0, m.markets.length - 1);
+  // "Başlıyor" geri sayımı (Nesine "X dk. kaldı" esinli): yakın maçlarda kalkışa
+  // dakika. Feed 5sn'de bir yeniden çizdiği için ayrı timer'a gerek yok.
+  const minsToStart = !isLive ? Math.round((Date.parse(m.starts_at) - Date.now()) / 60000) : Infinity;
+  const startingSoon = minsToStart >= 0 && minsToStart <= 60;
   const infoInner = (
     <>
-      <span className={`ll-time tnum ${isLive ? 'live' : ''}`}>
-        {isLive ? (isBB ? bballClock(m.minute, m.period) : (isTN || isVB) ? (m.period ?? 'LIVE') : `${m.minute ?? 0}'`) : formatKickoff(m.starts_at)}
+      <span className={`ll-time tnum ${isLive ? 'live' : startingSoon ? 'soon' : ''}`}>
+        {isLive ? (isBB ? bballClock(m.minute, m.period) : (isTN || isVB) ? (m.period ?? 'LIVE') : `${m.minute ?? 0}'`)
+          : startingSoon ? (minsToStart <= 0 ? t('feed.startnow') : t('feed.startsin', { n: minsToStart }))
+          : formatKickoff(m.starts_at)}
       </span>
       <span className="ll-teamline">
         <span className="ll-tags">
