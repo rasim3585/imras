@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
-import { fetchAviatorMirror, type MirrorProfile, type MirrorFlag, type MirrorBucket } from '../lib/aviator';
+import {
+  fetchAviatorMirror, fetchAviatorMoment,
+  type MirrorProfile, type MirrorFlag, type MirrorBucket, type MirrorMoment,
+} from '../lib/aviator';
 import { CoinIcon } from '../components/icons';
 
 // DAVRANIŞ AYNASI — Faz 1a yüzeyi. Kullanıcının KENDİ Aviator verisinden çıkan
@@ -71,13 +74,32 @@ function TrendChart({ series }: { series: MirrorBucket[] }) {
   );
 }
 
+// Decision Replay: tek somut tur. "Şu turda çıkabilirdin ama açgözlülük kazandı."
+function ReplayMoment({ m }: { m: MirrorMoment }) {
+  if (m.kind !== 'greed_loss') return null;
+  return (
+    <div className="av-mirror-replay">
+      <div className="av-mirror-replay-h">🎞️ Seni ele veren an</div>
+      <p>
+        <b>{m.stake.toLocaleString('tr-TR')}</b> gold koydun
+        {m.had_auto ? `, otomatik çekişin ${m.auto_target}x'te` : ', otomatik çekişin yoktu'}.
+        Uçak <b>{Number(m.crash_point).toFixed(2)}x</b>'e kadar uçtu — istediğin an çıkabilir,
+        <b className="pos"> +{Number(m.missed_gain).toLocaleString('tr-TR')}</b>'e kadar kazanabilirdin.
+        Çıkmadın; hepsi gitti.
+      </p>
+    </div>
+  );
+}
+
 export default function AviatorMirror() {
   const [data, setData] = useState<MirrorProfile | null>(null);
+  const [moment, setMoment] = useState<MirrorMoment | null>(null);
   const [err, setErr] = useState(false);
 
   useEffect(() => {
     let alive = true;
     fetchAviatorMirror().then((d) => { if (alive) setData(d); }).catch(() => { if (alive) setErr(true); });
+    fetchAviatorMoment().then((m) => { if (alive) setMoment(m); }).catch(() => { /* replay opsiyonel */ });
     return () => { alive = false; };
   }, []);
 
@@ -126,6 +148,8 @@ export default function AviatorMirror() {
           })}
         </ul>
       )}
+      {moment && <ReplayMoment m={moment} />}
+
       <p className="av-mirror-foot">Bu bir yargı değil, bir ayna. Para yok — desenini zararsız gör.</p>
     </div>
   );

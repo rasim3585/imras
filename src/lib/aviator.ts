@@ -153,6 +153,21 @@ export async function fetchAviatorMirror(): Promise<MirrorProfile> {
   return (data ?? { ready: false }) as MirrorProfile;
 }
 
+// Decision Replay: the single most telling round (biggest greed loss). One
+// concrete moment beats any percentage — makes the mirror visceral.
+export type MirrorMoment =
+  | { kind: 'none' }
+  | {
+      kind: 'greed_loss'; stake: number; crash_point: number; missed_gain: number;
+      had_auto: boolean; auto_target: number | null; when: string;
+    };
+
+export async function fetchAviatorMoment(): Promise<MirrorMoment> {
+  const { data, error } = await supabase.rpc('mirror_aviator_moment');
+  if (error) throw new Error(error.message);
+  return (data ?? { kind: 'none' }) as MirrorMoment;
+}
+
 // --- writes (auth required) --------------------------------------------------
 export async function placeBet(stake: number, slot: 1 | 2, autoCashoutAt: number | null): Promise<PlaceBetResult> {
   const { data, error } = await supabase.rpc('aviator_place_bet', {

@@ -1447,6 +1447,11 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .av-mirror-bar.mid { background: #ffb020; }
 .av-mirror-bar.hi { background: var(--av-low); }
 .av-mirror-trend-axis { display: flex; justify-content: space-between; font-size: 0.6rem; color: var(--text-mut); }
+.av-mirror-replay { border: 1px solid color-mix(in srgb, var(--av-low) 35%, var(--card-line)); border-radius: 8px; background: color-mix(in srgb, var(--av-low) 8%, var(--surface-2)); padding: 9px 11px; }
+.av-mirror-replay-h { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; color: var(--av-low); margin-bottom: 4px; }
+.av-mirror-replay p { margin: 0; font-size: 0.8rem; line-height: 1.5; color: var(--text); }
+.av-mirror-replay b { font-weight: 800; font-variant-numeric: tabular-nums; }
+.av-mirror-replay b.pos { color: var(--av-mid); }
 .av-mirror-foot { margin: 2px 0 0; font-size: 0.7rem; color: var(--text-mut); opacity: 0.75; font-style: italic; }
 
 /* dual-bet clarity: per-slot accent colour + status pill */
