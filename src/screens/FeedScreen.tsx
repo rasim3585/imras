@@ -14,12 +14,21 @@ const SPORTS: { key: SportKey; label: string; icon: string; soon?: boolean }[] =
   { key: 'all', label: 'All', icon: '📋' },
   { key: 'football', label: 'Football', icon: '⚽' },
   { key: 'efootball', label: 'E-Football', icon: '' },
-  { key: 'basketball', label: 'Basketball', icon: '🏀', soon: true },
+  { key: 'basketball', label: 'Basketball', icon: '🏀' },
   { key: 'tennis', label: 'Tennis', icon: '🎾', soon: true },
   { key: 'volley', label: 'Volleyball', icon: '🏐', soon: true },
 ];
 
-function Cols() {
+function Cols({ bb }: { bb?: boolean } = {}) {
+  if (bb) return (
+    <div className="ll-cols">
+      <span className="lead">Match</span>
+      <span>1</span><span>2</span>
+      <span className="ll-c-sec">Hnd</span><span className="ll-c-sec">Hnd</span>
+      <span className="ll-c-sec">Üst</span><span className="ll-c-sec">Alt</span>
+      <span className="ll-c-plus">+</span>
+    </div>
+  );
   return (
     <div className="ll-cols">
       <span className="lead">Match</span>
@@ -103,11 +112,13 @@ export default function FeedScreen() {
   const notFinished = matches.filter((m) => m.status !== 'finished');
   const liveAll = notFinished.filter((m) => LIVE.has(m.status));
   const realOnes = notFinished.filter((m) => m.kind === 'real');
-  const virtualOnes = notFinished.filter((m) => m.kind === 'virtual');
+  const virtualOnes = notFinished.filter((m) => m.kind === 'virtual' && m.sport === 'football');
+  const basketballOnes = notFinished.filter((m) => m.sport === 'basketball');
 
   const spec = SPORTS.find((s) => s.key === sport);
   const set = sport === 'live' ? liveAll : sport === 'all' ? notFinished
-    : sport === 'football' ? realOnes : sport === 'efootball' ? virtualOnes : [];
+    : sport === 'football' ? realOnes : sport === 'efootball' ? virtualOnes
+    : sport === 'basketball' ? basketballOnes : [];
   // Live stays a single flat section (few matches, cross-league). Upcoming keeps
   // the backend's country>league>sort_at order untouched so the grouping headers
   // fall in the right places -- no client re-sort.
@@ -119,10 +130,10 @@ export default function FeedScreen() {
   const upcoming = set.filter((m) => !LIVE.has(m.status));
   const grouped = groupMatches(upcoming);
 
-  const section = (title: string, right: ReactNode, list: BulletinMatch[], icon: ReactNode = <EFootballIcon size={19} />) => list.length > 0 && (
+  const section = (title: string, right: ReactNode, list: BulletinMatch[], icon: ReactNode = <EFootballIcon size={19} />, bb = false) => list.length > 0 && (
     <>
       <div className="ll-bar"><span className="ll-bar-l">{icon} {title}</span>{right}</div>
-      <Cols />
+      <Cols bb={bb} />
       {list.map((m) => <MatchRow key={m.id} m={m} hideLeague />)}
     </>
   );
@@ -145,7 +156,8 @@ export default function FeedScreen() {
       <div className="sport-bar">
         {SPORTS.map((s) => {
           const cnt = s.key === 'live' ? liveAll.length : s.key === 'all' ? notFinished.length
-            : s.key === 'football' ? realOnes.length : s.key === 'efootball' ? virtualOnes.length : null;
+            : s.key === 'football' ? realOnes.length : s.key === 'efootball' ? virtualOnes.length
+            : s.key === 'basketball' ? basketballOnes.length : null;
           return (
             <button key={s.key} className={`sport-tab ${sport === s.key ? 'active' : ''} ${s.soon ? 'soon' : ''}`} onClick={() => setSport(s.key)}>
               {s.key === 'efootball' ? <EFootballIcon size={19} /> : <span className="sport-ic">{s.icon}</span>}
@@ -167,7 +179,8 @@ export default function FeedScreen() {
       ) : (
         <div className="ll">
           {section('Live · Football', liveCount(live.filter((m) => m.kind === 'real').length), live.filter((m) => m.kind === 'real'), <BallIcon size={18} />)}
-          {section('Live · E-Football', liveCount(live.filter((m) => m.kind === 'virtual').length), live.filter((m) => m.kind === 'virtual'))}
+          {section('Live · E-Football', liveCount(live.filter((m) => m.kind === 'virtual' && m.sport === 'football').length), live.filter((m) => m.kind === 'virtual' && m.sport === 'football'))}
+          {section('Live · Basketball', liveCount(live.filter((m) => m.sport === 'basketball').length), live.filter((m) => m.sport === 'basketball'), <span className="sport-ic">🏀</span>, true)}
           {sport !== 'live' && (
             <>
               {grouped.countries.map((cg) => (
@@ -182,12 +195,20 @@ export default function FeedScreen() {
                   ))}
                 </div>
               ))}
-              {grouped.virtual.length > 0 && (
+              {grouped.virtual.filter((m) => m.sport === 'football').length > 0 && (
                 <div className="ll-cgrp">
-                  <div className="ll-country"><span>Simulated</span><span className="ll-country-n">{grouped.virtual.length}</span></div>
+                  <div className="ll-country"><span>Simulated</span><span className="ll-country-n">{grouped.virtual.filter((m) => m.sport === 'football').length}</span></div>
                   <div className="ll-bar"><span className="ll-bar-l"><EFootballIcon size={19} /> E-Football · 2×4 min</span><span className="ll-bar-r">sim</span></div>
                   <Cols />
-                  {grouped.virtual.map((m) => <MatchRow key={m.id} m={m} hideLeague />)}
+                  {grouped.virtual.filter((m) => m.sport === 'football').map((m) => <MatchRow key={m.id} m={m} hideLeague />)}
+                </div>
+              )}
+              {grouped.virtual.filter((m) => m.sport === 'basketball').length > 0 && (
+                <div className="ll-cgrp">
+                  <div className="ll-country"><span>Simulated</span><span className="ll-country-n">{grouped.virtual.filter((m) => m.sport === 'basketball').length}</span></div>
+                  <div className="ll-bar"><span className="ll-bar-l"><span className="sport-ic">🏀</span> Basketball · 4×2 min</span><span className="ll-bar-r">sim</span></div>
+                  <Cols bb />
+                  {grouped.virtual.filter((m) => m.sport === 'basketball').map((m) => <MatchRow key={m.id} m={m} hideLeague />)}
                 </div>
               )}
             </>

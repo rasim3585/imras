@@ -98,6 +98,7 @@ export interface BulletinMarket {
 export interface BulletinMatch {
   id: string;
   kind: BulletinKind;
+  sport: 'football' | 'basketball';   // real+virtual football = 'football'; basketball = 'basketball'
   home_team: string;
   away_team: string;
   starts_at: string;

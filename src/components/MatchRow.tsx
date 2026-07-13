@@ -19,9 +19,9 @@ export default function MatchRow({ m, hideLeague }: { m: BulletinMatch; hideLeag
   const [open, setOpen] = useState(false);
   const isLive = LIVE.has(m.status);
   const isVirtual = m.kind === 'virtual';
+  const isBB = m.sport === 'basketball';
 
   const mkt = (t: string): BulletinMarket | undefined => m.markets.find((k) => k.market_type === t);
-  const mr = mkt('match_result'); const ou = mkt('over_under_2_5'); const kg = mkt('both_teams_score');
   const optOf = (market: BulletinMarket | undefined, key: string): BulletinOption | undefined => market?.options.find((o) => o.outcome_key === key);
   const oddsOf = (market: BulletinMarket | undefined, key: string): number | null => optOf(market, key)?.odds ?? null;
 
@@ -33,11 +33,26 @@ export default function MatchRow({ m, hideLeague }: { m: BulletinMatch; hideLeag
     });
   };
 
-  const mrOdds = mr ? [oddsOf(mr, 'home'), oddsOf(mr, 'draw'), oddsOf(mr, 'away')] : [];
-  const favMr = Math.min(...mrOdds.filter((x): x is number => x != null && x > 0));
+  // Compact main-row cells differ by sport. Football: 1/X/2 + O/U 2.5 + BTTS.
+  // Basketball: Match Winner 1/2 + Handicap + Total. Both fill the same 6 slots.
+  const cellCfg: { market: BulletinMarket | undefined; k: string; sec?: boolean }[] = isBB
+    ? [
+        { market: mkt('bb_moneyline'), k: 'ml_home' }, { market: mkt('bb_moneyline'), k: 'ml_away' },
+        { market: mkt('bb_handicap'), k: 'hcap_home', sec: true }, { market: mkt('bb_handicap'), k: 'hcap_away', sec: true },
+        { market: mkt('bb_total'), k: 'tot_over', sec: true }, { market: mkt('bb_total'), k: 'tot_under', sec: true },
+      ]
+    : [
+        { market: mkt('match_result'), k: 'home' }, { market: mkt('match_result'), k: 'draw' }, { market: mkt('match_result'), k: 'away' },
+        { market: mkt('over_under_2_5'), k: 'ou25_under', sec: true }, { market: mkt('over_under_2_5'), k: 'ou25_over', sec: true },
+        { market: mkt('both_teams_score'), k: 'btts_yes', sec: true },
+      ];
 
-  // odds-move arrows: on a live change show ▲/▼ for ~5s (Nesine "breathing" feel)
-  const shownCells: [BulletinMarket | undefined, string][] = [[mr, 'home'], [mr, 'draw'], [mr, 'away'], [ou, 'ou25_under'], [ou, 'ou25_over'], [kg, 'btts_yes']];
+  const primaryMkt = isBB ? mkt('bb_moneyline') : mkt('match_result');
+  const primaryOdds = primaryMkt ? primaryMkt.options.map((o) => o.odds).filter((x) => x > 0) : [];
+  const favMr = primaryOdds.length ? Math.min(...primaryOdds) : Infinity;
+
+  // odds-move arrows: on a live change show ▲/▼ for ~5s
+  const shownCells: [BulletinMarket | undefined, string][] = cellCfg.map((c) => [c.market, c.k]);
   const prev = useRef<Record<string, number>>({});
   const timers = useRef<Record<string, number>>({});
   const [arrows, setArrows] = useState<Record<string, 'up' | 'down'>>({});
@@ -62,7 +77,7 @@ export default function MatchRow({ m, hideLeague }: { m: BulletinMatch; hideLeag
     const o = optOf(market, k); const odds = oddsOf(market, k); const arr = arrows[k];
     const on = market ? isPicked(m.id, market.market_type, k) : false;
     return (
-      <button type="button" disabled={!o} className={`ll-odd ${sec ? 'll-sec' : ''} ${on ? 'sel' : ''} ${market === mr && odds === favMr ? 'fav' : ''} ${arr ? `chg-${arr}` : ''}`} onClick={() => pick(market, k)}>
+      <button type="button" disabled={!o} className={`ll-odd ${sec ? 'll-sec' : ''} ${on ? 'sel' : ''} ${market === primaryMkt && odds === favMr ? 'fav' : ''} ${arr ? `chg-${arr}` : ''}`} onClick={() => pick(market, k)}>
         {o ? formatOdds(odds ?? 0) : '–'}
         {arr && <span className={`ll-arrow ${arr}`}>{arr === 'up' ? '▲' : '▼'}</span>}
       </button>
@@ -78,7 +93,9 @@ export default function MatchRow({ m, hideLeague }: { m: BulletinMatch; hideLeag
       <span className="ll-teamline">
         <span className="ll-tags">
           {isVirtual
-            ? <span className="ll-sim" title="Simulated match · E-Football 2×4 min"><EFootballIcon size={20} /></span>
+            ? (isBB
+                ? <span className="ll-sim" title="Simulated basketball"><span className="ll-bball" aria-hidden="true">🏀</span></span>
+                : <span className="ll-sim" title="Simulated match · E-Football 2×4 min"><EFootballIcon size={20} /></span>)
             : <span className="ll-real">REAL</span>}
           {!hideLeague && m.league && <span className="ll-lg">{m.league}</span>}
           {m.is_derby && <span className="ll-derby">DERBY</span>}
@@ -100,8 +117,7 @@ export default function MatchRow({ m, hideLeague }: { m: BulletinMatch; hideLeag
           ? <Link className="ll-info" to={`/match/${m.id}`}>{infoInner}</Link>
           : <div className="ll-info">{infoInner}</div>}
 
-        <Cell market={mr} k="home" /><Cell market={mr} k="draw" /><Cell market={mr} k="away" />
-        <Cell market={ou} k="ou25_under" sec /><Cell market={ou} k="ou25_over" sec /><Cell market={kg} k="btts_yes" sec />
+        {cellCfg.map((c, i) => <Cell key={i} market={c.market} k={c.k} sec={c.sec} />)}
         <button type="button" className={`ll-plus ${open ? 'open' : ''}`} onClick={() => setOpen((v) => !v)}>{open ? '−' : `+${moreCount}`}</button>
       </div>
 
