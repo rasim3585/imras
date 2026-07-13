@@ -62,6 +62,7 @@ export interface LiveState {
   away_team: string;
   phase: LivePhase;
   minute: number;
+  period?: string | null; // basketball live: "Q1".."Q4" (football: absent)
   starts_in: number;      // seconds until kickoff (0 once started)
   duration_secs: number;  // virtual match length in wall-clock seconds
   home_score: number;

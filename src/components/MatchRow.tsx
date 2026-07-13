@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { BulletinMatch, BulletinMarket, BulletinOption } from '../lib/types';
-import { formatKickoff, formatOdds } from '../lib/format';
+import { formatKickoff, formatOdds, bballClock } from '../lib/format';
 import TeamCrest from './TeamCrest';
 import { playerName } from '../lib/playerNames';
 import { useCart } from '../coupon/CartContext';
@@ -88,7 +88,7 @@ export default function MatchRow({ m, hideLeague }: { m: BulletinMatch; hideLeag
   const infoInner = (
     <>
       <span className={`ll-time tnum ${isLive ? 'live' : ''}`}>
-        {isLive ? `${m.minute ?? 0}'` : formatKickoff(m.starts_at)}
+        {isLive ? (isBB ? bballClock(m.minute, m.period) : `${m.minute ?? 0}'`) : formatKickoff(m.starts_at)}
       </span>
       <span className="ll-teamline">
         <span className="ll-tags">

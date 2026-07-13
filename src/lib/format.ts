@@ -19,6 +19,17 @@ export function formatOdds(n: number): string {
   return n.toFixed(2);
 }
 
+/** Live basketball clock: quarter + minutes into that quarter, e.g. "Q3 6'".
+ *  Game minute is 0..48 (four 12-minute quarters); period ("Q1".."Q4") comes
+ *  from the server, with a fallback derived from the minute. */
+export function bballClock(minute: number | null, period?: string | null): string {
+  const min = minute ?? 0;
+  const q = period || `Q${Math.min(4, Math.floor(min / 12) + 1)}`;
+  const base = (parseInt(q.replace(/\D/g, ''), 10) || 1) - 1;
+  const inQ = Math.max(0, Math.min(12, min - base * 12));
+  return `${q} ${inQ}'`;
+}
+
 /** Market-style implied probability (%) for one option, normalised across the
  *  market's options so they read like a book summing to ~100%. Display only. */
 export function impliedProb(odds: number, allOdds: number[]): number {

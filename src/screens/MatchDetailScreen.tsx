@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { matchProvider } from '../lib/matchProvider';
-import { formatKickoff } from '../lib/format';
+import { formatKickoff, bballClock } from '../lib/format';
 import MarketSection from '../components/MarketSection';
 import MatchStatsPanel from '../components/MatchStatsPanel';
 import TeamCrest from '../components/TeamCrest';
@@ -73,7 +73,7 @@ export default function MatchDetailScreen() {
       <div className="scoreboard card">
         <div className="sb-top">
           {isLive
-            ? <><span className="live-badge">LIVE</span><span className="minute-red tnum">{live!.minute}&apos;</span></>
+            ? <><span className="live-badge">LIVE</span><span className="minute-red tnum">{match.sport === 'basketball' ? bballClock(live!.minute, live!.period) : `${live!.minute}'`}</span></>
             : isFinished
               ? <span className="tag">Full time</span>
               : <span className="soon-timer tnum">{formatKickoff(match.starts_at)}</span>}
