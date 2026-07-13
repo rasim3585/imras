@@ -142,6 +142,12 @@ const en: Dict = {
   'flag.trend_better.title': 'Trend improving',
   'flag.trend_better.body': "You're getting caught less lately ({recent} vs {overall}). Your discipline is rising.",
 
+  'avs.phase.betting': 'Bets open',
+  'avs.phase.flying': 'Flying',
+  'avs.phase.crashed': 'Flew away — new round soon',
+  'avs.phase.connecting': 'Connecting…',
+  'avs.fair': 'verifiable',
+
   'av.rounds': '{n} rounds',
   'av.wait': 'Need a bit more data to read your pattern — {have}/{need} rounds. It sharpens as you play.',
   'av.stat.medianCashout': 'Median cashout',
@@ -299,6 +305,12 @@ const tr: Dict = {
   'flag.trend_worse.body': 'Son turlarda daha sık yakalanıyorsun ({recent} vs genel {overall}). Sıcak kafayla oynuyor olabilirsin — ara ver.',
   'flag.trend_better.title': 'Trend iyiye',
   'flag.trend_better.body': 'Son turlarda daha az yakalanıyorsun ({recent} vs {overall}). Disiplinin artıyor.',
+
+  'avs.phase.betting': 'Bahisler açık',
+  'avs.phase.flying': 'Uçuyor',
+  'avs.phase.crashed': 'Uçtu — yeni tur geliyor',
+  'avs.phase.connecting': 'Bağlanıyor…',
+  'avs.fair': 'doğrulanabilir',
 
   'av.rounds': '{n} tur',
   'av.wait': 'Deseni çıkarmak için biraz daha veri gerekiyor — {have}/{need} tur. Oynadıkça aynan netleşir.',

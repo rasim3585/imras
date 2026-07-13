@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { useI18n } from '../i18n/LanguageContext';
 import { useAviator } from '../aviator/useAviator';
 import PitchCurve from '../aviator/PitchCurve';
 import BetPanel from '../aviator/BetPanel';
@@ -34,7 +35,7 @@ export default function AviatorScreen() {
           {loggedIn && <span className="av-bal-chip tnum"><CoinIcon size={14} /> {(profile?.gold_balance ?? 0).toLocaleString()}</span>}
           {seed && (
             <span className="av-fair" title={`Provably fair · server seed hash:\n${seed}`}>
-              🔒 doğrulanabilir <span className="av-fair-hash tnum">{seed.slice(0, 8)}…</span>
+              🔒 <Fair /> <span className="av-fair-hash tnum">{seed.slice(0, 8)}…</span>
             </span>
           )}
         </div>
@@ -77,11 +78,17 @@ export default function AviatorScreen() {
   );
 }
 
+function Fair() {
+  const { t } = useI18n();
+  return <>{t('avs.fair')}</>;
+}
+
 function PhaseTag({ phase, bettingEndsAtMs }: { phase: string | undefined; bettingEndsAtMs: number | null }) {
-  if (phase === 'betting') return <span className="av-phase av-phase-bet">Bahisler açık <Countdown to={bettingEndsAtMs} /></span>;
-  if (phase === 'flying') return <span className="av-phase av-phase-fly"><span className="pulse" /> Uçuyor</span>;
-  if (phase === 'crashed') return <span className="av-phase av-phase-crash">Uçtu — yeni tur geliyor</span>;
-  return <span className="av-phase">Bağlanıyor…</span>;
+  const { t } = useI18n();
+  if (phase === 'betting') return <span className="av-phase av-phase-bet">{t('avs.phase.betting')} <Countdown to={bettingEndsAtMs} /></span>;
+  if (phase === 'flying') return <span className="av-phase av-phase-fly"><span className="pulse" /> {t('avs.phase.flying')}</span>;
+  if (phase === 'crashed') return <span className="av-phase av-phase-crash">{t('avs.phase.crashed')}</span>;
+  return <span className="av-phase">{t('avs.phase.connecting')}</span>;
 }
 
 function Countdown({ to }: { to: number | null }) {
