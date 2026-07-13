@@ -202,6 +202,13 @@ export default function LiveMatchScreen() {
   const as = finished ? state.away_score : score.a;
   const shownMinute = phase === 'upcoming' ? 0 : finished ? 90 : minute;
 
+  // İlk yarı skoru (Nesine başlık paritesi) — 45' ve öncesi goller
+  const htPast = finished || shownMinute >= 45;
+  const htH = htPast ? state.events.filter((e) => e.team === 'home' && e.minute <= 45).length : null;
+  const htA = htPast ? state.events.filter((e) => e.team === 'away' && e.minute <= 45).length : null;
+  const ht = htH != null && htA != null ? ([htH, htA] as [number, number]) : null;
+  const liveStats = phase !== 'upcoming' ? statsAt(matchId!, shownMinute, [state.red_home, state.red_away]) : null;
+
   const pick = myLeg?.outcome_key as OutKey | undefined;
   const pickState = pick ? computePickState(pick, hs, as) : null;
   const pickLabel = { win: t('live.win'), lose: t('live.lose'), level: t('live.level') } as const;
@@ -231,6 +238,7 @@ export default function LiveMatchScreen() {
         minute={shownMinute} phase={phase} redHome={state.red_home} redAway={state.red_away}
         matchId={matchId!} getClock={getClock} goalPulse={goalPulse}
         homePlayer={playerName(matchId + 'h')} awayPlayer={playerName(matchId + 'a')}
+        ht={ht} yellows={liveStats?.yellows}
       />
 
       {phase !== 'upcoming' && matchId && (

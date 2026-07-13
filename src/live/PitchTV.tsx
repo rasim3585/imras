@@ -28,12 +28,13 @@ export interface GoalPulse { id: number; team: Side; penalty: boolean }
 
 export default function PitchTV({
   home, away, hs, as, minute, phase, redHome, redAway,
-  matchId, getClock, goalPulse, homePlayer, awayPlayer,
+  matchId, getClock, goalPulse, homePlayer, awayPlayer, ht, yellows,
 }: {
   home: string; away: string; hs: number; as: number; minute: number;
   phase: 'upcoming' | 'live' | 'finished'; redHome: number; redAway: number;
   matchId: string; getClock: () => number; goalPulse: GoalPulse | null;
   homePlayer?: string; awayPlayer?: string;
+  ht?: [number, number] | null; yellows?: [number, number];
 }) {
   const finished = phase === 'finished';
 
@@ -137,16 +138,24 @@ export default function PitchTV({
         <div className="sb2-center">
           <span className="sb2-score tnum">{phase === 'upcoming' ? '– : –' : `${hs}-${as}`}</span>
           <span className="sb2-clock tnum">{phase === 'upcoming' ? 'soon' : finished ? 'FT' : <><span className="dot" />{minute}&apos;</>}</span>
+          {ht && phase !== 'upcoming' && <span className="sb2-ht tnum">HT {ht[0]}-{ht[1]}</span>}
         </div>
         <div className="sb2-team away">
           <span className="sb2-info"><span className="sb2-name">{away}</span>{awayPlayer && <span className="sb2-pl">({awayPlayer})</span>}</span>
           <TeamCrest name={away} size={32} className="sb2-badge" />
         </div>
       </div>
-      {(redHome > 0 || redAway > 0) && (
+      {(redHome > 0 || redAway > 0 || (yellows && (yellows[0] > 0 || yellows[1] > 0))) && (
         <div className="sb-sub">
-          {redHome > 0 && <span className="sb-red">🟥 {home} · {redHome}</span>}
-          {redAway > 0 && <span className="sb-red">🟥 {away} · {redAway}</span>}
+          <span className="sb-cards">
+            {yellows && yellows[0] > 0 && <span className="sb-y">🟨{yellows[0]}</span>}
+            {redHome > 0 && <span className="sb-r">🟥{redHome}</span>}
+          </span>
+          <span className="sb-cards-lbl">{home.length > 12 ? `${home.slice(0, 11)}…` : home} · {away.length > 12 ? `${away.slice(0, 11)}…` : away}</span>
+          <span className="sb-cards">
+            {redAway > 0 && <span className="sb-r">🟥{redAway}</span>}
+            {yellows && yellows[1] > 0 && <span className="sb-y">🟨{yellows[1]}</span>}
+          </span>
         </div>
       )}
 

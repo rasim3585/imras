@@ -958,8 +958,12 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .dot { position: absolute; width: 11px; height: 11px; border-radius: 50%; transform: translate(-50%, -50%);
   border: 1.5px solid rgba(0, 0, 0, 0.25); z-index: 3; animation: dot-float 3.2s ease-in-out infinite; }
 @keyframes dot-float { 0%, 100% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, -62%); } }
-.sb-sub { display: flex; justify-content: center; gap: var(--s3); padding: 4px 0 8px; }
+.sb-sub { display: flex; justify-content: center; align-items: center; gap: var(--s3); padding: 4px 0 8px; }
 .sb-red { font-size: 0.72rem; font-weight: 600; color: #e24b4a; }
+.sb-cards { display: inline-flex; gap: 6px; font-size: 0.72rem; font-weight: 700; min-width: 54px; }
+.sb-cards:first-of-type { justify-content: flex-end; }
+.sb-cards-lbl { font-size: 0.6rem; color: var(--text-mut); text-transform: uppercase; letter-spacing: 0.3px; }
+.sb2-ht { font-size: 0.6rem; font-weight: 600; color: var(--text-mut); letter-spacing: 0.3px; }
 .momentum { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); z-index: 6; display: inline-flex; align-items: center; gap: 6px; font-size: 0.66rem; font-weight: 600; color: rgba(255,255,255,0.9); background: rgba(0,0,0,0.34); padding: 3px 11px; border-radius: 999px; backdrop-filter: blur(2px); white-space: nowrap; }
 .pitch-ov { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 2px; z-index: 8; pointer-events: none; animation: ov-in 0.18s ease; }
