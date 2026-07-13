@@ -119,7 +119,7 @@ function CoachBlock() {
       try {
         const [ov, card, bench] = await Promise.all([fetchOverview(), fetchPlayerCard(), fetchBenchmark()]);
         const summary = {
-          card: card.ready ? { archetype: card.archetype, subtitle: card.subtitle, total_net: card.total_net } : null,
+          card: card.ready ? { archetype: card.archetype, total_net: card.total_net } : null,
           overall: ov.ready ? { net: ov.net, most_played: ov.most_played, worst: ov.worst,
             products: ov.products.map((p) => ({ oyun: p.key, oynanma: p.plays, net: p.net, risk_payi: p.stake_share })),
             teshisler: ov.flags.map((f) => f.code) } : null,
@@ -146,6 +146,7 @@ function CoachBlock() {
 
 // Kimlik kartı: çapraz-ürün desenden arketip + imza özellikler.
 function PlayerCardBlock() {
+  const { t } = useI18n();
   const c = useMirror<PlayerCard>(fetchPlayerCard, 'card');
   if (!c || !c.ready) return null;
   const netCls = c.total_net >= 0 ? 'pos' : 'neg';
@@ -153,13 +154,13 @@ function PlayerCardBlock() {
     <div className="az-card">
       <div className="az-card-emoji" aria-hidden>{c.emoji}</div>
       <div className="az-card-main">
-        <div className="az-card-arche">{c.archetype}</div>
-        <p className="az-card-sub">{c.subtitle}</p>
+        <div className="az-card-arche">{t('archetype.' + c.archetype + '.name')}</div>
+        <p className="az-card-sub">{t('archetype.' + c.archetype + '.sub')}</p>
         <div className="az-card-traits">
-          {c.traits.map((t) => (
-            <span key={t.label} className={`az-trait ${t.tone}`}>{t.label}: <b>{t.value}</b></span>
+          {c.traits.map((tr) => (
+            <span key={tr.label} className={`az-trait ${tr.tone}`}>{t('trait.' + tr.label)}: <b>{t('traitval.' + tr.value)}</b></span>
           ))}
-          <span className={`az-trait ${netCls === 'pos' ? 'good' : 'warn'}`}>Net: <b>{gold(c.total_net)}</b></span>
+          <span className={`az-trait ${netCls === 'pos' ? 'good' : 'warn'}`}>{t('analiz.stat.net')}: <b>{gold(c.total_net)}</b></span>
         </div>
       </div>
     </div>

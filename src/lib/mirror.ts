@@ -64,7 +64,7 @@ export interface CardTrait { label: string; value: string; tone: 'good' | 'warn'
 export type PlayerCard =
   | { ready: false }
   | {
-      ready: true; archetype: string; emoji: string; subtitle: string;
+      ready: true; archetype: string; emoji: string;
       traits: CardTrait[]; total_net: number; total_plays: number;
     };
 export async function fetchPlayerCard(): Promise<PlayerCard> {
