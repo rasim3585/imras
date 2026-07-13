@@ -148,6 +148,9 @@ const en: Dict = {
   'flag.chat_calm.body': "Only {tilt} of your comments run hot. You keep your cool under pressure — a real, rare edge.",
   'flag.chat_heating.title': 'Heating up',
   'flag.chat_heating.body': "Lately your comments run hotter ({recent} vs {overall}). You may be on tilt — step away before the next bet.",
+  'flag.loss_tilt.title': 'Loss → rage → chase',
+  'flag.loss_tilt.body': "Right after a loss you get {ratio} angrier in chat ({loss} vs {other} otherwise). This is the tilt spiral: the loss stings, you rage, then you bet to “get it back”.",
+  'flag.loss_tilt.action': "The moment you're raging after a loss is exactly when to close the app — not place a bet.",
 
   'avs.phase.betting': 'Bets open',
   'avs.phase.flying': 'Flying',
@@ -434,6 +437,9 @@ const tr: Dict = {
   'flag.chat_calm.body': 'Yorumlarının yalnızca {tilt}\'i sıcak. Baskı altında soğukkanlı kalıyorsun — gerçek ve nadir bir avantaj.',
   'flag.chat_heating.title': 'Isınıyorsun',
   'flag.chat_heating.body': 'Son yorumların daha sıcak ({recent} vs {overall}). Tilt olmuş olabilirsin — sonraki bahisten önce ara ver.',
+  'flag.loss_tilt.title': 'Kayıp → öfke → kovala',
+  'flag.loss_tilt.body': 'Kaybettikten hemen sonra sohbette {ratio} daha sinirlisin ({loss} vs diğer zaman {other}). İşte tilt spirali: kayıp acıtır, sinirlenirsin, sonra "geri almak" için bahis yaparsın.',
+  'flag.loss_tilt.action': 'Kayıptan sonra sinirlendiğin an tam da uygulamayı kapatma anı — bahis yapma anı değil.',
 
   'avs.phase.betting': 'Bahisler açık',
   'avs.phase.flying': 'Uçuyor',

@@ -30,13 +30,14 @@ const VARS: Record<string, (v: Record<string, number | string>) => Record<string
   chat_tilt: (v) => ({ tilt: pctv(v.tilt), n: Number(v.n).toLocaleString() }),
   chat_calm: (v) => ({ tilt: pctv(v.tilt) }),
   chat_heating: (v) => ({ recent: pctv(v.recent), overall: pctv(v.overall) }),
+  loss_tilt: (v) => ({ ratio: `${v.ratio}×`, loss: pctv(v.loss), other: pctv(v.other) }),
 };
 
 // Somut "koç" önerisi olan (uyarı) kodları.
 const HAS_ACTION = new Set([
   'longshot_addict', 'coupon_bleed', 'buy_impulse', 'ante_habit', 'slot_bleed',
   'concentration', 'worst_is_favorite',
-  'greed_caught', 'low_discipline', 'win_illusion', 'chasing_losses', 'chat_tilt',
+  'greed_caught', 'low_discipline', 'win_illusion', 'chasing_losses', 'chat_tilt', 'loss_tilt',
 ]);
 
 export function flagContent(f: MirrorFlag, t: TFn): { title: string; body: string; action: string | null } {
