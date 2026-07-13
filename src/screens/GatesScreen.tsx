@@ -97,6 +97,8 @@ export default function GatesScreen() {
   const [autoPanel, setAutoPanel] = useState(false);
   const [autoLeft, setAutoLeft] = useState(0);
   const [runWin, setRunWin] = useState(0);
+  const [tumbles, setTumbles] = useState<number[]>([]);   // her cascade adiminin kazanci (sol ray yigini)
+  const [turbo, setTurbo] = useState(false);
   const [multSum, setMultSum] = useState(0);
   const [fs, setFs] = useState<FsState>(FS_OFF);
   const [lastWin, setLastWin] = useState(0);
@@ -111,7 +113,8 @@ export default function GatesScreen() {
   const genRef = useRef(0);
   const autoRef = useRef(false);
   const autoLeftRef = useRef(0);
-  const betRef = useRef(bet); const anteRef = useRef(ante); const balRef = useRef(balance);
+  const betRef = useRef(bet); const anteRef = useRef(ante); const balRef = useRef(balance); const turboRef = useRef(turbo);
+  useEffect(() => { turboRef.current = turbo; }, [turbo]);
   useEffect(() => { betRef.current = bet; }, [bet]);
   useEffect(() => { anteRef.current = ante; }, [ante]);
   useEffect(() => { balRef.current = balance; }, [balance]);
@@ -129,6 +132,7 @@ export default function GatesScreen() {
       const st = steps[i];
       if (st.win > 0) {
         onWin?.(st.win);
+        setTumbles((prev) => [...prev, st.win].slice(-8));   // sol ray: son 8 tumble kazanci
         // SHOW — each winning symbol group in turn, so the player sees why it won
         setDim(true); setWinPhase('show');
         for (const g of winGroups(st.grid, st.cells, bt)) {
@@ -147,10 +151,13 @@ export default function GatesScreen() {
   }
 
   async function animate(res: SlotResult) {
+    const tb = turboRef.current;
+    const baseT = tb ? { show: 420, boom: 260, gap: 70 } : { show: 950, boom: 600, gap: 150 };
+    const fsT = tb ? { show: 320, boom: 220, gap: 60 } : { show: 680, boom: 480, gap: 120 };
     if (!res.buy) await fallOutBoard();           // old board falls away first
     let running = 0;
-    await playSteps(res.base.steps, { show: 950, boom: 600, gap: 150 }, res.bet, (w) => { running += w; setRunWin(running); });
-    if (res.base.payout > 0 && res.base.mult_sum > 0) { setMultSum(res.base.mult_sum); await wait(560); }
+    await playSteps(res.base.steps, baseT, res.bet, (w) => { running += w; setRunWin(running); });
+    if (res.base.payout > 0 && res.base.mult_sum > 0) { setMultSum(res.base.mult_sum); await wait(tb ? 320 : 560); }
 
     if (res.bonus.triggered) {
       setRunWin(0); setMultSum(0);
@@ -161,7 +168,7 @@ export default function GatesScreen() {
       for (let i = 0; i < res.bonus.spins.length; i++) {
         const sp = res.bonus.spins[i];
         setFs((f) => ({ ...f, i: i + 1 }));
-        await playSteps(sp.steps, { show: 680, boom: 480, gap: 120 }, res.bet);
+        await playSteps(sp.steps, fsT, res.bet);
         setFs((f) => ({ ...f, mult: sp.total_mult }));
         if (sp.win > 0) { bwin += sp.win; setFs((f) => ({ ...f, win: bwin })); await wait(420); }
         else await wait(150);
@@ -179,7 +186,7 @@ export default function GatesScreen() {
     const st = buy ? buyStake : stake;
     if (busy || st > balance || st <= 0) return;
     setBusy(true); setErr(null); setBanner(null); setBig(false);
-    setRunWin(0); setMultSum(0); setFs(FS_OFF); setWinCells(new Set());
+    setRunWin(0); setTumbles([]); setMultSum(0); setFs(FS_OFF); setWinCells(new Set());
     setWinPhase(null); setDim(false); setCallout(null);
     try {
       const res = await matchProvider.slotSpin(bet, buy ? false : ante, buy);
@@ -242,6 +249,16 @@ export default function GatesScreen() {
             <div className="go-double-note">{t('go.betplus')}</div>
           </div>
 
+          {tumbles.length > 0 && (
+            <div className="go-tstack">
+              {tumbles.map((w, i) => (
+                <div key={i} className={`go-tstack-row ${i === tumbles.length - 1 ? 'new' : ''}`}>
+                  <span className="tnum">+{w.toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className={`go-winscreen ${displayWin > 0 ? 'lit' : ''}`}>
             <span className="go-winscreen-lbl">{t('go.win')}</span>
             <b className="tnum">{displayWin.toLocaleString()}</b>
@@ -280,7 +297,12 @@ export default function GatesScreen() {
               )}
 
               {multSum > 0 && <div className="go-multbadge tnum">×{multSum}</div>}
-              {runWin > 0 && !banner && !bonus && !callout && <div className="go-runwin tnum">+{runWin.toLocaleString()}</div>}
+              {runWin > 0 && !banner && !bonus && (
+                <div className="go-tumblewin">
+                  <span className="go-tumblewin-l">{t('go.tumblewin')}</span>
+                  <b className="tnum">+{runWin.toLocaleString()}</b>
+                </div>
+              )}
 
               {bonus && (
                 <div className="go-fs">
@@ -304,6 +326,9 @@ export default function GatesScreen() {
               <div className="go-auto-panel" onClick={(e) => e.stopPropagation()}>
                 <div className="go-auto-title">{t('go.autoplay')}</div>
                 <div className="go-auto-sub">{t('go.autosub', { stake })}</div>
+                <button className={`go-turbo ${turbo ? 'on' : ''}`} onClick={() => setTurbo((v) => !v)}>
+                  <span className="go-turbo-ic">⚡</span> {t('go.turbo')} <span className="go-turbo-st">{turbo ? t('go.on') : t('go.off')}</span>
+                </button>
                 <div className="go-auto-grid">
                   {AUTO_OPTIONS.map((o) => (
                     <button key={o} className="go-auto-opt" disabled={stake > balance} onClick={() => startAuto(o)}>

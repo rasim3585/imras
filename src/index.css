@@ -826,6 +826,23 @@ svg.crest { background: none !important; border-radius: 0 !important; }
   box-shadow: 0 3px 12px rgba(0,0,0,0.4); animation: pop-in 0.4s ease; }
 .go-runwin { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 4;
   color: #fff; background: rgba(0,0,0,0.42); font-weight: 800; padding: 4px 16px; border-radius: 999px; }
+/* GoO-tarzi ust-orta zincir kazanci hapi (cascade toplami buyur) */
+.go-tumblewin { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 5; display: inline-flex; align-items: center; gap: 8px;
+  background: linear-gradient(#3a2470, #22143f); border: 1.5px solid #f3c73f; border-radius: 999px; padding: 3px 16px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.45); animation: pop-in 0.3s ease; }
+.go-tumblewin-l { font-size: 0.58rem; font-weight: 900; letter-spacing: 1.3px; color: #f3c73f; }
+.go-tumblewin b { font-size: 1.15rem; color: #fff; text-shadow: 0 0 10px rgba(255,207,58,0.8); }
+/* sol ray: tumble kazanc yigini (her adim alt alta) */
+.go-tstack { display: flex; flex-direction: column-reverse; gap: 4px; padding: 8px 6px; border-radius: 10px;
+  background: rgba(0,0,0,0.25); border: 1px solid var(--line); max-height: 168px; overflow: hidden; }
+.go-tstack-row { text-align: center; font-weight: 800; font-size: 0.8rem; color: #ffcf3a; opacity: 0.6; }
+.go-tstack-row.new { opacity: 1; color: #86ffb0; animation: pop-in 0.25s ease; }
+/* turbo anahtari (autoplay paneli) */
+.go-turbo { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin: 4px 0 12px; padding: 8px;
+  border-radius: 10px; cursor: pointer; font-weight: 800; font-size: 0.82rem; background: #241a12; border: 1px solid #5a4a2a; color: #b9a880; }
+.go-turbo.on { background: #3a2d0e; border-color: #f3c73f; color: #ffe27a; }
+.go-turbo-ic { filter: grayscale(1); } .go-turbo.on .go-turbo-ic { filter: none; }
+.go-turbo-st { font-size: 0.7rem; opacity: 0.85; }
 .go-fs { position: absolute; top: 12px; left: 0; right: 0; z-index: 4; display: flex; flex-direction: column; align-items: center; gap: 2px; pointer-events: none; }
 .go-fs-head { font-size: 0.74rem; font-weight: 900; letter-spacing: 1.5px; color: #ffe27a; text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
 .go-fs-mult { font-size: 2.6rem; font-weight: 900; line-height: 1; color: #fff; text-shadow: 0 2px 14px rgba(255,207,58,1), 0 0 5px rgba(0,0,0,0.7); animation: pop-in 0.3s ease; }
