@@ -172,6 +172,18 @@ export function RanksIcon() {
   );
 }
 
+// Ayna/analiz: el aynası — desenini yansıtan yüzey.
+export function MirrorIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+         strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <ellipse cx="12" cy="9" rx="7" ry="8" />
+      <path d="M9 5.5a4.6 4.6 0 0 0-2.4 3.2" opacity="0.7" />
+      <path d="M12 17v4M9 21h6" />
+    </svg>
+  );
+}
+
 export function ProfileIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"

@@ -1454,6 +1454,45 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .av-mirror-replay b.pos { color: var(--av-mid); }
 .av-mirror-foot { margin: 2px 0 0; font-size: 0.7rem; color: var(--text-mut); opacity: 0.75; font-style: italic; }
 
+/* Analiz merkezi (Aynam) */
+.az-screen { display: flex; flex-direction: column; gap: var(--s3); }
+.az-head h1 { margin: 0; font-size: 1.4rem; }
+.az-lead { margin: 4px 0 0; font-size: 0.82rem; color: var(--text-mut); line-height: 1.45; max-width: 620px; }
+.az-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+.az-tab { flex: none; font-size: 0.8rem; font-weight: 700; border: 1px solid var(--card-line); background: var(--surface); color: var(--text-mut); border-radius: 999px; padding: 7px 14px; cursor: pointer; white-space: nowrap; }
+.az-tab:hover { color: var(--text); }
+.az-tab.is-active { background: var(--av-mid); color: #06140c; border-color: var(--av-mid); }
+.az-body { display: flex; flex-direction: column; gap: var(--s3); }
+.az-sub { margin: 0; font-size: 0.84rem; color: var(--text-mut); line-height: 1.5; }
+.az-block { display: flex; flex-direction: column; gap: 8px; }
+.az-h { margin: 0; font-size: 0.9rem; font-weight: 800; }
+.az-stats3, .az-stats4 { display: grid; gap: 8px; }
+.az-stats3 { grid-template-columns: repeat(3, 1fr); }
+.az-stats4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 480px) { .az-stats4 { grid-template-columns: repeat(2, 1fr); } }
+.az-stat { background: var(--surface-2); border: 1px solid var(--card-line); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 3px; }
+.az-stat .k { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-mut); }
+.az-stat b { font-size: 1rem; font-weight: 800; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 4px; }
+.az-stat b.pos { color: var(--av-mid); }
+.az-stat b.neg { color: var(--av-low); }
+.az-prods { display: flex; flex-direction: column; gap: 12px; }
+.az-prod { display: flex; flex-direction: column; gap: 5px; }
+.az-prod-top { display: flex; justify-content: space-between; align-items: baseline; }
+.az-prod-name { font-size: 0.86rem; font-weight: 700; }
+.az-prod-net { font-size: 0.86rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.az-prod-net.pos { color: var(--av-mid); }
+.az-prod-net.neg { color: var(--av-low); }
+.az-bar { height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.az-bar-fill { height: 100%; background: linear-gradient(90deg, var(--av-mid), #7fe6b0); border-radius: 999px; }
+.az-prod-sub { font-size: 0.72rem; color: var(--text-mut); }
+.az-flags { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.az-flag { display: flex; gap: 10px; align-items: flex-start; }
+.az-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; }
+.az-flag.warn .az-dot { background: var(--av-low); }
+.az-flag.good .az-dot { background: var(--av-mid); }
+.az-flag b { font-size: 0.88rem; font-weight: 800; }
+.az-flag p { margin: 3px 0 0; font-size: 0.82rem; color: var(--text-mut); line-height: 1.5; }
+
 /* dual-bet clarity: per-slot accent colour + status pill */
 .av-panel-s1 { --slot: var(--av-mid); }
 .av-panel-s2 { --slot: #3aa0ff; }

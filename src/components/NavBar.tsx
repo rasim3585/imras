@@ -3,13 +3,14 @@ import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useCart } from '../coupon/CartContext';
 import { Brand } from './Brand';
-import { MarketsIcon, CouponIcon, RanksIcon, SocialIcon, ProfileIcon, HomeIcon, AviatorIcon, GatesIcon, CoinIcon } from './icons';
+import { MarketsIcon, CouponIcon, RanksIcon, SocialIcon, ProfileIcon, HomeIcon, AviatorIcon, GatesIcon, MirrorIcon, CoinIcon } from './icons';
 
 const NAV = [
   { to: '/', end: true, label: 'Matches', Icon: MarketsIcon },
   { to: '/aviator', end: false, label: 'Aviator', Icon: AviatorIcon },
   { to: '/gates', end: false, label: 'Gates', Icon: GatesIcon },
   { to: '/coupons', end: false, label: 'Coupons', Icon: CouponIcon },
+  { to: '/analiz', end: false, label: 'Aynam', Icon: MirrorIcon },
   { to: '/ranks', end: false, label: 'Ranks', Icon: RanksIcon },
   { to: '/social', end: false, label: 'Social', Icon: SocialIcon },
   { to: '/profile', end: false, label: 'Profile', Icon: ProfileIcon },

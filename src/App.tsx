@@ -12,6 +12,7 @@ import SettleScreen from './screens/SettleScreen';
 import LiveMatchScreen from './screens/LiveMatchScreen';
 import AviatorScreen from './screens/AviatorScreen';
 import GatesScreen from './screens/GatesScreen';
+import AnalizScreen from './screens/AnalizScreen';
 import StandingsScreen from './screens/StandingsScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import LeaderboardScreen from './screens/LeaderboardScreen';
@@ -62,6 +63,7 @@ function App() {
           <Route path="/login" element={session ? <Navigate to="/" replace /> : <AuthScreen />} />
           <Route path="/coupons" element={<RequireAuth><MyCouponsScreen /></RequireAuth>} />
           <Route path="/settle/:couponId" element={<RequireAuth><SettleScreen /></RequireAuth>} />
+          <Route path="/analiz" element={<RequireAuth><AnalizScreen /></RequireAuth>} />
           <Route path="/ranks" element={<RequireAuth><LeaderboardScreen /></RequireAuth>} />
           <Route path="/social" element={<RequireAuth><SocialScreen /></RequireAuth>} />
           <Route path="/league/:leagueId" element={<RequireAuth><LeagueDetailScreen /></RequireAuth>} />
