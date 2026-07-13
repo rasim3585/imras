@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthContext';
 import { matchProvider } from '../lib/matchProvider';
 import { formatOdds } from '../lib/format';
 import { logEvent } from '../lib/behaviorLog';
+import { useI18n } from '../i18n/LanguageContext';
 
 const QUICK = [100, 250, 500];
 
@@ -13,6 +14,7 @@ const QUICK = [100, 250, 500];
 export default function CouponPanel({ onClose }: { onClose?: () => void }) {
   const { selections, count, totalOdds, remove, clear, saveDraft } = useCart();
   const { profile, session, refreshProfile } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
 
   const balance = profile?.gold_balance ?? 0;
@@ -53,28 +55,28 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
     } catch (err) {
       const raw = err instanceof Error ? err.message : '';
       logEvent('coupon', 'coupon_place_failed', { ...decision, reason: raw.slice(0, 80) }, meta);
-      setError(raw.includes('market_closed') ? 'A match on your coupon has closed. Remove it and retry.'
-        : raw.includes('Not enough gold') ? 'Not enough gold for that stake.' : raw || 'Could not place coupon');
+      setError(raw.includes('market_closed') ? t('cpn.err.closed')
+        : raw.includes('Not enough gold') ? t('cpn.err.funds') : raw || t('cpn.err.generic'));
     } finally { setBusy(false); }
   }
 
   return (
     <div className="cpn">
       <div className="cpn-head">
-        <span className="cpn-title">My coupon{count > 0 ? ` · ${count}` : ''}</span>
+        <span className="cpn-title">{t('cpn.title')}{count > 0 ? ` · ${count}` : ''}</span>
         <div className="row" style={{ gap: 'var(--s2)' }}>
-          {count > 0 && <button className="cpn-x" onClick={clear} title="Clear all">Clear</button>}
+          {count > 0 && <button className="cpn-x" onClick={clear} title={t('cpn.clear')}>{t('cpn.clear')}</button>}
           {onClose && <button className="cpn-x" onClick={onClose} aria-label="Close">✕</button>}
         </div>
       </div>
 
       {placed && count === 0 ? (
         <div className="cpn-empty">
-          <p className="cpn-ok">Coupon placed ✓</p>
-          <Link to="/coupons" className="btn btn-ghost btn-sm" onClick={onClose}>View in My coupons</Link>
+          <p className="cpn-ok">{t('cpn.placed')}</p>
+          <Link to="/coupons" className="btn btn-ghost btn-sm" onClick={onClose}>{t('cpn.view')}</Link>
         </div>
       ) : count === 0 ? (
-        <div className="cpn-empty"><p className="dim">Tap any odds to build a coupon.</p></div>
+        <div className="cpn-empty"><p className="dim">{t('cpn.empty')}</p></div>
       ) : (
         <>
           <div className="cpn-legs">
@@ -90,30 +92,30 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
           </div>
 
           <div className="cpn-foot">
-            <div className="cpn-row"><span className="muted">Total odds</span><b className="tnum">{formatOdds(totalOdds)}</b></div>
+            <div className="cpn-row"><span className="muted">{t('cpn.totalOdds')}</span><b className="tnum">{formatOdds(totalOdds)}</b></div>
             <div className="cpn-stake">
               <input className="input tnum" type="number" min={1} max={session ? balance : undefined} value={stake}
                 onChange={(e) => setStake(Math.max(0, Math.floor(Number(e.target.value) || 0)))} />
               <div className="cpn-quick">
                 {QUICK.map((q) => <button key={q} className="btn btn-sm" onClick={() => setStake(q)}>{q}</button>)}
-                {session && <button className="btn btn-sm" disabled={balance <= 0} onClick={() => setStake(balance)}>Max</button>}
+                {session && <button className="btn btn-sm" disabled={balance <= 0} onClick={() => setStake(balance)}>{t('cpn.max')}</button>}
               </div>
             </div>
-            <div className="cpn-row cpn-win"><span>Potential win</span><b className="tnum">{potential} <span className="coin" aria-hidden="true" /></b></div>
-            {session && <div className="cpn-bal dim tnum">Balance: {balance} <span className="coin" aria-hidden="true" /></div>}
+            <div className="cpn-row cpn-win"><span>{t('cpn.potential')}</span><b className="tnum">{potential} <span className="coin" aria-hidden="true" /></b></div>
+            {session && <div className="cpn-bal dim tnum">{t('cpn.balance')}: {balance} <span className="coin" aria-hidden="true" /></div>}
             {error && <div className="banner banner-error" style={{ marginTop: 'var(--s2)' }}>{error}</div>}
 
             {session ? (
               <button className="btn btn-primary btn-block" style={{ marginTop: 'var(--s2)' }} disabled={busy || !stakeValid} onClick={place}>
-                {busy ? '…' : <>Play now · {stake} <span className="coin coin-light" aria-hidden="true" /></>}
+                {busy ? '…' : <>{t('cpn.playnow')} · {stake} <span className="coin coin-light" aria-hidden="true" /></>}
               </button>
             ) : (
               <button className="btn btn-primary btn-block" style={{ marginTop: 'var(--s2)' }} onClick={() => { onClose?.(); navigate('/login'); }}>
-                Log in to play
+                {t('cpn.loginToPlay')}
               </button>
             )}
             <button className="btn btn-ghost btn-block btn-sm" style={{ marginTop: 'var(--s2)' }} onClick={save}>
-              {savedMsg ? 'Saved ✓' : 'Save for later'}
+              {savedMsg ? t('cpn.saved') : t('cpn.save')}
             </button>
           </div>
         </>

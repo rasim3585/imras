@@ -179,6 +179,13 @@ const en: Dict = {
   'rc.long_session': "You've been playing {hours}h today ({plays} rounds). Step away for a bit.",
   'rc.high_risk': "High-risk zone: you've wiped out a big share of your balance this week. This is where losses snowball.",
 
+  'cpn.title': 'My coupon', 'cpn.clear': 'Clear', 'cpn.placed': 'Coupon placed ✓',
+  'cpn.view': 'View in My coupons', 'cpn.empty': 'Tap any odds to build a coupon.',
+  'cpn.totalOdds': 'Total odds', 'cpn.max': 'Max', 'cpn.potential': 'Potential win', 'cpn.balance': 'Balance',
+  'cpn.playnow': 'Play now', 'cpn.loginToPlay': 'Log in to play', 'cpn.saved': 'Saved ✓', 'cpn.save': 'Save for later',
+  'cpn.err.closed': 'A match on your coupon has closed. Remove it and retry.',
+  'cpn.err.funds': 'Not enough gold for that stake.', 'cpn.err.generic': 'Could not place coupon',
+
   'lang.label': 'Language',
 };
 
@@ -342,6 +349,13 @@ const tr: Dict = {
   'rc.burn_rate': 'Bu hızla bakiyen yaklaşık {days} gün sonra biter. Yavaşlamakta fayda var.',
   'rc.long_session': 'Bugün {hours} saattir oynuyorsun ({plays} el). Biraz ara ver.',
   'rc.high_risk': 'Yüksek riskli bölge: bu hafta bakiyenin büyük bir kısmını sildin. Kayıplar tam da burada çığ gibi büyür.',
+
+  'cpn.title': 'Kuponum', 'cpn.clear': 'Temizle', 'cpn.placed': 'Kupon oynandı ✓',
+  'cpn.view': 'Kuponlarımda gör', 'cpn.empty': 'Kupon yapmak için bir orana dokun.',
+  'cpn.totalOdds': 'Toplam oran', 'cpn.max': 'Maks', 'cpn.potential': 'Olası kazanç', 'cpn.balance': 'Bakiye',
+  'cpn.playnow': 'Şimdi oyna', 'cpn.loginToPlay': 'Oynamak için giriş yap', 'cpn.saved': 'Kaydedildi ✓', 'cpn.save': 'Sonrası için kaydet',
+  'cpn.err.closed': 'Kuponundaki bir maç kapandı. Onu çıkarıp tekrar dene.',
+  'cpn.err.funds': 'Bu tutar için yeterli altın yok.', 'cpn.err.generic': 'Kupon oynanamadı',
 
   'lang.label': 'Dil',
 };
