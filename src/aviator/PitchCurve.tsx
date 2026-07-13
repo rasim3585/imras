@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLiveMultiplier, type FlightAnchor } from './useAviator';
 import type { AviatorStatus } from '../lib/aviator';
 import { multClass } from '../lib/aviator';
+import { useI18n } from '../i18n/LanguageContext';
 
 // Football-themed crash visual (v1, pure SVG -- no assets yet).
 //   betting  -> ball rests; a footballer runs up and the kick lands exactly as
@@ -211,22 +212,23 @@ export default function PitchCurve({
   );
 }
 
-// Big, unmissable betting countdown: "3 · 2 · 1 · Kalkış!".
+// Big, unmissable betting countdown: "3 · 2 · 1 · Takeoff!".
 function BigCountdown({ to }: { to: number | null }) {
+  const { t } = useI18n();
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (to == null) return;
     const id = window.setInterval(() => setNow(Date.now()), 100);
     return () => window.clearInterval(id);
   }, [to]);
-  if (to == null) return <div className="av-idle-note">Bahisler açık</div>;
+  if (to == null) return <div className="av-idle-note">{t('avs.phase.betting')}</div>;
   const secs = (to - now) / 1000;
-  if (secs <= 0.25) return <div className="av-count-go">Kalkış!</div>;
+  if (secs <= 0.25) return <div className="av-count-go">{t('av2.takeoff')}</div>;
   const n = Math.ceil(secs);
   return (
     <>
       <div key={n} className="av-count-big tnum">{n}</div>
-      <div className="av-idle-note">Bahisler kapanıyor</div>
+      <div className="av-idle-note">{t('av2.betsClosing')}</div>
     </>
   );
 }

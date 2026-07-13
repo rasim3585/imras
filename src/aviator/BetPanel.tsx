@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../auth/AuthContext';
+import { useI18n } from '../i18n/LanguageContext';
 import { useLiveMultiplier, type FlightAnchor } from './useAviator';
 import type { AviatorStatus, AviatorConfig, AviatorBet } from '../lib/aviator';
+
+type TFn = (k: string, v?: Record<string, string | number>) => string;
 
 // One bet slot. The app runs TWO of these (slot 1 + slot 2), independent bets on
 // the same round -- the classic Aviator dual bet. Betting is enabled ONLY in the
@@ -21,6 +24,7 @@ export default function BetPanel({
   onRequireLogin: () => void;
 }) {
   const { profile } = useAuth();
+  const { t } = useI18n();
   const [stake, setStake] = useState(String(config.min_stake));
   const [autoOn, setAutoOn] = useState(false);
   const [auto, setAuto] = useState('2.00');
@@ -46,7 +50,7 @@ export default function BetPanel({
   async function place() {
     setErr(null); setBusy(true);
     try { await onPlace(slot, stakeN, autoN); }
-    catch (e) { setErr(e instanceof Error ? cleanErr(e.message) : 'Bahis alınamadı'); }
+    catch (e) { setErr(e instanceof Error ? cleanErr(e.message, t) : t('av2.betFail')); }
     finally { setBusy(false); }
   }
   async function cash() {
@@ -58,7 +62,7 @@ export default function BetPanel({
       await onCashout(slot, snap);                // server honours the SEEN value (snap)
     } catch (e) {
       setOptimistic(null);                        // too late -> real state (lost) shows
-      setErr(e instanceof Error ? cleanErr(e.message) : 'Çekilemedi');
+      setErr(e instanceof Error ? cleanErr(e.message, t) : t('av2.cashFail'));
     } finally {
       setBusy(false);
     }
@@ -67,42 +71,42 @@ export default function BetPanel({
   // ---- states -> what the big button is right now ----
   let body: React.ReactNode;
   if (optimistic) {
-    body = <div className="av-result av-won">Çekildi {optimistic.multiplier.toFixed(2)}x · +{optimistic.payout}</div>;
+    body = <div className="av-result av-won">{t('av2.cashed', { x: optimistic.multiplier.toFixed(2), p: optimistic.payout })}</div>;
   } else if (!loggedIn) {
-    body = <button className="av-btn av-btn-login" onClick={onRequireLogin}>Giriş yap & oyna</button>;
+    body = <button className="av-btn av-btn-login" onClick={onRequireLogin}>{t('av2.loginPlay')}</button>;
   } else if (bet?.status === 'won') {
-    body = <div className="av-result av-won">Çekildi {bet.cashout_multiplier?.toFixed(2)}x · +{bet.payout}</div>;
+    body = <div className="av-result av-won">{t('av2.cashed', { x: bet.cashout_multiplier?.toFixed(2) ?? '', p: bet.payout ?? 0 })}</div>;
   } else if (bet?.status === 'lost' || (phase === 'crashed' && bet)) {
-    body = <div className="av-result av-lost">Kaybetti −{bet?.stake}</div>;
+    body = <div className="av-result av-lost">{t('av2.lost', { s: bet?.stake ?? 0 })}</div>;
   } else if (phase === 'flying' && bet?.status === 'placed') {
     const potential = Math.floor(live * bet.stake);
     body = <button className="av-btn av-btn-cash" disabled={busy} onClick={cash}>
-      ÇEK {live.toFixed(2)}x <b>+{potential}</b>
+      {t('av2.cashout', { x: live.toFixed(2) })} <b>+{potential}</b>
     </button>;
   } else if (phase === 'betting' && bet?.status === 'placed') {
-    body = <div className="av-result av-placed">Bahis alındı · {bet.stake} {bet.auto_cashout_at ? `· oto ${bet.auto_cashout_at}x` : ''}</div>;
+    body = <div className="av-result av-placed">{t('av2.placed', { stake: bet.stake })} {bet.auto_cashout_at ? `· ${t('av2.autoSuffix', { x: bet.auto_cashout_at })}` : ''}</div>;
   } else if (phase === 'betting') {
     body = <button className="av-btn av-btn-place" disabled={busy || !stakeValid || !autoValid} onClick={place}>
-      {busy ? '…' : <>Bahis koy <b>{stakeN}</b></>}
+      {busy ? '…' : <>{t('av2.place')} <b>{stakeN}</b></>}
     </button>;
   } else {
-    body = <button className="av-btn" disabled>Sonraki tur bekleniyor</button>;
+    body = <button className="av-btn" disabled>{t('av2.waiting')}</button>;
   }
 
   const editable = loggedIn && phase === 'betting' && !bet;
 
   const statusPill = (() => {
-    if (optimistic || bet?.status === 'won') return { t: 'Çekildi', c: 'won' };
-    if (bet?.status === 'lost' || (phase === 'crashed' && bet)) return { t: 'Kaybetti', c: 'lost' };
-    if (bet?.status === 'placed' && phase === 'flying') return { t: 'Uçuyor', c: 'live' };
-    if (bet?.status === 'placed') return { t: 'Hazır', c: 'ready' };
-    return { t: phase === 'betting' ? 'Boş' : 'Bu turda yok', c: 'idle' };
+    if (optimistic || bet?.status === 'won') return { t: t('av2.st.cashed'), c: 'won' };
+    if (bet?.status === 'lost' || (phase === 'crashed' && bet)) return { t: t('av2.st.lost'), c: 'lost' };
+    if (bet?.status === 'placed' && phase === 'flying') return { t: t('av2.st.flying'), c: 'live' };
+    if (bet?.status === 'placed') return { t: t('av2.st.ready'), c: 'ready' };
+    return { t: phase === 'betting' ? t('av2.st.idle') : t('av2.st.none'), c: 'idle' };
   })();
 
   return (
     <div className={`av-panel av-panel-s${slot} ${bet ? `av-panel-${bet.status}` : ''} ${optimistic ? 'av-panel-won' : ''}`}>
       <div className="av-panel-head">
-        <span className="av-slot"><span className="av-slot-dot" />Bahis {slot}</span>
+        <span className="av-slot"><span className="av-slot-dot" />{t('av2.slot', { n: slot })}</span>
         <span className={`av-status av-status-${statusPill.c}`}>{statusPill.t}</span>
       </div>
 
@@ -117,13 +121,13 @@ export default function BetPanel({
           {[10, 50, 100, 500].map((v) => (
             <button key={v} className="av-chip" onClick={() => setStake(String(Math.min(config.max_stake, v)))}>{v}</button>
           ))}
-          <button className="av-chip" onClick={() => setStake(String(Math.min(config.max_stake, balance)))}>max</button>
+          <button className="av-chip" onClick={() => setStake(String(Math.min(config.max_stake, balance)))}>{t('av2.max')}</button>
         </div>
       )}
 
       <label className={`av-auto ${editable ? '' : 'is-locked'}`}>
         <input type="checkbox" checked={autoOn} disabled={!editable} onChange={(e) => setAutoOn(e.target.checked)} />
-        Oto çek
+        {t('av2.autoLabel')}
         <input className="av-auto-val tnum" inputMode="decimal" value={auto} disabled={!editable || !autoOn}
           onChange={(e) => setAuto(e.target.value.replace(/[^0-9.]/g, ''))} />
         <span className="muted">x</span>
@@ -135,11 +139,11 @@ export default function BetPanel({
   );
 }
 
-// backend errors come through raw; surface the useful ones in Turkish
-function cleanErr(msg: string): string {
-  if (msg.includes('insufficient')) return 'Yetersiz bakiye';
-  if (msg.includes('bet_closed') || msg.includes('not betting')) return 'Bahis kapandı';
-  if (msg.includes('already')) return 'Bu slotta zaten bahis var';
-  if (msg.includes('not flying') || msg.includes('cashout')) return 'Şu an çekilemez';
-  return msg.length > 60 ? 'İşlem başarısız' : msg;
+// backend errors come through raw; surface the useful ones, localized.
+function cleanErr(msg: string, t: TFn): string {
+  if (msg.includes('insufficient')) return t('av2.err.insufficient');
+  if (msg.includes('bet_closed') || msg.includes('not betting')) return t('av2.err.closed');
+  if (msg.includes('already')) return t('av2.err.already');
+  if (msg.includes('not flying') || msg.includes('cashout')) return t('av2.err.cantCash');
+  return msg.length > 60 ? t('av2.err.failed') : msg;
 }
