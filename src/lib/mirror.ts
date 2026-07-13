@@ -39,9 +39,9 @@ export type OverviewProfile =
 
 // LLM "ses": deterministik özeti mirror-coach edge function'a yollar, kişisel
 // koçluk metni döner. Key yoksa/hata → null (frontend deterministik metne düşer).
-export async function fetchCoach(summary: unknown): Promise<string | null> {
+export async function fetchCoach(summary: unknown, lang = 'en'): Promise<string | null> {
   try {
-    const { data, error } = await supabase.functions.invoke('mirror-coach', { body: { summary } });
+    const { data, error } = await supabase.functions.invoke('mirror-coach', { body: { summary, lang } });
     if (error) return null;
     return ((data as { text?: string | null })?.text ?? null);
   } catch {

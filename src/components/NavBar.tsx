@@ -2,19 +2,31 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useCart } from '../coupon/CartContext';
+import { useI18n } from '../i18n/LanguageContext';
+import { LANGS, type Lang } from '../i18n/dict';
 import { Brand } from './Brand';
 import { MarketsIcon, CouponIcon, RanksIcon, SocialIcon, ProfileIcon, HomeIcon, AviatorIcon, GatesIcon, MirrorIcon, CoinIcon } from './icons';
 
 const NAV = [
-  { to: '/', end: true, label: 'Matches', Icon: MarketsIcon },
-  { to: '/aviator', end: false, label: 'Aviator', Icon: AviatorIcon },
-  { to: '/gates', end: false, label: 'Gates', Icon: GatesIcon },
-  { to: '/coupons', end: false, label: 'Coupons', Icon: CouponIcon },
-  { to: '/analiz', end: false, label: 'Aynam', Icon: MirrorIcon },
-  { to: '/ranks', end: false, label: 'Ranks', Icon: RanksIcon },
-  { to: '/social', end: false, label: 'Social', Icon: SocialIcon },
-  { to: '/profile', end: false, label: 'Profile', Icon: ProfileIcon },
+  { to: '/', end: true, key: 'nav.matches', Icon: MarketsIcon },
+  { to: '/aviator', end: false, key: 'nav.aviator', Icon: AviatorIcon },
+  { to: '/gates', end: false, key: 'nav.gates', Icon: GatesIcon },
+  { to: '/coupons', end: false, key: 'nav.coupons', Icon: CouponIcon },
+  { to: '/analiz', end: false, key: 'nav.mirror', Icon: MirrorIcon },
+  { to: '/ranks', end: false, key: 'nav.ranks', Icon: RanksIcon },
+  { to: '/social', end: false, key: 'nav.social', Icon: SocialIcon },
+  { to: '/profile', end: false, key: 'nav.profile', Icon: ProfileIcon },
 ];
+
+function LangPicker() {
+  const { lang, setLang, t } = useI18n();
+  return (
+    <select className="lang-picker" value={lang} aria-label={t('lang.label')}
+      onChange={(e) => setLang(e.target.value as Lang)}>
+      {LANGS.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
+    </select>
+  );
+}
 
 // Top-right balance: counts up on a win and floats a green "+amount" below it.
 function BalanceChip({ balance }: { balance: number }) {
@@ -53,6 +65,7 @@ function BalanceChip({ balance }: { balance: number }) {
 export default function NavBar() {
   const { profile, signOut } = useAuth();
   const { count } = useCart();
+  const { t } = useI18n();
 
   // icon + an active-selection count badge on the Coupons item
   const navIcon = (icon: ReactNode, to: string) => (
@@ -68,6 +81,7 @@ export default function NavBar() {
         <div className="topbar-inner">
           <Brand />
           <div className="topbar-right">
+            <LangPicker />
             <NavLink to="/" end className="home-btn" title="Home" aria-label="Home"><HomeIcon /></NavLink>
             {profile ? (
               <>
@@ -87,10 +101,10 @@ export default function NavBar() {
 
       {/* desktop sidebar */}
       <nav className="sidebar">
-        {NAV.map(({ to, end, label, Icon }) => (
+        {NAV.map(({ to, end, key, Icon }) => (
           <NavLink key={to} to={to} end={end} className="side-item">
             {navIcon(<Icon />, to)}
-            {label}
+            {t(key)}
           </NavLink>
         ))}
       </nav>
@@ -98,10 +112,10 @@ export default function NavBar() {
       {/* mobile bottom bar */}
       <nav className="tabbar">
         <div className="tabbar-inner">
-          {NAV.map(({ to, end, label, Icon }) => (
+          {NAV.map(({ to, end, key, Icon }) => (
             <NavLink key={to} to={to} end={end} className="tab">
               {navIcon(<Icon />, to)}
-              {label}
+              {t(key)}
             </NavLink>
           ))}
         </div>
