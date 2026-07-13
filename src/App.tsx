@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useAuth } from './auth/AuthContext';
+import { logEvent } from './lib/behaviorLog';
 import SharedCouponScreen from './screens/SharedCouponScreen';
 import AuthScreen from './screens/AuthScreen';
 import UsernameScreen from './screens/UsernameScreen';
@@ -31,6 +32,12 @@ function RequireAuth({ children }: { children: ReactNode }) {
 function App() {
   const { loading, session, needsUsername } = useAuth();
   const loc = useLocation();
+
+  // Oturum başlangıcı — davranış moat'ının zaman çerçevesi (ne zaman, ne sıklıkta
+  // geliyor). Giriş yapıldığında bir kez; log_events null-uid'yi zaten düşürür.
+  useEffect(() => {
+    if (session) logEvent('app', 'session_start');
+  }, [session]);
 
   // public shared-coupon link: standalone, no nav, no auth gate
   if (loc.pathname.startsWith('/c/')) {

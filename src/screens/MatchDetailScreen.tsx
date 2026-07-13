@@ -5,6 +5,7 @@ import { formatKickoff, bballClock } from '../lib/format';
 import MarketSection from '../components/MarketSection';
 import MatchStatsPanel from '../components/MatchStatsPanel';
 import TeamCrest from '../components/TeamCrest';
+import { logEvent } from '../lib/behaviorLog';
 import type { LiveState, Match } from '../lib/types';
 
 // First-half markets are bettable pre-match ONLY (mirror of MarketSection's gate).
@@ -48,6 +49,8 @@ export default function MatchDetailScreen() {
   useEffect(() => {
     if (!matchId) return;
     let alive = true;
+    // Bahis-öncesi ilgi sinyali: hangi maçı incelediğin (oynamadan da). Moat.
+    logEvent('match', 'detail_viewed', { match_id: matchId });
     matchProvider.getMatch(matchId)
       .then((m) => { if (alive) setMatch(m); })
       .catch((e) => { if (alive) setError(e instanceof Error ? e.message : 'Could not load the match'); });
