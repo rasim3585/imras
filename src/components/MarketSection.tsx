@@ -1,6 +1,7 @@
 import type { Match, Market, LiveState } from '../lib/types';
 import { formatOdds, impliedProb } from '../lib/format';
 import { useCart } from '../coupon/CartContext';
+import { useI18n } from '../i18n/LanguageContext';
 
 const HT_MARKETS = new Set(['ht_result', 'ht_over_under_0_5']);
 
@@ -10,6 +11,7 @@ export default function MarketSection({
   match, market, live, showTitle = true,
 }: { match: Match; market: Market; live?: LiveState; showTitle?: boolean }) {
   const { isPicked, select } = useCart();
+  const { t } = useI18n();
   const isLive = live?.phase === 'live';
   // first-half markets are bettable pre-match ONLY -> show only when we KNOW the
   // match is upcoming (live loaded); hidden while live is loading or once started.
@@ -33,7 +35,7 @@ export default function MarketSection({
           if (odds == null) return (
             <div key={o.id} className="outcome outcome-closed">
               <span className="outcome-name">{o.label}</span>
-              <span className="outcome-odds">Closed</span>
+              <span className="outcome-odds">{t('md.closed')}</span>
             </div>
           );
           const picked = isPicked(match.id, market.market_type, o.outcome_key);

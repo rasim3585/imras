@@ -211,6 +211,11 @@ const en: Dict = {
   'feed.sport.football': 'Football', 'feed.sport.efootball': 'E-Football', 'feed.sport.basketball': 'Basketball',
   'feed.sport.tennis': 'Tennis', 'feed.sport.volleyball': 'Volleyball',
 
+  'md.err.load': 'Could not load the match', 'md.back': 'Back', 'md.fulltime': 'Full time',
+  'md.watchlive': 'Watch live', 'md.all': 'All', 'md.closed': 'Closed', 'md.bulletin': 'Bulletin',
+  'grp.result': 'Result', 'grp.ou': 'Over/Under', 'grp.goals': 'Goals', 'grp.winner': 'Winner',
+  'grp.handicap': 'Handicap', 'grp.totals': 'Totals', 'grp.sets': 'Sets', 'grp.games': 'Games', 'grp.points': 'Points',
+
   'dock.empty': 'Tap any odds to start a coupon.', 'dock.coupon': 'Coupon',
   'mc.title': 'My coupons',
   'mc.tab.ongoing': 'Ongoing', 'mc.tab.won': 'Won', 'mc.tab.lost': 'Lost', 'mc.tab.saved': 'Saved',
@@ -420,6 +425,11 @@ const tr: Dict = {
   'feed.livePrefix': 'Canlı',
   'feed.sport.football': 'Futbol', 'feed.sport.efootball': 'E-Futbol', 'feed.sport.basketball': 'Basketbol',
   'feed.sport.tennis': 'Tenis', 'feed.sport.volleyball': 'Voleybol',
+
+  'md.err.load': 'Maç yüklenemedi', 'md.back': 'Geri', 'md.fulltime': 'Maç sonu',
+  'md.watchlive': 'Canlı izle', 'md.all': 'Tümü', 'md.closed': 'Kapalı', 'md.bulletin': 'Bülten',
+  'grp.result': 'Sonuç', 'grp.ou': 'Alt/Üst', 'grp.goals': 'Goller', 'grp.winner': 'Kazanan',
+  'grp.handicap': 'Handikap', 'grp.totals': 'Toplam', 'grp.sets': 'Setler', 'grp.games': 'Oyunlar', 'grp.points': 'Sayılar',
 
   'dock.empty': 'Kupon başlatmak için bir orana dokun.', 'dock.coupon': 'Kupon',
   'mc.title': 'Kuponlarım',

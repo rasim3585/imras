@@ -6,6 +6,7 @@ import MarketSection from '../components/MarketSection';
 import MatchStatsPanel from '../components/MatchStatsPanel';
 import TeamCrest from '../components/TeamCrest';
 import { logEvent } from '../lib/behaviorLog';
+import { useI18n } from '../i18n/LanguageContext';
 import type { LiveState, Match } from '../lib/types';
 
 // First-half markets are bettable pre-match ONLY (mirror of MarketSection's gate).
@@ -14,26 +15,26 @@ const HT_MARKETS = new Set(['ht_result', 'ht_over_under_0_5']);
 // Market grouping. Each market_type lands in one tab; unmapped falls back to the
 // first group so a new market never disappears silently. Football and basketball
 // have their own tab sets.
-type MarketGroup = { key: string; label: string; types: string[] };
+type MarketGroup = { key: string; tkey: string; types: string[] };
 const GROUPS: MarketGroup[] = [
-  { key: 'result', label: 'Result', types: ['match_result', 'double_chance', 'ht_result'] },
-  { key: 'ou', label: 'Over/Under', types: ['over_under_1_5', 'over_under_2_5', 'over_under_3_5', 'ht_over_under_0_5'] },
-  { key: 'goals', label: 'Goals', types: ['both_teams_score', 'odd_even'] },
+  { key: 'result', tkey: 'grp.result', types: ['match_result', 'double_chance', 'ht_result'] },
+  { key: 'ou', tkey: 'grp.ou', types: ['over_under_1_5', 'over_under_2_5', 'over_under_3_5', 'ht_over_under_0_5'] },
+  { key: 'goals', tkey: 'grp.goals', types: ['both_teams_score', 'odd_even'] },
 ];
 const BB_GROUPS: MarketGroup[] = [
-  { key: 'result', label: 'Winner', types: ['bb_moneyline'] },
-  { key: 'handicap', label: 'Handicap', types: ['bb_handicap'] },
-  { key: 'totals', label: 'Totals', types: ['bb_total', 'bb_total_home', 'bb_total_away'] },
+  { key: 'result', tkey: 'grp.winner', types: ['bb_moneyline'] },
+  { key: 'handicap', tkey: 'grp.handicap', types: ['bb_handicap'] },
+  { key: 'totals', tkey: 'grp.totals', types: ['bb_total', 'bb_total_home', 'bb_total_away'] },
 ];
 const TN_GROUPS: MarketGroup[] = [
-  { key: 'result', label: 'Winner', types: ['tn_moneyline', 'tn_gameshcap'] },
-  { key: 'sets', label: 'Sets', types: ['tn_setbet', 'tn_totalsets', 'tn_firstset'] },
-  { key: 'totals', label: 'Games', types: ['tn_total'] },
+  { key: 'result', tkey: 'grp.winner', types: ['tn_moneyline', 'tn_gameshcap'] },
+  { key: 'sets', tkey: 'grp.sets', types: ['tn_setbet', 'tn_totalsets', 'tn_firstset'] },
+  { key: 'totals', tkey: 'grp.games', types: ['tn_total'] },
 ];
 const VB_GROUPS: MarketGroup[] = [
-  { key: 'result', label: 'Winner', types: ['vb_moneyline', 'vb_sethcap'] },
-  { key: 'sets', label: 'Sets', types: ['vb_setbet', 'vb_totalsets', 'vb_firstset'] },
-  { key: 'points', label: 'Points', types: ['vb_totalpts'] },
+  { key: 'result', tkey: 'grp.winner', types: ['vb_moneyline', 'vb_sethcap'] },
+  { key: 'sets', tkey: 'grp.sets', types: ['vb_setbet', 'vb_totalsets', 'vb_firstset'] },
+  { key: 'points', tkey: 'grp.points', types: ['vb_totalpts'] },
 ];
 const groupOf = (groups: MarketGroup[], mt: string): string =>
   groups.find((g) => g.types.includes(mt))?.key ?? groups[0].key;
@@ -41,6 +42,7 @@ const groupOf = (groups: MarketGroup[], mt: string): string =>
 export default function MatchDetailScreen() {
   const { matchId } = useParams<{ matchId: string }>();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [match, setMatch] = useState<Match | null>(null);
   const [live, setLive] = useState<LiveState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +55,7 @@ export default function MatchDetailScreen() {
     logEvent('match', 'detail_viewed', { match_id: matchId });
     matchProvider.getMatch(matchId)
       .then((m) => { if (alive) setMatch(m); })
-      .catch((e) => { if (alive) setError(e instanceof Error ? e.message : 'Could not load the match'); });
+      .catch((e) => { if (alive) setError(e instanceof Error ? e.message : t('md.err.load')); });
     const poll = async () => {
       try { const [s] = await matchProvider.getLiveStates([matchId]); if (alive && s) setLive(s); }
       catch { /* transient */ }
@@ -63,7 +65,7 @@ export default function MatchDetailScreen() {
     return () => { alive = false; clearInterval(id); };
   }, [matchId]);
 
-  if (error) return <div className="app-shell" style={{ paddingTop: 'var(--s6)' }}><div className="banner banner-error">{error}</div><button className="btn btn-block" onClick={() => navigate(-1)}>Back</button></div>;
+  if (error) return <div className="app-shell" style={{ paddingTop: 'var(--s6)' }}><div className="banner banner-error">{error}</div><button className="btn btn-block" onClick={() => navigate(-1)}>{t('md.back')}</button></div>;
   if (!match) return <div className="settle"><div className="spinner" /></div>;
 
   const isLive = live?.phase === 'live';
@@ -82,16 +84,16 @@ export default function MatchDetailScreen() {
 
   return (
     <div className="app-shell app-shell-flush">
-      <button className="detail-back" onClick={() => navigate(-1)}>&lsaquo; Bulletin</button>
+      <button className="detail-back" onClick={() => navigate(-1)}>&lsaquo; {t('md.bulletin')}</button>
 
       <div className="scoreboard card">
         <div className="sb-top">
           {isLive
             ? <><span className="live-badge">LIVE</span><span className="minute-red tnum">{match.sport === 'basketball' ? bballClock(live!.minute, live!.period) : (match.sport === 'tennis' || match.sport === 'volleyball') ? (live!.period ?? 'LIVE') : `${live!.minute}'`}</span></>
             : isFinished
-              ? <span className="tag">Full time</span>
+              ? <span className="tag">{t('md.fulltime')}</span>
               : <span className="soon-timer tnum">{formatKickoff(match.starts_at)}</span>}
-          <span className="tag" style={{ marginLeft: 'auto' }}>{match.sport === 'football' ? 'Football' : match.sport}</span>
+          <span className="tag" style={{ marginLeft: 'auto' }}>{match.sport === 'football' ? t('feed.sport.football') : match.sport}</span>
         </div>
         <div className="sb-teams">
           <div className="sb-team">
@@ -105,7 +107,7 @@ export default function MatchDetailScreen() {
           </div>
         </div>
         {match.sport === 'football' && (isLive || isFinished) && (
-          <Link className="btn btn-ghost btn-sm btn-block" style={{ marginTop: 'var(--s3)' }} to={`/live/${match.id}`}>Watch live</Link>
+          <Link className="btn btn-ghost btn-sm btn-block" style={{ marginTop: 'var(--s3)' }} to={`/live/${match.id}`}>{t('md.watchlive')}</Link>
         )}
       </div>
 
@@ -113,9 +115,9 @@ export default function MatchDetailScreen() {
 
       {groupsWith.length > 1 && (
         <div className="bet-tabs">
-          <button className={`bet-tab ${tab === 'all' ? 'active' : ''}`} onClick={() => setTab('all')}>All</button>
+          <button className={`bet-tab ${tab === 'all' ? 'active' : ''}`} onClick={() => setTab('all')}>{t('md.all')}</button>
           {groupsWith.map((g) => (
-            <button key={g.key} className={`bet-tab ${tab === g.key ? 'active' : ''}`} onClick={() => setTab(g.key)}>{g.label}</button>
+            <button key={g.key} className={`bet-tab ${tab === g.key ? 'active' : ''}`} onClick={() => setTab(g.key)}>{t(g.tkey)}</button>
           ))}
         </div>
       )}
@@ -124,7 +126,7 @@ export default function MatchDetailScreen() {
         {shownGroups.flatMap((g) => {
           const list = markets.filter((m) => groupOf(groups, m.market_type) === g.key);
           const els = [];
-          if (tab === 'all') els.push(<div key={`cat-${g.key}`} className="mkt-cat">{g.label}</div>);
+          if (tab === 'all') els.push(<div key={`cat-${g.key}`} className="mkt-cat">{t(g.tkey)}</div>);
           for (const m of list) {
             els.push(
               <div key={m.id} className="mkt-group">
