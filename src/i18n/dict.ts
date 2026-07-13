@@ -211,6 +211,9 @@ const en: Dict = {
   'feed.sport.football': 'Football', 'feed.sport.efootball': 'E-Football', 'feed.sport.basketball': 'Basketball',
   'feed.sport.tennis': 'Tennis', 'feed.sport.volleyball': 'Volleyball',
 
+  'std.title': 'Standings', 'std.none': 'No standings yet — the table fills in as matches finish.',
+  'std.league': 'League', 'std.simleague': 'Simulated League',
+  'std.col.team': 'Team', 'std.col.gd': 'GD', 'std.col.pts': 'Pts', 'std.col.winpct': 'Win%',
   'md.err.load': 'Could not load the match', 'md.back': 'Back', 'md.fulltime': 'Full time',
   'md.watchlive': 'Watch live', 'md.all': 'All', 'md.closed': 'Closed', 'md.bulletin': 'Bulletin',
   'grp.result': 'Result', 'grp.ou': 'Over/Under', 'grp.goals': 'Goals', 'grp.winner': 'Winner',
@@ -426,6 +429,9 @@ const tr: Dict = {
   'feed.sport.football': 'Futbol', 'feed.sport.efootball': 'E-Futbol', 'feed.sport.basketball': 'Basketbol',
   'feed.sport.tennis': 'Tenis', 'feed.sport.volleyball': 'Voleybol',
 
+  'std.title': 'Puan durumu', 'std.none': 'Henüz puan durumu yok — tablo maçlar bittikçe dolar.',
+  'std.league': 'Lig', 'std.simleague': 'Sanal Lig',
+  'std.col.team': 'Takım', 'std.col.gd': 'AV', 'std.col.pts': 'P', 'std.col.winpct': 'Galibiyet%',
   'md.err.load': 'Maç yüklenemedi', 'md.back': 'Geri', 'md.fulltime': 'Maç sonu',
   'md.watchlive': 'Canlı izle', 'md.all': 'Tümü', 'md.closed': 'Kapalı', 'md.bulletin': 'Bülten',
   'grp.result': 'Sonuç', 'grp.ou': 'Alt/Üst', 'grp.goals': 'Goller', 'grp.winner': 'Kazanan',
