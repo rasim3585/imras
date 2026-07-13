@@ -281,6 +281,7 @@ const en: Dict = {
   'mc.cashoutGone': 'Cash out is no longer available for this coupon.', 'mc.cashoutErr': 'Could not cash out',
 
   'lang.label': 'Language',
+  'set.title': 'Settings', 'set.sound': 'Sound', 'set.on': 'On', 'set.off': 'Off', 'set.signout': 'Sign out',
 };
 
 const tr: Dict = {
@@ -546,6 +547,7 @@ const tr: Dict = {
   'mc.cashoutGone': 'Bu kupon için bozdurma artık kullanılamıyor.', 'mc.cashoutErr': 'Bozdurulamadı',
 
   'lang.label': 'Dil',
+  'set.title': 'Ayarlar', 'set.sound': 'Ses', 'set.on': 'Açık', 'set.off': 'Kapalı', 'set.signout': 'Çıkış yap',
 };
 
 // Diğer diller: navigasyon + Analiz ana başlıkları. Kalan anahtarlar EN'e düşer.

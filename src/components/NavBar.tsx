@@ -3,9 +3,10 @@ import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useCart } from '../coupon/CartContext';
 import { useI18n } from '../i18n/LanguageContext';
+import { useSound } from '../settings/SoundContext';
 import { LANGS, type Lang } from '../i18n/dict';
 import { Brand } from './Brand';
-import { MarketsIcon, CouponIcon, RanksIcon, SocialIcon, ProfileIcon, HomeIcon, AviatorIcon, GatesIcon, MirrorIcon, CoinIcon } from './icons';
+import { MarketsIcon, CouponIcon, RanksIcon, SocialIcon, ProfileIcon, HomeIcon, AviatorIcon, GatesIcon, MirrorIcon, CoinIcon, SettingsIcon, SoundOnIcon, SoundOffIcon } from './icons';
 
 const NAV = [
   { to: '/', end: true, key: 'nav.matches', Icon: MarketsIcon },
@@ -18,13 +19,48 @@ const NAV = [
   { to: '/profile', end: false, key: 'nav.profile', Icon: ProfileIcon },
 ];
 
-function LangPicker() {
+// Settings gear (between home and balance): language, sound on/off, sign out.
+function SettingsMenu() {
   const { lang, setLang, t } = useI18n();
+  const { enabled, toggle } = useSound();
+  const { profile, signOut } = useAuth();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
   return (
-    <select className="lang-picker" value={lang} aria-label={t('lang.label')}
-      onChange={(e) => setLang(e.target.value as Lang)}>
-      {LANGS.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
-    </select>
+    <div className="settings-wrap" ref={ref}>
+      <button className="settings-btn" aria-label={t('set.title')} aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        <SettingsIcon />
+      </button>
+      {open && (
+        <div className="settings-menu" role="menu">
+          <div className="settings-row">
+            <span className="settings-lbl">{t('lang.label')}</span>
+            <select className="lang-picker" value={lang} aria-label={t('lang.label')}
+              onChange={(e) => setLang(e.target.value as Lang)}>
+              {LANGS.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
+            </select>
+          </div>
+          <div className="settings-row">
+            <span className="settings-lbl">{t('set.sound')}</span>
+            <button className={`sound-toggle ${enabled ? 'on' : 'off'}`} onClick={toggle} aria-pressed={enabled}>
+              {enabled ? <SoundOnIcon /> : <SoundOffIcon />}
+              <span>{enabled ? t('set.on') : t('set.off')}</span>
+            </button>
+          </div>
+          {profile && (
+            <button className="settings-signout" onClick={() => { setOpen(false); signOut(); }}>{t('set.signout')}</button>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -63,7 +99,7 @@ function BalanceChip({ balance }: { balance: number }) {
 }
 
 export default function NavBar() {
-  const { profile, signOut } = useAuth();
+  const { profile } = useAuth();
   const { count } = useCart();
   const { t } = useI18n();
 
@@ -81,18 +117,14 @@ export default function NavBar() {
         <div className="topbar-inner">
           <Brand />
           <div className="topbar-right">
-            <LangPicker />
             <NavLink to="/" end className="home-btn" title="Home" aria-label="Home"><HomeIcon /></NavLink>
+            <SettingsMenu />
             {profile ? (
-              <>
-                <BalanceChip balance={profile.gold_balance} />
-                <button className="btn btn-ghost btn-sm" onClick={signOut}>Sign out</button>
-              </>
+              <BalanceChip balance={profile.gold_balance} />
             ) : (
               <nav className="top-auth">
-                <NavLink to="/" end className="top-link">Home</NavLink>
-                <Link to="/login" className="top-link">Log in</Link>
-                <Link to="/login" className="btn btn-primary btn-sm">Sign up</Link>
+                <Link to="/login" className="top-link">{t('feed.login')}</Link>
+                <Link to="/login" className="btn btn-primary btn-sm">{t('feed.signup')}</Link>
               </nav>
             )}
           </div>

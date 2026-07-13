@@ -175,6 +175,36 @@ export function RanksIcon() {
   );
 }
 
+export function SettingsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+         strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6" />
+    </svg>
+  );
+}
+
+export function SoundOnIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+         strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 9v6h3.5L13 20V4L7.5 9H4z" />
+      <path d="M16.5 8.5a5 5 0 0 1 0 7M18.8 6a8 8 0 0 1 0 12" />
+    </svg>
+  );
+}
+
+export function SoundOffIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+         strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 9v6h3.5L13 20V4L7.5 9H4z" />
+      <path d="M17 9.5l4 5M21 9.5l-4 5" />
+    </svg>
+  );
+}
+
 // Ayna/analiz: el aynası — desenini yansıtan yüzey.
 export function MirrorIcon() {
   return (
