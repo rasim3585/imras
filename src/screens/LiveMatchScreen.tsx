@@ -6,6 +6,7 @@ import {
 } from '../live/commentary';
 import { isPenaltyGoal } from '../live/liveModel';
 import PitchTV from '../live/PitchTV';
+import MatchChat from '../live/ChatPanel';
 import { matchProvider } from '../lib/matchProvider';
 import { useI18n } from '../i18n/LanguageContext';
 import type { CouponLeg, LiveState } from '../lib/types';
@@ -157,6 +158,10 @@ export default function LiveMatchScreen() {
   const pickState = pick ? computePickState(pick, hs, as) : null;
   const pickLabel = { win: t('live.win'), lose: t('live.lose'), level: t('live.level') } as const;
   const oddsArr = odds ? [odds.home, odds.draw, odds.away].filter((x): x is number => x != null) : [];
+  // Kazanma olasılığı (Nesine esinli): canlı oranların ima ettiği ev/deplasman payı.
+  const ph = odds?.home ? 1 / odds.home : 0;
+  const pa = odds?.away ? 1 / odds.away : 0;
+  const homePct = ph + pa > 0 ? Math.round((100 * ph) / (ph + pa)) : 50;
 
   return (
     <div className="app-shell live-screen">
@@ -179,6 +184,20 @@ export default function LiveMatchScreen() {
         flashTeam={flash?.team ?? null} line={curLine}
         homePlayer={playerName(matchId + 'h')} awayPlayer={playerName(matchId + 'a')}
       />
+
+      {odds && !finished && (ph > 0 || pa > 0) && (
+        <div className="winprob">
+          <div className="winprob-head"><span className="k">{t('live.winprob')}</span></div>
+          <div className="winprob-bar">
+            <div className="winprob-h" style={{ width: `${homePct}%` }} />
+            <div className="winprob-a" style={{ width: `${100 - homePct}%` }} />
+          </div>
+          <div className="winprob-labels">
+            <span className="winprob-lh"><b>{homePct}%</b> {home}</span>
+            <span className="winprob-la">{away} <b>{100 - homePct}%</b></span>
+          </div>
+        </div>
+      )}
 
       {myLeg && (
         <div className={`card betstatus ${pickState ?? ''}`}>
@@ -217,6 +236,8 @@ export default function LiveMatchScreen() {
           </div>
         ))}
       </div>
+
+      {matchId && <MatchChat matchId={matchId} />}
 
       <button className="btn btn-ghost btn-block" style={{ marginTop: 'var(--s3)' }} onClick={() => (couponId ? navigate('/coupons') : navigate(-1))}>
         {couponId ? t('mc.title') : t('md.back')}
