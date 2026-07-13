@@ -207,7 +207,7 @@ const en: Dict = {
   'feed.live': '{n} live', 'feed.simulated': 'Simulated', 'feed.soon': 'soon', 'feed.startsin': '{n}m', 'feed.startnow': 'soon',
   'feed.col.match': 'Match', 'feed.col.over': 'Over', 'feed.col.under': 'Under', 'feed.col.btts': 'BTTS',
   'feed.col.hnd': 'Hnd', 'feed.col.set1': 'S1', 'feed.col.set2': 'S2',
-  'feed.livePrefix': 'Live',
+  'feed.livePrefix': 'Live', 'feed.today': 'Today', 'feed.tomorrow': 'Tomorrow',
   'feed.sport.football': 'Football', 'feed.sport.efootball': 'E-Football', 'feed.sport.basketball': 'Basketball',
   'feed.sport.tennis': 'Tennis', 'feed.sport.volleyball': 'Volleyball',
 
@@ -486,7 +486,7 @@ const tr: Dict = {
   'feed.live': '{n} canlı', 'feed.simulated': 'Sanal', 'feed.soon': 'yakında', 'feed.startsin': '{n}dk', 'feed.startnow': 'birazdan',
   'feed.col.match': 'Maç', 'feed.col.over': 'Üst', 'feed.col.under': 'Alt', 'feed.col.btts': 'KG',
   'feed.col.hnd': 'Hnd', 'feed.col.set1': 'İS1', 'feed.col.set2': 'İS2',
-  'feed.livePrefix': 'Canlı',
+  'feed.livePrefix': 'Canlı', 'feed.today': 'Bugün', 'feed.tomorrow': 'Yarın',
   'feed.sport.football': 'Futbol', 'feed.sport.efootball': 'E-Futbol', 'feed.sport.basketball': 'Basketbol',
   'feed.sport.tennis': 'Tenis', 'feed.sport.volleyball': 'Voleybol',
 

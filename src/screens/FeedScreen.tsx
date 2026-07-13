@@ -90,6 +90,15 @@ function groupMatches(list: BulletinMatch[]): { countries: CountryGroup[]; virtu
 export default function FeedScreen() {
   const { session } = useAuth();
   const { t } = useI18n();
+  // Bugün/Yarın etiketi (Nesine esinli) — lig başlığında ilk maçın gününe göre.
+  const dayLabel = (iso?: string): string => {
+    if (!iso) return '';
+    const d = new Date(iso), now = new Date();
+    const diff = Math.round(
+      (new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+        - new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()) / 86400000);
+    return diff <= 0 ? t('feed.today') : diff === 1 ? t('feed.tomorrow') : d.toLocaleDateString();
+  };
   const [matches, setMatches] = useState<BulletinMatch[]>([]);
   const [sport, setSport] = useState<SportKey>('all');
   const [loading, setLoading] = useState(true);
@@ -208,7 +217,7 @@ export default function FeedScreen() {
                   <div className="ll-country"><span>{countryFlag(cg.country) && <span className="ll-flag" aria-hidden>{countryFlag(cg.country)} </span>}{cg.country}</span><span className="ll-country-n">{cg.count}</span></div>
                   {cg.leagues.map((lg) => (
                     <div key={lg.league}>
-                      <div className="ll-bar"><span className="ll-bar-l">{lg.league}</span><span className="ll-bar-r">{lg.matches.length}</span></div>
+                      <div className="ll-bar"><span className="ll-bar-l">{lg.league}</span><span className="ll-bar-r"><span className="ll-day">{dayLabel(lg.matches[0]?.starts_at)}</span>{lg.matches.length}</span></div>
                       <Cols />
                       {lg.matches.map((m) => <MatchRow key={m.id} m={m} hideLeague />)}
                     </div>
