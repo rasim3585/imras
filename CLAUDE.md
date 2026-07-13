@@ -169,7 +169,16 @@ kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40
 ---
 
 ## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0088'den** devam, sıfır dolgulu 4 hane. (Aviator görsel
-senkron 0079–0081; kalıcı sanal lig + settle/aviator düzeltmeleri 0082–0087.) Her önemli oturum
-sonunda `DEVIR/` klasörüne kısa devir notu yaz (tarih + ne yapıldı + açık
+Yeni migration'lar **0109'dan** devam, sıfır dolgulu 4 hane. (Aviator görsel
+senkron 0079–0081; kalıcı sanal lig + settle 0082–0087; slot 0091; sanal
+basketbol/tenis/voleybol 0092–0106; get_bulletin security-definer fix 0101;
+davranış aynası Faz 0 yakalama 0107 + Faz 1a Aviator teşhis 0108.) Her önemli
+oturum sonunda `DEVIR/` klasörüne kısa devir notu yaz (tarih + ne yapıldı + açık
 konular) — böylece geçmiş kalıcı birikir.
+
+**Davranış aynası (asıl ürün) — başladı:** Faz 0 (moat: karar-öncesi olay
+yakalama, `behavior_events` + `log_events`) ve Faz 1a (Aviator teşhis,
+`mirror_aviator()` + `AviatorMirror.tsx`) CANLIDA. İlke: teşhis=hook, delta=ürün,
+sayılar deterministik, LLM sadece "ses" (henüz yok). **Para yoluna (settle)
+analiz mutasyonu ASLA eklenmez** — ayna yalnız okur. Sıra: Faz 1b (trend/delta
+çizgisi, Decision Replay, Player Card, çapraz-ürün profil, en son LLM ses).
