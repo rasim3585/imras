@@ -1591,6 +1591,9 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .court-clk { background: rgba(0,0,0,0.55); color: #fff; font-size: 0.78rem; font-weight: 800; padding: 4px 12px; border-radius: 999px; font-variant-numeric: tabular-nums; }
 .court-clk.fin { background: rgba(0,0,0,0.6); }
 .court-q { color: #ffcf6b; }
+.tn-sub { color: #fff; font-weight: 700; opacity: 0.92; }
+.tn-setslabel { position: absolute; left: 0; right: 0; bottom: 40px; text-align: center; font-size: 0.56rem; font-weight: 700;
+  letter-spacing: 0.5px; text-transform: uppercase; color: rgba(255,255,255,0.6); }
 .court-score { position: absolute; left: 0; right: 0; bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 12px; }
 .court-name { color: #fff; font-size: 0.82rem; font-weight: 700; max-width: 34%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 3px rgba(0,0,0,0.6); transition: color 0.2s; }
 .court-name.lit { color: #ffe08a; }

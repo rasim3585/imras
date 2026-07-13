@@ -6,7 +6,34 @@ import CourtTV from '../live/CourtTV';
 import TennisTV from '../live/TennisTV';
 import MatchChat from '../live/ChatPanel';
 import { courtStatsAt, ambientPlay, type PlayType } from '../live/courtSim';
+import { tennisFeed, type TPlay } from '../live/tennisSim';
 import type { LiveState, Match } from '../lib/types';
+
+const TPLAY_ICON: Record<TPlay, string> = { ace: '🎾', winner: '🔥', error: '❌', break: '⚡', rally: '↔' };
+
+// Tennis / volleyball point feed below the court (presentational atmosphere).
+function TennisPlays({ matchId, setIdx, home, away }: { matchId: string; setIdx: number; home: string; away: string }) {
+  const { t } = useI18n();
+  const mount = useRef(Date.now());
+  const [, force] = useState(0);
+  useEffect(() => { const id = setInterval(() => force((n) => n + 1), 1600); return () => clearInterval(id); }, []);
+  const elapsed = (Date.now() - mount.current) / 1000;
+  const feed = tennisFeed(matchId, setIdx, elapsed).slice(-10).reverse();
+  return (
+    <>
+      <div className="section-head"><h3>{t('live.keymoments')}</h3></div>
+      <div className="card cm-feed">
+        {feed.length === 0 && <div className="cm-line"><span className="cm-text muted">{t('live.playersout')}</span></div>}
+        {feed.map((e) => (
+          <div key={e.key} className="cm-line">
+            <span className="cm-ico">{TPLAY_ICON[e.type]}</span>
+            <span className="cm-text">{t(`tplay.${e.type}`)} · {e.side === 'home' ? home : away}</span>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
 
 const PLAY_ICON: Record<PlayType, string> = {
   make2: '🏀', make3: '🎯', miss: '🧱', rebound: '🔁', steal: '🖐', foul: '⚠', block: '🛡', assist: '➡',
@@ -110,7 +137,7 @@ export default function LiveCourtScreen() {
 
       {match.sport === 'tennis' || match.sport === 'volleyball' ? (
         <TennisTV home={match.home_team} away={match.away_team} hs={hs} as={as}
-          period={live?.period ?? null} phase={phase} />
+          period={live?.period ?? null} phase={phase} matchId={matchId!} sport={match.sport} />
       ) : (
         <CourtTV home={match.home_team} away={match.away_team} hs={hs} as={as}
           period={live?.period ?? null} minute={live?.minute ?? 0} phase={phase} matchId={matchId!} />
@@ -118,6 +145,9 @@ export default function LiveCourtScreen() {
 
       {phase !== 'upcoming' && matchId && match.sport === 'basketball' && (
         <CourtStats matchId={matchId} home={match.home_team} away={match.away_team} hs={hs} as={as} />
+      )}
+      {phase === 'live' && matchId && (match.sport === 'tennis' || match.sport === 'volleyball') && (
+        <TennisPlays matchId={matchId} setIdx={hs + as} home={match.home_team} away={match.away_team} />
       )}
 
       {(ph > 0 || pa > 0) && phase !== 'finished' && (
