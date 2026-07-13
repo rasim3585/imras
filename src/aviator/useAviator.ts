@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../auth/AuthContext';
+import { logEvent } from '../lib/behaviorLog';
 import {
   type AviatorRound, type AviatorConfig, type AviatorBet, type AviatorPlayer,
   DEFAULT_CONFIG, GROWTH,
@@ -194,6 +195,11 @@ export function useAviator(): AviatorState {
 
   const place = useCallback(async (slot: 1 | 2, stake: number, auto: number | null) => {
     const res = await placeBet(stake, slot, auto);
+    // Risk psychology at commit: stake size and whether they PRE-SET an auto-cashout
+    // (discipline) vs. left it manual (live greed). round_id ties it to the outcome.
+    logEvent('aviator', 'bet_placed',
+      { slot, stake, auto_cashout_at: auto, has_auto: auto != null },
+      { round_id: prevRound.current?.id ?? null });
     setMyBets((m) => ({
       ...m,
       [slot]: {
@@ -205,6 +211,12 @@ export function useAviator(): AviatorState {
   }, []);
 
   const cashOut = useCallback(async (slot: 1 | 2, clientMultiplier: number) => {
+    // THE cleanest risk signal: the multiplier the user chose to pull out at.
+    // clientMultiplier = what they SAW when they tapped (their decision point);
+    // res.multiplier = what the server paid. Gap between them = reflex/latency.
+    logEvent('aviator', 'cashout',
+      { seen_multiplier: Number(clientMultiplier.toFixed(2)), slot, was_auto: false },
+      { round_id: prevRound.current?.id ?? null });
     const res = await cashout(slot, clientMultiplier);
     setMyBets((m) => {
       const b = m[slot];

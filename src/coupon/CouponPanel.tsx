@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from './CartContext';
 import { useAuth } from '../auth/AuthContext';
 import { matchProvider } from '../lib/matchProvider';
 import { formatOdds } from '../lib/format';
+import { logEvent } from '../lib/behaviorLog';
 
 const QUICK = [100, 250, 500];
 
@@ -30,13 +31,28 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
   const potential = Math.round(stake * totalOdds);
   const stakeValid = stake > 0 && stake <= balance;
 
+  // When this slip was opened — lets us measure hesitation (open → play), a core
+  // pre-decision risk signal: impulsive vs. deliberated stakes read very differently.
+  const openedAt = useRef(Date.now());
+
   async function place() {
     setError(null); setBusy(true);
+    // Snapshot the decision the moment the user commits (moat: stake sizing vs.
+    // balance, odds appetite, leg count, hesitation). Post-settle we only know the
+    // outcome; the CHOICE lives here.
+    const decision = {
+      stake, total_odds: totalOdds, legs: count, potential,
+      stake_pct_balance: balance > 0 ? Math.round((stake / balance) * 100) : null,
+      kinds: selections.map((s) => s.kind),
+    };
+    const meta = { hesitation_ms: Date.now() - openedAt.current };
     try {
       await matchProvider.placeCoupon(selections, stake);
+      logEvent('coupon', 'coupon_placed', decision, meta);
       clear(); await refreshProfile(); setPlaced(true);
     } catch (err) {
       const raw = err instanceof Error ? err.message : '';
+      logEvent('coupon', 'coupon_place_failed', { ...decision, reason: raw.slice(0, 80) }, meta);
       setError(raw.includes('market_closed') ? 'A match on your coupon has closed. Remove it and retry.'
         : raw.includes('Not enough gold') ? 'Not enough gold for that stake.' : raw || 'Could not place coupon');
     } finally { setBusy(false); }
