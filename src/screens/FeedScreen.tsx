@@ -4,6 +4,7 @@ import MatchRow from '../components/MatchRow';
 import { EFootballIcon, EBasketballIcon, ETennisIcon, EVolleyballIcon, BallIcon } from '../components/icons';
 import { useAuth } from '../auth/AuthContext';
 import { useI18n } from '../i18n/LanguageContext';
+import { countryFlag } from '../lib/countryFlag';
 import { matchProvider } from '../lib/matchProvider';
 import type { BulletinMatch } from '../lib/types';
 
@@ -204,7 +205,7 @@ export default function FeedScreen() {
             <>
               {grouped.countries.map((cg) => (
                 <div key={cg.country} className="ll-cgrp">
-                  <div className="ll-country"><span>{cg.country}</span><span className="ll-country-n">{cg.count}</span></div>
+                  <div className="ll-country"><span>{countryFlag(cg.country) && <span className="ll-flag" aria-hidden>{countryFlag(cg.country)} </span>}{cg.country}</span><span className="ll-country-n">{cg.count}</span></div>
                   {cg.leagues.map((lg) => (
                     <div key={lg.league}>
                       <div className="ll-bar"><span className="ll-bar-l">{lg.league}</span><span className="ll-bar-r">{lg.matches.length}</span></div>
