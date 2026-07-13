@@ -6,6 +6,26 @@ import type { MirrorFlag } from '../lib/mirror';
 const pct = (x: number) => `%${Math.round(Number(x) * 100)}`;
 const gold = (n: number) => `${Number(n) > 0 ? '+' : ''}${Number(n).toLocaleString('tr-TR')}`;
 
+// Her uyarıya somut bir "koç" önerisi (LLM değil — deterministik nudge). İyi/nötr
+// bayraklara öneri yok.
+export function flagAction(code: string): string | null {
+  switch (code) {
+    case 'longshot_addict': return 'Sonraki 10 kuponda oranı 3.00 altında tut — tutma ihtimalin katlanır.';
+    case 'coupon_bleed': return 'Bacak sayısını azalt: tek maç, düşük oran. Kayıp yavaşlar.';
+    case 'buy_impulse': return 'Bonusu satın alma; normal spinle bekle — uzun vadede çok daha ucuz.';
+    case 'ante_habit': return 'Ante\'yi kapat: aynı keyif, daha yumuşak varyans.';
+    case 'slot_bleed': return 'Bahsi bir kademe düşür; slot uzun vadede kazanamazsın, eğlence için oyna.';
+    case 'concentration': return 'Bahsini ürünlere böl — tek kanala %90 yüklemek tek kötü seri demek.';
+    case 'worst_is_favorite': return 'En çok kaybettiğin yerde bahsi küçült; kârlı olduğun oyuna kaydır.';
+    // aviator kodları (AviatorMirror kendi metnini kullanıyor; hub tutarlılığı için burada da var)
+    case 'greed_caught': return 'Otomatik çekişi 1.8x\'e kur; disiplini makineye bırak.';
+    case 'low_discipline': return 'Her bahiste auto-cashout koy — anlık dürtüyü devre dışı bırakır.';
+    case 'win_illusion': return 'Kazanma oranına değil, nete bak. Küçük kazançlar tabloyu yalıyor.';
+    case 'chasing_losses': return 'Kayıptan sonra bahsi ASLA büyütme; aynı tut ya da mola ver.';
+    default: return null;
+  }
+}
+
 export function flagText(f: MirrorFlag): { title: string; body: string } {
   const v = f.value as Record<string, number | string>;
   switch (f.code) {

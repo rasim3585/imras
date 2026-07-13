@@ -4,7 +4,7 @@ import {
   type OverviewProfile, type CouponProfile, type SlotProfile, type MirrorFlag,
   type BenchmarkProfile, type BenchmarkAxis, type PlayerCard,
 } from '../lib/mirror';
-import { flagText } from '../analiz/flagText';
+import { flagText, flagAction } from '../analiz/flagText';
 import AviatorMirror from '../aviator/AviatorMirror';
 import { CoinIcon } from '../components/icons';
 
@@ -32,10 +32,14 @@ function FlagList({ flags }: { flags: MirrorFlag[] }) {
     <ul className="az-flags">
       {[...warns, ...goods].map((f) => {
         const t = flagText(f);
+        const act = f.level === 'warn' ? flagAction(f.code) : null;
         return (
           <li key={f.code} className={`az-flag ${f.level}`}>
             <span className="az-dot" aria-hidden />
-            <div><b>{t.title}</b><p>{t.body}</p></div>
+            <div>
+              <b>{t.title}</b><p>{t.body}</p>
+              {act && <p className="az-act"><span aria-hidden>→ </span>{act}</p>}
+            </div>
           </li>
         );
       })}

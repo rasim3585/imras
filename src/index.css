@@ -1492,6 +1492,7 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .az-flag.good .az-dot { background: var(--av-mid); }
 .az-flag b { font-size: 0.88rem; font-weight: 800; }
 .az-flag p { margin: 3px 0 0; font-size: 0.82rem; color: var(--text-mut); line-height: 1.5; }
+.az-act { color: var(--av-mid) !important; font-weight: 600; }
 .az-card { display: flex; gap: 14px; align-items: flex-start; border: 1px solid var(--card-line); border-radius: 14px; background: linear-gradient(135deg, color-mix(in srgb, var(--av-mid) 10%, var(--surface)), var(--surface)); padding: 14px 16px; }
 .az-card-emoji { font-size: 2.4rem; line-height: 1; flex: none; }
 .az-card-main { display: flex; flex-direction: column; gap: 5px; min-width: 0; }

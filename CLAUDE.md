@@ -169,12 +169,13 @@ kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40
 ---
 
 ## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0114'ten** devam, sıfır dolgulu 4 hane. (Aviator görsel
+Yeni migration'lar **0115'ten** devam, sıfır dolgulu 4 hane. (Aviator görsel
 senkron 0079–0081; kalıcı sanal lig + settle 0082–0087; slot 0091; sanal
 basketbol/tenis/voleybol 0092–0106; get_bulletin security-definer fix 0101;
 davranış aynası Faz 0 yakalama 0107 + Faz 1a Aviator teşhis 0108 + Faz 1b trend
 0109 + Decision Replay 0110; sahte veri seed 0111; kupon/slot/genel analitik 0112;
-benchmark 0113.) Her önemli oturum sonunda `DEVIR/` klasörüne kısa devir notu yaz.
+benchmark 0113; Player Card 0114.) Her önemli oturum sonunda `DEVIR/` klasörüne
+kısa devir notu yaz.
 
 **Davranış aynası (asıl ürün) — canlıda büyüyor:** Faz 0 (moat yakalama
 `behavior_events`+`log_events`), Faz 1a-b (Aviator teşhis+trend+Decision Replay),
