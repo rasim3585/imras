@@ -4,10 +4,12 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
 import type { CartSelection } from '../lib/types';
+import { logEvent } from '../lib/behaviorLog';
 
 const STORAGE_KEY = 'pickplay.cart.v3';   // v3: kind-aware, option_id nullable
 const SAVED_KEY = 'pickplay.saved.v1';    // saved (un-played) coupon drafts
@@ -63,6 +65,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [selections, setSelections] = useState<CartSelection[]>(load);
   const [saved, setSaved] = useState<SavedDraft[]>(loadSaved);
 
+  // latest selections for behaviour logging (read outside state updaters so we
+  // never double-log under StrictMode's double-invoked reducers).
+  const selectionsRef = useRef(selections);
+  useEffect(() => { selectionsRef.current = selections; }, [selections]);
+
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(selections)); }
     catch { /* ignore quota / private mode */ }
@@ -95,6 +102,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const select = useCallback((leg: CartSelection) => {
     const legKey = keyOf(leg.match_id, leg.market_type, leg.outcome_key);
+    // Pre-decision behavioural signal (the moat): what the user adds / swaps /
+    // taps-off while building a coupon. Logged from a ref, outside the updater.
+    const prevSel = selectionsRef.current;
+    const onMatch = prevSel.find((s) => s.match_id === leg.match_id);
+    const action = onMatch && keyOf(onMatch.match_id, onMatch.market_type, onMatch.outcome_key) === legKey
+      ? 'selection_removed' : onMatch ? 'selection_changed' : 'selection_added';
+    logEvent('coupon', action,
+      { match_id: leg.match_id, kind: leg.kind, market_type: leg.market_type, outcome_key: leg.outcome_key, odds: leg.odds },
+      { cart_size_before: prevSel.length });
     setSelections((prev) => {
       const existing = prev.find((s) => s.match_id === leg.match_id);
       // tapping the already-selected leg clears the match
@@ -107,10 +123,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const remove = useCallback((matchId: string) => {
+    logEvent('coupon', 'selection_removed', { match_id: matchId }, { via: 'dock', cart_size_before: selectionsRef.current.length });
     setSelections((prev) => prev.filter((s) => s.match_id !== matchId));
   }, []);
 
-  const clear = useCallback(() => setSelections([]), []);
+  const clear = useCallback(() => {
+    if (selectionsRef.current.length > 0) logEvent('coupon', 'coupon_cleared', {}, { cart_size_before: selectionsRef.current.length });
+    setSelections([]);
+  }, []);
 
   const isPicked = useCallback(
     (matchId: string, marketType: string, outcomeKey: string) =>
