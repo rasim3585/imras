@@ -123,6 +123,32 @@ export async function fetchRoundBets(roundId: string | number): Promise<AviatorP
   return bets.map((b) => ({ ...b, username: nameById[b.user_id] ?? 'Player' }));
 }
 
+// --- behaviour mirror (Faz 1a) ----------------------------------------------
+// Deterministic self-diagnosis computed server-side from the user's OWN settled
+// bets (mirror_aviator RPC). Numbers are the truth; the UI only phrases them.
+export interface MirrorFlag {
+  code: 'win_illusion' | 'greed_caught' | 'chasing_losses' | 'low_discipline'
+      | 'disciplined' | 'trend_worse' | 'trend_better';
+  level: 'warn' | 'good' | 'info';
+  value: Record<string, number>;
+}
+export type MirrorProfile =
+  | { ready: false; rounds?: number; need?: number; reason?: string }
+  | {
+      ready: true; product: 'aviator'; rounds: number; win_rate: number; net: number;
+      avg_cashout: number; median_cashout: number; caught_rate: number; auto_rate: number;
+      loss_ratio: number | null; win_ratio: number | null;
+      recent: { rounds: number; caught_rate: number; net: number };
+      flags: MirrorFlag[];
+    };
+
+/** The user's Aviator behaviour mirror. Auth required; anon → {ready:false}. */
+export async function fetchAviatorMirror(): Promise<MirrorProfile> {
+  const { data, error } = await supabase.rpc('mirror_aviator');
+  if (error) throw new Error(error.message);
+  return (data ?? { ready: false }) as MirrorProfile;
+}
+
 // --- writes (auth required) --------------------------------------------------
 export async function placeBet(stake: number, slot: 1 | 2, autoCashoutAt: number | null): Promise<PlaceBetResult> {
   const { data, error } = await supabase.rpc('aviator_place_bet', {

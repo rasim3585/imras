@@ -1413,6 +1413,28 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .av-placed { background: var(--surface-2); color: var(--text-mut); }
 .av-err { font-size: 0.72rem; color: var(--av-low); text-align: center; }
 
+/* Davranış aynası — Aviator teşhis kartı */
+.av-mirror { margin-top: var(--s3); border: 1px solid var(--card-line); border-radius: var(--radius); background: var(--surface); padding: var(--s3); display: flex; flex-direction: column; gap: 10px; }
+.av-mirror-wait { opacity: 0.85; }
+.av-mirror-h { display: flex; align-items: baseline; gap: 8px; font-size: 0.95rem; font-weight: 800; margin: 0; }
+.av-mirror-n { font-size: 0.72rem; font-weight: 600; color: var(--text-mut); }
+.av-mirror-sub { margin: 0; font-size: 0.8rem; color: var(--text-mut); line-height: 1.45; }
+.av-mirror-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.av-mirror-stats > div { background: var(--surface-2); border: 1px solid var(--card-line); border-radius: 8px; padding: 7px 6px; display: flex; flex-direction: column; gap: 2px; }
+.av-mirror-stats .k { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-mut); }
+.av-mirror-stats b { font-size: 0.9rem; font-weight: 800; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 3px; }
+.av-mirror-stats b.pos { color: var(--av-mid); }
+.av-mirror-stats b.neg { color: var(--av-low); }
+@media (max-width: 480px) { .av-mirror-stats { grid-template-columns: repeat(2, 1fr); } }
+.av-mirror-flags { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.av-mirror-flag { display: flex; gap: 9px; align-items: flex-start; }
+.av-mirror-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; }
+.av-mirror-flag.warn .av-mirror-dot { background: var(--av-low); }
+.av-mirror-flag.good .av-mirror-dot { background: var(--av-mid); }
+.av-mirror-flag b { font-size: 0.82rem; font-weight: 800; }
+.av-mirror-flag p { margin: 2px 0 0; font-size: 0.79rem; color: var(--text-mut); line-height: 1.45; }
+.av-mirror-foot { margin: 2px 0 0; font-size: 0.7rem; color: var(--text-mut); opacity: 0.75; font-style: italic; }
+
 /* dual-bet clarity: per-slot accent colour + status pill */
 .av-panel-s1 { --slot: var(--av-mid); }
 .av-panel-s2 { --slot: #3aa0ff; }

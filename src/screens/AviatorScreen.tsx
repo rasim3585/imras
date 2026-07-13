@@ -6,6 +6,7 @@ import PitchCurve from '../aviator/PitchCurve';
 import BetPanel from '../aviator/BetPanel';
 import HistoryStrip from '../aviator/HistoryStrip';
 import PlayersList from '../aviator/PlayersList';
+import AviatorMirror from '../aviator/AviatorMirror';
 import { CoinIcon } from '../components/icons';
 
 // Aviator screen. Public to WATCH (anon SELECT is open); betting is login-gated
@@ -70,6 +71,8 @@ export default function AviatorScreen() {
           />
         ))}
       </div>
+
+      {loggedIn && <AviatorMirror />}
     </div>
   );
 }
