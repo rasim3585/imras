@@ -13,6 +13,8 @@ import type { SlotResult, SlotStep } from '../lib/types';
 
 const COLS = 6, ROWS = 5;
 const BUY_COST = 60;            // mirrors slot_config.buy_cost (buy = bet × 60)
+// Original scrolling ticker describing our own mechanics.
+const MARQUEE = '8 OR MORE MATCHING SYMBOLS PAY ANYWHERE  ✦  COLLECT MULTIPLIER ORBS  ✦  4+ SCATTERS OPEN FREE SPINS  ✦  MULTIPLIERS ADD UP IN FREE SPINS  ✦  DOUBLE CHANCE FOR MORE SCATTERS  ✦  WIN UP TO 1000× BET  ✦';
 const MIN_BET = 10, MAX_BET = 1000, BET_STEP = 10;
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -166,7 +168,11 @@ export default function GatesScreen() {
 
   return (
     <div className="go">
-      <div className="go-topbanner"><span>TUMBLE PAYS</span> · UP TO 1000× BET</div>
+      <div className="go-marquee">
+        <div className="go-marquee-track">
+          <span>{MARQUEE}</span><span>{MARQUEE}</span>
+        </div>
+      </div>
 
       <div className="go-stage">
         {/* left rail — buy bonus + double chance + black win screen */}
@@ -224,9 +230,10 @@ export default function GatesScreen() {
             </div>
           </div>
 
-          <div className="go-touchline" aria-hidden="true" />
-          <CornerFlag side="left" />
-          <CornerFlag side="right" />
+          <div className="go-ground" aria-hidden="true">
+            <CornerFlag side="left" />
+            <CornerFlag side="right" />
+          </div>
         </div>
       </div>
 

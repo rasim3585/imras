@@ -601,13 +601,16 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .go { max-width: 940px; margin: 0 auto; }
 @keyframes pop-in { 0% { transform: scale(0.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-.go-topbanner {
-  text-align: center; font-weight: 800; letter-spacing: 1.5px; font-size: 0.82rem;
-  color: #6b4610; padding: 5px 0; margin-bottom: 10px; border-radius: 999px;
+.go-marquee {
+  overflow: hidden; margin-bottom: 10px; padding: 6px 0; border-radius: 999px;
   background: linear-gradient(#ffe9a8, #f3c73f 55%, #d69a24);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 3px 12px rgba(0,0,0,0.3);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
 }
-.go-topbanner span { color: #3a2408; }
+.go-marquee-track { display: flex; width: max-content; animation: go-scroll 30s linear infinite; }
+.go-marquee-track span { padding-right: 40px; white-space: nowrap; font-weight: 800; letter-spacing: 1.3px; font-size: 0.8rem; color: #3a2408; }
+@keyframes go-scroll { to { transform: translateX(-50%); } }
 
 .go-stage { display: flex; align-items: stretch; gap: 12px; }
 
@@ -651,7 +654,8 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 
 /* center frame ------------------------------------------------------------ */
 .go-frame {           /* the grass pitch */
-  position: relative; flex: 1; min-width: 0; padding: 30px 52px 54px; border-radius: 18px; overflow: hidden;
+  position: relative; flex: 1; min-width: 0; padding: 26px 48px 12px; border-radius: 18px; overflow: hidden;
+  display: flex; flex-direction: column;
   background:
     repeating-linear-gradient(90deg, rgba(255,255,255,0.055) 0 44px, rgba(0,0,0,0.055) 44px 88px),
     linear-gradient(#2f8f3e 0%, #237231 55%, #17561f 100%);
@@ -659,26 +663,31 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 }
 .go-frame.is-bonus { box-shadow: inset 0 0 90px rgba(120,60,200,0.35), 0 16px 44px rgba(0,0,0,0.5); }
 
-/* white touchline (field boundary) between the goal and the corner flags */
-.go-touchline { position: absolute; inset: 12px; border-radius: 14px; z-index: 1; pointer-events: none;
-  border: 3px solid rgba(255,255,255,0.85); box-shadow: 0 0 6px rgba(255,255,255,0.25); }
-
-/* the football goal — white frame with a net behind the reels */
+/* the football goal — 3 white posts (left, right, crossbar); open at the
+   bottom where it meets the goal line. Net shows behind the reels. */
 .go-goal {
-  position: relative; z-index: 2; margin: 0 26px; padding: 12px; border-radius: 8px;
-  border: 9px solid #f4f7fa; background: linear-gradient(#0f2c17, #08190d);
-  box-shadow: 0 0 0 2px #b7bfc7, inset 0 0 26px rgba(0,0,0,0.7), 0 12px 26px rgba(0,0,0,0.55);
+  position: relative; z-index: 2; margin: 0 22px; padding: 12px 12px 8px; border-radius: 12px 12px 0 0;
+  border: 10px solid #f4f7fa; border-bottom: none;
+  background: linear-gradient(#153f22, #0d2a15);
+  box-shadow: inset 0 0 24px rgba(0,0,0,0.5), 0 6px 16px rgba(0,0,0,0.4);
 }
-.go-frame.is-bonus .go-goal { border-color: #ffe9a8; box-shadow: 0 0 0 2px #c8891f, inset 0 0 26px rgba(0,0,0,0.7), 0 0 34px rgba(255,206,74,0.55); }
+.go-frame.is-bonus .go-goal { border-color: #ffe9a8; box-shadow: inset 0 0 24px rgba(0,0,0,0.5), 0 0 30px rgba(255,206,74,0.5); }
 .go-net {
-  position: absolute; inset: 5px; z-index: 0; border-radius: 4px; opacity: 0.42;
+  position: absolute; inset: 4px; z-index: 0; opacity: 0.6;
   background-image:
-    repeating-linear-gradient(45deg, rgba(255,255,255,0.4) 0 1px, transparent 1px 14px),
-    repeating-linear-gradient(-45deg, rgba(255,255,255,0.4) 0 1px, transparent 1px 14px);
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.6) 0 1.5px, transparent 1.5px 15px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.6) 0 1.5px, transparent 1.5px 15px);
 }
-.go-frame.is-bonus .go-net { opacity: 0.6; background-image:
-  repeating-linear-gradient(45deg, rgba(255,220,120,0.5) 0 1px, transparent 1px 14px),
-  repeating-linear-gradient(-45deg, rgba(255,220,120,0.5) 0 1px, transparent 1px 14px); }
+.go-frame.is-bonus .go-net { background-image:
+  repeating-linear-gradient(0deg, rgba(255,222,130,0.65) 0 1.5px, transparent 1.5px 15px),
+  repeating-linear-gradient(90deg, rgba(255,222,130,0.65) 0 1.5px, transparent 1.5px 15px); }
+
+/* the goal line (white) — runs the full width between the corner flags; the
+   goal sits on it. A strip of grass shows below with the flags planted in it. */
+.go-ground {
+  position: relative; z-index: 2; height: 40px; margin: 0 -34px;
+  border-top: 4px solid #ffffff; box-shadow: 0 -1px 7px rgba(255,255,255,0.35);
+}
 
 .go-reels { position: relative; z-index: 1; padding: 2px; }
 .go-grid { display: grid; gap: 8px; position: relative; z-index: 1; }
@@ -723,13 +732,18 @@ svg.crest { background: none !important; border-radius: 0 !important; }
   font-size: 0.6rem; letter-spacing: 0.5px; color: #ffe27a; text-shadow: 0 1px 2px rgba(0,0,0,0.9); }
 .go-cell.scat { z-index: 2; }
 
-/* corner flags planted in the turf, outside the goal */
-.go-flag { position: absolute; bottom: 6px; width: 52px; z-index: 3; pointer-events: none; }
-.go-flag-left { left: 4px; }
-.go-flag-right { right: 4px; transform: scaleX(-1); }
-.go-flag-svg { width: 100%; height: auto; }
-.go-flag-cloth { transform-origin: 32px 22px; animation: go-wave 2.2s ease-in-out infinite; }
-@keyframes go-wave { 0%,100% { transform: skewY(0deg) scaleX(1); } 50% { transform: skewY(-5deg) scaleX(0.92); } }
+/* corner flags planted on the goal line, rising up into the grass */
+.go-flag { position: absolute; bottom: -6px; width: 46px; z-index: 3; pointer-events: none; }
+.go-flag-left { left: 6px; }
+.go-flag-right { right: 6px; transform: scaleX(-1); }
+.go-flag-svg { width: 100%; height: auto; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4)); }
+.go-flag-cloth { transform-origin: 32px 22px; animation: go-wave 1.7s ease-in-out infinite; }
+@keyframes go-wave {
+  0%,100% { transform: skewY(0deg) scaleX(1); }
+  25% { transform: skewY(7deg) scaleX(0.88); }
+  50% { transform: skewY(0deg) scaleX(1); }
+  75% { transform: skewY(-7deg) scaleX(0.9); }
+}
 
 /* overlays --------------------------------------------------------------- */
 .go-multbadge { position: absolute; top: 12px; right: 14px; z-index: 4; background: linear-gradient(#ffe27a, #f3c73f);
