@@ -640,53 +640,76 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .go-toggle.on .go-toggle-knob { background: #ffd24a; box-shadow: 0 0 8px #ffd24a; }
 .go-double-note { font-size: 0.64rem; color: var(--muted); margin-top: 6px; }
 
-.go-lastwin {
-  margin-top: auto; display: flex; flex-direction: column; gap: 2px; text-align: center;
-  border-radius: 12px; padding: 10px 6px; background: rgba(0,0,0,0.28); border: 1px solid var(--line);
+.go-winscreen {
+  margin-top: auto; text-align: center; border-radius: 10px; padding: 13px 6px;
+  background: radial-gradient(120% 100% at 50% 0%, #101a20 0%, #05080b 100%);
+  border: 2px solid #26333d; box-shadow: inset 0 0 18px rgba(0,0,0,0.9);
 }
-.go-lastwin .muted { font-size: 0.62rem; letter-spacing: 0.5px; }
-.go-lastwin b { font-size: 1.15rem; color: #ffe27a; }
+.go-winscreen-lbl { display: block; font-size: 0.56rem; letter-spacing: 2px; font-weight: 800; color: #3f6b4d; }
+.go-winscreen b { font-size: 1.4rem; color: #2fbf5a; text-shadow: 0 0 9px rgba(47,191,90,0.6); }
+.go-winscreen.lit b { color: #86ffb0; text-shadow: 0 0 15px rgba(125,255,168,0.95); }
 
 /* center frame ------------------------------------------------------------ */
-.go-frame {
-  position: relative; flex: 1; min-width: 0; padding: 16px; border-radius: 24px;
-  background: linear-gradient(150deg, #ffe9a8 0%, #d69a24 22%, #8a5a12 50%, #b8801e 72%, #f3c73f 100%);
-  box-shadow: inset 0 0 0 2px rgba(90,58,14,0.7), inset 0 2px 3px rgba(255,255,255,0.5),
-              0 16px 44px rgba(0,0,0,0.5);
+.go-frame {           /* the grass pitch */
+  position: relative; flex: 1; min-width: 0; padding: 30px 52px 54px; border-radius: 18px; overflow: hidden;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.055) 0 44px, rgba(0,0,0,0.055) 44px 88px),
+    linear-gradient(#2f8f3e 0%, #237231 55%, #17561f 100%);
+  box-shadow: inset 0 0 70px rgba(0,0,0,0.4), 0 16px 44px rgba(0,0,0,0.5);
 }
-.go-reels {
-  position: relative; border-radius: 14px; padding: 12px; overflow: hidden;
-  background: radial-gradient(130% 100% at 50% -10%, #57318f 0%, #3a1f66 45%, #241245 78%, #170b2e 100%);
-  box-shadow: inset 0 3px 18px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05);
-}
-.go-frame.is-bonus .go-reels {
-  background: radial-gradient(130% 100% at 50% -10%, #8a4bd6 0%, #5a2ea0 45%, #38206e 78%, #1e0f3e 100%);
-}
-.go-grid { display: grid; gap: 7px; position: relative; z-index: 1; }
+.go-frame.is-bonus { box-shadow: inset 0 0 90px rgba(120,60,200,0.35), 0 16px 44px rgba(0,0,0,0.5); }
 
+/* white touchline (field boundary) between the goal and the corner flags */
+.go-touchline { position: absolute; inset: 12px; border-radius: 14px; z-index: 1; pointer-events: none;
+  border: 3px solid rgba(255,255,255,0.85); box-shadow: 0 0 6px rgba(255,255,255,0.25); }
+
+/* the football goal — white frame with a net behind the reels */
+.go-goal {
+  position: relative; z-index: 2; margin: 0 26px; padding: 12px; border-radius: 8px;
+  border: 9px solid #f4f7fa; background: linear-gradient(#0f2c17, #08190d);
+  box-shadow: 0 0 0 2px #b7bfc7, inset 0 0 26px rgba(0,0,0,0.7), 0 12px 26px rgba(0,0,0,0.55);
+}
+.go-frame.is-bonus .go-goal { border-color: #ffe9a8; box-shadow: 0 0 0 2px #c8891f, inset 0 0 26px rgba(0,0,0,0.7), 0 0 34px rgba(255,206,74,0.55); }
+.go-net {
+  position: absolute; inset: 5px; z-index: 0; border-radius: 4px; opacity: 0.42;
+  background-image:
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.4) 0 1px, transparent 1px 14px),
+    repeating-linear-gradient(-45deg, rgba(255,255,255,0.4) 0 1px, transparent 1px 14px);
+}
+.go-frame.is-bonus .go-net { opacity: 0.6; background-image:
+  repeating-linear-gradient(45deg, rgba(255,220,120,0.5) 0 1px, transparent 1px 14px),
+  repeating-linear-gradient(-45deg, rgba(255,220,120,0.5) 0 1px, transparent 1px 14px); }
+
+.go-reels { position: relative; z-index: 1; padding: 2px; }
+.go-grid { display: grid; gap: 8px; position: relative; z-index: 1; }
+
+/* symbols sit DIRECTLY on the grid (no tile). Drop in from the top with a
+   squash on landing; on a win they flash then fall out of the bottom. */
 .go-cell {
-  position: relative; aspect-ratio: 1; border-radius: 11px; display: flex; align-items: center; justify-content: center;
-  background: rgba(255,255,255,0.03); animation: go-drop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  position: relative; aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+  transform-origin: bottom center; animation: go-drop 0.52s cubic-bezier(0.34, 1.2, 0.5, 1) both;
 }
 @keyframes go-drop {
-  0% { transform: translateY(-155%) scale(0.9); opacity: 0; }
-  55% { opacity: 1; }
-  78% { transform: translateY(7%) scale(1.03); }
+  0% { transform: translateY(-175%) scaleY(1.15) scaleX(0.88); opacity: 0; }
+  50% { opacity: 1; }
+  72% { transform: translateY(0) scaleY(0.78) scaleX(1.14); }
+  86% { transform: translateY(0) scaleY(1.09) scaleX(0.95); }
   100% { transform: translateY(0) scale(1); opacity: 1; }
 }
-.go-sym-wrap { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; animation: go-sway 2.8s ease-in-out infinite; }
-@keyframes go-sway { 0%,100% { transform: translateY(0) rotate(-0.8deg); } 50% { transform: translateY(-2px) rotate(0.8deg); } }
-.go-cell.win { animation: go-pop 0.72s ease forwards; z-index: 3; }
+.go-sym-wrap { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; animation: go-sway 2.9s ease-in-out infinite; }
+@keyframes go-sway { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-2px) rotate(1deg); } }
+.go-cell.win { animation: go-fall-out 0.7s ease-in forwards; z-index: 3; }
 .go-cell.win .go-sym-wrap { animation: none; }
-@keyframes go-pop {
-  0% { transform: scale(1); } 26% { transform: scale(1.2); filter: drop-shadow(0 0 16px rgba(255,214,74,0.95)); }
-  46% { transform: scale(1.06); } 100% { transform: scale(0.24) rotate(8deg); opacity: 0; }
+@keyframes go-fall-out {
+  0% { transform: translateY(0) scale(1); }
+  20% { transform: translateY(-7%) scale(1.16); filter: drop-shadow(0 0 18px rgba(255,255,255,0.95)); }
+  34% { transform: translateY(-7%) scale(1.1); }
+  100% { transform: translateY(200%) scale(0.8) rotate(12deg); opacity: 0; }
 }
 
 /* shared symbol tiles (used by SlotSymbol) */
-.slot-sym { width: 100%; height: 100%; border-radius: 11px; display: flex; align-items: center; justify-content: center;
-  box-shadow: inset 0 -3px 0 rgba(0,0,0,0.28), inset 0 2px 0 rgba(255,255,255,0.18); }
-.slot-sym svg { width: 80%; height: 80%; }
+.slot-sym { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.slot-sym svg { width: 94%; height: 94%; }
 .slot-empty { width: 100%; height: 100%; }
 .slot-orb { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
   filter: drop-shadow(0 0 8px rgba(255,207,58,0.7)); animation: orb-glow 1.4s ease-in-out infinite; }
@@ -700,23 +723,13 @@ svg.crest { background: none !important; border-radius: 0 !important; }
   font-size: 0.6rem; letter-spacing: 0.5px; color: #ffe27a; text-shadow: 0 1px 2px rgba(0,0,0,0.9); }
 .go-cell.scat { z-index: 2; }
 
-/* corner ornaments + torches */
-.go-corner { position: absolute; width: 46px; height: 46px; z-index: 2; pointer-events: none; }
-.go-corner-svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5)); }
-.go-corner.tl { top: 2px; left: 2px; }
-.go-corner.tr { top: 2px; right: 2px; transform: scaleX(-1); }
-.go-corner.bl { bottom: 2px; left: 2px; transform: scaleY(-1); }
-.go-corner.br { bottom: 2px; right: 2px; transform: scale(-1, -1); }
-.go-torches { position: absolute; top: -14px; left: 30px; right: 30px; display: flex; justify-content: space-between; z-index: 3; pointer-events: none; }
-.go-torch { position: relative; width: 40px; }
-.go-bowl { width: 40px; height: 30px; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.5)); }
-.go-flame { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); width: 26px; height: 34px; }
-.go-flame span { position: absolute; bottom: 0; left: 50%; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-  transform: translateX(-50%); filter: blur(0.4px); }
-.go-flame-a { width: 22px; height: 30px; background: radial-gradient(circle at 50% 80%, #ffd24a, #ff7a18 60%, #e0350f); animation: go-flick 0.5s ease-in-out infinite alternate; }
-.go-flame-b { width: 14px; height: 22px; background: radial-gradient(circle at 50% 80%, #fff2b0, #ffb43a 70%); animation: go-flick 0.4s ease-in-out infinite alternate-reverse; }
-.go-flame-c { width: 7px; height: 13px; background: #fff6d6; animation: go-flick 0.3s ease-in-out infinite alternate; }
-@keyframes go-flick { 0% { transform: translateX(-50%) scaleY(0.92) translateY(0); } 100% { transform: translateX(-52%) scaleY(1.12) translateY(-2px); } }
+/* corner flags planted in the turf, outside the goal */
+.go-flag { position: absolute; bottom: 6px; width: 52px; z-index: 3; pointer-events: none; }
+.go-flag-left { left: 4px; }
+.go-flag-right { right: 4px; transform: scaleX(-1); }
+.go-flag-svg { width: 100%; height: auto; }
+.go-flag-cloth { transform-origin: 32px 22px; animation: go-wave 2.2s ease-in-out infinite; }
+@keyframes go-wave { 0%,100% { transform: skewY(0deg) scaleX(1); } 50% { transform: skewY(-5deg) scaleX(0.92); } }
 
 /* overlays --------------------------------------------------------------- */
 .go-multbadge { position: absolute; top: 12px; right: 14px; z-index: 4; background: linear-gradient(#ffe27a, #f3c73f);
@@ -734,16 +747,6 @@ svg.crest { background: none !important; border-radius: 0 !important; }
   animation: pop-in 0.45s cubic-bezier(0.2,1.4,0.4,1); }
 .go-banner.big span { font-size: 2.2rem; animation: go-bigwin 0.6s cubic-bezier(0.2,1.4,0.4,1); }
 @keyframes go-bigwin { 0% { transform: scale(0.3) rotate(-6deg); opacity: 0; } 60% { transform: scale(1.15) rotate(3deg); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
-
-/* mascot ------------------------------------------------------------------ */
-.go-mascot { width: 150px; flex: none; display: flex; align-items: flex-end; justify-content: center; position: relative; }
-.go-legend { position: relative; width: 100%; }
-.go-legend-svg { width: 100%; height: auto; filter: drop-shadow(0 6px 14px rgba(0,0,0,0.5)); animation: go-float 4s ease-in-out infinite; }
-@keyframes go-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-.go-legend-aura { position: absolute; inset: 6% 0 10%; border-radius: 50%; z-index: -1;
-  background: radial-gradient(circle, rgba(243,199,63,0.35), rgba(243,199,63,0) 65%); animation: orb-glow 3s ease-in-out infinite; }
-.go-legend.is-excited .go-legend-svg { animation: go-legend-cheer 0.5s ease-in-out infinite alternate; }
-@keyframes go-legend-cheer { 0% { transform: translateY(0) rotate(-2deg) scale(1); } 100% { transform: translateY(-6px) rotate(2deg) scale(1.04); } }
 
 /* bottom bar -------------------------------------------------------------- */
 .go-err { margin-top: 10px; }
@@ -781,10 +784,9 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 
 @media (max-width: 720px) {
   .go-stage { flex-wrap: wrap; }
-  .go-mascot, .go-torches { display: none; }
   .go-rail { width: 100%; flex-direction: row; align-items: stretch; order: 2; }
-  .go-frame { order: 1; flex-basis: 100%; padding: 12px; }
-  .go-lastwin { margin-top: 0; flex: 1; }
+  .go-frame { order: 1; flex-basis: 100%; padding: 22px 30px 44px; }
+  .go-winscreen { margin-top: 0; flex: 1; }
   .go-buy, .go-double { flex: 1; }
 }
 

@@ -1,74 +1,162 @@
-// Original football-themed slot symbols for Gates of Goal. Each is a coloured
-// rounded tile + a simple football motif — our own identity, not a reskin.
-// Cell value: 1..8 = symbol, negative = multiplier orb of that value, 0 = empty.
-
 import type { ReactNode } from 'react';
 
-interface SymDef { bg: string; ink: string; body: ReactNode; }
+// Glossy, dimensional football symbols for Gates of Goal — original vector art
+// (radial/linear gradients + specular highlights + a per-symbol glow), rendered
+// DIRECTLY on the pitch grid with no tile border. Cell value: 1..8 = symbol,
+// 9 = scatter (referee), negative = multiplier orb, 0 = empty.
 
-const T = '#0c130f';   // dark ink outline
+interface SymDef { glow: string; body: ReactNode; }
+
+// Reusable soft top-left highlight
+const Shine = ({ cx = 38, cy = 30, rx = 22, ry = 14, o = 0.55 }: { cx?: number; cy?: number; rx?: number; ry?: number; o?: number }) => (
+  <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="#ffffff" opacity={o} transform={`rotate(-28 ${cx} ${cy})`} />
+);
 
 const SYMBOLS: SymDef[] = [
-  // 1 — whistle (low)
-  { bg: '#2f9e8f', ink: '#eafcf7', body: <>
-    <path d="M30 44h30a11 11 0 1 1-9 17l-3-6H30a6 6 0 0 1-6-6v-5a6 6 0 0 1 6-6z" fill="#eafcf7" stroke={T} strokeWidth="2.5"/>
-    <circle cx="62" cy="52" r="4.5" fill={T}/><path d="M60 40v-6h9" stroke="#eafcf7" strokeWidth="4" fill="none" strokeLinecap="round"/></> },
-  // 2 — boot (low)
-  { bg: '#3b7fd4', ink: '#eef4ff', body: <>
-    <path d="M28 34v22l30 6c8 1 14 4 14 11H24a6 6 0 0 1-6-6V34z" fill="#eef4ff" stroke={T} strokeWidth="2.5" strokeLinejoin="round"/>
-    <path d="M30 68h8M42 68h8M54 68h8" stroke={T} strokeWidth="3" strokeLinecap="round"/></> },
-  // 3 — gloves (low)
-  { bg: '#d0913a', ink: '#fff4e0', body: <>
-    <path d="M34 40c0-5 5-8 10-8s10 3 10 8v4c4-2 10 0 10 6v12a10 10 0 0 1-10 10H44a10 10 0 0 1-10-10z" fill="#fff4e0" stroke={T} strokeWidth="2.5"/>
-    <path d="M44 34v10M54 36v9" stroke={T} strokeWidth="2.5" strokeLinecap="round"/></> },
-  // 4 — corner flag (low)
-  { bg: '#c94f4f', ink: '#ffe9e4', body: <>
-    <path d="M42 26v50" stroke="#ffe9e4" strokeWidth="4.5" strokeLinecap="round"/>
-    <path d="M45 28l26 8-26 9z" fill="#ffe9e4" stroke={T} strokeWidth="2.5" strokeLinejoin="round"/>
-    <circle cx="42" cy="24" r="4" fill="#ffe9e4"/></> },
-  // 5 — card (low)
-  { bg: '#e0b400', ink: '#fff7cc', body: <>
-    <rect x="34" y="28" width="28" height="44" rx="5" fill="#fff7cc" stroke={T} strokeWidth="2.5" transform="rotate(-10 48 50)"/></> },
-  // 6 — jersey (high)
-  { bg: '#7a4fd0', ink: '#f0e9ff', body: <>
-    <path d="M38 30l-12 8 6 12 6-3v26h28V47l6 3 6-12-12-8-6 4a8 8 0 0 1-16 0z" fill="#f0e9ff" stroke={T} strokeWidth="2.5" strokeLinejoin="round"/>
-    <path d="M48 40v20" stroke={T} strokeWidth="2" strokeDasharray="2 3"/></> },
-  // 7 — golden boot (high)
-  { bg: '#1b2440', ink: '#ffd24a', body: <>
-    <path d="M28 34v22l30 6c8 1 14 4 14 11H24a6 6 0 0 1-6-6V34z" fill="#ffd24a" stroke={T} strokeWidth="2.5" strokeLinejoin="round"/>
-    <path d="M30 68h9M43 68h9M56 68h6" stroke="#8a5a00" strokeWidth="3" strokeLinecap="round"/>
-    <circle cx="66" cy="30" r="4" fill="#fff3bf"/></> },
-  // 8 — trophy (top)
-  { bg: '#12203f', ink: '#ffdd5c', body: <>
-    <path d="M34 26h28v10a14 14 0 0 1-28 0z" fill="#ffdd5c" stroke={T} strokeWidth="2.5"/>
-    <path d="M34 30h-8a8 8 0 0 0 8 8M62 30h8a8 8 0 0 1-8 8" fill="none" stroke="#ffdd5c" strokeWidth="3.5"/>
-    <path d="M44 50h8v8h6v6H38v-6h6z" fill="#ffdd5c" stroke={T} strokeWidth="2.5" strokeLinejoin="round"/></> },
+  // 1 — referee whistle (emerald) ------------------------------------------ low
+  { glow: 'rgba(52,211,153,0.8)', body: <>
+    <defs>
+      <linearGradient id="whBody" x1="0" y1="0" x2="0.4" y2="1">
+        <stop offset="0" stopColor="#6ee7b7" /><stop offset="0.5" stopColor="#10b981" /><stop offset="1" stopColor="#047857" />
+      </linearGradient>
+    </defs>
+    <path d="M22 42h34a13 13 0 1 1-11 20l-4-7H22a6 6 0 0 1-6-6v-1a6 6 0 0 1 6-6z" fill="url(#whBody)" stroke="#065f46" strokeWidth="2.5" strokeLinejoin="round" />
+    <circle cx="58" cy="55" r="6" fill="#03362a" />
+    <path d="M54 40V30h13" stroke="url(#whBody)" strokeWidth="6" fill="none" strokeLinecap="round" />
+    <path d="M54 40V30h13" stroke="#065f46" strokeWidth="2" fill="none" strokeLinecap="round" />
+    <Shine cx={34} cy={44} rx={16} ry={6} o={0.5} />
+  </> },
+
+  // 2 — red card ----------------------------------------------------------- low
+  { glow: 'rgba(239,68,68,0.85)', body: <>
+    <defs>
+      <linearGradient id="rcard" x1="0" y1="0" x2="0.5" y2="1">
+        <stop offset="0" stopColor="#f87171" /><stop offset="0.5" stopColor="#ef4444" /><stop offset="1" stopColor="#b91c1c" />
+      </linearGradient>
+    </defs>
+    <g transform="rotate(-9 50 50)">
+      <rect x="30" y="18" width="40" height="60" rx="6" fill="url(#rcard)" stroke="#7f1010" strokeWidth="2.5" />
+      <rect x="35" y="23" width="14" height="30" rx="4" fill="#ffffff" opacity="0.28" />
+    </g>
+  </> },
+
+  // 3 — yellow card -------------------------------------------------------- low
+  { glow: 'rgba(250,204,21,0.9)', body: <>
+    <defs>
+      <linearGradient id="ycard" x1="0" y1="0" x2="0.5" y2="1">
+        <stop offset="0" stopColor="#fde68a" /><stop offset="0.5" stopColor="#facc15" /><stop offset="1" stopColor="#ca8a04" />
+      </linearGradient>
+    </defs>
+    <g transform="rotate(9 50 50)">
+      <rect x="30" y="18" width="40" height="60" rx="6" fill="url(#ycard)" stroke="#7c5e08" strokeWidth="2.5" />
+      <rect x="35" y="23" width="14" height="30" rx="4" fill="#ffffff" opacity="0.4" />
+    </g>
+  </> },
+
+  // 4 — football (soccer ball) --------------------------------------------- mid
+  { glow: 'rgba(255,255,255,0.7)', body: <>
+    <defs>
+      <radialGradient id="ball" cx="0.38" cy="0.32" r="0.85">
+        <stop offset="0" stopColor="#ffffff" /><stop offset="0.65" stopColor="#eef1f4" /><stop offset="1" stopColor="#b9c2cb" />
+      </radialGradient>
+    </defs>
+    <circle cx="50" cy="52" r="38" fill="url(#ball)" stroke="#8892a0" strokeWidth="1.5" />
+    <polygon points="50,38 63,48 58,64 42,64 37,48" fill="#1c2430" />
+    <path d="M50 14V38M88 52 63 48M74 82 58 64M26 82 42 64M12 52 37 48" stroke="#39424f" strokeWidth="2.4" fill="none" />
+    <path d="M50 14l14 10M50 14 36 24M86 66 63 48M63 48 58 64M42 64 26 66" stroke="#39424f" strokeWidth="1.6" fill="none" opacity="0.7" />
+    <Shine cx={36} cy={34} rx={14} ry={8} o={0.6} />
+  </> },
+
+  // 5 — team jersey (blue, glowing) ---------------------------------------- mid
+  { glow: 'rgba(56,132,255,0.85)', body: <>
+    <defs>
+      <linearGradient id="jersey" x1="0" y1="0" x2="0.3" y2="1">
+        <stop offset="0" stopColor="#7db3ff" /><stop offset="0.5" stopColor="#2f7cf0" /><stop offset="1" stopColor="#1b4fb8" />
+      </linearGradient>
+    </defs>
+    <path d="M38 22 26 30l6 14 8-4v40h32V40l8 4 6-14-12-8-7 4a9 9 0 0 1-18 0z"
+      fill="url(#jersey)" stroke="#12336f" strokeWidth="2.5" strokeLinejoin="round" />
+    <path d="M50 34v46" stroke="#12336f" strokeWidth="2" opacity="0.5" />
+    <path d="M56 26a8 8 0 0 1-12 0" fill="none" stroke="#12336f" strokeWidth="2.5" />
+    <Shine cx={38} cy={40} rx={10} ry={16} o={0.35} />
+  </> },
+
+  // 6 — golden shin guard -------------------------------------------------- high
+  { glow: 'rgba(255,206,74,0.9)', body: <>
+    <defs>
+      <linearGradient id="shin" x1="0" y1="0" x2="0.4" y2="1">
+        <stop offset="0" stopColor="#fff2b0" /><stop offset="0.45" stopColor="#f3c73f" /><stop offset="1" stopColor="#a9741a" />
+      </linearGradient>
+    </defs>
+    <path d="M50 16c16 0 24 14 24 34s-8 34-24 34-24-14-24-34 8-34 24-34z" fill="url(#shin)" stroke="#6b4610" strokeWidth="2.5" />
+    <path d="M50 22v56" stroke="#c8891f" strokeWidth="3" opacity="0.6" />
+    <rect x="30" y="40" width="40" height="6" rx="3" fill="#8a5a12" opacity="0.7" />
+    <rect x="30" y="58" width="40" height="6" rx="3" fill="#8a5a12" opacity="0.7" />
+    <Shine cx={40} cy={34} rx={9} ry={16} o={0.55} />
+  </> },
+
+  // 7 — golden boot -------------------------------------------------------- high
+  { glow: 'rgba(255,206,74,0.95)', body: <>
+    <defs>
+      <linearGradient id="boot" x1="0" y1="0" x2="0.3" y2="1">
+        <stop offset="0" stopColor="#fff2b0" /><stop offset="0.45" stopColor="#f3c73f" /><stop offset="1" stopColor="#a9741a" />
+      </linearGradient>
+    </defs>
+    <path d="M20 34v20l34 8c10 2 20 4 20 14v6H20a6 6 0 0 1-6-6V34z" fill="url(#boot)" stroke="#6b4610" strokeWidth="2.5" strokeLinejoin="round" />
+    <path d="M24 72h6M34 72h6M44 72h6M54 72h6M64 72h5" stroke="#6b4610" strokeWidth="3" strokeLinecap="round" />
+    <path d="M26 40l14 4M26 48l16 4" stroke="#fff6d6" strokeWidth="2.5" strokeLinecap="round" opacity="0.8" />
+    <Shine cx={34} cy={40} rx={12} ry={5} o={0.6} />
+  </> },
+
+  // 8 — golden trophy ------------------------------------------------------ top
+  { glow: 'rgba(255,214,74,1)', body: <>
+    <defs>
+      <linearGradient id="trophy" x1="0" y1="0" x2="0.3" y2="1">
+        <stop offset="0" stopColor="#fff6d6" /><stop offset="0.4" stopColor="#ffd24a" /><stop offset="1" stopColor="#b8801e" />
+      </linearGradient>
+    </defs>
+    <path d="M32 18h36v14a18 18 0 0 1-36 0z" fill="url(#trophy)" stroke="#6b4610" strokeWidth="2.5" strokeLinejoin="round" />
+    <path d="M32 22h-9a9 9 0 0 0 9 10M68 22h9a9 9 0 0 1-9 10" fill="none" stroke="url(#trophy)" strokeWidth="4" />
+    <path d="M45 48h10v10h7v8H38v-8h7z" fill="url(#trophy)" stroke="#6b4610" strokeWidth="2.5" strokeLinejoin="round" />
+    <rect x="34" y="72" width="32" height="8" rx="2" fill="url(#trophy)" stroke="#6b4610" strokeWidth="2.5" />
+    <path d="M42 22c0 8 3 14 8 16" stroke="#fff6d6" strokeWidth="3" fill="none" strokeLinecap="round" opacity="0.85" />
+  </> },
 ];
 
-// Scatter (value 9): a glowing golden match-ball stamped "GOAL". 4+ anywhere on
-// the base spin opens the free-spins gate. Our own symbol — not a reskin.
+// Scatter (value 9): a glowing golden referee whistle burst stamped "SCATTER".
 function ScatterBall() {
   return (
     <div className="slot-scatter">
       <svg viewBox="0 0 100 100" aria-hidden="true">
-        <circle cx="50" cy="50" r="40" fill="#0c130f" stroke="#ffd24a" strokeWidth="4" />
-        <circle cx="50" cy="50" r="40" fill="none" stroke="#fff2b0" strokeWidth="1.5" opacity="0.5" />
-        <polygon points="50,26 66,38 60,57 40,57 34,38" fill="#ffd24a" />
-        <path d="M34 38l-8-3M66 38l8-3M40 57l-6 9M60 57l6 9M50 26v-9"
-          stroke="#ffd24a" strokeWidth="3.5" strokeLinecap="round" />
+        <defs>
+          <radialGradient id="scGlow" cx="0.5" cy="0.45" r="0.6">
+            <stop offset="0" stopColor="#fff6d6" /><stop offset="0.5" stopColor="#ffd24a" /><stop offset="1" stopColor="#b8801e" />
+          </radialGradient>
+        </defs>
+        <g stroke="#ffe27a" strokeWidth="3" strokeLinecap="round">
+          <path d="M50 8v10M50 82v10M8 50h10M82 50h10M20 20l7 7M80 20l-7 7M20 80l7-7M80 80l-7-7" />
+        </g>
+        <circle cx="50" cy="46" r="30" fill="url(#scGlow)" stroke="#6b4610" strokeWidth="2.5" />
+        <path d="M34 40h20a9 9 0 1 1-8 14l-3-5H34a4 4 0 0 1-4-4 4 4 0 0 1 4-5z" fill="#0c130f" opacity="0.85" />
+        <circle cx="55" cy="49" r="4" fill="#ffe27a" />
       </svg>
-      <span className="slot-scatter-x">GOAL</span>
+      <span className="slot-scatter-x">SCATTER</span>
     </div>
   );
 }
 
+// Multiplier orb — glossy sphere with ×N.
 function OrbBall({ value }: { value: number }) {
   return (
     <div className="slot-orb">
       <svg viewBox="0 0 100 100" aria-hidden="true">
-        <circle cx="50" cy="50" r="40" fill="#ffcf3a" stroke="#8a5a00" strokeWidth="3" />
-        <circle cx="50" cy="50" r="40" fill="none" stroke="#fff6d6" strokeWidth="2" opacity="0.6" />
-        <polygon points="50,32 62,41 57,55 43,55 38,41" fill="#7a2f10" opacity="0.25" />
+        <defs>
+          <radialGradient id="orb" cx="0.36" cy="0.3" r="0.8">
+            <stop offset="0" stopColor="#fff2b0" /><stop offset="0.5" stopColor="#ffcf3a" /><stop offset="1" stopColor="#a9741a" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="40" fill="url(#orb)" stroke="#6b4610" strokeWidth="3" />
+        <ellipse cx="38" cy="34" rx="14" ry="9" fill="#ffffff" opacity="0.6" transform="rotate(-28 38 34)" />
       </svg>
       <span className="slot-orb-x tnum">×{value}</span>
     </div>
@@ -81,7 +169,7 @@ export default function SlotSymbol({ v }: { v: number }) {
   if (v < 0) return <OrbBall value={-v} />;
   const s = SYMBOLS[v - 1] ?? SYMBOLS[0];
   return (
-    <span className="slot-sym" style={{ background: s.bg }}>
+    <span className="slot-sym" style={{ filter: `drop-shadow(0 2px 3px rgba(0,0,0,0.55)) drop-shadow(0 0 7px ${s.glow})` }}>
       <svg viewBox="0 0 100 100" aria-hidden="true">{s.body}</svg>
     </span>
   );

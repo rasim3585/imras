@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { matchProvider } from '../lib/matchProvider';
 import SlotSymbol from '../slot/symbols';
-import { CornerOrnament, Torch, Mascot } from '../slot/scene';
+import { CornerFlag } from '../slot/scene';
 import type { SlotResult, SlotStep } from '../lib/types';
 
 // Gates of Goal — original football-themed tumble slot. Server computes the whole
@@ -162,13 +162,14 @@ export default function GatesScreen() {
   }
 
   const bonus = fs.active;
+  const displayWin = bonus ? fs.win : (runWin || lastWin);
 
   return (
     <div className="go">
       <div className="go-topbanner"><span>TUMBLE PAYS</span> · UP TO 1000× BET</div>
 
       <div className="go-stage">
-        {/* left rail — buy bonus + double chance + last win */}
+        {/* left rail — buy bonus + double chance + black win screen */}
         <aside className="go-rail">
           <button className="go-buy" disabled={busy || !session || buyStake > balance} onClick={() => spin(true)}>
             <span className="go-buy-t">BUY<br />FREE SPINS</span>
@@ -183,52 +184,50 @@ export default function GatesScreen() {
             <div className="go-double-note">+25% bet</div>
           </div>
 
-          <div className="go-lastwin">
-            <span className="muted">LAST WIN</span>
-            <b className="tnum">{lastWin.toLocaleString()}</b>
+          <div className={`go-winscreen ${displayWin > 0 ? 'lit' : ''}`}>
+            <span className="go-winscreen-lbl">WIN</span>
+            <b className="tnum">{displayWin.toLocaleString()}</b>
           </div>
         </aside>
 
-        {/* center — ornate frame + reels */}
+        {/* center — football goal on a grass pitch */}
         <div className={`go-frame ${busy ? 'is-spin' : ''} ${bonus ? 'is-bonus' : ''}`}>
-          <div className="go-torches"><Torch /><Torch /></div>
-          <span className="go-corner tl"><CornerOrnament /></span>
-          <span className="go-corner tr"><CornerOrnament /></span>
-          <span className="go-corner bl"><CornerOrnament /></span>
-          <span className="go-corner br"><CornerOrnament /></span>
-
-          <div className="go-reels">
-            <div className="go-grid" style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}>
-              {board.cells.map((v, i) => (
-                <div
-                  key={`${board.gen}-${i}`}
-                  className={`go-cell ${winCells.has(i) ? 'win' : ''} ${v < 0 ? 'orb' : ''} ${v === 9 ? 'scat' : ''}`}
-                  style={{ animationDelay: `${Math.floor(i / COLS) * 45}ms` }}
-                >
-                  <span className="go-sym-wrap" style={{ animationDelay: `${(i % 7) * 0.28}s` }}>
-                    <SlotSymbol v={v} />
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {multSum > 0 && <div className="go-multbadge tnum">×{multSum}</div>}
-            {runWin > 0 && !banner && !bonus && <div className="go-runwin tnum">+{runWin.toLocaleString()}</div>}
-
-            {bonus && (
-              <div className="go-fs">
-                <div className="go-fs-head">FREE SPINS <span className="tnum">{fs.i}/{fs.n}</span></div>
-                <div className="go-fs-mult tnum">×{fs.mult}</div>
-                {fs.win > 0 && <div className="go-fs-win tnum">+{fs.win.toLocaleString()}</div>}
+          <div className="go-goal">
+            <div className="go-net" aria-hidden="true" />
+            <div className="go-reels">
+              <div className="go-grid" style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}>
+                {board.cells.map((v, i) => (
+                  <div
+                    key={`${board.gen}-${i}`}
+                    className={`go-cell ${winCells.has(i) ? 'win' : ''} ${v < 0 ? 'orb' : ''} ${v === 9 ? 'scat' : ''}`}
+                    style={{ animationDelay: `${Math.floor(i / COLS) * 45}ms` }}
+                  >
+                    <span className="go-sym-wrap" style={{ animationDelay: `${(i % 7) * 0.28}s` }}>
+                      <SlotSymbol v={v} />
+                    </span>
+                  </div>
+                ))}
               </div>
-            )}
 
-            {banner && <div className={`go-banner ${big ? 'big' : ''}`}><span className="tnum">{banner}</span></div>}
+              {multSum > 0 && <div className="go-multbadge tnum">×{multSum}</div>}
+              {runWin > 0 && !banner && !bonus && <div className="go-runwin tnum">+{runWin.toLocaleString()}</div>}
+
+              {bonus && (
+                <div className="go-fs">
+                  <div className="go-fs-head">FREE SPINS <span className="tnum">{fs.i}/{fs.n}</span></div>
+                  <div className="go-fs-mult tnum">×{fs.mult}</div>
+                  {fs.win > 0 && <div className="go-fs-win tnum">+{fs.win.toLocaleString()}</div>}
+                </div>
+              )}
+
+              {banner && <div className={`go-banner ${big ? 'big' : ''}`}><span className="tnum">{banner}</span></div>}
+            </div>
           </div>
-        </div>
 
-        {/* right — mascot */}
-        <div className="go-mascot"><Mascot excited={big || bonus} /></div>
+          <div className="go-touchline" aria-hidden="true" />
+          <CornerFlag side="left" />
+          <CornerFlag side="right" />
+        </div>
       </div>
 
       {err && <div className="banner banner-error go-err">{err}</div>}
