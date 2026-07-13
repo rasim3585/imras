@@ -177,12 +177,15 @@ davranış aynası Faz 0 yakalama 0107 + Faz 1a Aviator teşhis 0108 + Faz 1b tr
 benchmark 0113; Player Card 0114.) Her önemli oturum sonunda `DEVIR/` klasörüne
 kısa devir notu yaz.
 
-**Davranış aynası (asıl ürün) — canlıda büyüyor:** Faz 0 (moat yakalama
-`behavior_events`+`log_events`), Faz 1a-b (Aviator teşhis+trend+Decision Replay),
-ve **Analiz merkezi "Aynam"** (`/analiz`, sol menü): alt sekmeler Genel/Maç
-bahisleri/Aviator/Gates/Diğer. Backend: `mirror_aviator/coupon/slot/overview()`.
-Çapraz içgörüler: risk yığılması, "en çok oynadığın=en çok kaybettiğin", gizli
-kazanan. **Sahte veri (0111): 36 persona-kullanıcı** çapraz-ürün — benchmark +
-çeşitlilik için. İlke: teşhis=hook, delta=ürün, sayılar deterministik, LLM sadece
-"ses" (henüz yok). **Para yoluna analiz mutasyonu ASLA eklenmez** — ayna yalnız
-OKUR. Sıra: benchmark ("vs diğer oyuncular"), Player Card kimliği, en son LLM ses.
+**Davranış aynası (asıl ürün) — çekirdek TAM, canlıda:** Faz 0 (moat yakalama
+`behavior_events`+`log_events`; kupon/Aviator/session_start/match_detail_viewed),
+Faz 1a-b (Aviator teşhis+trend+Decision Replay), **Analiz merkezi "Aynam"**
+(`/analiz`): Genel/Maç/Aviator/Gates/Diğer. Backend: `mirror_aviator/coupon/slot/
+overview/benchmark/card()`. Çapraz içgörüler + benchmark (vs 78 oyuncu) + Player
+Card arketip + deterministik koç önerileri. **Sahte veri (0111): 36 persona.**
+**LLM "ses":** `mirror-coach` EDGE FUNCTION (verify_jwt=true) — deterministik
+özeti alıp kişisel Türkçe koçluk mesajına döker; **key yoksa {text:null}, frontend
+gizler**. GEREKLİ: Supabase secret `ANTHROPIC_API_KEY` (Rasim ekleyince aktif).
+İlke: sayılar HEP deterministik, LLM yalnız cümleye döker, uydurmaz. **Para yoluna
+analiz mutasyonu ASLA eklenmez** — ayna yalnız OKUR. Sıra: park (4-spor QA, Gates
+görsel), sonra daha çok yakalama/hedef-takip nudge.
