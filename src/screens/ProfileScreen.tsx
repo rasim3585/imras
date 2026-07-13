@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { matchProvider } from '../lib/matchProvider';
+import { useI18n } from '../i18n/LanguageContext';
 import type { Challenge, Coupon } from '../lib/types';
 import { accuracyPct, formatOdds } from '../lib/format';
 
@@ -18,6 +19,7 @@ function isBonusAvailable(last: string | null): boolean {
 
 export default function ProfileScreen() {
   const { profile, refreshProfile } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
@@ -35,7 +37,7 @@ export default function ProfileScreen() {
         setCoupons(await matchProvider.getMyCoupons());
         await loadChallenges();
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Could not load your history');
+        setError(err instanceof Error ? err.message : t('pr.err.load'));
       } finally {
         setLoading(false);
       }
@@ -45,7 +47,7 @@ export default function ProfileScreen() {
   async function claimChallenge(key: string) {
     setBusy(true);
     try { await matchProvider.claimChallenge(key); await refreshProfile(); await loadChallenges(); }
-    catch (err) { setError(err instanceof Error ? err.message : 'Could not claim'); }
+    catch (err) { setError(err instanceof Error ? err.message : t('pr.err.claim')); }
     finally { setBusy(false); }
   }
 
@@ -74,13 +76,13 @@ export default function ProfileScreen() {
   async function claimBonus() {
     setBusy(true);
     try { await matchProvider.claimDailyBonus(); await refreshProfile(); }
-    catch (err) { setError(err instanceof Error ? err.message : 'Could not claim bonus'); }
+    catch (err) { setError(err instanceof Error ? err.message : t('pr.err.bonus')); }
     finally { setBusy(false); }
   }
   async function topup() {
     setBusy(true);
     try { await matchProvider.topupGold(); await refreshProfile(); }
-    catch (err) { setError(err instanceof Error ? err.message : 'Could not top up'); }
+    catch (err) { setError(err instanceof Error ? err.message : t('pr.err.topup')); }
     finally { setBusy(false); }
   }
 
@@ -88,63 +90,63 @@ export default function ProfileScreen() {
     <div className="app-shell">
       <div className="page-head">
         <h1>{profile?.username ?? '—'}</h1>
-        <p className="page-sub">Your gold, your coupons. Symbolic only — never real money.</p>
+        <p className="page-sub">{t('pr.sub')}</p>
       </div>
 
       {error && <div className="banner banner-error">{error}</div>}
 
       <div className="card gold-panel">
         <div className="gold-main">
-          <span className="stat-k">Gold balance</span>
+          <span className="stat-k">{t('pr.gold')}</span>
           <span className="gold-value tnum">{balance.toLocaleString()}</span>
         </div>
         <div className="gold-actions">
           {bonusReady && (
             <button className="btn btn-primary btn-sm" disabled={busy} onClick={claimBonus}>
-              Claim daily bonus
+              {t('pr.claimbonus')}
             </button>
           )}
           {canTopup && (
             <button className="btn btn-sm" disabled={busy} onClick={topup}>
-              Top up to 500
+              {t('pr.topup')}
             </button>
           )}
           {!bonusReady && !canTopup && (
-            <span className="dim" style={{ fontSize: '0.82rem' }}>Daily bonus claimed. Come back tomorrow.</span>
+            <span className="dim" style={{ fontSize: '0.82rem' }}>{t('pr.bonusclaimed')}</span>
           )}
         </div>
       </div>
 
       <div className="stat-grid" style={{ marginTop: 'var(--s2)' }}>
         <div className="stat">
-          <span className="stat-k">Win streak</span>
+          <span className="stat-k">{t('pr.winstreak')}</span>
           <span className={`stat-v tnum ${(profile?.current_streak ?? 0) > 0 ? 'pos' : ''}`}>
             {profile?.current_streak ?? 0}{(profile?.current_streak ?? 0) > 0 ? ' \u{1F525}' : ''}
           </span>
         </div>
         <div className="stat">
-          <span className="stat-k">Best streak</span>
+          <span className="stat-k">{t('pr.beststreak')}</span>
           <span className="stat-v tnum">{profile?.best_streak ?? 0}</span>
         </div>
         <div className="stat">
-          <span className="stat-k">Pick accuracy</span>
+          <span className="stat-k">{t('pr.accuracy')}</span>
           <span className="stat-v tnum">{stats.accuracy}%</span>
         </div>
         <div className="stat">
-          <span className="stat-k">Coupons won</span>
+          <span className="stat-k">{t('pr.couponswon')}</span>
           <span className="stat-v tnum">{stats.won}</span>
         </div>
         <div className="stat">
-          <span className="stat-k">Coupons played</span>
+          <span className="stat-k">{t('pr.couponsplayed')}</span>
           <span className="stat-v tnum">{stats.played}</span>
         </div>
         <div className="stat">
-          <span className="stat-k">Biggest win</span>
+          <span className="stat-k">{t('pr.biggestwin')}</span>
           <span className="stat-v tnum pos">{stats.biggest.toLocaleString()}</span>
         </div>
       </div>
 
-      <div className="section-head"><h3>Today's challenges</h3></div>
+      <div className="section-head"><h3>{t('pr.challenges')}</h3></div>
       <div className="card dna">
         {challenges.map((ch) => {
           const done = ch.progress >= ch.target;
@@ -153,7 +155,7 @@ export default function ProfileScreen() {
               <div className="dna-top">
                 <span className="name">{ch.label}</span>
                 {ch.claimed ? (
-                  <span className="chip chip-pos">Claimed</span>
+                  <span className="chip chip-pos">{t('pr.claimed')}</span>
                 ) : done ? (
                   <button className="btn btn-primary btn-sm" disabled={busy} onClick={() => claimChallenge(ch.key)}>+{ch.reward}</button>
                 ) : (
@@ -166,13 +168,13 @@ export default function ProfileScreen() {
         })}
       </div>
 
-      <div className="section-head"><h3>Recent coupons</h3></div>
+      <div className="section-head"><h3>{t('pr.recent')}</h3></div>
       {loading ? (
         <div className="center-pad"><div className="spinner" /></div>
       ) : coupons.length === 0 ? (
         <div className="empty">
-          <p>No coupons yet. Head to the markets and build one.</p>
-          <button className="btn" onClick={() => navigate('/')}>Go to markets</button>
+          <p>{t('pr.nocoupons')}</p>
+          <button className="btn" onClick={() => navigate('/')}>{t('mc.gotomarkets')}</button>
         </div>
       ) : (
         <div className="table">
@@ -184,19 +186,19 @@ export default function ProfileScreen() {
             >
               <div className="trow-main">
                 <div className="trow-match">
-                  {c.legs.length === 1 ? 'Single' : `${c.legs.length}-fold`} · {c.stake} gold
+                  {c.legs.length === 1 ? t('mc.single') : t('mc.fold', { n: c.legs.length })} · {c.stake} {t('unit.gold')}
                 </div>
-                <div className="trow-sub">@ {formatOdds(c.total_odds)} · to win {c.potential_win}</div>
+                <div className="trow-sub">@ {formatOdds(c.total_odds)} · {t('pr.towin', { p: c.potential_win })}</div>
               </div>
               <div className="trow-right">
                 {c.status === 'won' ? (
                   <span className="chip chip-pos tnum">+{c.potential_win}</span>
                 ) : c.status === 'lost' ? (
-                  <span className="chip chip-neg">Lost</span>
+                  <span className="chip chip-neg">{t('mc.st.lost')}</span>
                 ) : c.status === 'cashed_out' ? (
-                  <span className="chip chip-accent tnum">Cashed +{c.cashout_amount}</span>
+                  <span className="chip chip-accent tnum">{t('pr.cashed', { a: c.cashout_amount ?? 0 })}</span>
                 ) : (
-                  <span className="chip chip-accent">Open</span>
+                  <span className="chip chip-accent">{t('mc.st.open')}</span>
                 )}
               </div>
             </button>
