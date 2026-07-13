@@ -1,71 +1,46 @@
 import type { MirrorFlag } from '../lib/mirror';
 
-// Deterministik teşhis → Türkçe "ses" (şablonlu, LLM değil). Sayılar backend'de
-// üretilir; burada yalnız cümleye dökülür. Kupon + slot + genel kodları.
+// Deterministik teşhis → yerelleştirilmiş metin. Sayılar backend'de üretilir; burada
+// yalnız değişkenler hazırlanıp i18n şablonuna verilir. Metinler dict'te (flag.<code>.*).
 
-const pct = (x: number) => `%${Math.round(Number(x) * 100)}`;
-const gold = (n: number) => `${Number(n) > 0 ? '+' : ''}${Number(n).toLocaleString('tr-TR')}`;
+type TFn = (k: string, v?: Record<string, string | number>) => string;
 
-// Her uyarıya somut bir "koç" önerisi (LLM değil — deterministik nudge). İyi/nötr
-// bayraklara öneri yok.
-export function flagAction(code: string): string | null {
-  switch (code) {
-    case 'longshot_addict': return 'Sonraki 10 kuponda oranı 3.00 altında tut — tutma ihtimalin katlanır.';
-    case 'coupon_bleed': return 'Bacak sayısını azalt: tek maç, düşük oran. Kayıp yavaşlar.';
-    case 'buy_impulse': return 'Bonusu satın alma; normal spinle bekle — uzun vadede çok daha ucuz.';
-    case 'ante_habit': return 'Ante\'yi kapat: aynı keyif, daha yumuşak varyans.';
-    case 'slot_bleed': return 'Bahsi bir kademe düşür; slot uzun vadede kazanamazsın, eğlence için oyna.';
-    case 'concentration': return 'Bahsini ürünlere böl — tek kanala %90 yüklemek tek kötü seri demek.';
-    case 'worst_is_favorite': return 'En çok kaybettiğin yerde bahsi küçült; kârlı olduğun oyuna kaydır.';
-    // aviator kodları (AviatorMirror kendi metnini kullanıyor; hub tutarlılığı için burada da var)
-    case 'greed_caught': return 'Otomatik çekişi 1.8x\'e kur; disiplini makineye bırak.';
-    case 'low_discipline': return 'Her bahiste auto-cashout koy — anlık dürtüyü devre dışı bırakır.';
-    case 'win_illusion': return 'Kazanma oranına değil, nete bak. Küçük kazançlar tabloyu yalıyor.';
-    case 'chasing_losses': return 'Kayıptan sonra bahsi ASLA büyütme; aynı tut ya da mola ver.';
-    default: return null;
-  }
-}
+const pctv = (x: unknown) => `%${Math.round(Number(x) * 100)}`;
+const goldv = (n: unknown) => `${Number(n) > 0 ? '+' : ''}${Number(n).toLocaleString()}`;
 
-export function flagText(f: MirrorFlag): { title: string; body: string } {
-  const v = f.value as Record<string, number | string>;
-  switch (f.code) {
-    // ---- kupon ----
-    case 'longshot_addict':
-      return { title: 'Yüksek oran bağımlısı', body:
-        `Kuponlarının ${pct(Number(v.longshot_rate))}'i 5.00+ oran, medyan oranın ${v.median_odds}. Büyük oran = düşük ihtimal; heyecan yüksek ama tutması zor.` };
-    case 'coupon_bleed':
-      return { title: 'Kupon kaybı', body:
-        `Maç bahislerinde net ${gold(Number(v.net))} gold, kazanma ${pct(Number(v.win_rate))}. Oranları düşürmek (daha az bacak) kaybı yavaşlatır.` };
-    case 'safe_player':
-      return { title: 'Temkinli oyuncu', body:
-        `Medyan oranın ${v.median_odds}, kazanma ${pct(Number(v.win_rate))} ve zararda değilsin. Disiplinli bir bahis profili.` };
+// Her bayrak kodu için şablon değişkenleri (backend value'sundan türetilir).
+const VARS: Record<string, (v: Record<string, number | string>) => Record<string, string | number>> = {
+  greed_caught: (v) => ({ caught: pctv(v.caught_rate) }),
+  low_discipline: (v) => ({ auto: pctv(v.auto_rate) }),
+  win_illusion: (v) => ({ win: pctv(v.win_rate), net: goldv(v.net) }),
+  chasing_losses: (v) => ({ loss: String(v.loss_ratio), win: String(v.win_ratio) }),
+  disciplined: (v) => ({ auto: pctv(v.auto_rate) }),
+  trend_worse: (v) => ({ recent: pctv(v.recent_caught), overall: pctv(v.overall_caught) }),
+  trend_better: (v) => ({ recent: pctv(v.recent_caught), overall: pctv(v.overall_caught) }),
+  longshot_addict: (v) => ({ longshot: pctv(v.longshot_rate), median: String(v.median_odds) }),
+  coupon_bleed: (v) => ({ net: goldv(v.net), win: pctv(v.win_rate) }),
+  safe_player: (v) => ({ median: String(v.median_odds), win: pctv(v.win_rate) }),
+  buy_impulse: (v) => ({ buy: pctv(v.buy_rate) }),
+  ante_habit: (v) => ({ ante: pctv(v.ante_rate) }),
+  slot_bleed: (v) => ({ net: goldv(v.net), rtp: String(v.rtp) }),
+  slot_up: (v) => ({ net: goldv(v.net), rtp: String(v.rtp) }),
+  concentration: (v) => ({ product: String(v.product), share: pctv(v.share) }),
+  worst_is_favorite: (v) => ({ product: String(v.product), plays: Number(v.plays).toLocaleString(), net: goldv(v.net) }),
+  hidden_winner: (v) => ({ product: String(v.product), net: goldv(v.net), plays: Number(v.plays).toLocaleString() }),
+};
 
-    // ---- slot ----
-    case 'buy_impulse':
-      return { title: 'Bonus satın alma dürtüsü', body:
-        `Spinlerinin ${pct(Number(v.buy_rate))}'inde bonusu satın alıyorsun. Beklemek yerine ödeyip atlamak = sabırsızlık; en pahalı slot alışkanlığı.` };
-    case 'ante_habit':
-      return { title: 'Ante alışkanlığı', body:
-        `Spinlerinin ${pct(Number(v.ante_rate))}'i ante'li (%25 fazla bahis). Volatiliteyi artırıyor — kazanç da kayıp da sertleşiyor.` };
-    case 'slot_bleed':
-      return { title: 'Slot kaybı', body:
-        `Gates of Goal'da net ${gold(Number(v.net))} gold (RTP ${v.rtp}). Uzun vadede slot kasanın; bahsi küçük tut.` };
-    case 'slot_up':
-      return { title: 'Slotta kârdasın', body:
-        `Gates of Goal'da net ${gold(Number(v.net))} gold (RTP ${v.rtp}). Şimdilik öndesin — şansın döndüğü yerde durmayı bil.` };
+// Somut "koç" önerisi olan (uyarı) kodları.
+const HAS_ACTION = new Set([
+  'longshot_addict', 'coupon_bleed', 'buy_impulse', 'ante_habit', 'slot_bleed',
+  'concentration', 'worst_is_favorite',
+  'greed_caught', 'low_discipline', 'win_illusion', 'chasing_losses',
+]);
 
-    // ---- genel (çapraz-ürün) ----
-    case 'concentration':
-      return { title: 'Riski eşit dağıtmıyorsun', body:
-        `Tüm bahsinin ${pct(Number(v.share))}'i tek yerde: ${v.product}. Yumurtaların çoğu tek sepette — kötü bir tur seni orada vurur.` };
-    case 'worst_is_favorite':
-      return { title: 'En çok oynadığın seni en çok üzüyor', body:
-        `${v.product} en sık oynadığın oyun (${Number(v.plays).toLocaleString('tr-TR')} kez) ama en çok parayı orada kaybediyorsun (${gold(Number(v.net))}). Sevmek ve kazanmak aynı şey değil.` };
-    case 'hidden_winner':
-      return { title: 'Gizli kazananın', body:
-        `${v.product}'da kârdasın (${gold(Number(v.net))}) ama az oynuyorsun (${Number(v.plays).toLocaleString('tr-TR')} kez). İyi olduğun yere daha çok zaman ayır.` };
-
-    default:
-      return { title: f.code, body: '' };
-  }
+export function flagContent(f: MirrorFlag, t: TFn): { title: string; body: string; action: string | null } {
+  const vars = VARS[f.code] ? VARS[f.code](f.value) : {};
+  return {
+    title: t(`flag.${f.code}.title`),
+    body: t(`flag.${f.code}.body`, vars),
+    action: f.level === 'warn' && HAS_ACTION.has(f.code) ? t(`flag.${f.code}.action`, vars) : null,
+  };
 }
