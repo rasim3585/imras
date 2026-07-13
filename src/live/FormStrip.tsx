@@ -17,7 +17,8 @@ export default function FormStrip({ matchId, home, away }: { matchId: string; ho
 
   const hForm = stats?.home.form ?? [];
   const aForm = stats?.away.form ?? [];
-  if (hForm.length === 0 && aForm.length === 0) return null;
+  const h2h = (stats?.h2h ?? []).slice(0, 4);
+  if (hForm.length === 0 && aForm.length === 0 && h2h.length === 0) return null;
 
   const Row = ({ name, form }: { name: string; form: ('W' | 'D' | 'L')[] }) => (
     <div className="fs-row">
@@ -29,11 +30,26 @@ export default function FormStrip({ matchId, home, away }: { matchId: string; ho
     </div>
   );
 
+  const shortDate = (iso: string) => { const d = new Date(iso); return `${d.getDate()}/${d.getMonth() + 1}`; };
+
   return (
     <div className="card fs">
       <div className="fs-title">{t('live.form')}</div>
       <Row name={home} form={hForm} />
       <Row name={away} form={aForm} />
+      {h2h.length > 0 && (
+        <>
+          <div className="fs-title" style={{ marginTop: 12 }}>{t('live.h2h')}</div>
+          {h2h.map((m, i) => (
+            <div key={i} className="fs-h2h">
+              <span className="fs-h2h-d tnum">{shortDate(m.starts_at)}</span>
+              <span className="fs-h2h-t">{m.home_team}</span>
+              <span className="fs-h2h-s tnum">{m.home_score}-{m.away_score}</span>
+              <span className="fs-h2h-t fs-h2h-a">{m.away_team}</span>
+            </div>
+          ))}
+        </>
+      )}
     </div>
   );
 }
