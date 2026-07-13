@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  fetchOverview, fetchCouponMirror, fetchSlotMirror, fetchBenchmark, fetchPlayerCard,
+  fetchOverview, fetchCouponMirror, fetchSlotMirror, fetchBenchmark, fetchPlayerCard, fetchCoach,
   type OverviewProfile, type CouponProfile, type SlotProfile, type MirrorFlag,
   type BenchmarkProfile, type BenchmarkAxis, type PlayerCard,
 } from '../lib/mirror';
@@ -104,6 +104,43 @@ function BenchmarkBlock() {
   );
 }
 
+// LLM koç: deterministik özeti kişisel bir mesaja döker. Key/edge yoksa sessizce
+// gizlenir (deterministik içerik zaten aşağıda). Sayılar backend'de üretilir; LLM
+// yalnız cümleye döker.
+function CoachBlock() {
+  const [text, setText] = useState<string | null>(null);
+  const [state, setState] = useState<'load' | 'done' | 'off'>('load');
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const [ov, card, bench] = await Promise.all([fetchOverview(), fetchPlayerCard(), fetchBenchmark()]);
+        const summary = {
+          card: card.ready ? { archetype: card.archetype, subtitle: card.subtitle, total_net: card.total_net } : null,
+          overall: ov.ready ? { net: ov.net, most_played: ov.most_played, worst: ov.worst,
+            products: ov.products.map((p) => ({ oyun: p.label, oynanma: p.plays, net: p.net, risk_payi: p.stake_share })),
+            teshisler: ov.flags.map((f) => f.code) } : null,
+          benchmark: bench.ready ? bench.axes.map((a) => ({ eksen: a.label, sen: a.you, ortalama: a.avg, dilim: a.percentile })) : null,
+        };
+        if (!summary.card && !summary.overall) { if (alive) setState('off'); return; }
+        const t = await fetchCoach(summary);
+        if (!alive) return;
+        if (t) { setText(t); setState('done'); } else setState('off');
+      } catch { if (alive) setState('off'); }
+    })();
+    return () => { alive = false; };
+  }, []);
+  if (state === 'off') return null;
+  return (
+    <div className="az-coach">
+      <div className="az-coach-h">💬 Koçun</div>
+      {state === 'load'
+        ? <p className="az-coach-load">Desenini okuyor…</p>
+        : <p className="az-coach-text">{text}</p>}
+    </div>
+  );
+}
+
 // Kimlik kartı: çapraz-ürün desenden arketip + imza özellikler.
 function PlayerCardBlock() {
   const c = useMirror<PlayerCard>(fetchPlayerCard, 'card');
@@ -135,6 +172,7 @@ function GenelTab() {
   return (
     <div className="az-body">
       <PlayerCardBlock />
+      <CoachBlock />
 
       <div className="az-stats3">
         <Stat k="Toplam oyun">{d.plays.toLocaleString('tr-TR')}</Stat>

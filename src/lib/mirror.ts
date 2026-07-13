@@ -37,6 +37,18 @@ export type OverviewProfile =
       flags: MirrorFlag[];
     };
 
+// LLM "ses": deterministik özeti mirror-coach edge function'a yollar, kişisel
+// koçluk metni döner. Key yoksa/hata → null (frontend deterministik metne düşer).
+export async function fetchCoach(summary: unknown): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke('mirror-coach', { body: { summary } });
+    if (error) return null;
+    return ((data as { text?: string | null })?.text ?? null);
+  } catch {
+    return null;
+  }
+}
+
 export interface CardTrait { label: string; value: string; tone: 'good' | 'warn' | 'info' }
 export type PlayerCard =
   | { ready: false }
