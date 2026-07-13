@@ -37,6 +37,19 @@ export type OverviewProfile =
       flags: MirrorFlag[];
     };
 
+export interface CardTrait { label: string; value: string; tone: 'good' | 'warn' | 'info' }
+export type PlayerCard =
+  | { ready: false }
+  | {
+      ready: true; archetype: string; emoji: string; subtitle: string;
+      traits: CardTrait[]; total_net: number; total_plays: number;
+    };
+export async function fetchPlayerCard(): Promise<PlayerCard> {
+  const { data, error } = await supabase.rpc('mirror_card');
+  if (error) throw new Error(error.message);
+  return (data ?? { ready: false }) as PlayerCard;
+}
+
 export interface BenchmarkAxis {
   key: string; label: string; metric: string;
   dir: 'low_good' | 'high_good' | 'neutral';

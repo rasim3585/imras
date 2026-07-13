@@ -1492,6 +1492,16 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .az-flag.good .az-dot { background: var(--av-mid); }
 .az-flag b { font-size: 0.88rem; font-weight: 800; }
 .az-flag p { margin: 3px 0 0; font-size: 0.82rem; color: var(--text-mut); line-height: 1.5; }
+.az-card { display: flex; gap: 14px; align-items: flex-start; border: 1px solid var(--card-line); border-radius: 14px; background: linear-gradient(135deg, color-mix(in srgb, var(--av-mid) 10%, var(--surface)), var(--surface)); padding: 14px 16px; }
+.az-card-emoji { font-size: 2.4rem; line-height: 1; flex: none; }
+.az-card-main { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.az-card-arche { font-size: 1.15rem; font-weight: 800; letter-spacing: -0.01em; }
+.az-card-sub { margin: 0; font-size: 0.82rem; color: var(--text-mut); line-height: 1.45; }
+.az-card-traits { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 3px; }
+.az-trait { font-size: 0.7rem; font-weight: 600; color: var(--text-mut); background: var(--surface-2); border: 1px solid var(--card-line); border-radius: 999px; padding: 3px 9px; }
+.az-trait b { font-weight: 800; color: var(--text); }
+.az-trait.good b { color: var(--av-mid); }
+.az-trait.warn b { color: var(--av-low); }
 .az-pop { font-size: 0.68rem; font-weight: 600; color: var(--text-mut); }
 .az-bench { display: flex; flex-direction: column; gap: 14px; }
 .az-bx { display: flex; flex-direction: column; gap: 5px; }

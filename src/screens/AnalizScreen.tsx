@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
-  fetchOverview, fetchCouponMirror, fetchSlotMirror, fetchBenchmark,
+  fetchOverview, fetchCouponMirror, fetchSlotMirror, fetchBenchmark, fetchPlayerCard,
   type OverviewProfile, type CouponProfile, type SlotProfile, type MirrorFlag,
-  type BenchmarkProfile, type BenchmarkAxis,
+  type BenchmarkProfile, type BenchmarkAxis, type PlayerCard,
 } from '../lib/mirror';
 import { flagText } from '../analiz/flagText';
 import AviatorMirror from '../aviator/AviatorMirror';
@@ -100,6 +100,28 @@ function BenchmarkBlock() {
   );
 }
 
+// Kimlik kartı: çapraz-ürün desenden arketip + imza özellikler.
+function PlayerCardBlock() {
+  const c = useMirror<PlayerCard>(fetchPlayerCard, 'card');
+  if (!c || !c.ready) return null;
+  const netCls = c.total_net >= 0 ? 'pos' : 'neg';
+  return (
+    <div className="az-card">
+      <div className="az-card-emoji" aria-hidden>{c.emoji}</div>
+      <div className="az-card-main">
+        <div className="az-card-arche">{c.archetype}</div>
+        <p className="az-card-sub">{c.subtitle}</p>
+        <div className="az-card-traits">
+          {c.traits.map((t) => (
+            <span key={t.label} className={`az-trait ${t.tone}`}>{t.label}: <b>{t.value}</b></span>
+          ))}
+          <span className={`az-trait ${netCls === 'pos' ? 'good' : 'warn'}`}>Net: <b>{gold(c.total_net)}</b></span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function GenelTab() {
   const d = useMirror<OverviewProfile>(fetchOverview, 'genel');
   if (!d) return <p className="az-sub">Yükleniyor…</p>;
@@ -108,6 +130,8 @@ function GenelTab() {
   const maxStake = Math.max(...d.products.map((p) => p.staked), 1);
   return (
     <div className="az-body">
+      <PlayerCardBlock />
+
       <div className="az-stats3">
         <Stat k="Toplam oyun">{d.plays.toLocaleString('tr-TR')}</Stat>
         <Stat k="Toplam net" cls={netCls}><CoinIcon size={12} /> {gold(d.net)}</Stat>
