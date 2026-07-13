@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { useI18n } from '../i18n/LanguageContext';
 import { matchProvider } from '../lib/matchProvider';
 import SlotSymbol from '../slot/symbols';
 import { CornerFlag } from '../slot/scene';
 import type { SlotResult, SlotStep } from '../lib/types';
+
+type TFn = (k: string, v?: Record<string, string | number>) => string;
 
 // Gates of Goal — original football-themed tumble slot. The server computes the
 // whole spin (provably fair); this screen animates the cascade: winning symbol
@@ -29,8 +32,6 @@ function symbolPay(v: number, count: number, bet: number): number {
   return Math.round((PAY[v]?.[bucket] ?? 0) * bet);
 }
 
-const MARQUEE = '8 OR MORE MATCHING SYMBOLS PAY ANYWHERE  ✦  COLLECT MULTIPLIER ORBS  ✦  4+ SCATTERS OPEN FREE SPINS  ✦  MULTIPLIERS ADD UP IN FREE SPINS  ✦  DOUBLE CHANCE FOR MORE SCATTERS  ✦  WIN UP TO 1000× BET  ✦';
-
 interface CellMeta { n: boolean; dy: number; }         // n = new (drops from top); else shifted down dy rows
 interface WinGroup { v: number; cells: number[]; count: number; amount: number; }
 interface FsState { active: boolean; i: number; n: number; mult: number; win: number; }
@@ -43,11 +44,11 @@ function initialGrid(): number[] {
   return g;
 }
 
-function cleanErr(m: string): string {
-  if (m.includes('yetersiz')) return 'Not enough coins for that bet.';
-  if (m.includes('giris')) return 'Log in to play.';
-  if (m.includes('bet')) return 'Bet is out of range.';
-  return 'Spin failed. Try again.';
+function cleanErr(m: string, t: TFn): string {
+  if (m.includes('yetersiz')) return t('go.err.funds');
+  if (m.includes('giris')) return t('go.err.login');
+  if (m.includes('bet')) return t('go.err.range');
+  return t('go.err.fail');
 }
 
 // Split a winning step into its per-symbol groups (each symbol pays separately).
@@ -80,6 +81,7 @@ function computeMeta(prev: number[], winners: number[]): CellMeta[] {
 
 export default function GatesScreen() {
   const { profile, session, refreshProfile } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
 
   const [board, setBoard] = useState<{ cells: number[]; meta: CellMeta[]; gen: number }>(() => ({ cells: initialGrid(), meta: ALL_NEW, gen: 0 }));
@@ -153,7 +155,7 @@ export default function GatesScreen() {
     if (res.bonus.triggered) {
       setRunWin(0); setMultSum(0);
       setFs({ ...FS_OFF, active: true, n: res.bonus.count });
-      setBanner(res.buy ? 'FREE SPINS' : 'GATE OPEN'); setBig(true);
+      setBanner(res.buy ? t('go.freespins') : t('go.gateopen')); setBig(true);
       await wait(1400); setBanner(null);
       let bwin = 0;
       for (let i = 0; i < res.bonus.spins.length; i++) {
@@ -168,7 +170,7 @@ export default function GatesScreen() {
     }
 
     setWinCells(new Set());
-    if (res.payout > 0) { setLastWin(res.payout); setBig(res.payout >= res.stake * 10); setBanner(`${res.payout.toLocaleString()} WON`); }
+    if (res.payout > 0) { setLastWin(res.payout); setBig(res.payout >= res.stake * 10); setBanner(t('go.won', { n: res.payout.toLocaleString() })); }
     await wait(200); setBig(false);
   }
 
@@ -185,7 +187,7 @@ export default function GatesScreen() {
       await refreshProfile();
     } catch (e) {
       autoRef.current = false; setAuto(false);
-      setErr(e instanceof Error ? cleanErr(e.message) : 'Spin failed');
+      setErr(e instanceof Error ? cleanErr(e.message, t) : t('go.err.spinfail'));
     } finally {
       setBusy(false);
     }
@@ -222,26 +224,26 @@ export default function GatesScreen() {
   return (
     <div className="go">
       <div className="go-marquee">
-        <div className="go-marquee-track"><span>{MARQUEE}</span><span>{MARQUEE}</span></div>
+        <div className="go-marquee-track"><span>{t('go.marquee')}</span><span>{t('go.marquee')}</span></div>
       </div>
 
       <div className="go-stage">
         <aside className="go-rail">
           <button className="go-buy" disabled={busy || !session || buyStake > balance} onClick={() => spin(true)}>
-            <span className="go-buy-t">BUY<br />FREE SPINS</span>
+            <span className="go-buy-t">{t('go.buyfs')}</span>
             <span className="go-buy-p tnum">{session ? buyStake.toLocaleString() : '—'}</span>
           </button>
 
           <div className="go-double">
-            <div className="go-double-h">DOUBLE<br />CHANCE</div>
+            <div className="go-double-h">{t('go.doublechance')}</div>
             <button className={`go-toggle ${ante ? 'on' : ''}`} disabled={busy} onClick={() => setAnte((a) => !a)}>
-              <span className="go-toggle-knob" /><span className="go-toggle-lbl">{ante ? 'ON' : 'OFF'}</span>
+              <span className="go-toggle-knob" /><span className="go-toggle-lbl">{ante ? t('go.on') : t('go.off')}</span>
             </button>
-            <div className="go-double-note">+25% bet</div>
+            <div className="go-double-note">{t('go.betplus')}</div>
           </div>
 
           <div className={`go-winscreen ${displayWin > 0 ? 'lit' : ''}`}>
-            <span className="go-winscreen-lbl">WIN</span>
+            <span className="go-winscreen-lbl">{t('go.win')}</span>
             <b className="tnum">{displayWin.toLocaleString()}</b>
           </div>
         </aside>
@@ -282,7 +284,7 @@ export default function GatesScreen() {
 
               {bonus && (
                 <div className="go-fs">
-                  <div className="go-fs-head">FREE SPINS <span className="tnum">{fs.i}/{fs.n}</span></div>
+                  <div className="go-fs-head">{t('go.freespins')} <span className="tnum">{fs.i}/{fs.n}</span></div>
                   <div className="go-fs-mult tnum">×{fs.mult}</div>
                   {fs.win > 0 && <div className="go-fs-win tnum">+{fs.win.toLocaleString()}</div>}
                 </div>
@@ -300,8 +302,8 @@ export default function GatesScreen() {
           {autoPanel && (
             <div className="go-modal" onClick={() => setAutoPanel(false)}>
               <div className="go-auto-panel" onClick={(e) => e.stopPropagation()}>
-                <div className="go-auto-title">AUTOPLAY</div>
-                <div className="go-auto-sub">Bet <b className="tnum">{stake}</b> · pick number of spins</div>
+                <div className="go-auto-title">{t('go.autoplay')}</div>
+                <div className="go-auto-sub">{t('go.autosub', { stake })}</div>
                 <div className="go-auto-grid">
                   {AUTO_OPTIONS.map((o) => (
                     <button key={o} className="go-auto-opt" disabled={stake > balance} onClick={() => startAuto(o)}>
@@ -309,7 +311,7 @@ export default function GatesScreen() {
                     </button>
                   ))}
                 </div>
-                <button className="go-auto-cancel" onClick={() => setAutoPanel(false)}>Cancel</button>
+                <button className="go-auto-cancel" onClick={() => setAutoPanel(false)}>{t('go.cancel')}</button>
               </div>
             </div>
           )}
@@ -320,24 +322,24 @@ export default function GatesScreen() {
 
       <div className="go-bar">
         <div className="go-credit">
-          <span className="muted">CREDIT</span>
+          <span className="muted">{t('go.credit')}</span>
           <b className="tnum">{session ? balance.toLocaleString() : '—'}</b>
         </div>
 
         <div className="go-betbox">
           <button className="go-betstep" disabled={busy || auto} onClick={() => stepBet(-BET_STEP)}>−</button>
-          <div className="go-betval"><span className="muted">BET</span><b className="tnum">{stake}</b></div>
+          <div className="go-betval"><span className="muted">{t('go.bet')}</span><b className="tnum">{stake}</b></div>
           <button className="go-betstep" disabled={busy || auto} onClick={() => stepBet(BET_STEP)}>+</button>
         </div>
 
         <div className="go-actions">
           <button className={`go-auto ${auto ? 'on' : ''}`} disabled={busy && !auto} onClick={onAutoBtn} title="Autoplay">
-            {auto ? <>STOP<span className="go-auto-left tnum">{autoLeft === Infinity ? '∞' : autoLeft}</span></> : 'AUTO'}
+            {auto ? <>{t('go.stop')}<span className="go-auto-left tnum">{autoLeft === Infinity ? '∞' : autoLeft}</span></> : t('go.auto')}
           </button>
 
           <button className="go-spin" disabled={busy || auto || (!!session && stake > balance)} onClick={() => spin(false)}>
             <span className="go-spin-ic" aria-hidden="true" />
-            <span className="go-spin-lbl">{!session ? 'LOG IN' : busy ? '···' : 'SPIN'}</span>
+            <span className="go-spin-lbl">{!session ? t('go.login') : busy ? '···' : t('go.spin')}</span>
           </button>
         </div>
       </div>
