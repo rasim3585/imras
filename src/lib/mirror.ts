@@ -49,6 +49,17 @@ export async function fetchCoach(summary: unknown, lang = 'en'): Promise<string 
   }
 }
 
+// Gerçeklik kontrolü (anti-kumar ayıraçları).
+export interface RealityAlert { code: string; level: 'danger' | 'warn'; value: Record<string, number> }
+export type RealityCheck =
+  | { ready: false }
+  | { ready: true; balance: number; net7: number; alerts: RealityAlert[] };
+export async function fetchRealityCheck(): Promise<RealityCheck> {
+  const { data, error } = await supabase.rpc('mirror_reality_check');
+  if (error) throw new Error(error.message);
+  return (data ?? { ready: false }) as RealityCheck;
+}
+
 export interface CardTrait { label: string; value: string; tone: 'good' | 'warn' | 'info' }
 export type PlayerCard =
   | { ready: false }

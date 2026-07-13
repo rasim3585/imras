@@ -77,6 +77,11 @@ const en: Dict = {
   'product.aviator': 'Aviator',
   'product.slot': 'Gates of Goal',
 
+  'rc.title': 'Reality check',
+  'rc.burn_rate': 'At this rate, your balance runs out in about {days} days. Worth slowing down.',
+  'rc.long_session': "You've been playing {hours}h today ({plays} rounds). Step away for a bit.",
+  'rc.high_risk': "High-risk zone: you've wiped out a big share of your balance this week. This is where losses snowball.",
+
   'lang.label': 'Language',
 };
 
@@ -138,6 +143,11 @@ const tr: Dict = {
   'product.coupon': 'Maç bahisleri',
   'product.aviator': 'Aviator',
   'product.slot': 'Gates of Goal',
+
+  'rc.title': 'Gerçeklik kontrolü',
+  'rc.burn_rate': 'Bu hızla bakiyen yaklaşık {days} gün sonra biter. Yavaşlamakta fayda var.',
+  'rc.long_session': 'Bugün {hours} saattir oynuyorsun ({plays} el). Biraz ara ver.',
+  'rc.high_risk': 'Yüksek riskli bölge: bu hafta bakiyenin büyük bir kısmını sildin. Kayıplar tam da burada çığ gibi büyür.',
 
   'lang.label': 'Dil',
 };

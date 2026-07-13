@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
-  fetchOverview, fetchCouponMirror, fetchSlotMirror, fetchBenchmark, fetchPlayerCard, fetchCoach,
+  fetchOverview, fetchCouponMirror, fetchSlotMirror, fetchBenchmark, fetchPlayerCard, fetchCoach, fetchRealityCheck,
   type OverviewProfile, type CouponProfile, type SlotProfile, type MirrorFlag,
-  type BenchmarkProfile, type BenchmarkAxis, type PlayerCard,
+  type BenchmarkProfile, type BenchmarkAxis, type PlayerCard, type RealityCheck,
 } from '../lib/mirror';
 import { flagText, flagAction } from '../analiz/flagText';
 import AviatorMirror from '../aviator/AviatorMirror';
@@ -247,6 +247,23 @@ function SlotTab() {
   );
 }
 
+// Gerçeklik kontrolü: kullanıcıyı LEHİNE uyaran ayıraçlar (ürünün asıl amacı).
+function RealityCheckBanner() {
+  const { t } = useI18n();
+  const d = useMirror<RealityCheck>(fetchRealityCheck, 'rc');
+  if (!d || !d.ready || d.alerts.length === 0) return null;
+  return (
+    <div className="az-rc">
+      {d.alerts.map((a) => (
+        <div key={a.code} className={`az-rc-item ${a.level}`}>
+          <span className="az-rc-ic" aria-hidden>{a.level === 'danger' ? '⚠️' : '⏸️'}</span>
+          <span>{t('rc.' + a.code, a.value as Record<string, number>)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function AnalizScreen() {
   const { t } = useI18n();
   const [tab, setTab] = useState<Tab>('genel');
@@ -256,6 +273,8 @@ export default function AnalizScreen() {
         <h1>🪞 {t('analiz.title')}</h1>
         <p className="az-lead">{t('analiz.lead')}</p>
       </div>
+
+      <RealityCheckBanner />
 
       <div className="az-tabs">
         {TABS.map((tb) => (

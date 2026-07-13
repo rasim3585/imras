@@ -1493,6 +1493,12 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .az-flag b { font-size: 0.88rem; font-weight: 800; }
 .az-flag p { margin: 3px 0 0; font-size: 0.82rem; color: var(--text-mut); line-height: 1.5; }
 .az-act { color: var(--av-mid) !important; font-weight: 600; }
+.az-rc { display: flex; flex-direction: column; gap: 8px; }
+.az-rc-item { display: flex; gap: 10px; align-items: flex-start; border-radius: 10px; padding: 11px 13px; font-size: 0.84rem; line-height: 1.45; font-weight: 600; }
+.az-rc-item.danger { background: color-mix(in srgb, var(--av-low) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--av-low) 45%, transparent); color: var(--text); }
+.az-rc-item.warn { background: color-mix(in srgb, #ffb020 13%, var(--surface)); border: 1px solid color-mix(in srgb, #ffb020 40%, transparent); color: var(--text); }
+.az-rc-ic { flex: none; font-size: 1rem; line-height: 1.3; }
+
 .lang-picker { background: var(--surface-2); color: var(--text); border: 1px solid var(--card-line); border-radius: 8px; font-size: 0.78rem; font-weight: 600; padding: 5px 8px; cursor: pointer; max-width: 96px; }
 .lang-picker:hover { border-color: var(--av-mid); }
 
