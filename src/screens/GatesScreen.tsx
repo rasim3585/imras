@@ -5,6 +5,7 @@ import { useI18n } from '../i18n/LanguageContext';
 import { matchProvider } from '../lib/matchProvider';
 import SlotSymbol from '../slot/symbols';
 import { CornerFlag } from '../slot/scene';
+import { cheer } from '../lib/sfx';
 import type { SlotResult, SlotStep } from '../lib/types';
 
 type TFn = (k: string, v?: Record<string, string | number>) => string;
@@ -104,6 +105,7 @@ export default function GatesScreen() {
   const [lastWin, setLastWin] = useState(0);
   const [banner, setBanner] = useState<string | null>(null);
   const [big, setBig] = useState(false);
+  const [bigWin, setBigWin] = useState<{ tier: string; shown: number; target: number } | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   const balance = profile?.gold_balance ?? 0;
@@ -150,6 +152,28 @@ export default function GatesScreen() {
     setWinCells(new Set()); setWinPhase(null); setCallout(null); setDim(false);
   }
 
+  // GoO-tarzi buyuk kazanc sekansi: kademeli baslik + 0'dan hedefe sayan sayac +
+  // ekran sarsintisi + konfeti. Esik: stake'in 12 katindan sonra.
+  async function runBigWin(amount: number, stakeAmt: number) {
+    const r = amount / stakeAmt;
+    const tier = r >= 100 ? 'legend' : r >= 50 ? 'epic' : r >= 25 ? 'mega' : 'big';
+    cheer();
+    const dur = turboRef.current ? 900 : 1900;
+    const t0 = Date.now();
+    setBigWin({ tier, shown: 0, target: amount });
+    await new Promise<void>((resolve) => {
+      const step = () => {
+        const p = Math.min(1, (Date.now() - t0) / dur);
+        const eased = p * p * (3 - 2 * p);
+        setBigWin((b) => (b ? { ...b, shown: Math.round(amount * eased) } : b));
+        if (p < 1) requestAnimationFrame(step); else resolve();
+      };
+      requestAnimationFrame(step);
+    });
+    await wait(turboRef.current ? 550 : 1000);
+    setBigWin(null);
+  }
+
   async function animate(res: SlotResult) {
     const tb = turboRef.current;
     const baseT = tb ? { show: 420, boom: 260, gap: 70 } : { show: 950, boom: 600, gap: 150 };
@@ -177,8 +201,16 @@ export default function GatesScreen() {
     }
 
     setWinCells(new Set());
-    if (res.payout > 0) { setLastWin(res.payout); setBig(res.payout >= res.stake * 10); setBanner(t('go.won', { n: res.payout.toLocaleString() })); }
-    await wait(200); setBig(false);
+    if (res.payout > 0) {
+      setLastWin(res.payout);
+      if (res.payout >= res.stake * 12) {
+        await runBigWin(res.payout, res.stake);
+      } else {
+        setBanner(t('go.won', { n: res.payout.toLocaleString() }));
+        await wait(900); setBanner(null);
+      }
+    }
+    setBig(false);
   }
 
   async function spin(buy = false) {
@@ -186,7 +218,7 @@ export default function GatesScreen() {
     const st = buy ? buyStake : stake;
     if (busy || st > balance || st <= 0) return;
     setBusy(true); setErr(null); setBanner(null); setBig(false);
-    setRunWin(0); setTumbles([]); setMultSum(0); setFs(FS_OFF); setWinCells(new Set());
+    setRunWin(0); setTumbles([]); setMultSum(0); setFs(FS_OFF); setWinCells(new Set()); setBigWin(null);
     setWinPhase(null); setDim(false); setCallout(null);
     try {
       const res = await matchProvider.slotSpin(bet, buy ? false : ante, buy);
@@ -265,7 +297,7 @@ export default function GatesScreen() {
           </div>
         </aside>
 
-        <div className={`go-frame ${busy ? 'is-spin' : ''} ${bonus ? 'is-bonus' : ''}`}>
+        <div className={`go-frame ${busy ? 'is-spin' : ''} ${bonus ? 'is-bonus' : ''} ${bigWin ? 'shake' : ''}`}>
           <div className="go-goal">
             <div className="go-net" aria-hidden="true" />
             <div className="go-reels">
@@ -313,6 +345,17 @@ export default function GatesScreen() {
               )}
 
               {banner && <div className={`go-banner ${big ? 'big' : ''}`}><span className="tnum">{banner}</span></div>}
+
+              {bigWin && (
+                <div className={`go-bigwin tier-${bigWin.tier}`}>
+                  <div className="go-bigwin-rays" aria-hidden="true" />
+                  <div className="go-bigwin-confetti" aria-hidden="true">
+                    {Array.from({ length: 18 }).map((_, i) => <span key={i} style={{ ['--i' as string]: i }} />)}
+                  </div>
+                  <div className="go-bigwin-tier">{t(`go.${bigWin.tier}`)}</div>
+                  <div className="go-bigwin-amt tnum">{bigWin.shown.toLocaleString()}</div>
+                </div>
+              )}
             </div>
           </div>
 

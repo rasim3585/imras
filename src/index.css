@@ -852,6 +852,31 @@ svg.crest { background: none !important; border-radius: 0 !important; }
   letter-spacing: 1px; padding: 12px 30px; border-radius: 16px; box-shadow: 0 8px 26px rgba(0,0,0,0.5);
   animation: pop-in 0.45s cubic-bezier(0.2,1.4,0.4,1); }
 .go-banner.big span { font-size: 2.2rem; animation: go-bigwin 0.6s cubic-bezier(0.2,1.4,0.4,1); }
+
+/* --- Buyuk kazanc sekansi (Big/Mega/Epic/Efsane) ------------------------- */
+.go-frame.shake { animation: go-shake 0.5s cubic-bezier(.36,.07,.19,.97) both; animation-iteration-count: 3; }
+@keyframes go-shake { 10%,90%{transform:translateX(-1px)} 20%,80%{transform:translateX(2px)} 30%,50%,70%{transform:translateX(-4px)} 40%,60%{transform:translateX(4px)} }
+.go-bigwin { position: absolute; inset: 0; z-index: 9; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; background: radial-gradient(circle at 50% 45%, rgba(30,12,60,0.72), rgba(6,3,14,0.92)); overflow: hidden; }
+.go-bigwin-rays { position: absolute; width: 170%; height: 170%; top: -35%; left: -35%;
+  background: repeating-conic-gradient(from 0deg, rgba(255,207,58,0.14) 0deg 8deg, transparent 8deg 16deg);
+  animation: go-rays 14s linear infinite; }
+@keyframes go-rays { to { transform: rotate(360deg); } }
+.go-bigwin-tier { position: relative; font-size: 1.9rem; font-weight: 900; letter-spacing: 2px;
+  background: linear-gradient(#fff2b0, #ffcf3a 55%, #e0952a); -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.4); animation: pop-in 0.4s cubic-bezier(0.2,1.4,0.4,1); }
+.go-bigwin-amt { position: relative; font-size: 3rem; font-weight: 900; color: #fff; line-height: 1;
+  text-shadow: 0 0 18px rgba(255,207,58,0.9), 0 3px 8px rgba(0,0,0,0.6); }
+.go-bigwin.tier-mega .go-bigwin-tier { background: linear-gradient(#bfe0ff, #63b3ff 55%, #2a6fd0); -webkit-background-clip: text; background-clip: text; }
+.go-bigwin.tier-epic .go-bigwin-tier { background: linear-gradient(#ffd0f0, #ff6fd8 55%, #a02fb0); -webkit-background-clip: text; background-clip: text; }
+.go-bigwin.tier-legend .go-bigwin-tier { background: linear-gradient(#d9ffe0, #4dffa0 55%, #12b070); -webkit-background-clip: text; background-clip: text; font-size: 2.1rem; }
+.go-bigwin.tier-epic { background: radial-gradient(circle at 50% 45%, rgba(60,12,70,0.75), rgba(10,2,16,0.94)); }
+.go-bigwin.tier-legend { background: radial-gradient(circle at 50% 45%, rgba(10,50,30,0.75), rgba(2,12,8,0.95)); }
+.go-bigwin-confetti { position: absolute; inset: 0; pointer-events: none; }
+.go-bigwin-confetti span { position: absolute; top: -8%; left: calc((var(--i) * 5.5%) + 2%); width: 8px; height: 12px; border-radius: 2px;
+  background: hsl(calc(var(--i) * 47), 85%, 60%); opacity: 0.9;
+  animation: go-confetti 1.6s linear infinite; animation-delay: calc(var(--i) * -0.13s); }
+@keyframes go-confetti { 0%{transform:translateY(0) rotate(0);opacity:1} 100%{transform:translateY(360px) rotate(540deg);opacity:0} }
 @keyframes go-bigwin { 0% { transform: scale(0.3) rotate(-6deg); opacity: 0; } 60% { transform: scale(1.15) rotate(3deg); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
 
 /* bottom bar -------------------------------------------------------------- */
