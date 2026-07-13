@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react';
 import { matchProvider } from '../lib/matchProvider';
 import { useAuth } from '../auth/AuthContext';
+import { useI18n } from '../i18n/LanguageContext';
 import type { Leaderboard, LeaderboardScope } from '../lib/types';
 
-const TABS: { key: LeaderboardScope; label: string }[] = [
-  { key: 'day', label: 'King of the day' },
-  { key: 'week', label: 'King of the week' },
-  { key: 'wins', label: 'Most correct' },
+const TABS: { key: LeaderboardScope; tkey: string }[] = [
+  { key: 'day', tkey: 'lb.tab.day' },
+  { key: 'week', tkey: 'lb.tab.week' },
+  { key: 'wins', tkey: 'lb.tab.wins' },
 ];
 
 const fmtNet = (n: number) => `${n > 0 ? '+' : ''}${n.toLocaleString()}`;
 
 export default function LeaderboardScreen() {
   const { profile } = useAuth();
+  const { t } = useI18n();
   const [scope, setScope] = useState<LeaderboardScope>('day');
   const [board, setBoard] = useState<Leaderboard | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +27,7 @@ export default function LeaderboardScreen() {
         const b = await matchProvider.getLeaderboard(scope);
         if (alive && b.scope === scope) setBoard(b);
       } catch (err) {
-        if (alive) setError(err instanceof Error ? err.message : 'Could not load the leaderboard');
+        if (alive) setError(err instanceof Error ? err.message : t('lb.err'));
       }
     };
     void load();
@@ -34,22 +36,18 @@ export default function LeaderboardScreen() {
   }, [scope]);
 
   const isWins = scope === 'wins';
-  const sub = scope === 'day'
-    ? "Today's net gold from settled coupons. Resets at midnight (UTC)."
-    : scope === 'week'
-      ? "This week's net gold. Resets every Monday."
-      : 'Most won coupons all-time (ties: fewer played wins).';
+  const sub = scope === 'day' ? t('lb.sub.day') : scope === 'week' ? t('lb.sub.week') : t('lb.sub.wins');
 
-  const value = (v: number) => (isWins ? `${v} won` : fmtNet(v));
+  const value = (v: number) => (isWins ? t('lb.won', { v }) : fmtNet(v));
 
   return (
     <div className="app-shell">
-      <div className="page-head"><h1>Leaderboard</h1><p className="page-sub">{sub}</p></div>
+      <div className="page-head"><h1>{t('lb.title')}</h1><p className="page-sub">{sub}</p></div>
 
       <div className="segmented">
-        {TABS.map((t) => (
-          <button key={t.key} className={`segmented-item ${scope === t.key ? 'active' : ''}`} onClick={() => setScope(t.key)}>
-            {t.label}
+        {TABS.map((tb) => (
+          <button key={tb.key} className={`segmented-item ${scope === tb.key ? 'active' : ''}`} onClick={() => setScope(tb.key)}>
+            {t(tb.tkey)}
           </button>
         ))}
       </div>
@@ -59,7 +57,7 @@ export default function LeaderboardScreen() {
       {board?.me && (
         <div className="card lb-me">
           <span className="lb-rank tnum">{board.me.rank ? `#${board.me.rank}` : '—'}</span>
-          <span className="lb-me-name">You{isWins && board.me.played != null ? <span className="dim tnum"> · {board.me.played} played</span> : null}</span>
+          <span className="lb-me-name">{t('lb.you')}{isWins && board.me.played != null ? <span className="dim tnum"> · {t('lb.played', { n: board.me.played })}</span> : null}</span>
           <span className={`lb-net tnum ${isWins ? 'pos' : board.me.value >= 0 ? 'pos' : 'neg'}`}>{value(board.me.value)}</span>
         </div>
       )}
@@ -67,7 +65,7 @@ export default function LeaderboardScreen() {
       {!board ? (
         <div className="center-pad"><div className="spinner" /></div>
       ) : board.rows.length === 0 ? (
-        <div className="empty"><p>Nothing on this board yet. Settle some coupons to appear.</p></div>
+        <div className="empty"><p>{t('lb.empty')}</p></div>
       ) : (
         <div className="table" style={{ marginTop: 'var(--s3)' }}>
           {board.rows.map((r) => (

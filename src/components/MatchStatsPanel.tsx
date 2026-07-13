@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { matchProvider } from '../lib/matchProvider';
+import { useI18n } from '../i18n/LanguageContext';
 import type { MatchStats, VTeamStat } from '../lib/types';
 
 // Virtual-league context for a match: both teams' league standing + recent form,
@@ -27,6 +28,7 @@ function TeamRow({ t, bb }: { t: VTeamStat; bb?: boolean }) {
 }
 
 export default function MatchStatsPanel({ matchId }: { matchId: string }) {
+  const { t } = useI18n();
   const [stats, setStats] = useState<MatchStats | null | 'none'>(null);
 
   useEffect(() => {
@@ -41,9 +43,9 @@ export default function MatchStatsPanel({ matchId }: { matchId: string }) {
 
   const played = stats.home.played + stats.away.played;
   const noDraw = stats.sport === 'basketball' || stats.sport === 'tennis' || stats.sport === 'volleyball';
-  const head = stats.sport === 'basketball' ? 'e-Basketball · Simulated League'
-    : stats.sport === 'tennis' ? 'e-Tennis · Simulated League'
-    : stats.sport === 'volleyball' ? 'e-Volleyball · Simulated League' : 'Simulated League';
+  const head = stats.sport === 'basketball' ? `${t('feed.tab.basketball')} · ${t('ms.simleague')}`
+    : stats.sport === 'tennis' ? `${t('feed.tab.tennis')} · ${t('ms.simleague')}`
+    : stats.sport === 'volleyball' ? `${t('feed.tab.volley')} · ${t('ms.simleague')}` : t('ms.simleague');
 
   return (
     <div className="vstats card">
@@ -53,10 +55,10 @@ export default function MatchStatsPanel({ matchId }: { matchId: string }) {
         <TeamRow t={stats.away} bb={noDraw} />
       </div>
       {played === 0 ? (
-        <div className="vstat-note">New league — the table fills in as matches finish.</div>
+        <div className="vstat-note">{t('ms.newleague')}</div>
       ) : stats.h2h.length > 0 ? (
         <>
-          <div className="vstats-sub">Head to head</div>
+          <div className="vstats-sub">{t('ms.hth')}</div>
           <div className="vstat-h2h">
             {stats.h2h.map((h, i) => (
               <div key={i} className="vh2h-row">
