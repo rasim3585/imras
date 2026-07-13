@@ -11,6 +11,7 @@ import CouponScreen from './screens/CouponScreen';
 import MyCouponsScreen from './screens/MyCouponsScreen';
 import SettleScreen from './screens/SettleScreen';
 import LiveMatchScreen from './screens/LiveMatchScreen';
+import LiveCourtScreen from './screens/LiveCourtScreen';
 import AviatorScreen from './screens/AviatorScreen';
 import GatesScreen from './screens/GatesScreen';
 import AnalizScreen from './screens/AnalizScreen';
@@ -63,6 +64,7 @@ function App() {
           <Route path="/" element={<FeedScreen />} />
           <Route path="/match/:matchId" element={<MatchDetailScreen />} />
           <Route path="/live/:matchId" element={<LiveMatchScreen />} />
+          <Route path="/court/:matchId" element={<LiveCourtScreen />} />
           <Route path="/aviator" element={<AviatorScreen />} />
           <Route path="/gates" element={<GatesScreen />} />
           <Route path="/standings" element={<StandingsScreen />} />
