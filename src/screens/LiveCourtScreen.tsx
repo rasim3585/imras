@@ -1,11 +1,63 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { matchProvider } from '../lib/matchProvider';
 import { useI18n } from '../i18n/LanguageContext';
 import CourtTV from '../live/CourtTV';
 import TennisTV from '../live/TennisTV';
 import MatchChat from '../live/ChatPanel';
+import { courtStatsAt, ambientPlay, type PlayType } from '../live/courtSim';
 import type { LiveState, Match } from '../lib/types';
+
+const PLAY_ICON: Record<PlayType, string> = {
+  make2: '🏀', make3: '🎯', miss: '🧱', rebound: '🔁', steal: '🖐', foul: '⚠', block: '🛡', assist: '➡',
+};
+
+// Basketball stat strip + play feed below the court. Its own slow clock; makes
+// are pulled from the authoritative server score.
+function CourtStats({ matchId, home, away, hs, as }: { matchId: string; home: string; away: string; hs: number; as: number }) {
+  const { t } = useI18n();
+  const mount = useRef(Date.now());
+  const [, force] = useState(0);
+  useEffect(() => { const id = setInterval(() => force((n) => n + 1), 1600); return () => clearInterval(id); }, []);
+  const elapsed = (Date.now() - mount.current) / 1000;
+  const s = courtStatsAt(matchId, elapsed);
+  const feed = ambientPlay(matchId, elapsed).slice(-10).reverse();
+  const rows: [string, [number, number], string][] = [
+    ['FG%', s.fgPct, '%'], [t('bb.reb'), s.rebounds, ''], [t('bb.to'), s.turnovers, ''], [t('live.fouls'), s.fouls, ''],
+  ];
+  const Bar = ({ label, l, r, suf }: { label: string; l: number; r: number; suf: string }) => {
+    const tot = l + r; const lp = tot === 0 ? 50 : Math.round((100 * l) / tot);
+    return (
+      <div className="lst-row">
+        <span className="lst-l tnum">{l}{suf}</span>
+        <div className="lst-mid"><span className="lst-k">{label}</span>
+          <div className="lst-bar"><div className="lst-h" style={{ width: `${lp}%` }} /><div className="lst-a" style={{ width: `${100 - lp}%` }} /></div></div>
+        <span className="lst-r tnum">{r}{suf}</span>
+      </div>
+    );
+  };
+  return (
+    <>
+      <div className="card lst">
+        <div className="lst-head"><span className="lst-tm">{home}</span><span className="lst-ti">{t('live.stats')}</span><span className="lst-tm">{away}</span></div>
+        <div className="lst-row lst-poss"><span className="lst-l tnum">{hs}</span>
+          <div className="lst-mid"><span className="lst-k">{t('bb.pts')}</span>
+            <div className="lst-bar big"><div className="lst-h" style={{ width: `${hs + as === 0 ? 50 : Math.round((100 * hs) / (hs + as))}%` }} /><div className="lst-a" style={{ width: `${hs + as === 0 ? 50 : Math.round((100 * as) / (hs + as))}%` }} /></div></div>
+          <span className="lst-r tnum">{as}</span></div>
+        {rows.map(([label, [l, r], suf]) => <Bar key={label} label={label} l={l} r={r} suf={suf} />)}
+      </div>
+      <div className="section-head"><h3>{t('live.keymoments')}</h3></div>
+      <div className="card cm-feed">
+        {feed.map((e) => (
+          <div key={e.key} className="cm-line">
+            <span className="cm-ico">{PLAY_ICON[e.type]}</span>
+            <span className="cm-text">{t(`bbplay.${e.type}`)} · {e.side === 'home' ? home : away}</span>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
 
 // Basketbol 2D canlı izleme ekranı. Maçı + canlı skoru çeker, CourtTV'yi besler.
 // Kazanma olasılığı barı + canlı sohbet de burada (futbol /live ekranıyla tutarlı).
@@ -61,7 +113,11 @@ export default function LiveCourtScreen() {
           period={live?.period ?? null} phase={phase} />
       ) : (
         <CourtTV home={match.home_team} away={match.away_team} hs={hs} as={as}
-          period={live?.period ?? null} minute={live?.minute ?? 0} phase={phase} />
+          period={live?.period ?? null} minute={live?.minute ?? 0} phase={phase} matchId={matchId!} />
+      )}
+
+      {phase !== 'upcoming' && matchId && match.sport === 'basketball' && (
+        <CourtStats matchId={matchId} home={match.home_team} away={match.away_team} hs={hs} as={as} />
       )}
 
       {(ph > 0 || pa > 0) && phase !== 'finished' && (

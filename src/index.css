@@ -1576,11 +1576,17 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .court-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .court-poss { position: absolute; top: 0; bottom: 0; width: 46%; background: radial-gradient(circle at center, rgba(255,255,255,0.16), transparent 70%); transition: left 1.6s ease, right 1.6s ease; pointer-events: none; }
 .court-poss.home { left: 0; } .court-poss.away { right: 0; }
-.court-ball { position: absolute; top: 52%; width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffa763, #d9601f); box-shadow: 0 2px 6px rgba(0,0,0,0.35); transition: left 1.2s cubic-bezier(.5,0,.5,1); }
-.court-ball.home { left: 26%; } .court-ball.away { left: 68%; }
-.court-ball.tennis-ball { width: 12px; height: 12px; background: radial-gradient(circle at 35% 30%, #eaff7a, #b7e02a); top: 46%; }
-.court-ball.live { animation: courtBounce 0.9s ease-in-out infinite; }
-@keyframes courtBounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+.court-ball { position: absolute; top: 50%; left: 50%; width: 15px; height: 15px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffa763, #d9601f); box-shadow: 0 2px 6px rgba(0,0,0,0.35); transform: translate(-50%, -50%); will-change: left, top; z-index: 5; }
+.court-ball.tennis-ball { width: 12px; height: 12px; background: radial-gradient(circle at 35% 30%, #eaff7a, #b7e02a); box-shadow: 0 0 7px rgba(234,255,122,0.6); }
+.court-ball.shooting { box-shadow: 0 0 10px rgba(255,167,99,0.9); }
+/* rim lights up on a made basket */
+.rim-lit { stroke: #ffd36b !important; animation: rim-pop 0.7s ease; }
+@keyframes rim-pop { 0% { stroke-width: 2.5; } 45% { stroke-width: 6; } 100% { stroke-width: 2.5; } }
+/* +2 / +3 score pop */
+.court-pop { position: absolute; top: 30%; z-index: 8; font-size: 1.6rem; font-weight: 900; color: #ffe08a;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6); animation: court-pop 1.3s cubic-bezier(.2,1,.3,1) forwards; }
+.court-pop.home { right: 18%; } .court-pop.away { left: 18%; }
+@keyframes court-pop { 0% { opacity: 0; transform: translateY(8px) scale(0.6); } 25% { opacity: 1; transform: translateY(0) scale(1.1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-16px) scale(1); } }
 .court-top { position: absolute; top: 10px; left: 0; right: 0; display: flex; justify-content: center; }
 .court-clk { background: rgba(0,0,0,0.55); color: #fff; font-size: 0.78rem; font-weight: 800; padding: 4px 12px; border-radius: 999px; font-variant-numeric: tabular-nums; }
 .court-clk.fin { background: rgba(0,0,0,0.6); }

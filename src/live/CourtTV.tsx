@@ -1,42 +1,70 @@
 import { useEffect, useRef, useState } from 'react';
 import { bballClock } from '../lib/format';
+import { courtFlowAt, ambientPlay, type Side, type PlayType } from './courtSim';
 
-// Basketbol 2D canlı izleme (Nesine basket sahası esinli; futbol PitchTV'nin
-// basket karşılığı). Saf görsel: canlı skor + çeyrek/saat + hafif top hareketi +
-// sayı değişince o tarafın flaşı. Gerçek pozisyon verisi yok — top ritmik gezer,
-// sayı geldiğinde atan taraf parlar (izleme hissi, veri uydurmadan).
+// Basketball 2D live view. The ball now flows between the two hoops one
+// possession at a time (courtSim) instead of teleporting — bring-up, attack,
+// shot, transition — animated every frame. Made baskets come from the SERVER
+// score and trigger a +2/+3 pop + rim flash. Home attacks the RIGHT hoop.
+
+const PLAY_ICON: Record<PlayType, string> = {
+  make2: '🏀', make3: '🎯', miss: '🧱', rebound: '🔁', steal: '🖐', foul: '⚠', block: '🛡', assist: '➡',
+};
 
 export default function CourtTV({
-  home, away, hs, as, period, minute, phase,
+  home, away, hs, as, period, minute, phase, matchId,
 }: {
   home: string; away: string; hs: number; as: number;
-  period: string | null; minute: number; phase: 'upcoming' | 'live' | 'finished';
+  period: string | null; minute: number; phase: 'upcoming' | 'live' | 'finished'; matchId: string;
 }) {
   const finished = phase === 'finished';
   const live = phase === 'live';
-  const [side, setSide] = useState<'home' | 'away'>('home');   // topun bulunduğu yarı
-  const [flash, setFlash] = useState<'home' | 'away' | null>(null);
+  const ballRef = useRef<HTMLDivElement | null>(null);
+  const [side, setSide] = useState<Side>('home');
+  const [flash, setFlash] = useState<Side | null>(null);
+  const [pop, setPop] = useState<{ side: Side; pts: number; at: number } | null>(null);
+  const [badge, setBadge] = useState<{ type: PlayType; side: Side; at: number } | null>(null);
   const prev = useRef({ hs, as });
+  const mount = useRef(Date.now());
+  const shownBadge = useRef('');
 
-  // top ritmik olarak yarı değiştirir (izleme hissi)
-  useEffect(() => {
-    if (!live) return;
-    const id = setInterval(() => setSide((s) => (s === 'home' ? 'away' : 'home')), 2600);
-    return () => clearInterval(id);
-  }, [live]);
-
-  // sayı geldi → atan taraf parlar + top o tarafa
+  // server basket → scorer flash + +pts pop
   useEffect(() => {
     const dH = hs - prev.current.hs, dA = as - prev.current.as;
-    if (dH > 0 || dA > 0) {
-      const scorer = dH >= dA ? 'home' : 'away';
-      setFlash(scorer); setSide(scorer === 'home' ? 'away' : 'home');   // sayıdan sonra rakip topu alır
-      const t = setTimeout(() => setFlash(null), 900);
-      prev.current = { hs, as };
-      return () => clearTimeout(t);
-    }
     prev.current = { hs, as };
+    if (dH <= 0 && dA <= 0) return;
+    const scorer: Side = dH >= dA ? 'home' : 'away';
+    const pts = Math.max(dH, dA);
+    setFlash(scorer);
+    setPop({ side: scorer, pts, at: Date.now() });
+    const t = setTimeout(() => setFlash(null), 900);
+    return () => clearTimeout(t);
   }, [hs, as]);
+
+  // animation loop: smooth ball + possession side + ambient badges
+  useEffect(() => {
+    if (!live) return;
+    let raf = 0;
+    const events = ambientPlay(matchId, 4000);
+    const step = () => {
+      const t = (Date.now() - mount.current) / 1000;
+      const flow = courtFlowAt(matchId, t);
+      if (ballRef.current) {
+        ballRef.current.style.left = `${(flow.x / 320) * 100}%`;
+        ballRef.current.style.top = `${(flow.y / 200) * 100}%`;
+        ballRef.current.classList.toggle('shooting', flow.phase === 'shot');
+      }
+      setSide((s) => (s === flow.side ? s : flow.side));
+      const near = events.find((e) => Math.abs(e.sec - t) < 0.8);
+      if (near && near.key !== shownBadge.current) { shownBadge.current = near.key; setBadge({ type: near.type, side: near.side, at: Date.now() }); }
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [matchId, live]);
+
+  useEffect(() => { if (!pop) return; const id = setTimeout(() => setPop((p) => (p && p.at === pop.at ? null : p)), 1400); return () => clearTimeout(id); }, [pop]);
+  useEffect(() => { if (!badge) return; const id = setTimeout(() => setBadge((b) => (b && b.at === badge.at ? null : b)), 2200); return () => clearTimeout(id); }, [badge]);
 
   const clock = finished ? '' : bballClock(minute, period);
 
@@ -47,20 +75,26 @@ export default function CourtTV({
         <rect x="8" y="8" width="304" height="184" fill="none" stroke="#f2e4d0" strokeWidth="2" opacity="0.85" />
         <line x1="160" y1="8" x2="160" y2="192" stroke="#f2e4d0" strokeWidth="2" opacity="0.85" />
         <circle cx="160" cy="100" r="26" fill="none" stroke="#f2e4d0" strokeWidth="2" opacity="0.85" />
-        {/* keys + hoops */}
+        <path d="M8 52 A 78 78 0 0 1 8 148" fill="none" stroke="#f2e4d0" strokeWidth="2" opacity="0.55" />
+        <path d="M312 52 A 78 78 0 0 0 312 148" fill="none" stroke="#f2e4d0" strokeWidth="2" opacity="0.55" />
         <rect x="8" y="66" width="46" height="68" fill="none" stroke="#f2e4d0" strokeWidth="2" opacity="0.7" />
         <rect x="266" y="66" width="46" height="68" fill="none" stroke="#f2e4d0" strokeWidth="2" opacity="0.7" />
-        <circle cx="20" cy="100" r="6" fill="none" stroke="#ff7043" strokeWidth="2.5" />
-        <circle cx="300" cy="100" r="6" fill="none" stroke="#ff7043" strokeWidth="2.5" />
+        <circle cx="54" cy="100" r="14" fill="none" stroke="#f2e4d0" strokeWidth="1.5" opacity="0.5" />
+        <circle cx="266" cy="100" r="14" fill="none" stroke="#f2e4d0" strokeWidth="1.5" opacity="0.5" />
+        <circle cx="20" cy="100" r="6" fill="none" stroke="#ff7043" strokeWidth="2.5" className={flash === 'away' ? 'rim-lit' : ''} />
+        <circle cx="300" cy="100" r="6" fill="none" stroke="#ff7043" strokeWidth="2.5" className={flash === 'home' ? 'rim-lit' : ''} />
       </svg>
 
-      {/* possession glow */}
       {live && <div className={`court-poss ${side}`} />}
+      <div ref={ballRef} className={`court-ball ${live ? 'live' : ''}`} style={{ left: '50%', top: '50%' }} aria-hidden />
 
-      {/* ball */}
-      <div className={`court-ball ${live ? 'live' : ''} ${side}`} aria-hidden />
+      {badge && (
+        <div className={`pev pev-${badge.type} ${badge.side}`} key={badge.at}>
+          <span className="pev-i">{PLAY_ICON[badge.type]}</span>
+        </div>
+      )}
+      {pop && <div className={`court-pop ${pop.side}`} key={pop.at}>+{pop.pts}</div>}
 
-      {/* score + clock overlay */}
       <div className="court-top">
         {finished ? <span className="court-clk fin">FT</span>
           : <span className="court-clk"><span className="court-q">{period ?? 'Q1'}</span> {clock}</span>}
