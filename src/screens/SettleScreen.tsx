@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { matchProvider } from '../lib/matchProvider';
 import { useAuth } from '../auth/AuthContext';
+import { useI18n } from '../i18n/LanguageContext';
 import type { CouponSettlement } from '../lib/types';
 import { formatOdds } from '../lib/format';
 
@@ -12,6 +13,7 @@ export default function SettleScreen() {
   const { couponId } = useParams<{ couponId: string }>();
   const navigate = useNavigate();
   const { refreshProfile } = useAuth();
+  const { t } = useI18n();
 
   const [phase, setPhase] = useState<Phase>('loading');
   const [data, setData] = useState<CouponSettlement | null>(null);
@@ -49,7 +51,7 @@ export default function SettleScreen() {
         setPhase('final');
         void refreshRef.current();
       } catch (err) {
-        if (alive) setError(err instanceof Error ? err.message : 'Could not settle this coupon');
+        if (alive) setError(err instanceof Error ? err.message : t('settle.err'));
       }
     })();
     return () => { alive = false; };
@@ -59,7 +61,7 @@ export default function SettleScreen() {
     return (
       <div className="app-shell" style={{ paddingTop: 'var(--s6)' }}>
         <div className="banner banner-error">{error}</div>
-        <button className="btn btn-block" onClick={() => navigate('/coupons')}>Back to coupons</button>
+        <button className="btn btn-block" onClick={() => navigate('/coupons')}>{t('settle.back')}</button>
       </div>
     );
   }
@@ -68,7 +70,7 @@ export default function SettleScreen() {
     return (
       <div className="settle">
         <div className="spinner" />
-        <p className="settle-note">Settling your coupon…</p>
+        <p className="settle-note">{t('settle.settling')}</p>
       </div>
     );
   }
@@ -76,10 +78,10 @@ export default function SettleScreen() {
   if (data.in_progress) {
     return (
       <div className="app-shell settle-shell">
-        <div className="settle-top"><span className="chip chip-live"><span className="dot" />In progress</span></div>
+        <div className="settle-top"><span className="chip chip-live"><span className="dot" />{t('settle.inprogress')}</span></div>
         <div className="empty" style={{ marginTop: 'var(--s4)' }}>
-          <p>Your matches are still playing. This coupon settles automatically once they finish — watch them live or check back.</p>
-          <button className="btn" onClick={() => navigate('/coupons')}>Back to coupons</button>
+          <p>{t('settle.stillplaying')}</p>
+          <button className="btn" onClick={() => navigate('/coupons')}>{t('settle.back')}</button>
         </div>
       </div>
     );
@@ -92,8 +94,8 @@ export default function SettleScreen() {
     <div className="app-shell settle-shell">
       <div className="settle-top">
         {phase === 'final'
-          ? <span className={`chip ${won ? 'chip-pos' : 'chip-neg'}`}>{won ? 'Coupon won' : 'Coupon lost'}</span>
-          : <span className="chip chip-live"><span className="dot" />Settling · {Math.min(revealed, total)}/{total}</span>}
+          ? <span className={`chip ${won ? 'chip-pos' : 'chip-neg'}`}>{won ? t('settle.won') : t('settle.lost')}</span>
+          : <span className="chip chip-live"><span className="dot" />{t('settle.settlingn', { n: Math.min(revealed, total), total })}</span>}
       </div>
 
       <div className="settle-legs">
@@ -117,7 +119,7 @@ export default function SettleScreen() {
                     <span className="settle-leg-score tnum">{s.home_score} : {s.away_score}</span>
                     <span className={`chip ${hit ? 'chip-pos' : 'chip-neg'}`}>
                       <span className={`mark ${hit ? 'win' : 'loss'}`}>{hit ? '✓' : '✗'}</span>
-                      {hit ? 'Hit' : 'Miss'}
+                      {hit ? t('settle.hit') : t('settle.miss')}
                     </span>
                   </>
                 )}
@@ -133,12 +135,12 @@ export default function SettleScreen() {
             {won ? (
               <>
                 <span className="payout">+{data.potential_win.toLocaleString()}</span>
-                <div className="caption">gold — you called it.</div>
+                <div className="caption">{t('settle.calledit')}</div>
               </>
             ) : (
               <>
                 <span className="verdict-x">✗</span>
-                <div className="caption">Not this time. You got {data.selections.filter((s) => s.status === 'won').length}/{total} right.</div>
+                <div className="caption">{t('settle.nottime', { n: data.selections.filter((s) => s.status === 'won').length, total })}</div>
               </>
             )}
           </div>
@@ -146,20 +148,20 @@ export default function SettleScreen() {
           <div className="receipt" style={{ maxWidth: '100%' }}>
           <div className="receipt-rows">
             <div className="receipt-row">
-              <span className="k">Stake</span>
-              <span className="v tnum">{data.stake} gold</span>
+              <span className="k">{t('mc.stake')}</span>
+              <span className="v tnum">{data.stake} {t('unit.gold')}</span>
             </div>
             <div className="receipt-row">
-              <span className="k">Total odds</span>
+              <span className="k">{t('cpn.totalOdds')}</span>
               <span className="v tnum">{formatOdds(data.total_odds)}</span>
             </div>
             <div className={`receipt-row ${won ? 'pts' : ''}`}>
-              <span className="k">{won ? 'Payout' : 'Result'}</span>
-              <span className="v tnum">{won ? `+${data.potential_win} gold` : 'No return'}</span>
+              <span className="k">{won ? t('settle.payout') : t('settle.result')}</span>
+              <span className="v tnum">{won ? t('settle.gold', { p: data.potential_win }) : t('settle.noreturn')}</span>
             </div>
             <div className="receipt-row">
-              <span className="k">Balance</span>
-              <span className="v tnum">{data.new_balance} gold</span>
+              <span className="k">{t('cpn.balance')}</span>
+              <span className="v tnum">{data.new_balance} {t('unit.gold')}</span>
             </div>
           </div>
 

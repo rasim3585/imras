@@ -7,6 +7,7 @@ import {
 import { isPenaltyGoal } from '../live/liveModel';
 import PitchTV from '../live/PitchTV';
 import { matchProvider } from '../lib/matchProvider';
+import { useI18n } from '../i18n/LanguageContext';
 import type { CouponLeg, LiveState } from '../lib/types';
 import { formatOdds, impliedProb } from '../lib/format';
 import { teamColor } from '../lib/teams';
@@ -39,6 +40,7 @@ function revealedLines(matchId: string, st: LiveState, minute: number, atmo: Lin
 export default function LiveMatchScreen() {
   const { matchId } = useParams<{ matchId: string }>();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const { state, minute, error } = useLiveMatch(matchId);
   const [gaveUp, setGaveUp] = useState(false);
 
@@ -137,12 +139,12 @@ export default function LiveMatchScreen() {
     if (gaveUp || error) {
       return (
         <div className="app-shell" style={{ paddingTop: 'var(--s6)' }}>
-          <div className="banner banner-error">{error ?? 'Live view is only available for simulated matches.'}</div>
-          <button className="btn btn-block" onClick={() => navigate(-1)}>Back</button>
+          <div className="banner banner-error">{error ?? t('live.notsim')}</div>
+          <button className="btn btn-block" onClick={() => navigate(-1)}>{t('md.back')}</button>
         </div>
       );
     }
-    return <div className="settle"><div className="spinner" /><p className="settle-note">Connecting to the match…</p></div>;
+    return <div className="settle"><div className="spinner" /><p className="settle-note">{t('live.connecting')}</p></div>;
   }
 
   const { home_team: home, away_team: away, phase, live_odds: odds } = state;
@@ -153,22 +155,22 @@ export default function LiveMatchScreen() {
 
   const pick = myLeg?.outcome_key as OutKey | undefined;
   const pickState = pick ? computePickState(pick, hs, as) : null;
-  const pickLabel = { win: 'Winning', lose: 'Losing', level: 'On the line' } as const;
+  const pickLabel = { win: t('live.win'), lose: t('live.lose'), level: t('live.level') } as const;
   const oddsArr = odds ? [odds.home, odds.draw, odds.away].filter((x): x is number => x != null) : [];
 
   return (
     <div className="app-shell live-screen">
       {flash && (
         <div className="goal-flash" style={{ ['--flash' as string]: teamColor(flash.team === 'home' ? home : away) }}>
-          <span className="goal-flash-word">{flash.penalty ? 'PENALTY!' : 'GOAL!'}</span>
+          <span className="goal-flash-word">{flash.penalty ? t('live.penalty') : t('live.goal')}</span>
           <span className="goal-flash-team">{flash.team === 'home' ? home : away}</span>
         </div>
       )}
 
       <div className="live-statusbar">
-        {phase === 'upcoming' && <span className="chip">Kicking off…</span>}
-        {phase === 'live' && <span className="chip chip-live"><span className="dot" />LIVE · {shownMinute < 45 ? '1st half' : '2nd half'}</span>}
-        {finished && <span className="chip">Full-time</span>}
+        {phase === 'upcoming' && <span className="chip">{t('live.kickoff')}</span>}
+        {phase === 'live' && <span className="chip chip-live"><span className="dot" />LIVE · {shownMinute < 45 ? t('live.half1') : t('live.half2')}</span>}
+        {finished && <span className="chip">{t('live.fulltime')}</span>}
       </div>
 
       <PitchTV
@@ -181,18 +183,18 @@ export default function LiveMatchScreen() {
       {myLeg && (
         <div className={`card betstatus ${pickState ?? ''}`}>
           <div className="stack" style={{ gap: 2 }}>
-            <span className="tag">Your pick</span>
+            <span className="tag">{t('live.yourpick')}</span>
             <span className="betstatus-pick">{myLeg.market_name}: {myLeg.option_label}<span className="mono dim"> @ {formatOdds(myLeg.odds)}</span></span>
           </div>
           {pickState && (
-            <span className={`betstatus-flag ${pickState}`}>{finished ? (pickState === 'win' ? 'Won' : 'Missed') : pickLabel[pickState]}</span>
+            <span className={`betstatus-flag ${pickState}`}>{finished ? (pickState === 'win' ? t('live.won') : t('live.missed')) : pickLabel[pickState]}</span>
           )}
         </div>
       )}
 
       {odds && !finished && (
         <>
-          <div className="section-head"><h3>Match result · live</h3></div>
+          <div className="section-head"><h3>{t('live.matchresult')}</h3></div>
           <div className="market live-odds-row">
             {(['home', 'draw', 'away'] as OutKey[]).map((k) => (
               <div key={k} className={`outcome ${myLeg?.outcome_key === k ? 'sel' : ''}`}>
@@ -205,9 +207,9 @@ export default function LiveMatchScreen() {
         </>
       )}
 
-      <div className="section-head"><h3>Key moments</h3></div>
+      <div className="section-head"><h3>{t('live.keymoments')}</h3></div>
       <div className="card cm-feed">
-        {feed.length === 0 && <div className="cm-line"><span className="cm-text muted">The players are out…</span></div>}
+        {feed.length === 0 && <div className="cm-line"><span className="cm-text muted">{t('live.playersout')}</span></div>}
         {feed.map((l) => (
           <div key={l.key} className={`cm-line ${l.isGoal ? 'cm-goal' : ''} ${l.kind === 'card' ? 'cm-card' : ''}`}>
             <span className="cm-min tnum">{l.minute}&apos;</span>
@@ -217,7 +219,7 @@ export default function LiveMatchScreen() {
       </div>
 
       <button className="btn btn-ghost btn-block" style={{ marginTop: 'var(--s3)' }} onClick={() => (couponId ? navigate('/coupons') : navigate(-1))}>
-        {couponId ? 'My coupons' : 'Back'}
+        {couponId ? t('mc.title') : t('md.back')}
       </button>
     </div>
   );
