@@ -31,6 +31,18 @@ function cleanErr(m: string): string {
   return 'Spin failed. Try again.';
 }
 
+// Which symbol drove a winning step, and how many of it landed — so the callout
+// can explain WHY the win happened before the symbols clear.
+function winInfo(grid: number[], cells: number[]): { v: number; count: number } {
+  const counts: Record<number, number> = {};
+  for (const c of cells) { const v = grid[c]; if (v >= 1 && v <= 8) counts[v] = (counts[v] || 0) + 1; }
+  let bv = 0, bc = 0;
+  for (const k in counts) { if (counts[k] > bc) { bc = counts[k]; bv = Number(k); } }
+  return { v: bv, count: bc };
+}
+
+interface WinTiming { show: number; boom: number; gap: number; }
+
 interface FsState { active: boolean; i: number; n: number; mult: number; win: number; }
 const FS_OFF: FsState = { active: false, i: 0, n: 0, mult: 0, win: 0 };
 
@@ -42,6 +54,9 @@ export default function GatesScreen() {
   // CSS drop-in animation replays on every cascade step.
   const [board, setBoard] = useState<{ cells: number[]; gen: number }>(() => ({ cells: initialGrid(), gen: 0 }));
   const [winCells, setWinCells] = useState<Set<number>>(new Set());
+  const [winPhase, setWinPhase] = useState<'show' | 'boom' | null>(null);
+  const [dim, setDim] = useState(false);
+  const [callout, setCallout] = useState<{ v: number; count: number; win: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [bet, setBet] = useState(50);
   const [ante, setAnte] = useState(false);
@@ -70,30 +85,34 @@ export default function GatesScreen() {
   function showGrid(cells: number[]) { genRef.current += 1; setBoard({ cells, gen: genRef.current }); }
   const stepBet = (d: number) => setBet((b) => Math.max(MIN_BET, Math.min(MAX_BET, b + d)));
 
-  // Walk one spin's tumble steps: highlight winners (pop), then cascade to the
-  // next grid (drop-in). Base steps slower than the many free-spin steps.
-  async function playSteps(steps: SlotStep[], hi: number, gap: number, onWin?: (w: number) => void) {
+  // Walk one spin's tumble steps. Each winning step plays in two beats so the
+  // player understands it: (1) SHOW — winners pulse while the rest dim, and a
+  // callout names the symbol, its count and the win; (2) BOOM — the winners
+  // drop down toward the goal line and vanish. Then the grid cascades in.
+  async function playSteps(steps: SlotStep[], t: WinTiming, onWin?: (w: number) => void) {
     if (steps[0]) showGrid(steps[0].grid);
     for (let i = 0; i < steps.length; i++) {
       const st = steps[i];
       if (st.win > 0) {
+        const info = winInfo(st.grid, st.cells);
         setWinCells(new Set(st.cells));
+        setWinPhase('show'); setDim(true);
+        setCallout({ v: info.v, count: info.count, win: st.win });
         onWin?.(st.win);
-        await wait(hi);
-        if (i + 1 < steps.length) {
-          setWinCells(new Set());
-          showGrid(steps[i + 1].grid);
-          await wait(gap);
-        }
+        await wait(t.show);
+        setWinPhase('boom'); setDim(false);
+        await wait(t.boom);
+        setWinCells(new Set()); setWinPhase(null); setCallout(null);
+        if (i + 1 < steps.length) { showGrid(steps[i + 1].grid); await wait(t.gap); }
       }
     }
-    setWinCells(new Set());
+    setWinCells(new Set()); setWinPhase(null); setCallout(null); setDim(false);
   }
 
   async function animate(res: SlotResult) {
     // --- BASE spin (empty when the bonus was bought) ---
     let running = 0;
-    await playSteps(res.base.steps, 720, 340, (w) => { running += w; setRunWin(running); });
+    await playSteps(res.base.steps, { show: 1150, boom: 640, gap: 150 }, (w) => { running += w; setRunWin(running); });
     if (res.base.payout > 0 && res.base.mult_sum > 0) { setMultSum(res.base.mult_sum); await wait(560); }
 
     // --- FREE SPINS bonus ---
@@ -107,7 +126,7 @@ export default function GatesScreen() {
       for (let i = 0; i < res.bonus.spins.length; i++) {
         const sp = res.bonus.spins[i];
         setFs((f) => ({ ...f, i: i + 1 }));
-        await playSteps(sp.steps, 540, 240);
+        await playSteps(sp.steps, { show: 820, boom: 520, gap: 120 });
         setFs((f) => ({ ...f, mult: sp.total_mult }));
         if (sp.win > 0) { bwin += sp.win; setFs((f) => ({ ...f, win: bwin })); await wait(440); }
         else await wait(150);
@@ -132,6 +151,7 @@ export default function GatesScreen() {
     if (busy || st > balance || st <= 0) return;
     setBusy(true); setErr(null); setBanner(null); setBig(false);
     setRunWin(0); setMultSum(0); setFs(FS_OFF); setWinCells(new Set());
+    setWinPhase(null); setDim(false); setCallout(null);
     try {
       const res = await matchProvider.slotSpin(bet, buy ? false : ante, buy);
       await animate(res);
@@ -201,11 +221,11 @@ export default function GatesScreen() {
           <div className="go-goal">
             <div className="go-net" aria-hidden="true" />
             <div className="go-reels">
-              <div className="go-grid" style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}>
+              <div className={`go-grid ${dim ? 'dim' : ''}`} style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}>
                 {board.cells.map((v, i) => (
                   <div
                     key={`${board.gen}-${i}`}
-                    className={`go-cell ${winCells.has(i) ? 'win' : ''} ${v < 0 ? 'orb' : ''} ${v === 9 ? 'scat' : ''}`}
+                    className={`go-cell ${winCells.has(i) ? `win ${winPhase ?? ''}` : ''} ${v < 0 ? 'orb' : ''} ${v === 9 ? 'scat' : ''}`}
                     style={{ animationDelay: `${Math.floor(i / COLS) * 45}ms` }}
                   >
                     <span className="go-sym-wrap" style={{ animationDelay: `${(i % 7) * 0.28}s` }}>
@@ -214,6 +234,14 @@ export default function GatesScreen() {
                   </div>
                 ))}
               </div>
+
+              {callout && (
+                <div className="go-callout">
+                  <span className="go-callout-ic"><SlotSymbol v={callout.v} /></span>
+                  <span className="go-callout-cnt tnum">×{callout.count}</span>
+                  <b className="go-callout-win tnum">+{callout.win.toLocaleString()}</b>
+                </div>
+              )}
 
               {multSum > 0 && <div className="go-multbadge tnum">×{multSum}</div>}
               {runWin > 0 && !banner && !bonus && <div className="go-runwin tnum">+{runWin.toLocaleString()}</div>}

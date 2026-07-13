@@ -707,14 +707,35 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 }
 .go-sym-wrap { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; animation: go-sway 2.9s ease-in-out infinite; }
 @keyframes go-sway { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-2px) rotate(1deg); } }
-.go-cell.win { animation: go-fall-out 0.7s ease-in forwards; z-index: 3; }
+/* win presentation: non-winners dim so the winning group stands out */
+.go-cell { transition: opacity 0.25s ease, filter 0.25s ease; }
+.go-grid.dim .go-cell:not(.win) { opacity: 0.2; filter: grayscale(0.65) brightness(0.72); }
+.go-cell.win { z-index: 4; }
 .go-cell.win .go-sym-wrap { animation: none; }
-@keyframes go-fall-out {
-  0% { transform: translateY(0) scale(1); }
-  20% { transform: translateY(-7%) scale(1.16); filter: drop-shadow(0 0 18px rgba(255,255,255,0.95)); }
-  34% { transform: translateY(-7%) scale(1.1); }
-  100% { transform: translateY(200%) scale(0.8) rotate(12deg); opacity: 0; }
+/* SHOW beat — winners pulse and glow while the callout explains the win */
+.go-cell.win.show { animation: go-winpulse 0.55s ease-in-out infinite alternate; }
+@keyframes go-winpulse {
+  0% { transform: scale(1); filter: drop-shadow(0 0 3px rgba(255,255,255,0.5)); }
+  100% { transform: scale(1.15); filter: drop-shadow(0 0 17px rgba(255,240,120,0.95)); }
 }
+/* BOOM beat — winners drop down toward the goal line and vanish */
+.go-cell.win.boom { animation: go-fall-out 0.62s cubic-bezier(0.5, 0, 0.9, 0.45) forwards; }
+@keyframes go-fall-out {
+  0% { transform: translateY(0) scale(1.15); filter: drop-shadow(0 0 16px rgba(255,240,120,0.9)); }
+  100% { transform: translateY(340%) scale(0.62) rotate(9deg); opacity: 0; }
+}
+/* win callout — names the symbol, how many landed and the amount */
+.go-callout {
+  position: absolute; top: 8px; left: 50%; z-index: 6; display: flex; align-items: center; gap: 9px;
+  padding: 4px 12px 4px 6px; border-radius: 999px; background: rgba(6,16,10,0.92);
+  border: 1.5px solid rgba(255,255,255,0.28); box-shadow: 0 5px 16px rgba(0,0,0,0.55);
+  animation: go-callout-in 0.28s cubic-bezier(0.2,1.4,0.4,1) both;
+}
+.go-callout-ic { width: 30px; height: 30px; display: inline-flex; }
+.go-callout-ic .slot-sym, .go-callout-ic .slot-scatter, .go-callout-ic .slot-orb { width: 100%; height: 100%; }
+.go-callout-cnt { color: #fff; font-weight: 800; font-size: 0.95rem; }
+.go-callout-win { color: #86ffb0; font-size: 1.05rem; }
+@keyframes go-callout-in { 0% { transform: translateX(-50%) scale(0.6); opacity: 0; } 100% { transform: translateX(-50%) scale(1); opacity: 1; } }
 
 /* shared symbol tiles (used by SlotSymbol) */
 .slot-sym { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
@@ -732,10 +753,10 @@ svg.crest { background: none !important; border-radius: 0 !important; }
   font-size: 0.6rem; letter-spacing: 0.5px; color: #ffe27a; text-shadow: 0 1px 2px rgba(0,0,0,0.9); }
 .go-cell.scat { z-index: 2; }
 
-/* corner flags planted on the goal line, rising up into the grass */
-.go-flag { position: absolute; bottom: -6px; width: 46px; z-index: 3; pointer-events: none; }
-.go-flag-left { left: 6px; }
-.go-flag-right { right: 6px; transform: scaleX(-1); }
+/* corner flags at the far ends of the goal line, rising up into the grass */
+.go-flag { position: absolute; bottom: calc(100% - 9px); width: 42px; z-index: 3; pointer-events: none; }
+.go-flag-left { left: 0; }
+.go-flag-right { right: 0; transform: scaleX(-1); }
 .go-flag-svg { width: 100%; height: auto; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4)); }
 .go-flag-cloth { transform-origin: 32px 22px; animation: go-wave 1.7s ease-in-out infinite; }
 @keyframes go-wave {

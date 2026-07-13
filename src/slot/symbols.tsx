@@ -7,25 +7,12 @@ import type { ReactNode } from 'react';
 
 interface SymDef { glow: string; body: ReactNode; }
 
-const Shine = ({ cx = 38, cy = 30, rx = 16, ry = 9, o = 0.5 }: { cx?: number; cy?: number; rx?: number; ry?: number; o?: number }) => (
+const Shine = ({ cx = 38, cy = 30, rx = 14, ry = 8, o = 0.5 }: { cx?: number; cy?: number; rx?: number; ry?: number; o?: number }) => (
   <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="#ffffff" opacity={o} transform={`rotate(-28 ${cx} ${cy})`} />
 );
 
 const SYMBOLS: SymDef[] = [
-  // 1 — referee whistle (no protruding tube) -------------------------------- low
-  { glow: 'rgba(52,211,153,0.8)', body: <>
-    <defs>
-      <linearGradient id="whBody" x1="0" y1="0" x2="0.4" y2="1">
-        <stop offset="0" stopColor="#6ee7b7" /><stop offset="0.5" stopColor="#10b981" /><stop offset="1" stopColor="#047857" />
-      </linearGradient>
-    </defs>
-    <path d="M16 46h34a14 14 0 1 1-12 20l-3-6H16a7 7 0 0 1-7-7 7 7 0 0 1 7-7z" fill="url(#whBody)" stroke="#065f46" strokeWidth="2.5" strokeLinejoin="round" />
-    <circle cx="54" cy="58" r="6.5" fill="#03362a" />
-    <rect x="9" y="46" width="6" height="14" rx="3" fill="#0b6e4f" />
-    <Shine cx={30} cy={49} rx={15} ry={5} o={0.5} />
-  </> },
-
-  // 2 — red card ------------------------------------------------------------ low
+  // 1 — red card ------------------------------------------------------------ low
   { glow: 'rgba(239,68,68,0.85)', body: <>
     <defs>
       <linearGradient id="rcard" x1="0" y1="0" x2="0.5" y2="1">
@@ -38,7 +25,7 @@ const SYMBOLS: SymDef[] = [
     </g>
   </> },
 
-  // 3 — tennis ball (gold) -------------------------------------------------- low
+  // 2 — tennis ball (gold) -------------------------------------------------- low
   { glow: 'rgba(230,200,60,0.9)', body: <>
     <defs>
       <radialGradient id="tennis" cx="0.38" cy="0.32" r="0.85">
@@ -51,20 +38,62 @@ const SYMBOLS: SymDef[] = [
     <Shine cx={38} cy={34} rx={13} ry={8} o={0.55} />
   </> },
 
-  // 4 — football (soccer ball) ---------------------------------------------- mid
-  { glow: 'rgba(255,255,255,0.75)', body: <>
+  // 3 — baseball ------------------------------------------------------------ low
+  { glow: 'rgba(255,255,255,0.7)', body: <>
     <defs>
-      <radialGradient id="ball" cx="0.38" cy="0.32" r="0.85">
-        <stop offset="0" stopColor="#ffffff" /><stop offset="0.65" stopColor="#eef1f4" /><stop offset="1" stopColor="#b3bcc6" />
+      <radialGradient id="bsb" cx="0.38" cy="0.32" r="0.85">
+        <stop offset="0" stopColor="#ffffff" /><stop offset="0.7" stopColor="#f3f0ea" /><stop offset="1" stopColor="#cbc4b6" />
+      </radialGradient>
+    </defs>
+    <circle cx="50" cy="50" r="38" fill="url(#bsb)" stroke="#b3aa98" strokeWidth="1.5" />
+    <path d="M26 18 Q40 50 26 82" fill="none" stroke="#d81f3a" strokeWidth="2.4" />
+    <path d="M74 18 Q60 50 74 82" fill="none" stroke="#d81f3a" strokeWidth="2.4" />
+    <g stroke="#d81f3a" strokeWidth="1.6" strokeLinecap="round">
+      <path d="M22 30l7 3M22 42l8 2M22 54l8 2M22 66l7 3" />
+      <path d="M78 30l-7 3M78 42l-8 2M78 54l-8 2M78 66l-7 3" />
+    </g>
+    <Shine cx={38} cy={34} rx={12} ry={7} o={0.55} />
+  </> },
+
+  // 4 — volleyball ---------------------------------------------------------- mid
+  { glow: 'rgba(120,170,255,0.8)', body: <>
+    <defs>
+      <radialGradient id="vb" cx="0.38" cy="0.32" r="0.85">
+        <stop offset="0" stopColor="#ffffff" /><stop offset="0.7" stopColor="#eef3fb" /><stop offset="1" stopColor="#c2ccdd" />
+      </radialGradient>
+    </defs>
+    <circle cx="50" cy="50" r="38" fill="url(#vb)" stroke="#8b98ad" strokeWidth="1.5" />
+    <g fill="none" stroke="#2f7cf0" strokeWidth="2.6" strokeLinecap="round">
+      <path d="M50 12 Q42 40 22 62" /><path d="M50 12 Q48 42 40 84" />
+      <path d="M50 12 Q60 38 82 52" /><path d="M50 12 Q56 44 70 82" />
+      <path d="M22 62 Q54 58 82 52" /><path d="M40 84 Q56 66 70 82" />
+    </g>
+    <Shine cx={38} cy={32} rx={12} ry={7} o={0.5} />
+  </> },
+
+  // 5 — football (classic black & white pentagons) -------------------------- mid
+  { glow: 'rgba(255,255,255,0.8)', body: <>
+    <defs>
+      <radialGradient id="ball" cx="0.38" cy="0.3" r="0.9">
+        <stop offset="0" stopColor="#ffffff" /><stop offset="0.7" stopColor="#eef1f4" /><stop offset="1" stopColor="#b3bcc6" />
       </radialGradient>
     </defs>
     <circle cx="50" cy="50" r="38" fill="url(#ball)" stroke="#7d8794" strokeWidth="1.5" />
-    <polygon points="50,36 63,46 58,62 42,62 37,46" fill="#1c2430" />
-    <path d="M50 12V36M88 50 63 46M74 80 58 62M26 80 42 62M12 50 37 46" stroke="#39424f" strokeWidth="2.4" fill="none" />
-    <Shine cx={37} cy={33} rx={13} ry={8} o={0.6} />
+    <g stroke="#5c6570" strokeWidth="1.6" fill="none">
+      <path d="M50 35V27.7M62.4 44 68 37.8M57.6 58.5 58.6 66.8M42.4 58.5 41.4 66.8M37.6 44 32 37.8" />
+    </g>
+    <g fill="#141a22">
+      <polygon points="50,35 62.4,44 57.6,58.5 42.4,58.5 37.6,44" />
+      <polygon points="50,15 56.7,19.8 54.1,27.7 45.9,27.7 43.3,19.8" />
+      <polygon points="81.4,37.8 78.8,45.7 70.6,45.7 68,37.8 74.7,33" />
+      <polygon points="69.4,74.7 61.2,74.7 58.6,66.8 65.3,62 72,66.8" />
+      <polygon points="30.6,74.7 38.8,74.7 41.4,66.8 34.7,62 28,66.8" />
+      <polygon points="18.6,37.8 21.2,45.7 29.4,45.7 32,37.8 25.3,33" />
+    </g>
+    <Shine cx={36} cy={31} rx={11} ry={7} o={0.55} />
   </> },
 
-  // 5 — basketball ---------------------------------------------------------- mid
+  // 6 — basketball ---------------------------------------------------------- mid
   { glow: 'rgba(245,140,50,0.85)', body: <>
     <defs>
       <radialGradient id="bball" cx="0.38" cy="0.32" r="0.85">
@@ -77,7 +106,7 @@ const SYMBOLS: SymDef[] = [
     <Shine cx={37} cy={33} rx={12} ry={7} o={0.5} />
   </> },
 
-  // 6 — american football (gold-brown) -------------------------------------- high
+  // 7 — american football (gold-brown) -------------------------------------- high
   { glow: 'rgba(210,150,60,0.9)', body: <>
     <defs>
       <linearGradient id="afball" x1="0" y1="0" x2="0.3" y2="1">
@@ -91,25 +120,6 @@ const SYMBOLS: SymDef[] = [
       <path d="M42 45v10M48 44v12M54 45v10" stroke="#fff3d6" strokeWidth="2.6" strokeLinecap="round" />
       <Shine cx={40} cy={40} rx={14} ry={6} o={0.4} />
     </g>
-  </> },
-
-  // 7 — golden boot (side-profile cleat) ------------------------------------ high
-  { glow: 'rgba(255,206,74,0.95)', body: <>
-    <defs>
-      <linearGradient id="boot" x1="0" y1="0" x2="0.3" y2="1">
-        <stop offset="0" stopColor="#fff2b0" /><stop offset="0.45" stopColor="#f3c73f" /><stop offset="1" stopColor="#a9741a" />
-      </linearGradient>
-      <linearGradient id="bootSole" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor="#c8891f" /><stop offset="1" stopColor="#7a4e10" />
-      </linearGradient>
-    </defs>
-    <path d="M10 58c0-11 9-16 22-17l8-1c6-6 16-8 28-5 8 2 14 7 16 15 1 5-2 8-7 8H16c-4 0-6-1-6-3z"
-      fill="url(#boot)" stroke="#6b4610" strokeWidth="2.5" strokeLinejoin="round" />
-    <path d="M12 61h78c2 4-1 9-8 9H20c-6 0-9-4-8-9z" fill="url(#bootSole)" stroke="#6b4610" strokeWidth="2" strokeLinejoin="round" />
-    <circle cx="26" cy="73" r="2.6" fill="#5a3a0e" /><circle cx="44" cy="74" r="2.6" fill="#5a3a0e" />
-    <circle cx="62" cy="74" r="2.6" fill="#5a3a0e" /><circle cx="78" cy="73" r="2.6" fill="#5a3a0e" />
-    <path d="M46 44l12 3M44 50l14 3M43 56l14 2" stroke="#fff6d6" strokeWidth="2.4" strokeLinecap="round" opacity="0.85" />
-    <Shine cx={34} cy={48} rx={12} ry={5} o={0.5} />
   </> },
 
   // 8 — golden trophy ------------------------------------------------------- top
@@ -138,13 +148,10 @@ function ScatterBall() {
           </radialGradient>
         </defs>
         <circle cx="50" cy="46" r="34" fill="url(#scGlow)" opacity="0.28" />
-        {/* net */}
         <g stroke="#ffffff" strokeWidth="1.4" opacity="0.7">
           <path d="M24 30h52M24 42h52M24 54h52M32 22v46M44 22v46M56 22v46M68 22v46" />
         </g>
-        {/* 3-post goal frame (left, right, top) */}
         <path d="M20 66V22h60v44" fill="none" stroke="#ffffff" strokeWidth="5.5" strokeLinejoin="round" strokeLinecap="round" />
-        {/* ball inside */}
         <circle cx="50" cy="52" r="9" fill="#fff" stroke="#6b4610" strokeWidth="1.5" />
         <polygon points="50,46 55,50 53,56 47,56 45,50" fill="#1c2430" />
       </svg>
