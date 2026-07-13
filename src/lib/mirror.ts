@@ -88,6 +88,16 @@ export async function fetchBenchmark(): Promise<BenchmarkProfile> {
   return (data ?? { ready: false }) as BenchmarkProfile;
 }
 
+// Sohbet mizacı (maç yorumlarından tilt oranı).
+export type ChatProfile =
+  | { ready: false; rounds?: number; need?: number }
+  | { ready: true; comments: number; tilt_rate: number; avg_len: number; flags: MirrorFlag[] };
+export async function fetchChatMirror(): Promise<ChatProfile> {
+  const { data, error } = await supabase.rpc('mirror_chat');
+  if (error) throw new Error(error.message);
+  return (data ?? { ready: false }) as ChatProfile;
+}
+
 export async function fetchOverview(): Promise<OverviewProfile> {
   const { data, error } = await supabase.rpc('mirror_overview');
   if (error) throw new Error(error.message);

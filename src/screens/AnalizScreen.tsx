@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
-  fetchOverview, fetchCouponMirror, fetchSlotMirror, fetchBenchmark, fetchPlayerCard, fetchCoach, fetchRealityCheck,
+  fetchOverview, fetchCouponMirror, fetchSlotMirror, fetchBenchmark, fetchPlayerCard, fetchCoach, fetchRealityCheck, fetchChatMirror,
   type OverviewProfile, type CouponProfile, type SlotProfile, type MirrorFlag,
-  type BenchmarkProfile, type BenchmarkAxis, type PlayerCard, type RealityCheck,
+  type BenchmarkProfile, type BenchmarkAxis, type PlayerCard, type RealityCheck, type ChatProfile,
 } from '../lib/mirror';
 import { flagContent } from '../analiz/flagText';
 import AviatorMirror from '../aviator/AviatorMirror';
@@ -116,13 +116,14 @@ function CoachBlock() {
     let alive = true;
     (async () => {
       try {
-        const [ov, card, bench] = await Promise.all([fetchOverview(), fetchPlayerCard(), fetchBenchmark()]);
+        const [ov, card, bench, chat] = await Promise.all([fetchOverview(), fetchPlayerCard(), fetchBenchmark(), fetchChatMirror()]);
         const summary = {
           card: card.ready ? { archetype: card.archetype, total_net: card.total_net } : null,
           overall: ov.ready ? { net: ov.net, most_played: ov.most_played, worst: ov.worst,
             products: ov.products.map((p) => ({ oyun: p.key, oynanma: p.plays, net: p.net, risk_payi: p.stake_share })),
             teshisler: ov.flags.map((f) => f.code) } : null,
           benchmark: bench.ready ? bench.axes.map((a) => ({ eksen: a.key, sen: a.you, ortalama: a.avg, dilim: a.percentile })) : null,
+          chat: chat.ready ? { comments: chat.comments, tilt_rate: chat.tilt_rate, flags: chat.flags.map((f) => f.code) } : null,
         };
         if (!summary.card && !summary.overall) { if (alive) setState('off'); return; }
         const msg = await fetchCoach(summary, lang);
@@ -192,6 +193,19 @@ function HouseEdgeBlock() {
   );
 }
 
+// Sohbet mizacı: maç yorumlarından tilt/öfke deseni (sohbet → duygu → karar).
+function ChatMirrorBlock() {
+  const { t } = useI18n();
+  const d = useMirror<ChatProfile>(fetchChatMirror, 'chat');
+  if (!d || !d.ready || d.flags.length === 0) return null;
+  return (
+    <div className="az-block">
+      <h3 className="az-h">💬 {t('chat.title')} <span className="az-pop">{d.comments} · {pct(d.tilt_rate)}</span></h3>
+      <FlagList flags={d.flags} />
+    </div>
+  );
+}
+
 function GenelTab() {
   const { t } = useI18n();
   const d = useMirror<OverviewProfile>(fetchOverview, 'genel');
@@ -233,6 +247,7 @@ function GenelTab() {
       </div>
 
       <BenchmarkBlock />
+      <ChatMirrorBlock />
       <HouseEdgeBlock />
     </div>
   );

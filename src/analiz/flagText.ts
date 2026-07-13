@@ -27,13 +27,16 @@ const VARS: Record<string, (v: Record<string, number | string>) => Record<string
   concentration: (v) => ({ product: String(v.product), share: pctv(v.share) }),
   worst_is_favorite: (v) => ({ product: String(v.product), plays: Number(v.plays).toLocaleString(), net: goldv(v.net) }),
   hidden_winner: (v) => ({ product: String(v.product), net: goldv(v.net), plays: Number(v.plays).toLocaleString() }),
+  chat_tilt: (v) => ({ tilt: pctv(v.tilt), n: Number(v.n).toLocaleString() }),
+  chat_calm: (v) => ({ tilt: pctv(v.tilt) }),
+  chat_heating: (v) => ({ recent: pctv(v.recent), overall: pctv(v.overall) }),
 };
 
 // Somut "koç" önerisi olan (uyarı) kodları.
 const HAS_ACTION = new Set([
   'longshot_addict', 'coupon_bleed', 'buy_impulse', 'ante_habit', 'slot_bleed',
   'concentration', 'worst_is_favorite',
-  'greed_caught', 'low_discipline', 'win_illusion', 'chasing_losses',
+  'greed_caught', 'low_discipline', 'win_illusion', 'chasing_losses', 'chat_tilt',
 ]);
 
 export function flagContent(f: MirrorFlag, t: TFn): { title: string; body: string; action: string | null } {
