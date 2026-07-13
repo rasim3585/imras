@@ -1433,6 +1433,20 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .av-mirror-flag.good .av-mirror-dot { background: var(--av-mid); }
 .av-mirror-flag b { font-size: 0.82rem; font-weight: 800; }
 .av-mirror-flag p { margin: 2px 0 0; font-size: 0.79rem; color: var(--text-mut); line-height: 1.45; }
+.av-mirror-trend { border: 1px solid var(--card-line); border-radius: 8px; background: var(--surface-2); padding: 9px 10px; display: flex; flex-direction: column; gap: 6px; }
+.av-mirror-trend-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.av-mirror-trend-head .k { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-mut); }
+.av-mirror-trend-dir { font-size: 0.72rem; font-weight: 700; }
+.av-mirror-trend-dir.worse { color: var(--av-low); }
+.av-mirror-trend-dir.better { color: var(--av-mid); }
+.av-mirror-trend-dir.flat { color: var(--text-mut); }
+.av-mirror-bars { display: flex; align-items: flex-end; gap: 5px; height: 46px; }
+.av-mirror-bar-wrap { flex: 1; height: 100%; display: flex; align-items: flex-end; }
+.av-mirror-bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 4px; transition: height 0.3s ease; }
+.av-mirror-bar.lo { background: var(--av-mid); }
+.av-mirror-bar.mid { background: #ffb020; }
+.av-mirror-bar.hi { background: var(--av-low); }
+.av-mirror-trend-axis { display: flex; justify-content: space-between; font-size: 0.6rem; color: var(--text-mut); }
 .av-mirror-foot { margin: 2px 0 0; font-size: 0.7rem; color: var(--text-mut); opacity: 0.75; font-style: italic; }
 
 /* dual-bet clarity: per-slot accent colour + status pill */

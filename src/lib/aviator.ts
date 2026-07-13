@@ -132,6 +132,9 @@ export interface MirrorFlag {
   level: 'warn' | 'good' | 'info';
   value: Record<string, number>;
 }
+export interface MirrorBucket {
+  i: number; rounds: number; caught_rate: number; net_per: number; avg_cashout: number;
+}
 export type MirrorProfile =
   | { ready: false; rounds?: number; need?: number; reason?: string }
   | {
@@ -139,6 +142,7 @@ export type MirrorProfile =
       avg_cashout: number; median_cashout: number; caught_rate: number; auto_rate: number;
       loss_ratio: number | null; win_ratio: number | null;
       recent: { rounds: number; caught_rate: number; net: number };
+      series: MirrorBucket[];
       flags: MirrorFlag[];
     };
 

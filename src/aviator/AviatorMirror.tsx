@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchAviatorMirror, type MirrorProfile, type MirrorFlag } from '../lib/aviator';
+import { fetchAviatorMirror, type MirrorProfile, type MirrorFlag, type MirrorBucket } from '../lib/aviator';
 import { CoinIcon } from '../components/icons';
 
 // DAVRANIŞ AYNASI — Faz 1a yüzeyi. Kullanıcının KENDİ Aviator verisinden çıkan
@@ -36,6 +36,39 @@ function flagLine(f: MirrorFlag): { title: string; body: string } {
       return { title: 'Trend iyiye', body:
         `Son turlarda daha az yakalanıyorsun (${pct(v.recent_caught)} vs ${pct(v.overall_caught)}). Disiplinin artıyor.` };
   }
+}
+
+// Trend: yakalanma oranının zamanla değişimi (delta = ürün). Her kova bir bar;
+// yüksek/kırmızı = daha açgözlü. İlk→son eğim yönü aynanın asıl mesajı.
+function TrendChart({ series }: { series: MirrorBucket[] }) {
+  if (series.length < 2) return null;
+  const first = series[0].caught_rate;
+  const last = series[series.length - 1].caught_rate;
+  const delta = last - first;
+  const dir = delta > 0.08 ? 'worse' : delta < -0.08 ? 'better' : 'flat';
+  const label = dir === 'worse' ? 'Zamanla daha sık yakalanıyorsun ↑'
+    : dir === 'better' ? 'Zamanla daha az yakalanıyorsun ↓'
+    : 'Yakalanma oranın stabil →';
+  return (
+    <div className="av-mirror-trend">
+      <div className="av-mirror-trend-head">
+        <span className="k">Yakalanma trendi</span>
+        <span className={`av-mirror-trend-dir ${dir}`}>{label}</span>
+      </div>
+      <div className="av-mirror-bars">
+        {series.map((b) => {
+          const h = Math.max(6, Math.round(b.caught_rate * 100));
+          const cls = b.caught_rate >= 0.55 ? 'hi' : b.caught_rate >= 0.4 ? 'mid' : 'lo';
+          return (
+            <div key={b.i} className="av-mirror-bar-wrap" title={`${b.rounds} tur · yakalanma ${pct(b.caught_rate)}`}>
+              <div className={`av-mirror-bar ${cls}`} style={{ height: `${h}%` }} />
+            </div>
+          );
+        })}
+      </div>
+      <div className="av-mirror-trend-axis"><span>ilk</span><span>son</span></div>
+    </div>
+  );
 }
 
 export default function AviatorMirror() {
@@ -75,6 +108,8 @@ export default function AviatorMirror() {
         <div><span className="k">Medyan çekiş</span><b>{data.median_cashout}x</b></div>
         <div><span className="k">Yakalanma</span><b>{pct(data.caught_rate)}</b></div>
       </div>
+
+      {data.series.length >= 2 && <TrendChart series={data.series} />}
 
       {data.flags.length === 0 ? (
         <p className="av-mirror-sub">Belirgin bir zaaf deseni yok — dengeli oynuyorsun.</p>
