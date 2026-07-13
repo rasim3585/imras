@@ -166,6 +166,32 @@ function PlayerCardBlock() {
   );
 }
 
+// Şeffaflık: her oyunun kasası nasıl kazanır (açılır bölüm). Kullanıcıyı bilgilendir.
+function HouseEdgeBlock() {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  const games = ['aviator', 'slot', 'coupon'];
+  return (
+    <div className="az-edge">
+      <button className="az-edge-toggle" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+        <span>🎲 {t('edge.title')}</span><span aria-hidden>{open ? '−' : '+'}</span>
+      </button>
+      {open && (
+        <div className="az-edge-body">
+          <p className="az-edge-intro">{t('edge.intro')}</p>
+          {games.map((g) => (
+            <div key={g} className="az-edge-item">
+              <b>{t(`edge.${g}.h`)}</b>
+              <p>{t(`edge.${g}.b`)}</p>
+            </div>
+          ))}
+          <p className="az-edge-note">{t('edge.note')}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function GenelTab() {
   const { t } = useI18n();
   const d = useMirror<OverviewProfile>(fetchOverview, 'genel');
@@ -207,6 +233,7 @@ function GenelTab() {
       </div>
 
       <BenchmarkBlock />
+      <HouseEdgeBlock />
     </div>
   );
 }

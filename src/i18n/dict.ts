@@ -77,6 +77,16 @@ const en: Dict = {
   'product.aviator': 'Aviator',
   'product.slot': 'Gates of Goal',
 
+  'edge.title': 'How the house wins',
+  'edge.intro': 'No game here is beatable over time — the odds are built to favour the house. Knowing exactly how is your best defence.',
+  'edge.aviator.h': 'Aviator — the house waits for greed',
+  'edge.aviator.b': 'Returns about 97% over time (~3% house edge). The crash point is fixed and provably fair before you bet. The maths is neutral at every cashout target — but only if you always cash out. Every round the plane crashes before you pull is a total loss, and waiting for bigger multipliers makes that more likely.',
+  'edge.slot.h': 'Gates of Goal — volatility isn’t generosity',
+  'edge.slot.b': 'Returns about 96% over many spins (~4% house edge). Tumbles and multipliers feel generous, but the paytable is tuned so roughly 96 of every 100 gold staked comes back long-term. Ante and buy-bonus raise the swings, not your return.',
+  'edge.coupon.h': 'Sports bets — margin does the work',
+  'edge.coupon.b': 'Every market has a margin (~3–6%) baked into the odds; fair odds would pay more. Combining legs multiplies it: a 5-leg coupon can carry 20%+ negative expected value. The house never needs a single bet to lose — the margin grinds you down over time.',
+  'edge.note': 'That’s why this mirror exists: the value isn’t beating the game, it’s understanding your own pattern.',
+
   'rc.title': 'Reality check',
   'rc.burn_rate': 'At this rate, your balance runs out in about {days} days. Worth slowing down.',
   'rc.long_session': "You've been playing {hours}h today ({plays} rounds). Step away for a bit.",
@@ -143,6 +153,16 @@ const tr: Dict = {
   'product.coupon': 'Maç bahisleri',
   'product.aviator': 'Aviator',
   'product.slot': 'Gates of Goal',
+
+  'edge.title': 'Kasa nasıl kazanır',
+  'edge.intro': 'Buradaki hiçbir oyun uzun vadede yenilemez — oranlar kasa lehine kurulur. Nasıl olduğunu tam bilmek en iyi savunmandır.',
+  'edge.aviator.h': 'Aviator — kasa açgözlülüğü bekler',
+  'edge.aviator.b': 'Uzun vadede yaklaşık %97 döner (~%3 kasa payı). Crash noktası bahisten önce sabit ve doğrulanabilir. Matematik her çekiş hedefinde nötr — ama yalnızca hep çekersen. Uçağın sen çekmeden patladığı her tur tam kayıptır ve büyük çarpanları beklemek bunu daha olası kılar.',
+  'edge.slot.h': 'Gates of Goal — volatilite cömertlik değildir',
+  'edge.slot.b': 'Binlerce spinde yaklaşık %96 döner (~%4 kasa payı). Tumble ve çarpanlar cömert hissettirir ama ödeme tablosu, yatırılan her 100 altının uzun vadede ~96’sının geri geleceği şekilde ayarlıdır. Ante ve bonus-satın-alma getirini değil, salınımı büyütür.',
+  'edge.coupon.h': 'Maç bahisleri — işi marj yapar',
+  'edge.coupon.b': 'Her market orana gömülü bir marj taşır (~%3–6); adil oran daha çok öderdi. Bacakları birleştirmek marjı çarpar: 5 bacaklı kupon %20’den fazla negatif beklenen değer taşıyabilir. Kasanın tek bir bahsin kaybetmesine ihtiyacı yok — marj seni zamanla eritir.',
+  'edge.note': 'Bu ayna tam da bunun için var: değer oyunu yenmek değil, kendi desenini anlamak.',
 
   'rc.title': 'Gerçeklik kontrolü',
   'rc.burn_rate': 'Bu hızla bakiyen yaklaşık {days} gün sonra biter. Yavaşlamakta fayda var.',
