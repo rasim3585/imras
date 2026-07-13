@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { matchProvider } from '../lib/matchProvider';
 import { useI18n } from '../i18n/LanguageContext';
 import CourtTV from '../live/CourtTV';
+import TennisTV from '../live/TennisTV';
 import MatchChat from '../live/ChatPanel';
 import type { LiveState, Match } from '../lib/types';
 
@@ -55,8 +56,13 @@ export default function LiveCourtScreen() {
     <div className="app-shell live-screen">
       <button className="detail-back" onClick={() => navigate(-1)}>&lsaquo; {t('md.bulletin')}</button>
 
-      <CourtTV home={match.home_team} away={match.away_team} hs={hs} as={as}
-        period={live?.period ?? null} minute={live?.minute ?? 0} phase={phase} />
+      {match.sport === 'tennis' || match.sport === 'volleyball' ? (
+        <TennisTV home={match.home_team} away={match.away_team} hs={hs} as={as}
+          period={live?.period ?? null} phase={phase} />
+      ) : (
+        <CourtTV home={match.home_team} away={match.away_team} hs={hs} as={as}
+          period={live?.period ?? null} minute={live?.minute ?? 0} phase={phase} />
+      )}
 
       {(ph > 0 || pa > 0) && phase !== 'finished' && (
         <div className="winprob">

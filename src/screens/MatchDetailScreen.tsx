@@ -110,7 +110,7 @@ export default function MatchDetailScreen() {
         {match.sport === 'football' && (isLive || isFinished) && (
           <Link className="btn btn-ghost btn-sm btn-block" style={{ marginTop: 'var(--s3)' }} to={`/live/${match.id}`}>{t('md.watchlive')}</Link>
         )}
-        {match.sport === 'basketball' && (isLive || isFinished) && (
+        {(match.sport === 'basketball' || match.sport === 'tennis' || match.sport === 'volleyball') && (isLive || isFinished) && (
           <Link className="btn btn-ghost btn-sm btn-block" style={{ marginTop: 'var(--s3)' }} to={`/court/${match.id}`}>{t('md.watchlive')}</Link>
         )}
       </div>
