@@ -29,10 +29,10 @@ const SYMBOLS: SymDef[] = [
   { glow: 'rgba(230,200,60,0.9)', body: <>
     <defs>
       <radialGradient id="tennis" cx="0.38" cy="0.32" r="0.85">
-        <stop offset="0" stopColor="#fff6b8" /><stop offset="0.6" stopColor="#f2d13a" /><stop offset="1" stopColor="#b89416" />
+        <stop offset="0" stopColor="#f7e94e" /><stop offset="0.55" stopColor="#e0bc10" /><stop offset="1" stopColor="#8a6d08" />
       </radialGradient>
     </defs>
-    <circle cx="50" cy="50" r="38" fill="url(#tennis)" stroke="#8a6e12" strokeWidth="1.5" />
+    <circle cx="50" cy="50" r="38" fill="url(#tennis)" stroke="#6e5709" strokeWidth="2" />
     <path d="M16 30 Q46 50 16 70" fill="none" stroke="#fffdf0" strokeWidth="4" />
     <path d="M84 30 Q54 50 84 70" fill="none" stroke="#fffdf0" strokeWidth="4" />
     <Shine cx={38} cy={34} rx={13} ry={8} o={0.55} />
@@ -42,13 +42,13 @@ const SYMBOLS: SymDef[] = [
   { glow: 'rgba(255,255,255,0.7)', body: <>
     <defs>
       <radialGradient id="bsb" cx="0.38" cy="0.32" r="0.85">
-        <stop offset="0" stopColor="#ffffff" /><stop offset="0.7" stopColor="#f3f0ea" /><stop offset="1" stopColor="#cbc4b6" />
+        <stop offset="0" stopColor="#ffffff" /><stop offset="0.66" stopColor="#ece5d6" /><stop offset="1" stopColor="#b0a488" />
       </radialGradient>
     </defs>
-    <circle cx="50" cy="50" r="38" fill="url(#bsb)" stroke="#b3aa98" strokeWidth="1.5" />
-    <path d="M26 18 Q40 50 26 82" fill="none" stroke="#d81f3a" strokeWidth="2.4" />
-    <path d="M74 18 Q60 50 74 82" fill="none" stroke="#d81f3a" strokeWidth="2.4" />
-    <g stroke="#d81f3a" strokeWidth="1.6" strokeLinecap="round">
+    <circle cx="50" cy="50" r="38" fill="url(#bsb)" stroke="#8f8570" strokeWidth="2" />
+    <path d="M26 18 Q40 50 26 82" fill="none" stroke="#e0102e" strokeWidth="2.8" />
+    <path d="M74 18 Q60 50 74 82" fill="none" stroke="#e0102e" strokeWidth="2.8" />
+    <g stroke="#e0102e" strokeWidth="1.8" strokeLinecap="round">
       <path d="M22 30l7 3M22 42l8 2M22 54l8 2M22 66l7 3" />
       <path d="M78 30l-7 3M78 42l-8 2M78 54l-8 2M78 66l-7 3" />
     </g>
@@ -59,11 +59,11 @@ const SYMBOLS: SymDef[] = [
   { glow: 'rgba(120,170,255,0.8)', body: <>
     <defs>
       <radialGradient id="vb" cx="0.38" cy="0.32" r="0.85">
-        <stop offset="0" stopColor="#ffffff" /><stop offset="0.7" stopColor="#eef3fb" /><stop offset="1" stopColor="#c2ccdd" />
+        <stop offset="0" stopColor="#ffffff" /><stop offset="0.66" stopColor="#dbe6f6" /><stop offset="1" stopColor="#93a6c4" />
       </radialGradient>
     </defs>
-    <circle cx="50" cy="50" r="38" fill="url(#vb)" stroke="#8b98ad" strokeWidth="1.5" />
-    <g fill="none" stroke="#2f7cf0" strokeWidth="2.6" strokeLinecap="round">
+    <circle cx="50" cy="50" r="38" fill="url(#vb)" stroke="#6f7f97" strokeWidth="2" />
+    <g fill="none" stroke="#1666e0" strokeWidth="3.1" strokeLinecap="round">
       <path d="M50 12 Q42 40 22 62" /><path d="M50 12 Q48 42 40 84" />
       <path d="M50 12 Q60 38 82 52" /><path d="M50 12 Q56 44 70 82" />
       <path d="M22 62 Q54 58 82 52" /><path d="M40 84 Q56 66 70 82" />
@@ -75,14 +75,14 @@ const SYMBOLS: SymDef[] = [
   { glow: 'rgba(255,255,255,0.8)', body: <>
     <defs>
       <radialGradient id="ball" cx="0.38" cy="0.3" r="0.9">
-        <stop offset="0" stopColor="#ffffff" /><stop offset="0.7" stopColor="#eef1f4" /><stop offset="1" stopColor="#b3bcc6" />
+        <stop offset="0" stopColor="#ffffff" /><stop offset="0.66" stopColor="#e4e9ef" /><stop offset="1" stopColor="#9fabb8" />
       </radialGradient>
     </defs>
-    <circle cx="50" cy="50" r="38" fill="url(#ball)" stroke="#7d8794" strokeWidth="1.5" />
+    <circle cx="50" cy="50" r="38" fill="url(#ball)" stroke="#5e6773" strokeWidth="2" />
     <g stroke="#5c6570" strokeWidth="1.6" fill="none">
       <path d="M50 35V27.7M62.4 44 68 37.8M57.6 58.5 58.6 66.8M42.4 58.5 41.4 66.8M37.6 44 32 37.8" />
     </g>
-    <g fill="#141a22">
+    <g fill="#0c1016">
       <polygon points="50,35 62.4,44 57.6,58.5 42.4,58.5 37.6,44" />
       <polygon points="50,15 56.7,19.8 54.1,27.7 45.9,27.7 43.3,19.8" />
       <polygon points="81.4,37.8 78.8,45.7 70.6,45.7 68,37.8 74.7,33" />

@@ -56,6 +56,7 @@ function winGroups(grid: number[], cells: number[], bet: number): WinGroup[] {
   for (const c of cells) { const v = grid[c]; if (v >= 1 && v <= 8) (byV[v] ??= []).push(c); }
   return Object.keys(byV)
     .map((k) => { const v = Number(k); const cs = byV[v]; return { v, cells: cs, count: cs.length, amount: symbolPay(v, cs.length, bet) }; })
+    .filter((g) => g.count >= 8)     // a symbol only wins at 8+ — never flag fewer
     .sort((a, b) => b.amount - a.amount);
 }
 
