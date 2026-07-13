@@ -1,7 +1,7 @@
-// Çok dilli sözlük. İngilizce (en) TEMEL/varsayılan ve tam; Türkçe (tr) tam.
-// Diğer 6 dil: navigasyon + Analiz ana etiketleri çevrildi, kalan anahtarlar EN'e
-// düşer (t() fallback). LLM koç ayrıca her dilde doğrudan konuşur. Aşamalı
-// genişletilebilir — eksik anahtar hiçbir zaman kırılmaz, EN gösterir.
+// Çok dilli sözlük. İngilizce (en) TEMEL/varsayılan. 8 dilin HEPSİ ayna yüzeyi
+// için TAM çevrildi (nav + Analiz + flag + arketip + benchmark + edge + gerçeklik
+// + Aviator). Eksik anahtar t() ile EN'e düşer (asla kırılmaz). LLM koç ayrıca her
+// dilde doğrudan konuşur. Ayna-dışı ekranlar (feed/kupon paneli) aşamalı taşınıyor.
 
 export type Lang = 'en' | 'tr' | 'ar' | 'ru' | 'es' | 'zh' | 'hi' | 'de';
 
