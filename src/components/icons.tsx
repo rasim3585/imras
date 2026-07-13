@@ -74,6 +74,25 @@ export function EFootballIcon({ size = 22 }: { size?: number }) {
   );
 }
 
+// e-Basketball: same gamepad as E-Football but a basketball on top (virtual
+// basketball). Original art — not a team/league logo.
+export function EBasketballIcon({ size = 22 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      {/* basketball on top */}
+      <circle cx="12" cy="5.4" r="3.8" fill="#f0872f" stroke="#0b2c1f" strokeWidth="1" />
+      <path d="M12 1.7v7.4M8.2 5.4h7.6M9.5 2.5Q12 5.4 9.5 8.3M14.5 2.5Q12 5.4 14.5 8.3"
+        fill="none" stroke="#0b2c1f" strokeWidth="0.75" strokeLinecap="round" />
+      {/* gamepad */}
+      <path d="M7 11.4 Q3.3 11.4 2.7 15.4 L2 19 Q1.7 21.7 4.5 21.7 Q6.5 21.7 7.4 19.7 L8.3 17.9 L15.7 17.9 L16.6 19.7 Q17.5 21.7 19.5 21.7 Q22.3 21.7 22 19 L21.3 15.4 Q20.7 11.4 17 11.4 Z" fill="#e07b2a" />
+      {/* d-pad + action buttons */}
+      <rect x="6" y="14" width="1.7" height="4.6" rx="0.7" fill="#3a1c08" />
+      <rect x="4.55" y="15.45" width="4.6" height="1.7" rx="0.7" fill="#3a1c08" />
+      <circle cx="16.1" cy="15.3" r="1.05" fill="#3a1c08" /><circle cx="18.2" cy="16.6" r="1.05" fill="#3a1c08" />
+    </svg>
+  );
+}
+
 // Virtual-money coin (green) — replaces the gold dot / coin emoji. Original art.
 export function CoinIcon({ size = 16 }: { size?: number }) {
   return (

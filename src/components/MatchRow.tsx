@@ -5,7 +5,7 @@ import { formatKickoff, formatOdds } from '../lib/format';
 import TeamCrest from './TeamCrest';
 import { playerName } from '../lib/playerNames';
 import { useCart } from '../coupon/CartContext';
-import { EFootballIcon } from './icons';
+import { EFootballIcon, EBasketballIcon } from './icons';
 
 const LIVE = new Set(['inprogress', 'live', 'penalties']);
 
@@ -94,7 +94,7 @@ export default function MatchRow({ m, hideLeague }: { m: BulletinMatch; hideLeag
         <span className="ll-tags">
           {isVirtual
             ? (isBB
-                ? <span className="ll-sim" title="Simulated basketball"><span className="ll-bball" aria-hidden="true">🏀</span></span>
+                ? <span className="ll-sim" title="Simulated basketball · e-Basketball 4×2 min"><EBasketballIcon size={20} /></span>
                 : <span className="ll-sim" title="Simulated match · E-Football 2×4 min"><EFootballIcon size={20} /></span>)
             : <span className="ll-real">REAL</span>}
           {!hideLeague && m.league && <span className="ll-lg">{m.league}</span>}

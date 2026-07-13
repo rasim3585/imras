@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import MatchRow from '../components/MatchRow';
-import { EFootballIcon, BallIcon } from '../components/icons';
+import { EFootballIcon, EBasketballIcon, BallIcon } from '../components/icons';
 import { useAuth } from '../auth/AuthContext';
 import { matchProvider } from '../lib/matchProvider';
 import type { BulletinMatch } from '../lib/types';
@@ -14,7 +14,7 @@ const SPORTS: { key: SportKey; label: string; icon: string; soon?: boolean }[] =
   { key: 'all', label: 'All', icon: '📋' },
   { key: 'football', label: 'Football', icon: '⚽' },
   { key: 'efootball', label: 'E-Football', icon: '' },
-  { key: 'basketball', label: 'Basketball', icon: '🏀' },
+  { key: 'basketball', label: 'e-Basketball', icon: '🏀' },
   { key: 'tennis', label: 'Tennis', icon: '🎾', soon: true },
   { key: 'volley', label: 'Volleyball', icon: '🏐', soon: true },
 ];
@@ -160,7 +160,7 @@ export default function FeedScreen() {
             : s.key === 'basketball' ? basketballOnes.length : null;
           return (
             <button key={s.key} className={`sport-tab ${sport === s.key ? 'active' : ''} ${s.soon ? 'soon' : ''}`} onClick={() => setSport(s.key)}>
-              {s.key === 'efootball' ? <EFootballIcon size={19} /> : <span className="sport-ic">{s.icon}</span>}
+              {s.key === 'efootball' ? <EFootballIcon size={19} /> : s.key === 'basketball' ? <EBasketballIcon size={19} /> : <span className="sport-ic">{s.icon}</span>}
               {s.label}
               {s.soon ? <span className="soon-badge">soon</span> : cnt != null ? <span className="sport-cnt">{cnt}</span> : null}
             </button>
@@ -180,7 +180,7 @@ export default function FeedScreen() {
         <div className="ll">
           {section('Live · Football', liveCount(live.filter((m) => m.kind === 'real').length), live.filter((m) => m.kind === 'real'), <BallIcon size={18} />)}
           {section('Live · E-Football', liveCount(live.filter((m) => m.kind === 'virtual' && m.sport === 'football').length), live.filter((m) => m.kind === 'virtual' && m.sport === 'football'))}
-          {section('Live · Basketball', liveCount(live.filter((m) => m.sport === 'basketball').length), live.filter((m) => m.sport === 'basketball'), <span className="sport-ic">🏀</span>, true)}
+          {section('Live · Basketball', liveCount(live.filter((m) => m.sport === 'basketball').length), live.filter((m) => m.sport === 'basketball'), <EBasketballIcon size={19} />, true)}
           {sport !== 'live' && (
             <>
               {grouped.countries.map((cg) => (
@@ -203,14 +203,23 @@ export default function FeedScreen() {
                   {grouped.virtual.filter((m) => m.sport === 'football').map((m) => <MatchRow key={m.id} m={m} hideLeague />)}
                 </div>
               )}
-              {grouped.virtual.filter((m) => m.sport === 'basketball').length > 0 && (
-                <div className="ll-cgrp">
-                  <div className="ll-country"><span>Simulated</span><span className="ll-country-n">{grouped.virtual.filter((m) => m.sport === 'basketball').length}</span></div>
-                  <div className="ll-bar"><span className="ll-bar-l"><span className="sport-ic">🏀</span> Basketball · 4×2 min</span><span className="ll-bar-r">sim</span></div>
-                  <Cols bb />
-                  {grouped.virtual.filter((m) => m.sport === 'basketball').map((m) => <MatchRow key={m.id} m={m} hideLeague />)}
-                </div>
-              )}
+              {(() => {
+                const bb = grouped.virtual.filter((m) => m.sport === 'basketball');
+                if (bb.length === 0) return null;
+                const leagues = [...new Set(bb.map((m) => m.league || 'e-Basketball'))].sort();
+                return (
+                  <div className="ll-cgrp">
+                    <div className="ll-country"><span className="ll-cty-l"><EBasketballIcon size={16} /> e-Basketball</span><span className="ll-country-n">{bb.length}</span></div>
+                    {leagues.map((lg) => (
+                      <div key={lg}>
+                        <div className="ll-bar"><span className="ll-bar-l">{lg} · 4×2 min</span><span className="ll-bar-r">sim</span></div>
+                        <Cols bb />
+                        {bb.filter((m) => (m.league || 'e-Basketball') === lg).map((m) => <MatchRow key={m.id} m={m} hideLeague />)}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </>
           )}
         </div>
