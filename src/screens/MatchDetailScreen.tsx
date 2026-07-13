@@ -112,6 +112,29 @@ export default function MatchDetailScreen() {
         )}
       </div>
 
+      {(() => {
+        // Kazanma olasılığı barı (sonuç marketinin ima ettiği ev/deplasman payı).
+        const rm = markets.find((mk) => mk.market_type === 'match_result' || mk.market_type.endsWith('moneyline'));
+        const oddByLabel = (l: string) => rm?.options.find((o) => o.label === l)?.odds ?? null;
+        const hO = oddByLabel('1'); const aO = oddByLabel('2');
+        const ph = hO ? 1 / hO : 0; const pa = aO ? 1 / aO : 0;
+        if (ph <= 0 && pa <= 0) return null;
+        const homePct = Math.round((100 * ph) / (ph + pa));
+        return (
+          <div className="winprob">
+            <div className="winprob-head"><span className="k">{t('live.winprob')}</span></div>
+            <div className="winprob-bar">
+              <div className="winprob-h" style={{ width: `${homePct}%` }} />
+              <div className="winprob-a" style={{ width: `${100 - homePct}%` }} />
+            </div>
+            <div className="winprob-labels">
+              <span className="winprob-lh"><b>{homePct}%</b> {match.home_team}</span>
+              <span className="winprob-la">{match.away_team} <b>{100 - homePct}%</b></span>
+            </div>
+          </div>
+        );
+      })()}
+
       <MatchStatsPanel matchId={match.id} />
 
       {groupsWith.length > 1 && (
