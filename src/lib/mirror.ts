@@ -37,6 +37,21 @@ export type OverviewProfile =
       flags: MirrorFlag[];
     };
 
+export interface BenchmarkAxis {
+  key: string; label: string; metric: string;
+  dir: 'low_good' | 'high_good' | 'neutral';
+  you: number; avg: number; percentile: number; unit: 'pct' | 'x';
+}
+export type BenchmarkProfile =
+  | { ready: false }
+  | { ready: true; population: number; axes: BenchmarkAxis[] };
+
+export async function fetchBenchmark(): Promise<BenchmarkProfile> {
+  const { data, error } = await supabase.rpc('mirror_benchmark');
+  if (error) throw new Error(error.message);
+  return (data ?? { ready: false }) as BenchmarkProfile;
+}
+
 export async function fetchOverview(): Promise<OverviewProfile> {
   const { data, error } = await supabase.rpc('mirror_overview');
   if (error) throw new Error(error.message);

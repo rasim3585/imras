@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
-  fetchOverview, fetchCouponMirror, fetchSlotMirror,
+  fetchOverview, fetchCouponMirror, fetchSlotMirror, fetchBenchmark,
   type OverviewProfile, type CouponProfile, type SlotProfile, type MirrorFlag,
+  type BenchmarkProfile, type BenchmarkAxis,
 } from '../lib/mirror';
 import { flagText } from '../analiz/flagText';
 import AviatorMirror from '../aviator/AviatorMirror';
@@ -57,6 +58,48 @@ function useMirror<T>(fn: () => Promise<T>, dep: unknown): T | null {
   return data;
 }
 
+// "vs diğer oyuncular": her eksende sen vs ortalama + yüzdelik dilim rozeti.
+function fmtAxis(a: BenchmarkAxis, x: number): string {
+  return a.unit === 'x' ? `${x.toFixed(2)}x` : `%${Math.round(x * 100)}`;
+}
+function axisNote(a: BenchmarkAxis): { text: string; good: boolean | null } {
+  const p = Math.round(a.percentile * 100);
+  if (a.dir === 'low_good')
+    return { text: `Oyuncuların %${p} kadarından daha disiplinlisin.`, good: a.you < a.avg };
+  if (a.dir === 'high_good')
+    return { text: `Getirin oyuncuların %${p}'inden daha iyi.`, good: a.you > a.avg };
+  return { text: `Oyuncuların %${p}'inden daha yüksek oran oynuyorsun.`, good: null };
+}
+function BenchmarkBlock() {
+  const d = useMirror<BenchmarkProfile>(fetchBenchmark, 'bench');
+  if (!d || !d.ready) return null;
+  return (
+    <div className="az-block">
+      <h3 className="az-h">Diğer oyunculara göre <span className="az-pop">{d.population} oyuncu</span></h3>
+      <div className="az-bench">
+        {d.axes.map((a) => {
+          const note = axisNote(a);
+          const max = Math.max(a.you, a.avg) * 1.15 || 1;
+          return (
+            <div key={a.key} className="az-bx">
+              <div className="az-bx-head">
+                <span className="az-bx-label">{a.label}</span>
+                <span className={`az-bx-pill ${note.good === true ? 'good' : note.good === false ? 'bad' : ''}`}>{note.text}</span>
+              </div>
+              <div className="az-bx-row"><span className="az-bx-k">Sen</span>
+                <div className="az-bx-track"><div className="az-bx-fill you" style={{ width: `${Math.round((a.you / max) * 100)}%` }} /></div>
+                <span className="az-bx-v">{fmtAxis(a, a.you)}</span></div>
+              <div className="az-bx-row"><span className="az-bx-k">Ort.</span>
+                <div className="az-bx-track"><div className="az-bx-fill avg" style={{ width: `${Math.round((a.avg / max) * 100)}%` }} /></div>
+                <span className="az-bx-v">{fmtAxis(a, a.avg)}</span></div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function GenelTab() {
   const d = useMirror<OverviewProfile>(fetchOverview, 'genel');
   if (!d) return <p className="az-sub">Yükleniyor…</p>;
@@ -91,6 +134,8 @@ function GenelTab() {
         <h3 className="az-h">Aynan diyor ki</h3>
         <FlagList flags={d.flags} />
       </div>
+
+      <BenchmarkBlock />
     </div>
   );
 }

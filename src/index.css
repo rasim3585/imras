@@ -1492,6 +1492,21 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .az-flag.good .az-dot { background: var(--av-mid); }
 .az-flag b { font-size: 0.88rem; font-weight: 800; }
 .az-flag p { margin: 3px 0 0; font-size: 0.82rem; color: var(--text-mut); line-height: 1.5; }
+.az-pop { font-size: 0.68rem; font-weight: 600; color: var(--text-mut); }
+.az-bench { display: flex; flex-direction: column; gap: 14px; }
+.az-bx { display: flex; flex-direction: column; gap: 5px; }
+.az-bx-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.az-bx-label { font-size: 0.84rem; font-weight: 700; }
+.az-bx-pill { font-size: 0.7rem; font-weight: 700; color: var(--text-mut); }
+.az-bx-pill.good { color: var(--av-mid); }
+.az-bx-pill.bad { color: var(--av-low); }
+.az-bx-row { display: grid; grid-template-columns: 30px 1fr 46px; align-items: center; gap: 8px; }
+.az-bx-k { font-size: 0.68rem; color: var(--text-mut); }
+.az-bx-track { height: 7px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.az-bx-fill { height: 100%; border-radius: 999px; }
+.az-bx-fill.you { background: var(--av-mid); }
+.az-bx-fill.avg { background: color-mix(in srgb, var(--text-mut) 55%, transparent); }
+.az-bx-v { font-size: 0.74rem; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
 
 /* dual-bet clarity: per-slot accent colour + status pill */
 .av-panel-s1 { --slot: var(--av-mid); }
