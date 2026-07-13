@@ -169,16 +169,19 @@ kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40
 ---
 
 ## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0111'den** devam, sıfır dolgulu 4 hane. (Aviator görsel
+Yeni migration'lar **0113'ten** devam, sıfır dolgulu 4 hane. (Aviator görsel
 senkron 0079–0081; kalıcı sanal lig + settle 0082–0087; slot 0091; sanal
 basketbol/tenis/voleybol 0092–0106; get_bulletin security-definer fix 0101;
 davranış aynası Faz 0 yakalama 0107 + Faz 1a Aviator teşhis 0108 + Faz 1b trend
-serisi 0109 + Decision Replay 0110.) Her önemli oturum sonunda `DEVIR/` klasörüne
-kısa devir notu yaz (tarih + ne yapıldı + açık konular) — geçmiş kalıcı birikir.
+0109 + Decision Replay 0110; sahte veri seed 0111; kupon/slot/genel analitik 0112.)
+Her önemli oturum sonunda `DEVIR/` klasörüne kısa devir notu yaz.
 
-**Davranış aynası (asıl ürün) — başladı:** Faz 0 (moat: karar-öncesi olay
-yakalama, `behavior_events` + `log_events`) ve Faz 1a (Aviator teşhis,
-`mirror_aviator()` + `AviatorMirror.tsx`) CANLIDA. İlke: teşhis=hook, delta=ürün,
-sayılar deterministik, LLM sadece "ses" (henüz yok). **Para yoluna (settle)
-analiz mutasyonu ASLA eklenmez** — ayna yalnız okur. Sıra: Faz 1b (trend/delta
-çizgisi, Decision Replay, Player Card, çapraz-ürün profil, en son LLM ses).
+**Davranış aynası (asıl ürün) — canlıda büyüyor:** Faz 0 (moat yakalama
+`behavior_events`+`log_events`), Faz 1a-b (Aviator teşhis+trend+Decision Replay),
+ve **Analiz merkezi "Aynam"** (`/analiz`, sol menü): alt sekmeler Genel/Maç
+bahisleri/Aviator/Gates/Diğer. Backend: `mirror_aviator/coupon/slot/overview()`.
+Çapraz içgörüler: risk yığılması, "en çok oynadığın=en çok kaybettiğin", gizli
+kazanan. **Sahte veri (0111): 36 persona-kullanıcı** çapraz-ürün — benchmark +
+çeşitlilik için. İlke: teşhis=hook, delta=ürün, sayılar deterministik, LLM sadece
+"ses" (henüz yok). **Para yoluna analiz mutasyonu ASLA eklenmez** — ayna yalnız
+OKUR. Sıra: benchmark ("vs diğer oyuncular"), Player Card kimliği, en son LLM ses.
