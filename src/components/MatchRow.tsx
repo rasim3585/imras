@@ -5,7 +5,7 @@ import { formatKickoff, formatOdds, bballClock } from '../lib/format';
 import TeamCrest from './TeamCrest';
 import { playerName } from '../lib/playerNames';
 import { useCart } from '../coupon/CartContext';
-import { EFootballIcon, EBasketballIcon, ETennisIcon } from './icons';
+import { EFootballIcon, EBasketballIcon, ETennisIcon, EVolleyballIcon } from './icons';
 
 const LIVE = new Set(['inprogress', 'live', 'penalties']);
 
@@ -21,6 +21,7 @@ export default function MatchRow({ m, hideLeague }: { m: BulletinMatch; hideLeag
   const isVirtual = m.kind === 'virtual';
   const isBB = m.sport === 'basketball';
   const isTN = m.sport === 'tennis';
+  const isVB = m.sport === 'volleyball';
 
   const mkt = (t: string): BulletinMarket | undefined => m.markets.find((k) => k.market_type === t);
   const optOf = (market: BulletinMarket | undefined, key: string): BulletinOption | undefined => market?.options.find((o) => o.outcome_key === key);
@@ -36,7 +37,13 @@ export default function MatchRow({ m, hideLeague }: { m: BulletinMatch; hideLeag
 
   // Compact main-row cells differ by sport. Football: 1/X/2 + O/U 2.5 + BTTS.
   // Basketball: Match Winner 1/2 + Handicap + Total. Both fill the same 6 slots.
-  const cellCfg: { market: BulletinMarket | undefined; k: string; sec?: boolean }[] = isTN
+  const cellCfg: { market: BulletinMarket | undefined; k: string; sec?: boolean }[] = isVB
+    ? [
+        { market: mkt('vb_moneyline'), k: 'ml_home' }, { market: mkt('vb_moneyline'), k: 'ml_away' },
+        { market: mkt('vb_totalsets'), k: 'ts_over', sec: true }, { market: mkt('vb_totalsets'), k: 'ts_under', sec: true },
+        { market: mkt('vb_sethcap'), k: 'sh_home', sec: true }, { market: mkt('vb_sethcap'), k: 'sh_away', sec: true },
+      ]
+    : isTN
     ? [
         { market: mkt('tn_moneyline'), k: 'ml_home' }, { market: mkt('tn_moneyline'), k: 'ml_away' },
         { market: mkt('tn_total'), k: 'tot_over', sec: true }, { market: mkt('tn_total'), k: 'tot_under', sec: true },
@@ -54,7 +61,7 @@ export default function MatchRow({ m, hideLeague }: { m: BulletinMatch; hideLeag
         { market: mkt('both_teams_score'), k: 'btts_yes', sec: true },
       ];
 
-  const primaryMkt = isTN ? mkt('tn_moneyline') : isBB ? mkt('bb_moneyline') : mkt('match_result');
+  const primaryMkt = isVB ? mkt('vb_moneyline') : isTN ? mkt('tn_moneyline') : isBB ? mkt('bb_moneyline') : mkt('match_result');
   const primaryOdds = primaryMkt ? primaryMkt.options.map((o) => o.odds).filter((x) => x > 0) : [];
   const favMr = primaryOdds.length ? Math.min(...primaryOdds) : Infinity;
 
@@ -95,7 +102,7 @@ export default function MatchRow({ m, hideLeague }: { m: BulletinMatch; hideLeag
   const infoInner = (
     <>
       <span className={`ll-time tnum ${isLive ? 'live' : ''}`}>
-        {isLive ? (isBB ? bballClock(m.minute, m.period) : isTN ? (m.period ?? 'LIVE') : `${m.minute ?? 0}'`) : formatKickoff(m.starts_at)}
+        {isLive ? (isBB ? bballClock(m.minute, m.period) : (isTN || isVB) ? (m.period ?? 'LIVE') : `${m.minute ?? 0}'`) : formatKickoff(m.starts_at)}
       </span>
       <span className="ll-teamline">
         <span className="ll-tags">
@@ -104,6 +111,8 @@ export default function MatchRow({ m, hideLeague }: { m: BulletinMatch; hideLeag
                 ? <span className="ll-sim" title="Simulated basketball · e-Basketball"><EBasketballIcon size={20} /></span>
                 : isTN
                 ? <span className="ll-sim" title="Simulated tennis · e-Tennis"><ETennisIcon size={20} /></span>
+                : isVB
+                ? <span className="ll-sim" title="Simulated volleyball · e-Volleyball"><EVolleyballIcon size={20} /></span>
                 : <span className="ll-sim" title="Simulated match · E-Football 2×4 min"><EFootballIcon size={20} /></span>)
             : <span className="ll-real">REAL</span>}
           {!hideLeague && m.league && <span className="ll-lg">{m.league}</span>}

@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { matchProvider } from '../lib/matchProvider';
 import TeamCrest from '../components/TeamCrest';
-import { EFootballIcon, EBasketballIcon, ETennisIcon } from '../components/icons';
+import { EFootballIcon, EBasketballIcon, ETennisIcon, EVolleyballIcon } from '../components/icons';
 import type { StandingsRow } from '../lib/types';
 
 // Full simulated-league tables. Football = one table (points). Basketball / tennis
-// split by league and rank by win% (no draws).
-type Sport = 'football' | 'basketball' | 'tennis';
+// / volleyball split by league and rank by win% (no draws).
+type Sport = 'football' | 'basketball' | 'tennis' | 'volleyball';
 
 export default function StandingsScreen() {
   const [sport, setSport] = useState<Sport>('football');
@@ -33,6 +33,7 @@ export default function StandingsScreen() {
         <button className={`std-tab ${sport === 'football' ? 'active' : ''}`} onClick={() => setSport('football')}><EFootballIcon size={18} /> e-Football</button>
         <button className={`std-tab ${sport === 'basketball' ? 'active' : ''}`} onClick={() => setSport('basketball')}><EBasketballIcon size={18} /> e-Basketball</button>
         <button className={`std-tab ${sport === 'tennis' ? 'active' : ''}`} onClick={() => setSport('tennis')}><ETennisIcon size={18} /> e-Tennis</button>
+        <button className={`std-tab ${sport === 'volleyball' ? 'active' : ''}`} onClick={() => setSport('volleyball')}><EVolleyballIcon size={18} /> e-Volleyball</button>
       </div>
 
       {loading ? (

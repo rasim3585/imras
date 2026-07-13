@@ -36,7 +36,7 @@ export interface MatchProvider {
   getMatchStats(matchId: string): Promise<MatchStats | null>;
 
   /** Full league table for a sport (rows carry `league` for per-league split). */
-  getStandings(sport: 'football' | 'basketball' | 'tennis'): Promise<StandingsRow[]>;
+  getStandings(sport: 'football' | 'basketball' | 'tennis' | 'volleyball'): Promise<StandingsRow[]>;
 
   /** Gates of Goal: play one slot spin; server computes, client animates steps. */
   slotSpin(bet: number, ante: boolean, buy: boolean): Promise<SlotResult>;

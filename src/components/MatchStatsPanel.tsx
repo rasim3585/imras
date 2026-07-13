@@ -40,9 +40,10 @@ export default function MatchStatsPanel({ matchId }: { matchId: string }) {
   if (stats === null || stats === 'none') return null;   // loading, or real match → hide
 
   const played = stats.home.played + stats.away.played;
-  const noDraw = stats.sport === 'basketball' || stats.sport === 'tennis';
+  const noDraw = stats.sport === 'basketball' || stats.sport === 'tennis' || stats.sport === 'volleyball';
   const head = stats.sport === 'basketball' ? 'e-Basketball · Simulated League'
-    : stats.sport === 'tennis' ? 'e-Tennis · Simulated League' : 'Simulated League';
+    : stats.sport === 'tennis' ? 'e-Tennis · Simulated League'
+    : stats.sport === 'volleyball' ? 'e-Volleyball · Simulated League' : 'Simulated League';
 
   return (
     <div className="vstats card">

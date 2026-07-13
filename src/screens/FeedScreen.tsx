@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import MatchRow from '../components/MatchRow';
-import { EFootballIcon, EBasketballIcon, ETennisIcon, BallIcon } from '../components/icons';
+import { EFootballIcon, EBasketballIcon, ETennisIcon, EVolleyballIcon, BallIcon } from '../components/icons';
 import { useAuth } from '../auth/AuthContext';
 import { matchProvider } from '../lib/matchProvider';
 import type { BulletinMatch } from '../lib/types';
@@ -16,10 +16,19 @@ const SPORTS: { key: SportKey; label: string; icon: string; soon?: boolean }[] =
   { key: 'efootball', label: 'E-Football', icon: '' },
   { key: 'basketball', label: 'e-Basketball', icon: '🏀' },
   { key: 'tennis', label: 'e-Tennis', icon: '🎾' },
-  { key: 'volley', label: 'Volleyball', icon: '🏐', soon: true },
+  { key: 'volley', label: 'e-Volleyball', icon: '🏐' },
 ];
 
-function Cols({ bb, tn }: { bb?: boolean; tn?: boolean } = {}) {
+function Cols({ bb, tn, vb }: { bb?: boolean; tn?: boolean; vb?: boolean } = {}) {
+  if (vb) return (
+    <div className="ll-cols">
+      <span className="lead">Match</span>
+      <span>1</span><span>2</span>
+      <span className="ll-c-sec">Üst</span><span className="ll-c-sec">Alt</span>
+      <span className="ll-c-sec">Hnd</span><span className="ll-c-sec">Hnd</span>
+      <span className="ll-c-plus">+</span>
+    </div>
+  );
   if (tn) return (
     <div className="ll-cols">
       <span className="lead">Match</span>
@@ -124,11 +133,13 @@ export default function FeedScreen() {
   const virtualOnes = notFinished.filter((m) => m.kind === 'virtual' && m.sport === 'football');
   const basketballOnes = notFinished.filter((m) => m.sport === 'basketball');
   const tennisOnes = notFinished.filter((m) => m.sport === 'tennis');
+  const volleyOnes = notFinished.filter((m) => m.sport === 'volleyball');
 
   const spec = SPORTS.find((s) => s.key === sport);
   const set = sport === 'live' ? liveAll : sport === 'all' ? notFinished
     : sport === 'football' ? realOnes : sport === 'efootball' ? virtualOnes
-    : sport === 'basketball' ? basketballOnes : sport === 'tennis' ? tennisOnes : [];
+    : sport === 'basketball' ? basketballOnes : sport === 'tennis' ? tennisOnes
+    : sport === 'volley' ? volleyOnes : [];
   // Live stays a single flat section (few matches, cross-league). Upcoming keeps
   // the backend's country>league>sort_at order untouched so the grouping headers
   // fall in the right places -- no client re-sort.
@@ -140,7 +151,7 @@ export default function FeedScreen() {
   const upcoming = set.filter((m) => !LIVE.has(m.status));
   const grouped = groupMatches(upcoming);
 
-  const section = (title: string, right: ReactNode, list: BulletinMatch[], icon: ReactNode = <EFootballIcon size={19} />, cols: { bb?: boolean; tn?: boolean } = {}) => list.length > 0 && (
+  const section = (title: string, right: ReactNode, list: BulletinMatch[], icon: ReactNode = <EFootballIcon size={19} />, cols: { bb?: boolean; tn?: boolean; vb?: boolean } = {}) => list.length > 0 && (
     <>
       <div className="ll-bar"><span className="ll-bar-l">{icon} {title}</span>{right}</div>
       <Cols {...cols} />
@@ -167,10 +178,11 @@ export default function FeedScreen() {
         {SPORTS.map((s) => {
           const cnt = s.key === 'live' ? liveAll.length : s.key === 'all' ? notFinished.length
             : s.key === 'football' ? realOnes.length : s.key === 'efootball' ? virtualOnes.length
-            : s.key === 'basketball' ? basketballOnes.length : s.key === 'tennis' ? tennisOnes.length : null;
+            : s.key === 'basketball' ? basketballOnes.length : s.key === 'tennis' ? tennisOnes.length
+            : s.key === 'volley' ? volleyOnes.length : null;
           return (
             <button key={s.key} className={`sport-tab ${sport === s.key ? 'active' : ''} ${s.soon ? 'soon' : ''}`} onClick={() => setSport(s.key)}>
-              {s.key === 'efootball' ? <EFootballIcon size={19} /> : s.key === 'basketball' ? <EBasketballIcon size={19} /> : s.key === 'tennis' ? <ETennisIcon size={19} /> : <span className="sport-ic">{s.icon}</span>}
+              {s.key === 'efootball' ? <EFootballIcon size={19} /> : s.key === 'basketball' ? <EBasketballIcon size={19} /> : s.key === 'tennis' ? <ETennisIcon size={19} /> : s.key === 'volley' ? <EVolleyballIcon size={19} /> : <span className="sport-ic">{s.icon}</span>}
               {s.label}
               {s.soon ? <span className="soon-badge">soon</span> : cnt != null ? <span className="sport-cnt">{cnt}</span> : null}
             </button>
@@ -194,6 +206,7 @@ export default function FeedScreen() {
           {section('Live · E-Football', liveCount(live.filter((m) => m.kind === 'virtual' && m.sport === 'football').length), live.filter((m) => m.kind === 'virtual' && m.sport === 'football'))}
           {section('Live · Basketball', liveCount(live.filter((m) => m.sport === 'basketball').length), live.filter((m) => m.sport === 'basketball'), <EBasketballIcon size={19} />, { bb: true })}
           {section('Live · Tennis', liveCount(live.filter((m) => m.sport === 'tennis').length), live.filter((m) => m.sport === 'tennis'), <ETennisIcon size={19} />, { tn: true })}
+          {section('Live · Volleyball', liveCount(live.filter((m) => m.sport === 'volleyball').length), live.filter((m) => m.sport === 'volleyball'), <EVolleyballIcon size={19} />, { vb: true })}
           {sport !== 'live' && (
             <>
               {grouped.countries.map((cg) => (
@@ -245,6 +258,23 @@ export default function FeedScreen() {
                         <div className="ll-bar"><span className="ll-bar-l">{lg} · Best of 3</span><span className="ll-bar-r">sim</span></div>
                         <Cols tn />
                         {tn.filter((m) => (m.league || 'e-Tennis') === lg).map((m) => <MatchRow key={m.id} m={m} hideLeague />)}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+              {(() => {
+                const vb = grouped.virtual.filter((m) => m.sport === 'volleyball');
+                if (vb.length === 0) return null;
+                const leagues = [...new Set(vb.map((m) => m.league || 'e-Volleyball'))].sort();
+                return (
+                  <div className="ll-cgrp">
+                    <div className="ll-country"><span className="ll-cty-l"><EVolleyballIcon size={16} /> e-Volleyball</span><span className="ll-country-n">{vb.length}</span></div>
+                    {leagues.map((lg) => (
+                      <div key={lg}>
+                        <div className="ll-bar"><span className="ll-bar-l">{lg} · Best of 5</span><span className="ll-bar-r">sim</span></div>
+                        <Cols vb />
+                        {vb.filter((m) => (m.league || 'e-Volleyball') === lg).map((m) => <MatchRow key={m.id} m={m} hideLeague />)}
                       </div>
                     ))}
                   </div>

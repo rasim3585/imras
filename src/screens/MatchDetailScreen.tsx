@@ -25,9 +25,14 @@ const BB_GROUPS: MarketGroup[] = [
   { key: 'totals', label: 'Totals', types: ['bb_total', 'bb_total_home', 'bb_total_away'] },
 ];
 const TN_GROUPS: MarketGroup[] = [
-  { key: 'result', label: 'Winner', types: ['tn_moneyline'] },
-  { key: 'sets', label: 'Sets', types: ['tn_setbet', 'tn_firstset'] },
-  { key: 'totals', label: 'Totals', types: ['tn_total'] },
+  { key: 'result', label: 'Winner', types: ['tn_moneyline', 'tn_gameshcap'] },
+  { key: 'sets', label: 'Sets', types: ['tn_setbet', 'tn_totalsets', 'tn_firstset'] },
+  { key: 'totals', label: 'Games', types: ['tn_total'] },
+];
+const VB_GROUPS: MarketGroup[] = [
+  { key: 'result', label: 'Winner', types: ['vb_moneyline', 'vb_sethcap'] },
+  { key: 'sets', label: 'Sets', types: ['vb_setbet', 'vb_totalsets', 'vb_firstset'] },
+  { key: 'points', label: 'Points', types: ['vb_totalpts'] },
 ];
 const groupOf = (groups: MarketGroup[], mt: string): string =>
   groups.find((g) => g.types.includes(mt))?.key ?? groups[0].key;
@@ -67,7 +72,8 @@ export default function MatchDetailScreen() {
     .sort((a, b) => a.sort_order - b.sort_order)
     .filter((m) => !HT_MARKETS.has(m.market_type) || live?.phase === 'upcoming');
 
-  const groups = match.sport === 'tennis' ? TN_GROUPS : match.sport === 'basketball' ? BB_GROUPS : GROUPS;
+  const groups = match.sport === 'tennis' ? TN_GROUPS : match.sport === 'basketball' ? BB_GROUPS
+    : match.sport === 'volleyball' ? VB_GROUPS : GROUPS;
   const groupsWith = groups.filter((g) => markets.some((m) => groupOf(groups, m.market_type) === g.key));
   const shownGroups = tab === 'all' ? groupsWith : groupsWith.filter((g) => g.key === tab);
 
@@ -78,7 +84,7 @@ export default function MatchDetailScreen() {
       <div className="scoreboard card">
         <div className="sb-top">
           {isLive
-            ? <><span className="live-badge">LIVE</span><span className="minute-red tnum">{match.sport === 'basketball' ? bballClock(live!.minute, live!.period) : match.sport === 'tennis' ? (live!.period ?? 'LIVE') : `${live!.minute}'`}</span></>
+            ? <><span className="live-badge">LIVE</span><span className="minute-red tnum">{match.sport === 'basketball' ? bballClock(live!.minute, live!.period) : (match.sport === 'tennis' || match.sport === 'volleyball') ? (live!.period ?? 'LIVE') : `${live!.minute}'`}</span></>
             : isFinished
               ? <span className="tag">Full time</span>
               : <span className="soon-timer tnum">{formatKickoff(match.starts_at)}</span>}
