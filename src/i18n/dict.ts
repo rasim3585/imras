@@ -211,6 +211,20 @@ const en: Dict = {
   'feed.sport.football': 'Football', 'feed.sport.efootball': 'E-Football', 'feed.sport.basketball': 'Basketball',
   'feed.sport.tennis': 'Tennis', 'feed.sport.volleyball': 'Volleyball',
 
+  'dock.empty': 'Tap any odds to start a coupon.', 'dock.coupon': 'Coupon',
+  'mc.title': 'My coupons',
+  'mc.tab.ongoing': 'Ongoing', 'mc.tab.won': 'Won', 'mc.tab.lost': 'Lost', 'mc.tab.saved': 'Saved',
+  'mc.st.lost': 'Lost', 'mc.st.won': 'Won', 'mc.st.open': 'Open', 'mc.st.cashedout': 'Cashed out',
+  'mc.nosaved': 'No saved coupons. Build one and tap “Save for later”.', 'mc.gotomarkets': 'Go to markets',
+  'mc.single': 'Single', 'mc.fold': '{n}-fold', 'mc.loadplay': 'Load & play', 'mc.delete': 'Delete',
+  'mc.noopen': 'No open coupons. Build one from the markets.', 'mc.nonecoupons': 'No coupons yet.',
+  'mc.livehint': 'Live — green tick winning, red cross losing · settles automatically at full time',
+  'mc.stake': 'Stake', 'mc.odds': 'Odds', 'mc.towin': 'To win',
+  'mc.copylink': 'Copy link', 'mc.share': 'Share', 'mc.viewresult': 'View result', 'mc.cashout': 'Cash out {v}',
+  'mc.shared': 'Shared — copy the link or send it on WhatsApp', 'mc.copied': 'Link copied to clipboard',
+  'mc.shareErr': 'Could not share', 'mc.loadErr': 'Could not load coupons',
+  'mc.cashoutGone': 'Cash out is no longer available for this coupon.', 'mc.cashoutErr': 'Could not cash out',
+
   'lang.label': 'Language',
 };
 
@@ -406,6 +420,20 @@ const tr: Dict = {
   'feed.livePrefix': 'Canlı',
   'feed.sport.football': 'Futbol', 'feed.sport.efootball': 'E-Futbol', 'feed.sport.basketball': 'Basketbol',
   'feed.sport.tennis': 'Tenis', 'feed.sport.volleyball': 'Voleybol',
+
+  'dock.empty': 'Kupon başlatmak için bir orana dokun.', 'dock.coupon': 'Kupon',
+  'mc.title': 'Kuponlarım',
+  'mc.tab.ongoing': 'Devam eden', 'mc.tab.won': 'Kazanan', 'mc.tab.lost': 'Kaybeden', 'mc.tab.saved': 'Kayıtlı',
+  'mc.st.lost': 'Kaybetti', 'mc.st.won': 'Kazandı', 'mc.st.open': 'Açık', 'mc.st.cashedout': 'Bozduruldu',
+  'mc.nosaved': 'Kayıtlı kupon yok. Bir tane yap ve “Sonrası için kaydet”e dokun.', 'mc.gotomarkets': 'Marketlere git',
+  'mc.single': 'Tekli', 'mc.fold': '{n}-li', 'mc.loadplay': 'Yükle & oyna', 'mc.delete': 'Sil',
+  'mc.noopen': 'Açık kupon yok. Marketlerden bir tane yap.', 'mc.nonecoupons': 'Henüz kupon yok.',
+  'mc.livehint': 'Canlı — yeşil tik kazanıyor, kırmızı çarpı kaybediyor · maç sonunda otomatik sonuçlanır',
+  'mc.stake': 'Miktar', 'mc.odds': 'Oran', 'mc.towin': 'Kazanç',
+  'mc.copylink': 'Bağlantıyı kopyala', 'mc.share': 'Paylaş', 'mc.viewresult': 'Sonucu gör', 'mc.cashout': 'Bozdur {v}',
+  'mc.shared': 'Paylaşıldı — bağlantıyı kopyala ya da WhatsApp’tan gönder', 'mc.copied': 'Bağlantı kopyalandı',
+  'mc.shareErr': 'Paylaşılamadı', 'mc.loadErr': 'Kuponlar yüklenemedi',
+  'mc.cashoutGone': 'Bu kupon için bozdurma artık kullanılamıyor.', 'mc.cashoutErr': 'Bozdurulamadı',
 
   'lang.label': 'Dil',
 };

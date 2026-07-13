@@ -6,9 +6,11 @@ import { useCart } from '../coupon/CartContext';
 import type { Coupon, CouponLeg, LiveState } from '../lib/types';
 import { formatOdds } from '../lib/format';
 import { legLiveStatus, type LegLive } from '../lib/legStatus';
+import { useI18n } from '../i18n/LanguageContext';
 
 type ResultTab = 'ongoing' | 'won' | 'lost';
 type Tab = ResultTab | 'saved';
+type TFn = (k: string, v?: Record<string, string | number>) => string;
 
 // cashed-out counts as won if you took at least your stake back, else lost
 function bucketOf(c: Coupon): ResultTab {
@@ -18,11 +20,11 @@ function bucketOf(c: Coupon): ResultTab {
   return (c.cashout_amount ?? 0) >= c.stake ? 'won' : 'lost'; // cashed_out
 }
 
-function StatusChip({ c }: { c: Coupon }) {
-  if (c.status === 'won') return <span className="chip chip-pos tnum">Won +{c.potential_win}</span>;
-  if (c.status === 'lost') return <span className="chip chip-neg">Lost</span>;
-  if (c.status === 'cashed_out') return <span className="chip chip-accent tnum">Cashed out +{c.cashout_amount}</span>;
-  return <span className="chip">Open</span>;
+function StatusChip({ c, t }: { c: Coupon; t: TFn }) {
+  if (c.status === 'won') return <span className="chip chip-pos tnum">{t('mc.st.won')} +{c.potential_win}</span>;
+  if (c.status === 'lost') return <span className="chip chip-neg">{t('mc.st.lost')}</span>;
+  if (c.status === 'cashed_out') return <span className="chip chip-accent tnum">{t('mc.st.cashedout')} +{c.cashout_amount}</span>;
+  return <span className="chip">{t('mc.st.open')}</span>;
 }
 
 const MARK = { win: '✓', lose: '✗', level: '~', pending: '·' } as const;
@@ -59,6 +61,7 @@ function LiveLeg({ leg, live }: { leg: CouponLeg; live?: LiveState }) {
 
 export default function MyCouponsScreen() {
   const { refreshProfile } = useAuth();
+  const { t } = useI18n();
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [tab, setTab] = useState<Tab>('ongoing');
   const [liveMap, setLiveMap] = useState<Record<string, LiveState>>({});
@@ -78,15 +81,15 @@ export default function MyCouponsScreen() {
     try {
       await matchProvider.shareCoupon(couponId);
       setShared((s) => new Set(s).add(couponId));
-      setToast('Shared — copy the link or send it on WhatsApp');
+      setToast(t('mc.shared'));
     } catch (err) {
-      setToast(err instanceof Error ? err.message : 'Could not share');
+      setToast(err instanceof Error ? err.message : t('mc.shareErr'));
     }
     window.setTimeout(() => setToast(null), 2600);
   }
 
   async function copyLink(couponId: string) {
-    try { await navigator.clipboard.writeText(linkFor(couponId)); setToast('Link copied to clipboard'); }
+    try { await navigator.clipboard.writeText(linkFor(couponId)); setToast(t('mc.copied')); }
     catch { setToast(linkFor(couponId)); }
     window.setTimeout(() => setToast(null), 2600);
   }
@@ -98,7 +101,7 @@ export default function MyCouponsScreen() {
 
   useEffect(() => {
     load()
-      .catch((err) => setError(err instanceof Error ? err.message : 'Could not load coupons'))
+      .catch((err) => setError(err instanceof Error ? err.message : t('mc.loadErr')))
       .finally(() => setLoading(false));
   }, [load]);
 
@@ -139,8 +142,8 @@ export default function MyCouponsScreen() {
       await load();
     } catch (err) {
       setError(err instanceof Error && err.message.includes('cashout_unavailable')
-        ? 'Cash out is no longer available for this coupon.'
-        : err instanceof Error ? err.message : 'Could not cash out');
+        ? t('mc.cashoutGone')
+        : err instanceof Error ? err.message : t('mc.cashoutErr'));
     } finally {
       setBusy(null);
     }
@@ -148,10 +151,10 @@ export default function MyCouponsScreen() {
 
   const shown = tab === 'saved' ? [] : buckets[tab];
   const TABS: { key: Tab; label: string }[] = [
-    { key: 'ongoing', label: `Ongoing (${buckets.ongoing.length})` },
-    { key: 'won', label: `Won (${buckets.won.length})` },
-    { key: 'lost', label: `Lost (${buckets.lost.length})` },
-    { key: 'saved', label: `Saved (${saved.length})` },
+    { key: 'ongoing', label: `${t('mc.tab.ongoing')} (${buckets.ongoing.length})` },
+    { key: 'won', label: `${t('mc.tab.won')} (${buckets.won.length})` },
+    { key: 'lost', label: `${t('mc.tab.lost')} (${buckets.lost.length})` },
+    { key: 'saved', label: `${t('mc.tab.saved')} (${saved.length})` },
   ];
 
   const playDraft = (id: string) => { loadDraft(id); navigate('/coupon'); };
@@ -159,12 +162,12 @@ export default function MyCouponsScreen() {
   return (
     <div className="app-shell">
       <div className="page-head" style={{ paddingBottom: 'var(--s3)' }}>
-        <h1>My coupons</h1>
+        <h1>{t('mc.title')}</h1>
       </div>
 
       <div className="segmented">
-        {TABS.map((t) => (
-          <button key={t.key} className={`segmented-item ${tab === t.key ? 'active' : ''}`} onClick={() => setTab(t.key)}>{t.label}</button>
+        {TABS.map((tb) => (
+          <button key={tb.key} className={`segmented-item ${tab === tb.key ? 'active' : ''}`} onClick={() => setTab(tb.key)}>{tb.label}</button>
         ))}
       </div>
 
@@ -176,8 +179,8 @@ export default function MyCouponsScreen() {
       ) : tab === 'saved' ? (
         saved.length === 0 ? (
           <div className="empty">
-            <p>No saved coupons. Build one and tap “Save for later”.</p>
-            <button className="btn" onClick={() => navigate('/')}>Go to markets</button>
+            <p>{t('mc.nosaved')}</p>
+            <button className="btn" onClick={() => navigate('/')}>{t('mc.gotomarkets')}</button>
           </div>
         ) : (
           <div className="coupon-list">
@@ -186,7 +189,7 @@ export default function MyCouponsScreen() {
               return (
                 <div key={d.id} className="card coupon-card">
                   <div className="coupon-card-head">
-                    <span className="tag">{d.selections.length === 1 ? 'Single' : `${d.selections.length}-fold`}</span>
+                    <span className="tag">{d.selections.length === 1 ? t('mc.single') : t('mc.fold', { n: d.selections.length })}</span>
                     <span className="chip tnum">{formatOdds(odds)}</span>
                   </div>
                   <div className="coupon-legs">
@@ -198,8 +201,8 @@ export default function MyCouponsScreen() {
                     ))}
                   </div>
                   <div className="row" style={{ gap: 'var(--s2)', marginTop: 'var(--s2)' }}>
-                    <button className="btn btn-primary btn-sm" style={{ flex: 1 }} onClick={() => playDraft(d.id)}>Load &amp; play</button>
-                    <button className="btn btn-ghost btn-sm" onClick={() => deleteDraft(d.id)}>Delete</button>
+                    <button className="btn btn-primary btn-sm" style={{ flex: 1 }} onClick={() => playDraft(d.id)}>{t('mc.loadplay')}</button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => deleteDraft(d.id)}>{t('mc.delete')}</button>
                   </div>
                 </div>
               );
@@ -208,16 +211,16 @@ export default function MyCouponsScreen() {
         )
       ) : shown.length === 0 ? (
         <div className="empty">
-          <p>{tab === 'ongoing' ? 'No open coupons. Build one from the markets.' : `No ${tab} coupons yet.`}</p>
-          {tab === 'ongoing' && <button className="btn" onClick={() => navigate('/')}>Go to markets</button>}
+          <p>{tab === 'ongoing' ? t('mc.noopen') : t('mc.nonecoupons')}</p>
+          {tab === 'ongoing' && <button className="btn" onClick={() => navigate('/')}>{t('mc.gotomarkets')}</button>}
         </div>
       ) : (
         <div className="coupon-list">
           {shown.map((c) => (
             <div key={c.id} className={`card coupon-card cc-${c.status}`}>
               <div className="coupon-card-head">
-                <span className="tag">{c.legs.length === 1 ? 'Single' : `${c.legs.length}-fold`}</span>
-                <StatusChip c={c} />
+                <span className="tag">{c.legs.length === 1 ? t('mc.single') : t('mc.fold', { n: c.legs.length })}</span>
+                <StatusChip c={c} t={t} />
               </div>
 
               <div className="coupon-legs">
@@ -232,34 +235,34 @@ export default function MyCouponsScreen() {
               </div>
 
               {c.status === 'pending' && (
-                <div className="dim leg-hint">Live — green tick winning, red cross losing · settles automatically at full time</div>
+                <div className="dim leg-hint">{t('mc.livehint')}</div>
               )}
 
               <div className="coupon-card-foot">
                 <div className="coupon-foot-metrics">
-                  <span><span className="muted">Stake</span> <b className="tnum">{c.stake}</b></span>
-                  <span><span className="muted">Odds</span> <b className="tnum">{formatOdds(c.total_odds)}</b></span>
+                  <span><span className="muted">{t('mc.stake')}</span> <b className="tnum">{c.stake}</b></span>
+                  <span><span className="muted">{t('mc.odds')}</span> <b className="tnum">{formatOdds(c.total_odds)}</b></span>
                   <span>
-                    <span className="muted">{c.status === 'won' ? 'Won' : 'To win'}</span>{' '}
+                    <span className="muted">{c.status === 'won' ? t('mc.st.won') : t('mc.towin')}</span>{' '}
                     <b className="tnum">{c.potential_win}</b>
                   </span>
                 </div>
                 <div className="row" style={{ gap: 'var(--s2)' }}>
                   {shared.has(c.id) ? (
                     <>
-                      <button className="btn btn-ghost btn-sm" onClick={() => copyLink(c.id)}>Copy link</button>
+                      <button className="btn btn-ghost btn-sm" onClick={() => copyLink(c.id)}>{t('mc.copylink')}</button>
                       <a className="btn btn-ghost btn-sm" href={waHref(c.id)} target="_blank" rel="noreferrer">WhatsApp</a>
                     </>
                   ) : (
-                    <button className="btn btn-ghost btn-sm" onClick={() => share(c.id)}>Share</button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => share(c.id)}>{t('mc.share')}</button>
                   )}
                   {c.status === 'pending' && cashouts[c.id]?.available && (
                     <button className="btn btn-primary btn-sm" disabled={busy === c.id} onClick={() => cashout(c.id)}>
-                      {busy === c.id ? '…' : `Cash out ${cashouts[c.id].value}`}
+                      {busy === c.id ? '…' : t('mc.cashout', { v: cashouts[c.id].value })}
                     </button>
                   )}
                   {c.status !== 'pending' && (
-                    <button className="btn btn-ghost btn-sm" onClick={() => navigate(`/settle/${c.id}`)}>View result</button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => navigate(`/settle/${c.id}`)}>{t('mc.viewresult')}</button>
                   )}
                 </div>
               </div>

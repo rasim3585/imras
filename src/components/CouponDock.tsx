@@ -4,6 +4,7 @@ import { useCart } from '../coupon/CartContext';
 import CouponPanel from '../coupon/CouponPanel';
 import MiniWatch from '../coupon/MiniWatch';
 import { formatOdds } from '../lib/format';
+import { useI18n } from '../i18n/LanguageContext';
 
 // Quick betting. Desktop: a fixed right column that is ALWAYS reserved (the
 // bulletin never shifts) -- coupon on top, a mini live-watch of the last-added
@@ -11,6 +12,7 @@ import { formatOdds } from '../lib/format';
 export default function CouponDock() {
   const { count, totalOdds, selections } = useCart();
   const { pathname } = useLocation();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   if (pathname === '/coupon' || pathname.startsWith('/c/') || pathname.startsWith('/login')) return null;
 
@@ -26,7 +28,7 @@ export default function CouponDock() {
             {lastMatch && <MiniWatch matchId={lastMatch} />}
           </div>
         ) : (
-          <div className="dock-empty"><p className="dim">Tap any odds to start a coupon.</p></div>
+          <div className="dock-empty"><p className="dim">{t('dock.empty')}</p></div>
         )}
       </aside>
 
@@ -37,9 +39,9 @@ export default function CouponDock() {
             <div className="coupon-bar-inner">
               <div className="coupon-bar-info">
                 <span className="chip chip-accent">{count}</span>
-                <span className="coupon-bar-odds"><span className="muted">Total odds</span> <b className="tnum">{formatOdds(totalOdds)}</b></span>
+                <span className="coupon-bar-odds"><span className="muted">{t('cpn.totalOdds')}</span> <b className="tnum">{formatOdds(totalOdds)}</b></span>
               </div>
-              <button className="btn btn-primary btn-sm" onClick={() => setOpen(true)}>Coupon</button>
+              <button className="btn btn-primary btn-sm" onClick={() => setOpen(true)}>{t('dock.coupon')}</button>
             </div>
           </div>
           {open && (
