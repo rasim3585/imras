@@ -186,6 +186,19 @@ const en: Dict = {
   'cpn.err.closed': 'A match on your coupon has closed. Remove it and retry.',
   'cpn.err.funds': 'Not enough gold for that stake.', 'cpn.err.generic': 'Could not place coupon',
 
+  'feed.tab.live': 'Live', 'feed.tab.all': 'All', 'feed.tab.football': 'Football', 'feed.tab.efootball': 'E-Football',
+  'feed.tab.basketball': 'e-Basketball', 'feed.tab.tennis': 'e-Tennis', 'feed.tab.volley': 'e-Volleyball',
+  'landing.title': 'Real betting thrills, zero money.',
+  'landing.sub': 'Predict real & virtual matches, watch them play out live, and compete with friends — all with free virtual coins. No real money, ever.',
+  'feed.signup': 'Sign up free', 'feed.login': 'Log in', 'feed.stdlink': 'League tables ›',
+  'feed.comingsoon': '{label} is coming soon.', 'feed.nolive': 'No live matches right now.', 'feed.noopen': 'No open matches right now.',
+  'feed.live': '{n} live', 'feed.simulated': 'Simulated', 'feed.soon': 'soon',
+  'feed.col.match': 'Match', 'feed.col.over': 'Over', 'feed.col.under': 'Under', 'feed.col.btts': 'BTTS',
+  'feed.col.hnd': 'Hnd', 'feed.col.set1': 'S1', 'feed.col.set2': 'S2',
+  'feed.livePrefix': 'Live',
+  'feed.sport.football': 'Football', 'feed.sport.efootball': 'E-Football', 'feed.sport.basketball': 'Basketball',
+  'feed.sport.tennis': 'Tennis', 'feed.sport.volleyball': 'Volleyball',
+
   'lang.label': 'Language',
 };
 
@@ -356,6 +369,19 @@ const tr: Dict = {
   'cpn.playnow': 'Şimdi oyna', 'cpn.loginToPlay': 'Oynamak için giriş yap', 'cpn.saved': 'Kaydedildi ✓', 'cpn.save': 'Sonrası için kaydet',
   'cpn.err.closed': 'Kuponundaki bir maç kapandı. Onu çıkarıp tekrar dene.',
   'cpn.err.funds': 'Bu tutar için yeterli altın yok.', 'cpn.err.generic': 'Kupon oynanamadı',
+
+  'feed.tab.live': 'Canlı', 'feed.tab.all': 'Tümü', 'feed.tab.football': 'Futbol', 'feed.tab.efootball': 'E-Futbol',
+  'feed.tab.basketball': 'e-Basketbol', 'feed.tab.tennis': 'e-Tenis', 'feed.tab.volley': 'e-Voleybol',
+  'landing.title': 'Gerçek bahis heyecanı, sıfır para.',
+  'landing.sub': 'Gerçek ve sanal maçları tahmin et, canlı izle ve arkadaşlarınla yarış — hepsi ücretsiz sanal altınla. Asla gerçek para yok.',
+  'feed.signup': 'Ücretsiz kaydol', 'feed.login': 'Giriş yap', 'feed.stdlink': 'Lig tabloları ›',
+  'feed.comingsoon': '{label} çok yakında.', 'feed.nolive': 'Şu an canlı maç yok.', 'feed.noopen': 'Şu an açık maç yok.',
+  'feed.live': '{n} canlı', 'feed.simulated': 'Sanal', 'feed.soon': 'yakında',
+  'feed.col.match': 'Maç', 'feed.col.over': 'Üst', 'feed.col.under': 'Alt', 'feed.col.btts': 'KG',
+  'feed.col.hnd': 'Hnd', 'feed.col.set1': 'İS1', 'feed.col.set2': 'İS2',
+  'feed.livePrefix': 'Canlı',
+  'feed.sport.football': 'Futbol', 'feed.sport.efootball': 'E-Futbol', 'feed.sport.basketball': 'Basketbol',
+  'feed.sport.tennis': 'Tenis', 'feed.sport.volleyball': 'Voleybol',
 
   'lang.label': 'Dil',
 };

@@ -3,56 +3,48 @@ import { Link } from 'react-router-dom';
 import MatchRow from '../components/MatchRow';
 import { EFootballIcon, EBasketballIcon, ETennisIcon, EVolleyballIcon, BallIcon } from '../components/icons';
 import { useAuth } from '../auth/AuthContext';
+import { useI18n } from '../i18n/LanguageContext';
 import { matchProvider } from '../lib/matchProvider';
 import type { BulletinMatch } from '../lib/types';
 
 const LIVE = new Set(['inprogress', 'live', 'penalties']);
 
 type SportKey = 'live' | 'all' | 'football' | 'efootball' | 'basketball' | 'tennis' | 'volley';
-const SPORTS: { key: SportKey; label: string; icon: string; soon?: boolean }[] = [
-  { key: 'live', label: 'Live', icon: '⚡' },
-  { key: 'all', label: 'All', icon: '📋' },
-  { key: 'football', label: 'Football', icon: '⚽' },
-  { key: 'efootball', label: 'E-Football', icon: '' },
-  { key: 'basketball', label: 'e-Basketball', icon: '🏀' },
-  { key: 'tennis', label: 'e-Tennis', icon: '🎾' },
-  { key: 'volley', label: 'e-Volleyball', icon: '🏐' },
+const SPORTS: { key: SportKey; tkey: string; icon: string; soon?: boolean }[] = [
+  { key: 'live', tkey: 'feed.tab.live', icon: '⚡' },
+  { key: 'all', tkey: 'feed.tab.all', icon: '📋' },
+  { key: 'football', tkey: 'feed.tab.football', icon: '⚽' },
+  { key: 'efootball', tkey: 'feed.tab.efootball', icon: '' },
+  { key: 'basketball', tkey: 'feed.tab.basketball', icon: '🏀' },
+  { key: 'tennis', tkey: 'feed.tab.tennis', icon: '🎾' },
+  { key: 'volley', tkey: 'feed.tab.volley', icon: '🏐' },
 ];
 
 function Cols({ bb, tn, vb }: { bb?: boolean; tn?: boolean; vb?: boolean } = {}) {
+  const { t } = useI18n();
+  const M = <span className="lead">{t('feed.col.match')}</span>;
+  const plus = <span className="ll-c-plus">+</span>;
   if (vb) return (
-    <div className="ll-cols">
-      <span className="lead">Match</span>
-      <span>1</span><span>2</span>
-      <span className="ll-c-sec">Üst</span><span className="ll-c-sec">Alt</span>
-      <span className="ll-c-sec">Hnd</span><span className="ll-c-sec">Hnd</span>
-      <span className="ll-c-plus">+</span>
+    <div className="ll-cols">{M}<span>1</span><span>2</span>
+      <span className="ll-c-sec">{t('feed.col.over')}</span><span className="ll-c-sec">{t('feed.col.under')}</span>
+      <span className="ll-c-sec">{t('feed.col.hnd')}</span><span className="ll-c-sec">{t('feed.col.hnd')}</span>{plus}
     </div>
   );
   if (tn) return (
-    <div className="ll-cols">
-      <span className="lead">Match</span>
-      <span>1</span><span>2</span>
-      <span className="ll-c-sec">Üst</span><span className="ll-c-sec">Alt</span>
-      <span className="ll-c-sec">İS1</span><span className="ll-c-sec">İS2</span>
-      <span className="ll-c-plus">+</span>
+    <div className="ll-cols">{M}<span>1</span><span>2</span>
+      <span className="ll-c-sec">{t('feed.col.over')}</span><span className="ll-c-sec">{t('feed.col.under')}</span>
+      <span className="ll-c-sec">{t('feed.col.set1')}</span><span className="ll-c-sec">{t('feed.col.set2')}</span>{plus}
     </div>
   );
   if (bb) return (
-    <div className="ll-cols">
-      <span className="lead">Match</span>
-      <span>1</span><span>2</span>
-      <span className="ll-c-sec">Hnd</span><span className="ll-c-sec">Hnd</span>
-      <span className="ll-c-sec">Üst</span><span className="ll-c-sec">Alt</span>
-      <span className="ll-c-plus">+</span>
+    <div className="ll-cols">{M}<span>1</span><span>2</span>
+      <span className="ll-c-sec">{t('feed.col.hnd')}</span><span className="ll-c-sec">{t('feed.col.hnd')}</span>
+      <span className="ll-c-sec">{t('feed.col.over')}</span><span className="ll-c-sec">{t('feed.col.under')}</span>{plus}
     </div>
   );
   return (
-    <div className="ll-cols">
-      <span className="lead">Match</span>
-      <span>1</span><span>X</span><span>2</span>
-      <span className="ll-c-sec">Under</span><span className="ll-c-sec">Over</span><span className="ll-c-sec">BTTS</span>
-      <span className="ll-c-plus">+</span>
+    <div className="ll-cols">{M}<span>1</span><span>X</span><span>2</span>
+      <span className="ll-c-sec">{t('feed.col.under')}</span><span className="ll-c-sec">{t('feed.col.over')}</span><span className="ll-c-sec">{t('feed.col.btts')}</span>{plus}
     </div>
   );
 }
@@ -96,6 +88,7 @@ function groupMatches(list: BulletinMatch[]): { countries: CountryGroup[]; virtu
 
 export default function FeedScreen() {
   const { session } = useAuth();
+  const { t } = useI18n();
   const [matches, setMatches] = useState<BulletinMatch[]>([]);
   const [sport, setSport] = useState<SportKey>('all');
   const [loading, setLoading] = useState(true);
@@ -159,17 +152,17 @@ export default function FeedScreen() {
     </>
   );
 
-  const liveCount = (n: number) => <span className="ll-bar-r"><span className="dot" />{n} live</span>;
+  const liveCount = (n: number) => <span className="ll-bar-r"><span className="dot" />{t('feed.live', { n })}</span>;
 
   return (
     <div className="app-shell app-shell-wide">
       {!session && (
         <div className="landing-hero card">
-          <h2>Real betting thrills, zero money.</h2>
-          <p>Predict real & virtual matches, watch them play out live, and compete with friends — all with free virtual coins. No real money, ever.</p>
+          <h2>{t('landing.title')}</h2>
+          <p>{t('landing.sub')}</p>
           <div className="row" style={{ gap: 'var(--s2)' }}>
-            <Link to="/login" className="btn btn-primary">Sign up free</Link>
-            <Link to="/login" className="btn btn-ghost">Log in</Link>
+            <Link to="/login" className="btn btn-primary">{t('feed.signup')}</Link>
+            <Link to="/login" className="btn btn-ghost">{t('feed.login')}</Link>
           </div>
         </div>
       )}
@@ -183,30 +176,30 @@ export default function FeedScreen() {
           return (
             <button key={s.key} className={`sport-tab ${sport === s.key ? 'active' : ''} ${s.soon ? 'soon' : ''}`} onClick={() => setSport(s.key)}>
               {s.key === 'efootball' ? <EFootballIcon size={19} /> : s.key === 'basketball' ? <EBasketballIcon size={19} /> : s.key === 'tennis' ? <ETennisIcon size={19} /> : s.key === 'volley' ? <EVolleyballIcon size={19} /> : <span className="sport-ic">{s.icon}</span>}
-              {s.label}
-              {s.soon ? <span className="soon-badge">soon</span> : cnt != null ? <span className="sport-cnt">{cnt}</span> : null}
+              {t(s.tkey)}
+              {s.soon ? <span className="soon-badge">{t('feed.soon')}</span> : cnt != null ? <span className="sport-cnt">{cnt}</span> : null}
             </button>
           );
         })}
       </div>
 
-      <div className="std-link-row"><Link to="/standings" className="std-link">League tables ›</Link></div>
+      <div className="std-link-row"><Link to="/standings" className="std-link">{t('feed.stdlink')}</Link></div>
 
       {error && <div className="banner banner-error">{error}</div>}
 
       {spec?.soon ? (
-        <div className="empty"><p>{spec.label} is coming soon.</p></div>
+        <div className="empty"><p>{t('feed.comingsoon', { label: t(spec.tkey) })}</p></div>
       ) : loading ? (
         <div className="center-pad"><div className="spinner" /></div>
       ) : set.length === 0 ? (
-        <div className="empty"><p>{sport === 'live' ? 'No live matches right now.' : 'No open matches right now.'}</p></div>
+        <div className="empty"><p>{sport === 'live' ? t('feed.nolive') : t('feed.noopen')}</p></div>
       ) : (
         <div className="ll">
-          {section('Live · Football', liveCount(live.filter((m) => m.kind === 'real').length), live.filter((m) => m.kind === 'real'), <BallIcon size={18} />)}
-          {section('Live · E-Football', liveCount(live.filter((m) => m.kind === 'virtual' && m.sport === 'football').length), live.filter((m) => m.kind === 'virtual' && m.sport === 'football'))}
-          {section('Live · Basketball', liveCount(live.filter((m) => m.sport === 'basketball').length), live.filter((m) => m.sport === 'basketball'), <EBasketballIcon size={19} />, { bb: true })}
-          {section('Live · Tennis', liveCount(live.filter((m) => m.sport === 'tennis').length), live.filter((m) => m.sport === 'tennis'), <ETennisIcon size={19} />, { tn: true })}
-          {section('Live · Volleyball', liveCount(live.filter((m) => m.sport === 'volleyball').length), live.filter((m) => m.sport === 'volleyball'), <EVolleyballIcon size={19} />, { vb: true })}
+          {section(`${t('feed.livePrefix')} · ${t('feed.sport.football')}`, liveCount(live.filter((m) => m.kind === 'real').length), live.filter((m) => m.kind === 'real'), <BallIcon size={18} />)}
+          {section(`${t('feed.livePrefix')} · ${t('feed.sport.efootball')}`, liveCount(live.filter((m) => m.kind === 'virtual' && m.sport === 'football').length), live.filter((m) => m.kind === 'virtual' && m.sport === 'football'))}
+          {section(`${t('feed.livePrefix')} · ${t('feed.sport.basketball')}`, liveCount(live.filter((m) => m.sport === 'basketball').length), live.filter((m) => m.sport === 'basketball'), <EBasketballIcon size={19} />, { bb: true })}
+          {section(`${t('feed.livePrefix')} · ${t('feed.sport.tennis')}`, liveCount(live.filter((m) => m.sport === 'tennis').length), live.filter((m) => m.sport === 'tennis'), <ETennisIcon size={19} />, { tn: true })}
+          {section(`${t('feed.livePrefix')} · ${t('feed.sport.volleyball')}`, liveCount(live.filter((m) => m.sport === 'volleyball').length), live.filter((m) => m.sport === 'volleyball'), <EVolleyballIcon size={19} />, { vb: true })}
           {sport !== 'live' && (
             <>
               {grouped.countries.map((cg) => (
@@ -223,7 +216,7 @@ export default function FeedScreen() {
               ))}
               {grouped.virtual.filter((m) => m.sport === 'football').length > 0 && (
                 <div className="ll-cgrp">
-                  <div className="ll-country"><span>Simulated</span><span className="ll-country-n">{grouped.virtual.filter((m) => m.sport === 'football').length}</span></div>
+                  <div className="ll-country"><span>{t('feed.simulated')}</span><span className="ll-country-n">{grouped.virtual.filter((m) => m.sport === 'football').length}</span></div>
                   <div className="ll-bar"><span className="ll-bar-l"><EFootballIcon size={19} /> E-Football · 2×4 min</span><span className="ll-bar-r">sim</span></div>
                   <Cols />
                   {grouped.virtual.filter((m) => m.sport === 'football').map((m) => <MatchRow key={m.id} m={m} hideLeague />)}
