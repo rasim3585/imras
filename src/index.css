@@ -696,14 +696,29 @@ svg.crest { background: none !important; border-radius: 0 !important; }
    squash on landing; on a win they flash then fall out of the bottom. */
 .go-cell {
   position: relative; aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
-  transform-origin: bottom center; animation: go-drop 0.52s cubic-bezier(0.34, 1.2, 0.5, 1) both;
+  transform-origin: bottom center;
 }
+/* new symbol drops in from above with a squash on landing */
+.go-cell.drop { animation: go-drop 0.5s cubic-bezier(0.34, 1.2, 0.5, 1) both; }
 @keyframes go-drop {
   0% { transform: translateY(-175%) scaleY(1.15) scaleX(0.88); opacity: 0; }
   50% { opacity: 1; }
   72% { transform: translateY(0) scaleY(0.78) scaleX(1.14); }
   86% { transform: translateY(0) scaleY(1.09) scaleX(0.95); }
   100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+/* surviving symbol falls down dy rows to fill a gap left by a win */
+.go-cell.shift { animation: go-shift 0.44s cubic-bezier(0.34, 1.05, 0.5, 1) both; }
+@keyframes go-shift {
+  0% { transform: translateY(calc(var(--dy, 1) * -118%)); }
+  82% { transform: translateY(0) scaleY(0.94) scaleX(1.05); }
+  100% { transform: translateY(0) scale(1); }
+}
+/* whole board drops out toward the line at the start of a spin */
+.go-cell.out { animation: go-fall-line 0.5s cubic-bezier(0.5, 0, 0.9, 0.45) forwards; }
+@keyframes go-fall-line {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(360%) scale(0.66) rotate(6deg); opacity: 0; }
 }
 .go-sym-wrap { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; animation: go-sway 2.9s ease-in-out infinite; }
 @keyframes go-sway { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-2px) rotate(1deg); } }
@@ -754,9 +769,9 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .go-cell.scat { z-index: 2; }
 
 /* corner flags at the far ends of the goal line, rising up into the grass */
-.go-flag { position: absolute; bottom: calc(100% - 9px); width: 42px; z-index: 3; pointer-events: none; }
-.go-flag-left { left: 0; }
-.go-flag-right { right: 0; transform: scaleX(-1); }
+.go-flag { position: absolute; bottom: calc(100% - 9px); width: 40px; z-index: 3; pointer-events: none; }
+.go-flag-left { left: -8px; }
+.go-flag-right { right: -8px; transform: scaleX(-1); }
 .go-flag-svg { width: 100%; height: auto; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4)); }
 .go-flag-cloth { transform-origin: 32px 22px; animation: go-wave 1.7s ease-in-out infinite; }
 @keyframes go-wave {
@@ -765,6 +780,23 @@ svg.crest { background: none !important; border-radius: 0 !important; }
   50% { transform: skewY(0deg) scaleX(1); }
   75% { transform: skewY(-7deg) scaleX(0.9); }
 }
+
+/* autoplay config panel (opens over the reels) */
+.go-modal { position: absolute; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.55); border-radius: 18px; animation: go-callout-in 0.2s ease; }
+.go-auto-panel { width: 80%; max-width: 340px; padding: 18px; border-radius: 16px; text-align: center;
+  background: linear-gradient(#1c2a20, #10190f); border: 2px solid #f3c73f; box-shadow: 0 14px 44px rgba(0,0,0,0.6); }
+.go-auto-title { font-weight: 900; letter-spacing: 2px; color: #ffe27a; font-size: 1.05rem; }
+.go-auto-sub { color: var(--muted); font-size: 0.8rem; margin: 4px 0 14px; }
+.go-auto-sub b { color: #fff; }
+.go-auto-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; }
+.go-auto-opt { padding: 14px 0; border-radius: 12px; font-weight: 900; font-size: 1.05rem; cursor: pointer; color: #fff2b0;
+  background: radial-gradient(120% 100% at 50% 0%, #6a3fb0, #38215f); border: 1.5px solid #8a6ad0; }
+.go-auto-opt:hover:not(:disabled) { filter: brightness(1.12); }
+.go-auto-opt:disabled { opacity: 0.4; cursor: default; }
+.go-auto-cancel { margin-top: 14px; width: 100%; padding: 10px; border-radius: 10px; cursor: pointer;
+  background: transparent; border: 1px solid #5a4a2a; color: #cbb98a; font-weight: 700; }
+.go-auto-left { display: block; font-size: 0.6rem; margin-top: 1px; line-height: 1; }
 
 /* overlays --------------------------------------------------------------- */
 .go-multbadge { position: absolute; top: 12px; right: 14px; z-index: 4; background: linear-gradient(#ffe27a, #f3c73f);

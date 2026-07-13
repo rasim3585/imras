@@ -6,21 +6,40 @@ import SlotSymbol from '../slot/symbols';
 import { CornerFlag } from '../slot/scene';
 import type { SlotResult, SlotStep } from '../lib/types';
 
-// Gates of Goal — original football-themed tumble slot. Server computes the whole
-// spin (provably fair); this screen animates the cascade (symbols drop from the
-// top, winners pop and clear, the rest fall to fill gaps) plus the free-spins
-// bonus. Scene art (frame, torches, mascot) is our own — not a reskin.
+// Gates of Goal — original football-themed tumble slot. The server computes the
+// whole spin (provably fair); this screen animates the cascade: winning symbol
+// groups are shown one at a time (so the player sees WHY they won), then drop
+// out toward the goal line while survivors fall to fill the gaps and new symbols
+// drop in from the top. Scene art is our own — not a reskin.
 
-const COLS = 6, ROWS = 5;
+const COLS = 6, ROWS = 5, N = COLS * ROWS;
 const BUY_COST = 60;            // mirrors slot_config.buy_cost (buy = bet × 60)
-// Original scrolling ticker describing our own mechanics.
-const MARQUEE = '8 OR MORE MATCHING SYMBOLS PAY ANYWHERE  ✦  COLLECT MULTIPLIER ORBS  ✦  4+ SCATTERS OPEN FREE SPINS  ✦  MULTIPLIERS ADD UP IN FREE SPINS  ✦  DOUBLE CHANCE FOR MORE SCATTERS  ✦  WIN UP TO 1000× BET  ✦';
 const MIN_BET = 10, MAX_BET = 1000, BET_STEP = 10;
+const AUTO_OPTIONS = [10, 25, 50, 100, Infinity];
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Our paytable (mirrors slot_config: pays PER symbol by count bucket). Lets the
+// callout show each symbol's own win — same as the server's per-symbol step win.
+const PAY: Record<number, [number, number, number]> = {
+  1: [0.10, 0.30, 0.80], 2: [0.10, 0.30, 0.80], 3: [0.16, 0.36, 1.00], 4: [0.20, 0.40, 1.20],
+  5: [0.20, 0.48, 1.60], 6: [0.40, 0.80, 2.40], 7: [0.60, 1.60, 4.80], 8: [1.00, 4.00, 10.00],
+};
+function symbolPay(v: number, count: number, bet: number): number {
+  const bucket = count >= 12 ? 2 : count >= 10 ? 1 : 0;
+  return Math.round((PAY[v]?.[bucket] ?? 0) * bet);
+}
+
+const MARQUEE = '8 OR MORE MATCHING SYMBOLS PAY ANYWHERE  ✦  COLLECT MULTIPLIER ORBS  ✦  4+ SCATTERS OPEN FREE SPINS  ✦  MULTIPLIERS ADD UP IN FREE SPINS  ✦  DOUBLE CHANCE FOR MORE SCATTERS  ✦  WIN UP TO 1000× BET  ✦';
+
+interface CellMeta { n: boolean; dy: number; }         // n = new (drops from top); else shifted down dy rows
+interface WinGroup { v: number; cells: number[]; count: number; amount: number; }
+interface FsState { active: boolean; i: number; n: number; mult: number; win: number; }
+const FS_OFF: FsState = { active: false, i: 0, n: 0, mult: 0, win: 0 };
+const ALL_NEW: CellMeta[] = Array.from({ length: N }, () => ({ n: true, dy: 0 }));
 
 function initialGrid(): number[] {
   const g: number[] = [];
-  for (let i = 0; i < COLS * ROWS; i++) g.push(1 + Math.floor(Math.random() * 8));
+  for (let i = 0; i < N; i++) g.push(1 + Math.floor(Math.random() * 8));
   return g;
 }
 
@@ -31,36 +50,49 @@ function cleanErr(m: string): string {
   return 'Spin failed. Try again.';
 }
 
-// Which symbol drove a winning step, and how many of it landed — so the callout
-// can explain WHY the win happened before the symbols clear.
-function winInfo(grid: number[], cells: number[]): { v: number; count: number } {
-  const counts: Record<number, number> = {};
-  for (const c of cells) { const v = grid[c]; if (v >= 1 && v <= 8) counts[v] = (counts[v] || 0) + 1; }
-  let bv = 0, bc = 0;
-  for (const k in counts) { if (counts[k] > bc) { bc = counts[k]; bv = Number(k); } }
-  return { v: bv, count: bc };
+// Split a winning step into its per-symbol groups (each symbol pays separately).
+function winGroups(grid: number[], cells: number[], bet: number): WinGroup[] {
+  const byV: Record<number, number[]> = {};
+  for (const c of cells) { const v = grid[c]; if (v >= 1 && v <= 8) (byV[v] ??= []).push(c); }
+  return Object.keys(byV)
+    .map((k) => { const v = Number(k); const cs = byV[v]; return { v, cells: cs, count: cs.length, amount: symbolPay(v, cs.length, bet) }; })
+    .sort((a, b) => b.amount - a.amount);
 }
 
-interface WinTiming { show: number; boom: number; gap: number; }
-
-interface FsState { active: boolean; i: number; n: number; mult: number; win: number; }
-const FS_OFF: FsState = { active: false, i: 0, n: 0, mult: 0, win: 0 };
+// How the NEXT grid enters: survivors of each column fall to the bottom (shift
+// down), the freed top cells are new (drop from above).
+function computeMeta(prev: number[], winners: number[]): CellMeta[] {
+  const meta = Array.from({ length: N }, () => ({ n: true, dy: 0 }));
+  const win = new Set(winners);
+  for (let c = 0; c < COLS; c++) {
+    const survRows: number[] = [];
+    for (let r = 0; r < ROWS; r++) { const idx = r * COLS + c; if (!win.has(idx) && prev[idx] !== 0) survRows.push(r); }
+    const firstSurv = ROWS - survRows.length;
+    for (let r = 0; r < ROWS; r++) {
+      const idx = r * COLS + c;
+      if (r < firstSurv) meta[idx] = { n: true, dy: 0 };
+      else meta[idx] = { n: false, dy: r - survRows[r - firstSurv] };
+    }
+  }
+  return meta;
+}
 
 export default function GatesScreen() {
   const { profile, session, refreshProfile } = useAuth();
   const navigate = useNavigate();
 
-  // Board carries a generation counter: bumping it remounts the cells so the
-  // CSS drop-in animation replays on every cascade step.
-  const [board, setBoard] = useState<{ cells: number[]; gen: number }>(() => ({ cells: initialGrid(), gen: 0 }));
+  const [board, setBoard] = useState<{ cells: number[]; meta: CellMeta[]; gen: number }>(() => ({ cells: initialGrid(), meta: ALL_NEW, gen: 0 }));
+  const [boardOut, setBoardOut] = useState(false);       // whole grid dropping out (spin start)
   const [winCells, setWinCells] = useState<Set<number>>(new Set());
   const [winPhase, setWinPhase] = useState<'show' | 'boom' | null>(null);
   const [dim, setDim] = useState(false);
-  const [callout, setCallout] = useState<{ v: number; count: number; win: number } | null>(null);
+  const [callout, setCallout] = useState<{ v: number; count: number; amount: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [bet, setBet] = useState(50);
   const [ante, setAnte] = useState(false);
   const [auto, setAuto] = useState(false);
+  const [autoPanel, setAutoPanel] = useState(false);
+  const [autoLeft, setAutoLeft] = useState(0);
   const [runWin, setRunWin] = useState(0);
   const [multSum, setMultSum] = useState(0);
   const [fs, setFs] = useState<FsState>(FS_OFF);
@@ -73,76 +105,70 @@ export default function GatesScreen() {
   const stake = ante ? Math.round(bet * 1.25) : bet;
   const buyStake = bet * BUY_COST;
 
-  // Refs so the autoplay loop reads live values without stale closures.
   const genRef = useRef(0);
   const autoRef = useRef(false);
+  const autoLeftRef = useRef(0);
   const betRef = useRef(bet); const anteRef = useRef(ante); const balRef = useRef(balance);
   useEffect(() => { betRef.current = bet; }, [bet]);
   useEffect(() => { anteRef.current = ante; }, [ante]);
   useEffect(() => { balRef.current = balance; }, [balance]);
   useEffect(() => () => { autoRef.current = false; }, []);
 
-  function showGrid(cells: number[]) { genRef.current += 1; setBoard({ cells, gen: genRef.current }); }
+  function showGrid(cells: number[], meta: CellMeta[] = ALL_NEW) { genRef.current += 1; setBoard({ cells, meta, gen: genRef.current }); }
   const stepBet = (d: number) => setBet((b) => Math.max(MIN_BET, Math.min(MAX_BET, b + d)));
 
-  // Walk one spin's tumble steps. Each winning step plays in two beats so the
-  // player understands it: (1) SHOW — winners pulse while the rest dim, and a
-  // callout names the symbol, its count and the win; (2) BOOM — the winners
-  // drop down toward the goal line and vanish. Then the grid cascades in.
-  async function playSteps(steps: SlotStep[], t: WinTiming, onWin?: (w: number) => void) {
-    if (steps[0]) showGrid(steps[0].grid);
+  // Drop the whole current board out toward the line (used at spin start).
+  async function fallOutBoard() { setBoardOut(true); await wait(500); setBoardOut(false); }
+
+  async function playSteps(steps: SlotStep[], t: { show: number; boom: number; gap: number }, bt: number, onWin?: (w: number) => void) {
+    if (steps[0]) showGrid(steps[0].grid, ALL_NEW);
     for (let i = 0; i < steps.length; i++) {
       const st = steps[i];
       if (st.win > 0) {
-        const info = winInfo(st.grid, st.cells);
-        setWinCells(new Set(st.cells));
-        setWinPhase('show'); setDim(true);
-        setCallout({ v: info.v, count: info.count, win: st.win });
         onWin?.(st.win);
-        await wait(t.show);
-        setWinPhase('boom'); setDim(false);
+        // SHOW — each winning symbol group in turn, so the player sees why it won
+        setDim(true); setWinPhase('show');
+        for (const g of winGroups(st.grid, st.cells, bt)) {
+          setWinCells(new Set(g.cells));
+          setCallout({ v: g.v, count: g.count, amount: g.amount });
+          await wait(t.show);
+        }
+        // BOOM — all winners drop out toward the line together
+        setWinCells(new Set(st.cells)); setWinPhase('boom'); setCallout(null);
         await wait(t.boom);
-        setWinCells(new Set()); setWinPhase(null); setCallout(null);
-        if (i + 1 < steps.length) { showGrid(steps[i + 1].grid); await wait(t.gap); }
+        setWinCells(new Set()); setWinPhase(null); setDim(false);
+        if (i + 1 < steps.length) { showGrid(steps[i + 1].grid, computeMeta(st.grid, st.cells)); await wait(t.gap); }
       }
     }
     setWinCells(new Set()); setWinPhase(null); setCallout(null); setDim(false);
   }
 
   async function animate(res: SlotResult) {
-    // --- BASE spin (empty when the bonus was bought) ---
+    if (!res.buy) await fallOutBoard();           // old board falls away first
     let running = 0;
-    await playSteps(res.base.steps, { show: 1150, boom: 640, gap: 150 }, (w) => { running += w; setRunWin(running); });
+    await playSteps(res.base.steps, { show: 950, boom: 600, gap: 150 }, res.bet, (w) => { running += w; setRunWin(running); });
     if (res.base.payout > 0 && res.base.mult_sum > 0) { setMultSum(res.base.mult_sum); await wait(560); }
 
-    // --- FREE SPINS bonus ---
     if (res.bonus.triggered) {
       setRunWin(0); setMultSum(0);
       setFs({ ...FS_OFF, active: true, n: res.bonus.count });
       setBanner(res.buy ? 'FREE SPINS' : 'GATE OPEN'); setBig(true);
-      await wait(1400);
-      setBanner(null);
+      await wait(1400); setBanner(null);
       let bwin = 0;
       for (let i = 0; i < res.bonus.spins.length; i++) {
         const sp = res.bonus.spins[i];
         setFs((f) => ({ ...f, i: i + 1 }));
-        await playSteps(sp.steps, { show: 820, boom: 520, gap: 120 });
+        await playSteps(sp.steps, { show: 680, boom: 480, gap: 120 }, res.bet);
         setFs((f) => ({ ...f, mult: sp.total_mult }));
-        if (sp.win > 0) { bwin += sp.win; setFs((f) => ({ ...f, win: bwin })); await wait(440); }
+        if (sp.win > 0) { bwin += sp.win; setFs((f) => ({ ...f, win: bwin })); await wait(420); }
         else await wait(150);
       }
-      await wait(500);
-      setFs(FS_OFF);
+      await wait(500); setFs(FS_OFF);
     }
 
     setWinCells(new Set());
-    if (res.payout > 0) {
-      setLastWin(res.payout);
-      setBig(res.payout >= res.stake * 10);
-      setBanner(`${res.payout.toLocaleString()} WON`);
-    }
-    await wait(200);
-    setBig(false);
+    if (res.payout > 0) { setLastWin(res.payout); setBig(res.payout >= res.stake * 10); setBanner(`${res.payout.toLocaleString()} WON`); }
+    await wait(200); setBig(false);
   }
 
   async function spin(buy = false) {
@@ -165,22 +191,28 @@ export default function GatesScreen() {
   }
 
   async function autoLoop() {
-    while (autoRef.current) {
+    while (autoRef.current && autoLeftRef.current > 0) {
       const st = anteRef.current ? Math.round(betRef.current * 1.25) : betRef.current;
       if (st > balRef.current || st <= 0) break;
       await spin(false);
       if (!autoRef.current) break;
-      await wait(450);
+      if (autoLeftRef.current !== Infinity) { autoLeftRef.current -= 1; setAutoLeft(autoLeftRef.current); }
+      if (autoLeftRef.current <= 0) break;
+      await wait(420);
     }
     autoRef.current = false; setAuto(false);
   }
-
-  function toggleAuto() {
-    if (!session) { navigate('/login'); return; }
-    if (auto) { autoRef.current = false; setAuto(false); return; }
+  function startAuto(count: number) {
+    setAutoPanel(false);
     if (stake > balance) return;
     autoRef.current = true; setAuto(true);
+    autoLeftRef.current = count; setAutoLeft(count);
     if (!busy) void autoLoop();
+  }
+  function onAutoBtn() {
+    if (!session) { navigate('/login'); return; }
+    if (auto) { autoRef.current = false; setAuto(false); return; }
+    setAutoPanel(true);
   }
 
   const bonus = fs.active;
@@ -189,13 +221,10 @@ export default function GatesScreen() {
   return (
     <div className="go">
       <div className="go-marquee">
-        <div className="go-marquee-track">
-          <span>{MARQUEE}</span><span>{MARQUEE}</span>
-        </div>
+        <div className="go-marquee-track"><span>{MARQUEE}</span><span>{MARQUEE}</span></div>
       </div>
 
       <div className="go-stage">
-        {/* left rail — buy bonus + double chance + black win screen */}
         <aside className="go-rail">
           <button className="go-buy" disabled={busy || !session || buyStake > balance} onClick={() => spin(true)}>
             <span className="go-buy-t">BUY<br />FREE SPINS</span>
@@ -216,35 +245,39 @@ export default function GatesScreen() {
           </div>
         </aside>
 
-        {/* center — football goal on a grass pitch */}
         <div className={`go-frame ${busy ? 'is-spin' : ''} ${bonus ? 'is-bonus' : ''}`}>
           <div className="go-goal">
             <div className="go-net" aria-hidden="true" />
             <div className="go-reels">
               <div className={`go-grid ${dim ? 'dim' : ''}`} style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}>
-                {board.cells.map((v, i) => (
-                  <div
-                    key={`${board.gen}-${i}`}
-                    className={`go-cell ${winCells.has(i) ? `win ${winPhase ?? ''}` : ''} ${v < 0 ? 'orb' : ''} ${v === 9 ? 'scat' : ''}`}
-                    style={{ animationDelay: `${Math.floor(i / COLS) * 45}ms` }}
-                  >
-                    <span className="go-sym-wrap" style={{ animationDelay: `${(i % 7) * 0.28}s` }}>
-                      <SlotSymbol v={v} />
-                    </span>
-                  </div>
-                ))}
+                {board.cells.map((v, i) => {
+                  const m = board.meta[i] ?? ALL_NEW[i];
+                  const enter = boardOut ? 'out' : m.n ? 'drop' : m.dy > 0 ? 'shift' : '';
+                  const winCls = winCells.has(i) ? `win ${winPhase ?? ''}` : '';
+                  return (
+                    <div
+                      key={`${board.gen}-${i}`}
+                      className={`go-cell ${winCls || enter} ${v < 0 ? 'orb' : ''} ${v === 9 ? 'scat' : ''}`}
+                      style={{ animationDelay: enter === 'drop' ? `${Math.floor(i / COLS) * 40}ms` : '0ms', ['--dy' as string]: m.dy }}
+                    >
+                      <span className="go-sym-wrap" style={{ animationDelay: `${(i % 7) * 0.28}s` }}>
+                        <SlotSymbol v={v} />
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
 
               {callout && (
                 <div className="go-callout">
                   <span className="go-callout-ic"><SlotSymbol v={callout.v} /></span>
                   <span className="go-callout-cnt tnum">×{callout.count}</span>
-                  <b className="go-callout-win tnum">+{callout.win.toLocaleString()}</b>
+                  <b className="go-callout-win tnum">+{callout.amount.toLocaleString()}</b>
                 </div>
               )}
 
               {multSum > 0 && <div className="go-multbadge tnum">×{multSum}</div>}
-              {runWin > 0 && !banner && !bonus && <div className="go-runwin tnum">+{runWin.toLocaleString()}</div>}
+              {runWin > 0 && !banner && !bonus && !callout && <div className="go-runwin tnum">+{runWin.toLocaleString()}</div>}
 
               {bonus && (
                 <div className="go-fs">
@@ -262,12 +295,28 @@ export default function GatesScreen() {
             <CornerFlag side="left" />
             <CornerFlag side="right" />
           </div>
+
+          {autoPanel && (
+            <div className="go-modal" onClick={() => setAutoPanel(false)}>
+              <div className="go-auto-panel" onClick={(e) => e.stopPropagation()}>
+                <div className="go-auto-title">AUTOPLAY</div>
+                <div className="go-auto-sub">Bet <b className="tnum">{stake}</b> · pick number of spins</div>
+                <div className="go-auto-grid">
+                  {AUTO_OPTIONS.map((o) => (
+                    <button key={o} className="go-auto-opt" disabled={stake > balance} onClick={() => startAuto(o)}>
+                      {o === Infinity ? '∞' : o}
+                    </button>
+                  ))}
+                </div>
+                <button className="go-auto-cancel" onClick={() => setAutoPanel(false)}>Cancel</button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {err && <div className="banner banner-error go-err">{err}</div>}
 
-      {/* bottom control bar */}
       <div className="go-bar">
         <div className="go-credit">
           <span className="muted">CREDIT</span>
@@ -281,12 +330,9 @@ export default function GatesScreen() {
         </div>
 
         <div className="go-actions">
-          <button
-            className={`go-auto ${auto ? 'on' : ''}`}
-            disabled={busy && !auto}
-            onClick={toggleAuto}
-            title="Autoplay"
-          >{auto ? 'STOP' : 'AUTO'}</button>
+          <button className={`go-auto ${auto ? 'on' : ''}`} disabled={busy && !auto} onClick={onAutoBtn} title="Autoplay">
+            {auto ? <>STOP<span className="go-auto-left tnum">{autoLeft === Infinity ? '∞' : autoLeft}</span></> : 'AUTO'}
+          </button>
 
           <button className="go-spin" disabled={busy || auto || (!!session && stake > balance)} onClick={() => spin(false)}>
             <span className="go-spin-ic" aria-hidden="true" />
