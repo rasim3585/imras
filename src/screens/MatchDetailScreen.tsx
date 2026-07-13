@@ -40,6 +40,21 @@ const VB_GROUPS: MarketGroup[] = [
 const groupOf = (groups: MarketGroup[], mt: string): string =>
   groups.find((g) => g.types.includes(mt))?.key ?? groups[0].key;
 
+// Market kategori başlığı + "i" bilgi (Nesine esinli): ne demek olduğunu açar.
+function CatHeader({ tkey }: { tkey: string }) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <div className="mkt-cat">
+        <span>{t(tkey)}</span>
+        <button className="mkt-cat-i" aria-label="info" onClick={() => setOpen((o) => !o)}>ⓘ</button>
+      </div>
+      {open && <div className="mkt-cat-info">{t(tkey + '.i')}</div>}
+    </>
+  );
+}
+
 export default function MatchDetailScreen() {
   const { matchId } = useParams<{ matchId: string }>();
   const navigate = useNavigate();
@@ -153,7 +168,7 @@ export default function MatchDetailScreen() {
         {shownGroups.flatMap((g) => {
           const list = markets.filter((m) => groupOf(groups, m.market_type) === g.key);
           const els = [];
-          if (tab === 'all') els.push(<div key={`cat-${g.key}`} className="mkt-cat">{t(g.tkey)}</div>);
+          if (tab === 'all') els.push(<CatHeader key={`cat-${g.key}`} tkey={g.tkey} />);
           for (const m of list) {
             els.push(
               <div key={m.id} className="mkt-group">
