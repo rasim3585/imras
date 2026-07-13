@@ -93,6 +93,22 @@ export function EBasketballIcon({ size = 22 }: { size?: number }) {
   );
 }
 
+// e-Tennis: same gamepad but a tennis ball on top (virtual tennis). Original art.
+export function ETennisIcon({ size = 22 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      {/* tennis ball on top */}
+      <circle cx="12" cy="5.4" r="3.8" fill="#d7e600" stroke="#0b2c1f" strokeWidth="1" />
+      <path d="M8.4 3.2Q11 5.4 8.4 7.6M15.6 3.2Q13 5.4 15.6 7.6" fill="none" stroke="#fff" strokeWidth="0.9" strokeLinecap="round" />
+      {/* gamepad */}
+      <path d="M7 11.4 Q3.3 11.4 2.7 15.4 L2 19 Q1.7 21.7 4.5 21.7 Q6.5 21.7 7.4 19.7 L8.3 17.9 L15.7 17.9 L16.6 19.7 Q17.5 21.7 19.5 21.7 Q22.3 21.7 22 19 L21.3 15.4 Q20.7 11.4 17 11.4 Z" fill="#3f7d2a" />
+      <rect x="6" y="14" width="1.7" height="4.6" rx="0.7" fill="#0b2c1f" />
+      <rect x="4.55" y="15.45" width="4.6" height="1.7" rx="0.7" fill="#0b2c1f" />
+      <circle cx="16.1" cy="15.3" r="1.05" fill="#0b2c1f" /><circle cx="18.2" cy="16.6" r="1.05" fill="#0b2c1f" />
+    </svg>
+  );
+}
+
 // Virtual-money coin (green) — replaces the gold dot / coin emoji. Original art.
 export function CoinIcon({ size = 16 }: { size?: number }) {
   return (

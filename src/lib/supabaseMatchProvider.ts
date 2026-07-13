@@ -81,7 +81,7 @@ export class SupabaseMatchProvider implements MatchProvider {
     return { ...(raw as Match), markets };
   }
 
-  async getStandings(sport: 'football' | 'basketball'): Promise<StandingsRow[]> {
+  async getStandings(sport: 'football' | 'basketball' | 'tennis'): Promise<StandingsRow[]> {
     const { data, error } = await supabase.rpc('vleague_standings', { p_sport: sport });
     if (error) throw new Error(error.message);
     return (data ?? []) as StandingsRow[];

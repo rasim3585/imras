@@ -1,7 +1,7 @@
 // Shared domain types — provider-agnostic. Nothing here knows whether data came
 // from the simulator or a future real sports API.
 
-export type Sport = 'football' | 'basketball';
+export type Sport = 'football' | 'basketball' | 'tennis';
 export type Outcome = 'home' | 'draw' | 'away';
 export type MatchStatus = 'upcoming' | 'live' | 'finished';
 export type MarketStatus = 'open' | 'closed' | 'settled';
@@ -99,7 +99,7 @@ export interface BulletinMarket {
 export interface BulletinMatch {
   id: string;
   kind: BulletinKind;
-  sport: 'football' | 'basketball';   // real+virtual football = 'football'; basketball = 'basketball'
+  sport: 'football' | 'basketball' | 'tennis';   // real+virtual football = 'football'
   home_team: string;
   away_team: string;
   starts_at: string;
@@ -189,7 +189,7 @@ export interface MatchStats {
   home: VTeamStat;
   away: VTeamStat;
   h2h: VH2H[];
-  sport?: 'football' | 'basketball';
+  sport?: 'football' | 'basketball' | 'tennis';
 }
 
 // --- Gates of Goal (slot) ---------------------------------------------------

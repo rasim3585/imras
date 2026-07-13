@@ -40,14 +40,16 @@ export default function MatchStatsPanel({ matchId }: { matchId: string }) {
   if (stats === null || stats === 'none') return null;   // loading, or real match → hide
 
   const played = stats.home.played + stats.away.played;
-  const bb = stats.sport === 'basketball';
+  const noDraw = stats.sport === 'basketball' || stats.sport === 'tennis';
+  const head = stats.sport === 'basketball' ? 'e-Basketball · Simulated League'
+    : stats.sport === 'tennis' ? 'e-Tennis · Simulated League' : 'Simulated League';
 
   return (
     <div className="vstats card">
-      <div className="vstats-head">{bb ? 'e-Basketball · Simulated League' : 'Simulated League'}</div>
+      <div className="vstats-head">{head}</div>
       <div className="vstat-teams">
-        <TeamRow t={stats.home} bb={bb} />
-        <TeamRow t={stats.away} bb={bb} />
+        <TeamRow t={stats.home} bb={noDraw} />
+        <TeamRow t={stats.away} bb={noDraw} />
       </div>
       {played === 0 ? (
         <div className="vstat-note">New league — the table fills in as matches finish.</div>
