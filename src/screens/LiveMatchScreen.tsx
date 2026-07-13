@@ -5,7 +5,8 @@ import {
   atmosphereScript, goalBurst, goalHistoryLine, cardLine, type Line,
 } from '../live/commentary';
 import { isPenaltyGoal } from '../live/liveModel';
-import PitchTV from '../live/PitchTV';
+import { statsAt } from '../live/liveSim';
+import PitchTV, { type GoalPulse } from '../live/PitchTV';
 import MatchChat from '../live/ChatPanel';
 import { matchProvider } from '../lib/matchProvider';
 import { useI18n } from '../i18n/LanguageContext';
@@ -15,6 +16,53 @@ import { teamColor } from '../lib/teams';
 import { playerName } from '../lib/playerNames';
 
 type OutKey = 'home' | 'draw' | 'away';
+
+const LINE_ICON: Record<string, string> = {
+  goal: '⚽', shot: '🎯', save: '🧤', miss: '💨', blocked: '🛡', corner: '⛳',
+  freekick: '🎯', offside: '🚩', foul: '⚠', yellow: '🟨', card: '🟥', sub: '🔁',
+  buildup: '▶', calm: '·', mark: '·',
+};
+
+// Nesine-style live stats strip: possession bar + a compact row per metric.
+function StatsPanel({ matchId, minute, reds, home, away }: {
+  matchId: string; minute: number; reds: [number, number]; home: string; away: string;
+}) {
+  const { t } = useI18n();
+  const s = statsAt(matchId, minute, reds);
+  const [ph, pa] = s.possession;
+  const rows: [string, [number, number]][] = [
+    [t('live.shots'), s.shots], [t('live.ontarget'), s.onTarget], [t('live.corners'), s.corners],
+    [t('live.fouls'), s.fouls], [t('live.yellow'), s.yellows], [t('live.red'), s.reds],
+  ];
+  const Bar = ({ label, l, r }: { label: string; l: number; r: number }) => {
+    const tot = l + r;
+    const lp = tot === 0 ? 50 : Math.round((100 * l) / tot);
+    return (
+      <div className="lst-row">
+        <span className="lst-l tnum">{l}</span>
+        <div className="lst-mid">
+          <span className="lst-k">{label}</span>
+          <div className="lst-bar"><div className="lst-h" style={{ width: `${lp}%` }} /><div className="lst-a" style={{ width: `${100 - lp}%` }} /></div>
+        </div>
+        <span className="lst-r tnum">{r}</span>
+      </div>
+    );
+  };
+  return (
+    <div className="card lst">
+      <div className="lst-head"><span className="lst-tm">{home}</span><span className="lst-ti">{t('live.stats')}</span><span className="lst-tm">{away}</span></div>
+      <div className="lst-row lst-poss">
+        <span className="lst-l tnum">{ph}%</span>
+        <div className="lst-mid">
+          <span className="lst-k">{t('live.poss')}</span>
+          <div className="lst-bar big"><div className="lst-h" style={{ width: `${ph}%` }} /><div className="lst-a" style={{ width: `${pa}%` }} /></div>
+        </div>
+        <span className="lst-r tnum">{pa}%</span>
+      </div>
+      {rows.map(([label, [l, r]]) => <Bar key={label} label={label} l={l} r={r} />)}
+    </div>
+  );
+}
 
 function computePickState(pick: OutKey, hs: number, as: number): 'win' | 'lose' | 'level' {
   const leader: OutKey = hs > as ? 'home' : as > hs ? 'away' : 'draw';
@@ -42,7 +90,7 @@ export default function LiveMatchScreen() {
   const { matchId } = useParams<{ matchId: string }>();
   const navigate = useNavigate();
   const { t } = useI18n();
-  const { state, minute, error } = useLiveMatch(matchId);
+  const { state, minute, error, getClock } = useLiveMatch(matchId);
   const [gaveUp, setGaveUp] = useState(false);
 
   // Don't spin forever: the live-watch screen only serves virtual matches. If no
@@ -56,9 +104,10 @@ export default function LiveMatchScreen() {
   const [myLeg, setMyLeg] = useState<CouponLeg | null>(null);
   const [couponId, setCouponId] = useState<string | null>(null);
   const [feed, setFeed] = useState<Line[]>([]);
-  const [curLine, setCurLine] = useState<Line | null>(null);
   const [score, setScore] = useState({ h: 0, a: 0 });
   const [flash, setFlash] = useState<{ team: 'home' | 'away'; penalty: boolean } | null>(null);
+  const [goalPulse, setGoalPulse] = useState<GoalPulse | null>(null);
+  const pulseId = useRef(0);
 
   const stateRef = useRef<LiveState | null>(null);
   const minuteRef = useRef(0);
@@ -100,7 +149,6 @@ export default function LiveMatchScreen() {
         baselineGoals.current = st.events.length;
         setFeed(feedRef.current);
         setScore({ h: st.home_score, a: st.away_score });
-        setCurLine(lines[lines.length - 1] ?? null);
         seeded.current = true;
         return;
       }
@@ -125,10 +173,10 @@ export default function LiveMatchScreen() {
       if (next) {
         feedRef.current = [next, ...feedRef.current].slice(0, 60);
         setFeed(feedRef.current);
-        setCurLine(next);
         if (next.isGoal) {
           if (next.scoreH != null) setScore({ h: next.scoreH, a: next.scoreA! });
           setFlash({ team: next.team!, penalty: !!next.penalty });
+          setGoalPulse({ id: ++pulseId.current, team: next.team!, penalty: !!next.penalty });
           window.setTimeout(() => setFlash(null), 1200);
         }
       }
@@ -181,9 +229,13 @@ export default function LiveMatchScreen() {
       <PitchTV
         home={home} away={away} hs={phase === 'upcoming' ? 0 : hs} as={phase === 'upcoming' ? 0 : as}
         minute={shownMinute} phase={phase} redHome={state.red_home} redAway={state.red_away}
-        flashTeam={flash?.team ?? null} line={curLine}
+        matchId={matchId!} getClock={getClock} goalPulse={goalPulse}
         homePlayer={playerName(matchId + 'h')} awayPlayer={playerName(matchId + 'a')}
       />
+
+      {phase !== 'upcoming' && matchId && (
+        <StatsPanel matchId={matchId} minute={shownMinute} reds={[state.red_home, state.red_away]} home={home} away={away} />
+      )}
 
       {odds && !finished && (ph > 0 || pa > 0) && (
         <div className="winprob">
@@ -232,6 +284,7 @@ export default function LiveMatchScreen() {
         {feed.map((l) => (
           <div key={l.key} className={`cm-line ${l.isGoal ? 'cm-goal' : ''} ${l.kind === 'card' ? 'cm-card' : ''}`}>
             <span className="cm-min tnum">{l.minute}&apos;</span>
+            <span className="cm-ico">{LINE_ICON[l.kind] ?? '·'}</span>
             <span className="cm-text">{l.text}</span>
           </div>
         ))}
