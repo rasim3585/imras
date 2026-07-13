@@ -8,6 +8,7 @@ import { isPenaltyGoal } from '../live/liveModel';
 import { statsAt } from '../live/liveSim';
 import PitchTV, { type GoalPulse } from '../live/PitchTV';
 import MatchChat from '../live/ChatPanel';
+import FormStrip from '../live/FormStrip';
 import { matchProvider } from '../lib/matchProvider';
 import { useI18n } from '../i18n/LanguageContext';
 import type { CouponLeg, LiveState } from '../lib/types';
@@ -258,6 +259,8 @@ export default function LiveMatchScreen() {
           </div>
         </div>
       )}
+
+      {matchId && <FormStrip matchId={matchId} home={home} away={away} />}
 
       {myLeg && (
         <div className={`card betstatus ${pickState ?? ''}`}>

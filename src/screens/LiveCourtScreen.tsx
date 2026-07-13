@@ -5,6 +5,7 @@ import { useI18n } from '../i18n/LanguageContext';
 import CourtTV from '../live/CourtTV';
 import TennisTV from '../live/TennisTV';
 import MatchChat from '../live/ChatPanel';
+import FormStrip from '../live/FormStrip';
 import { courtStatsAt, ambientPlay, type PlayType } from '../live/courtSim';
 import { tennisFeed, type TPlay } from '../live/tennisSim';
 import type { LiveState, Match } from '../lib/types';
@@ -163,6 +164,8 @@ export default function LiveCourtScreen() {
           </div>
         </div>
       )}
+
+      {matchId && <FormStrip matchId={matchId} home={match.home_team} away={match.away_team} />}
 
       {matchId && <MatchChat matchId={matchId} />}
 
