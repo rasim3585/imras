@@ -8,7 +8,10 @@ import MatchChat from '../live/ChatPanel';
 import FormStrip from '../live/FormStrip';
 import { courtStatsAt, ambientPlay, type PlayType } from '../live/courtSim';
 import { tennisFeed, type TPlay } from '../live/tennisSim';
+import { supabase } from '../lib/supabase';
 import type { LiveState, Match } from '../lib/types';
+
+interface Quarter { q: number; h: number; a: number }
 
 const TPLAY_ICON: Record<TPlay, string> = { ace: '🎾', winner: '🔥', error: '❌', break: '⚡', rally: '↔' };
 
@@ -46,7 +49,15 @@ function CourtStats({ matchId, home, away, hs, as }: { matchId: string; home: st
   const { t } = useI18n();
   const mount = useRef(Date.now());
   const [, force] = useState(0);
+  const [quarters, setQuarters] = useState<Quarter[]>([]);
   useEffect(() => { const id = setInterval(() => force((n) => n + 1), 1600); return () => clearInterval(id); }, []);
+  // çeyrek skorları (yalnız tamamlanan çeyrekler; server sızıntı yapmıyor)
+  useEffect(() => {
+    let alive = true;
+    const load = () => supabase.rpc('bball_quarters', { p_match_id: matchId }).then(({ data }) => { if (alive && Array.isArray(data)) setQuarters(data as Quarter[]); });
+    load(); const id = setInterval(load, 8000);
+    return () => { alive = false; clearInterval(id); };
+  }, [matchId]);
   const elapsed = (Date.now() - mount.current) / 1000;
   const s = courtStatsAt(matchId, elapsed);
   const feed = ambientPlay(matchId, elapsed).slice(-10).reverse();
@@ -74,6 +85,13 @@ function CourtStats({ matchId, home, away, hs, as }: { matchId: string; home: st
           <span className="lst-r tnum">{as}</span></div>
         {rows.map(([label, [l, r], suf]) => <Bar key={label} label={label} l={l} r={r} suf={suf} />)}
       </div>
+      {quarters.length > 0 && (
+        <div className="card bbq">
+          <div className="bbq-row bbq-head"><span className="bbq-team" />{quarters.map((q) => <span key={q.q} className="bbq-q">Q{q.q}</span>)}</div>
+          <div className="bbq-row"><span className="bbq-team">{home}</span>{quarters.map((q) => <span key={q.q} className="bbq-c tnum">{q.h}</span>)}</div>
+          <div className="bbq-row"><span className="bbq-team">{away}</span>{quarters.map((q) => <span key={q.q} className="bbq-c tnum">{q.a}</span>)}</div>
+        </div>
+      )}
       <div className="section-head"><h3>{t('live.keymoments')}</h3></div>
       <div className="card cm-feed">
         {feed.map((e) => (

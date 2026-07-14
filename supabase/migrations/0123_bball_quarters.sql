@@ -1,0 +1,3 @@
+-- Basketbol çeyrek-çeyrek skor (Nesine paritesi). Veri secret_outcome.quarters'da.
+-- SIZINTI YOK: yalnız TAMAMLANMIŞ çeyrekler (minute/12) açığa çıkar; devam eden
+-- çeyreğin finali gizli. Salt-okunur, para etkisi yok. (Gövde 0123 apply ile.)

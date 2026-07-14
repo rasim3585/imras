@@ -1097,6 +1097,13 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .lst-bar.big { height: 8px; }
 .lst-h { background: #4aa3e2; } .lst-a { background: #e2a04a; }
 .lst-poss .lst-l, .lst-poss .lst-r { color: var(--text); }
+/* basketbol çeyrek tablosu (Q1..Q4, yalnız tamamlananlar) */
+.bbq { padding: 10px 13px; margin-top: var(--s3); }
+.bbq-row { display: flex; align-items: center; padding: 2px 0; }
+.bbq-team { flex: 1; font-size: 0.78rem; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bbq-head { border-bottom: 1px solid var(--card-line); padding-bottom: 5px; margin-bottom: 3px; }
+.bbq-q { width: 36px; text-align: center; font-size: 0.6rem; font-weight: 800; letter-spacing: 0.3px; color: var(--text-mut); }
+.bbq-c { width: 36px; text-align: center; font-size: 0.82rem; font-weight: 700; color: var(--text); }
 
 /* --- Coupon slip bar --------------------------------------------------- */
 
