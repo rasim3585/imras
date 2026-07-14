@@ -78,6 +78,18 @@ Headless kayıtlarla frame-frame doğrulandı. Sabah `git pull && npm run dev` i
 - **Login-arkası akışlar** (kupon/Aviator cashout/Gates spin/Ayna): headless'ta
   login yapamadığım için oynanış doğrulanamadı — sen giriş yapıp bak.
 
-## Toplam: bu gece ~20 commit, 3 migration (0121-0123), 0 çökme, hepsi build temiz.
+## Toplam: bu gece ~22 commit, 3 migration (0121-0123), 0 çökme, hepsi build temiz.
 2D tracker'lar amatör→profesyonel (oyuncular+tutarlılık+olay-yeri+çeyrek+form+H2H),
-2 kritik veri bug'ı (çapraz-spor + futbol açlığı) çözüldü, Aviator sağlam.
+2 kritik veri bug'ı (çapraz-spor + futbol açlığı) çözüldü, Aviator sağlam, voleybol 3v3.
+
+## SON: REGRESYON KONTROLÜ TEMİZ
+Tüm değişikliklerden sonra 10 rota (feed/aviator/gates/standings/coupon/4 canlı/detay)
+headless tarandı → **hiç JS hatası/çökme yok** (401 anon-gürültüsü hariç). Uygulama
+stabil. Sabah `git pull && npm run dev` → bir canlı futbol/basket maçına gir, farkı gör.
+
+## Sabah yapman gerekenler (sadece sen yapabilirsin)
+1. `git pull` (dev sunucu çalışıyorsa HMR ile gelmiş olabilir).
+2. Giriş yap → Gates spin/free-spins, Aviator cashout, kupon, Ayna akışlarını **oynanışla**
+   doğrula (headless'ta login yapamadığım için bunlar test edilemedi).
+3. İstersen kalan düşük-öncelikli maddeleri (voleybol kortu teması, tenis marketleri,
+   bitmiş-maç "Watch live") söyle, sıradaki turda hallederim.
