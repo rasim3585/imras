@@ -126,7 +126,7 @@ export default function LiveCourtScreen() {
       catch { /* transient */ }
     };
     void poll();
-    const id = setInterval(poll, 2500);
+    const id = setInterval(poll, 1400);   // basket skoru ince aralikli guncellensin (basketler tek tek gelsin)
     return () => { alive = false; clearInterval(id); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchId]);
