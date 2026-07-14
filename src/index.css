@@ -1116,9 +1116,10 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 }
 
 /* penalty-box arcs */
-.pl.arc { position: absolute; top: 50%; width: 34px; height: 44px; border: 1.5px solid rgba(255,255,255,0.32);
-  border-radius: 50%; transform: translateY(-50%); clip-path: inset(0 0 0 50%); }
-.pl.arc-l { left: 12%; } .pl.arc-r { right: 12%; transform: translateY(-50%) scaleX(-1); }
+/* 0715d: ceza yayı (D) TAM kutu kenarına oturur — yarım daire kutudan başlar */
+.pl.arc { position: absolute; top: 50%; width: 19px; height: 44px; border: 2px solid rgba(255,255,255,0.45);
+  border-left: 0; border-radius: 0 24px 24px 0; transform: translateY(-50%); }
+.pl.arc-l { left: 16%; } .pl.arc-r { right: 16%; transform: translateY(-50%) scaleX(-1); }
 
 /* the goal net bulging when a goal goes in */
 .pgoal.net-bulge { animation: net-bulge 0.7s ease; background: rgba(79, 232, 154, 0.85); }

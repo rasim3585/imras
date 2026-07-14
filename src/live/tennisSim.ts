@@ -1,32 +1,32 @@
 // ---------------------------------------------------------------------------
-// Deterministic tennis/volleyball RALLY simulation — ONE rally list per set on
-// ONE shared clock. The ball animation, the point ladder, the serve indicator
-// and the play feed all derive from the same rallies (previously each ran on
-// its own clock with unrelated randomness, so the feed could say "ace" while
-// the ball rallied on). After every rally the ball lies DEAD ≈2.2s exactly
-// where the point ended (ace → service box, winner → open court, error → net),
-// and the point ladder ticks at that same moment. The backend only knows SETS
-// (settle is set-based) — everything inside a set is presentational and the
-// ladder freezes near set end so the SERVER decides when the set flips.
-// 320×200 viewBox, home baseline right, net at x=160.
+// Tenis / voleybol ralli motoru — HER SPOR KENDİ KURALLARIYLA (0715 revizyon):
+//   TENİS:    sayı→oyun (15/30/40, deuce/avantaj), 6 oyunla set (2 fark;
+//             6-6'da sonraki oyun 7-6 yapar). Vuruşlar file üstünden teker
+//             teker, alçak yay.
+//   VOLEYBOL: her ralli 1 sayı; set 25'e (5. set 15'e), 2 fark, 27/17 tavan.
+//             Ralli = servis + karşılamada 3 DOKUNUŞ (manşet→pas→smaç) —
+//             tenisten görünür biçimde farklı: yüksek yaylar, hızlı tempo.
+//   Set bittiğinde ralliler DURUR (set arası) — sunucu seti çevirince
+//   (setIdx değişir) yeni set sıfırdan başlar. Sunucu setleri otoritedir.
+// Tek ralli listesi + paylaşılan set saati: top, merdiven, servis oku ve feed
+// hep aynı kaynaktan. 320×200 viewBox, ev sağ taraf, file x=160.
 // ---------------------------------------------------------------------------
 
 export type Side = 'home' | 'away';
 export type TPlay = 'ace' | 'winner' | 'error' | 'rally';
 export type CourtSport = 'tennis' | 'volleyball';
 
+interface Wp { t: number; x: number; y: number; arc: number }
 export interface Rally {
   idx: number; start: number; end: number; holdEnd: number;
-  winner: Side; type: TPlay; server: Side; strokes: number;
-  targets: { x: number; y: number }[];   // landing spot of each stroke (error: the net contact)
-  die: { x: number; y: number };         // where the ball finally lies dead (error: bounced BACK off the net)
-  gamesH: number; gamesA: number;        // ladder AFTER this rally (volley: set points)
-  ph: number; pa: number;                // tennis: points inside the running game
+  winner: Side; type: TPlay; server: Side;
+  wps: Wp[]; die: { x: number; y: number };
+  gamesH: number; gamesA: number;   // tenis: oyunlar · voleybol: sayılar
+  ph: number; pa: number;           // tenis: oyun içi sayılar
+  done: boolean;                    // bu ralliyle set bitti (sonrası set arası)
 }
 
-const HOLD = 2.2;                        // real seconds — a set plays out in real time
 const POINT_MAP = ['0', '15', '30', '40'];
-
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 const other = (s: Side): Side => (s === 'home' ? 'away' : 'home');
 
@@ -39,80 +39,109 @@ function seeded(str: string) {
 const cache = new Map<string, Rally[]>();
 
 function build(matchId: string, setIdx: number, sport: CourtSport): Rally[] {
-  const rng = seeded(`${matchId}:set${setIdx}:${sport}`);
+  const rng = seeded(`${matchId}:set${setIdx}:${sport}:v2`);
+  const vb = sport === 'volleyball';
+  const HOLD = vb ? 0.8 : 1.3;
+  const GAP = vb ? 0.5 : 0.8;
+  const target = vb ? (setIdx >= 4 ? 15 : 25) : 0;      // vb sayı hedefi (5. set 15)
+  const capPts = vb ? target + 2 : 0;                    // 27 / 17 tavanı
   const rallies: Rally[] = [];
   const startServer: Side = rng() < 0.5 ? 'home' : 'away';
   let server = startServer;
   let t = 2;
-  let ph = 0, pa = 0, gh = 0, ga = 0;    // tennis fold (volley reuses gh/ga as points)
-  for (let i = 0; i < 220; i++) {
+  let ph = 0, pa = 0, gh = 0, ga = 0;                    // tenis fold (vb: gh/ga = sayılar)
+  let done = false;
+
+  const yIn = () => (vb ? 44 + rng() * 112 : 50 + rng() * 100);
+  const backX = (s: Side) => (s === 'home' ? 244 + rng() * 34 : 42 + rng() * 34);
+  const netX = (s: Side) => (s === 'home' ? 176 + rng() * 14 : 130 + rng() * 14);
+
+  for (let i = 0; i < 600 && !done; i++) {
     const r = rng();
     const type: TPlay = r < 0.1 ? 'ace' : r < 0.42 ? 'winner' : r < 0.78 ? 'error' : 'rally';
-    let strokes = type === 'ace' ? 1 : type === 'rally' ? 6 + Math.floor(rng() * 5) : 2 + Math.floor(rng() * 4);
     const winner: Side = type === 'ace' ? server : rng() < (server === 'home' ? 0.55 : 0.45) ? 'home' : 'away';
     const loser = other(winner);
     const loserRight = loser === 'home';
-    // the LAST stroke must come off the right racket: the WINNER finishes a
-    // winner/long rally; the LOSER is the one who puts an error into the net
-    const lastHitter: Side = type === 'error' ? loser : winner;
-    if (type !== 'ace') {
-      const hitterOf = (k: number): Side => (k % 2 === 0 ? server : other(server));
-      if (hitterOf(strokes - 1) !== lastHitter) strokes += strokes > 2 ? -1 : 1;
-    }
-    // stroke landing spots: alternate court halves, always INSIDE the lines
-    // (tennis: singles court 34..286 × 50..150; volleyball: 56..264 × 44..156)
-    const vb = sport === 'volleyball';
-    const yIn = () => (vb ? 44 + rng() * 112 : 50 + rng() * 100);
-    const midX = (right: boolean) => (right ? (vb ? 190 + rng() * 66 : 196 + rng() * 84) : (vb ? 64 + rng() * 66 : 40 + rng() * 84));
-    const targets: { x: number; y: number }[] = [];
-    for (let k = 0; k < strokes; k++) {
-      const receiverRight = (k % 2 === 0 ? other(server) : server) === 'home';
-      targets.push({ x: midX(receiverRight), y: yIn() });
-    }
-    let die: { x: number; y: number };
-    if (type === 'error') {
-      // into the NET: contact on the net line, then the ball bounces BACK to
-      // the mistaken hitter's side and lies there
-      const ny = 60 + rng() * 80;
-      targets[strokes - 1] = { x: 160, y: ny };
-      die = { x: loserRight ? 173 : 147, y: ny + (rng() * 8 - 4) };
-    } else if (type === 'ace') {
-      // untouchable serve: tennis → the receiver's service box corner;
-      // volleyball → drops just behind the net in the receiver's court
-      targets[0] = vb
-        ? { x: loserRight ? 188 : 132, y: yIn() }
-        : { x: loserRight ? 208 : 112, y: rng() < 0.5 ? 62 : 138 };
-      die = targets[0];
+    const srvThis = server;                               // BU rallinin servisçisi (fold'dan önce)
+
+    // --- yol noktaları (waypoint'ler) ---------------------------------------
+    const wps: Wp[] = [];
+    let wt = t;
+    const push = (x: number, y: number, dur: number, arc: number) => { wt += dur; wps.push({ t: wt, x: clamp(x, 16, 304), y: clamp(y, 28, 172), arc }); };
+
+    if (vb) {
+      // servis: yüksek yayla karşı sahaya
+      push(loserRight && type === 'ace' ? 200 : server === 'home' ? 96 : 224, yIn(), 0.55, 20);
+      const crossings = type === 'ace' ? 0 : type === 'error' ? (rng() < 0.5 ? 0 : 1) : 1 + Math.floor(rng() * 2);
+      let sideNow: Side = other(server);
+      for (let c = 0; c < crossings; c++) {
+        push(backX(sideNow), yIn(), 0.3, 6);             // manşet (geri saha)
+        push(netX(sideNow), yIn(), 0.3, 9);              // pas (file önü)
+        sideNow = other(sideNow);
+        push(sideNow === 'home' ? 200 + rng() * 70 : 50 + rng() * 70, yIn(), 0.4, 16);  // SMAÇ
+      }
+      if (type === 'error') {
+        push(160, 60 + rng() * 80, 0.3, 8);              // fileye takıldı
+        push(loserRight ? 174 : 146, yIn(), 0.3, 5);     // geri sekti
+      } else if (type !== 'ace') {
+        // son smaç kaybedenin sahasında öldü — düzelt: sondaki nokta loser tarafında olsun
+        const last = wps[wps.length - 1];
+        last.x = clamp(loserRight ? 210 + rng() * 50 : 60 + rng() * 50, 16, 304);
+      }
     } else {
-      // winner: the ball crosses and dies deep in the opponent's open court —
-      // a point only happens when the other side can't reach it
-      targets[strokes - 1] = {
-        x: loserRight ? (vb ? 214 + rng() * 48 : 230 + rng() * 56) : (vb ? 58 + rng() * 48 : 34 + rng() * 56),
-        y: yIn(),
-      };
-      die = targets[strokes - 1];
+      // tenis: vuruşlar dönüşümlü, alçak yay; son vuruşu KAZANAN yapar
+      let strokes = type === 'ace' ? 1 : type === 'rally' ? 6 + Math.floor(rng() * 3) : 2 + Math.floor(rng() * 4);
+      if (type !== 'ace') {
+        const hitterOf = (k: number): Side => (k % 2 === 0 ? server : other(server));
+        const lastHitter: Side = type === 'error' ? loser : winner;
+        if (hitterOf(strokes - 1) !== lastHitter) strokes += strokes > 2 ? -1 : 1;
+      }
+      for (let k = 0; k < strokes; k++) {
+        const recvRight = (k % 2 === 0 ? other(server) : server) === 'home';
+        push(recvRight ? 196 + rng() * 84 : 40 + rng() * 84, yIn(), 0.65, 11);
+      }
+      if (type === 'error') {
+        wps[wps.length - 1].x = 160; wps[wps.length - 1].arc = 8;
+        push(loserRight ? 173 : 147, yIn(), 0.35, 5);    // fileden geri sekme
+      } else if (type === 'ace') {
+        wps[0].x = loserRight ? 208 : 112; wps[0].y = rng() < 0.5 ? 62 : 138;
+      } else {
+        const last = wps[wps.length - 1];
+        last.x = clamp(loserRight ? 230 + rng() * 56 : 34 + rng() * 56, 16, 304);
+      }
     }
-    // fold the point into the ladder (frozen near set end — server decides sets)
-    if (sport === 'volleyball') {
-      if (gh < 24 && ga < 24) { if (winner === 'home') gh++; else ga++; }
-    } else if (gh < 5 && ga < 5) {
+    const die = { x: wps[wps.length - 1].x, y: wps[wps.length - 1].y };
+
+    // --- kural fold'u --------------------------------------------------------
+    if (vb) {
+      if (winner === 'home') gh++; else ga++;
+      const lead = Math.abs(gh - ga);
+      if ((gh >= target || ga >= target) && lead >= 2) done = true;
+      if (gh >= capPts || ga >= capPts) done = true;
+      server = winner;                                    // sayıyı alan servis atar
+    } else {
       if (winner === 'home') ph++; else pa++;
-      if ((ph >= 4 || pa >= 4) && Math.abs(ph - pa) >= 2) { if (ph > pa) gh++; else ga++; ph = 0; pa = 0; }
+      if ((ph >= 4 || pa >= 4) && Math.abs(ph - pa) >= 2) {
+        if (ph > pa) gh++; else ga++;
+        ph = 0; pa = 0;
+        if ((gh >= 6 || ga >= 6) && Math.abs(gh - ga) >= 2) done = true;
+        if (gh === 7 || ga === 7) done = true;            // 6-6 → sonraki oyun 7-6
+        server = (gh + ga) % 2 === 0 ? startServer : other(startServer);
+      }
     }
-    const dur = strokes * (sport === 'volleyball' ? 0.9 : 1.1) + 0.6;
-    rallies.push({ idx: i, start: t, end: t + dur, holdEnd: t + dur + HOLD, winner, type, server, strokes, targets, die, gamesH: gh, gamesA: ga, ph, pa });
-    t += dur + HOLD + (sport === 'volleyball' ? 1.2 : 1.6);
-    server = sport === 'volleyball' ? winner : (gh + ga) % 2 === 0 ? startServer : other(startServer);
+
+    rallies.push({ idx: i, start: t, end: wt, holdEnd: wt + HOLD, winner, type, server: srvThis, wps, die, gamesH: gh, gamesA: ga, ph, pa, done });
+    t = wt + HOLD + GAP;
   }
-  cache.set(`${matchId}:${setIdx}:${sport}`, rallies);
+  cache.set(`${matchId}:${setIdx}:${sport}:v2`, rallies);
   return rallies;
 }
 
 function sim(matchId: string, setIdx: number, sport: CourtSport): Rally[] {
-  return cache.get(`${matchId}:${setIdx}:${sport}`) ?? build(matchId, setIdx, sport);
+  return cache.get(`${matchId}:${setIdx}:${sport}:v2`) ?? build(matchId, setIdx, sport);
 }
 
-// --- shared per-set clock: every component reads the SAME seconds -----------
+// paylaşılan set saati — tüm bileşenler aynı saniyeyi okur
 const anchors = new Map<string, number>();
 export function setClockSec(matchId: string, setIdx: number): number {
   const k = `${matchId}:${setIdx}`;
@@ -122,11 +151,8 @@ export function setClockSec(matchId: string, setIdx: number): number {
 }
 
 export interface TennisFlow { x: number; y: number; server: Side; dead: boolean }
-
 const baseX = (s: Side) => (s === 'home' ? 292 : 28);
 
-// Ball position at set-second tSec: strokes across the net during the rally,
-// then DEAD ≈2.2s where the point ended, then over to the next server.
 export function rallyFlowAt(matchId: string, setIdx: number, sport: CourtSport, tSec: number): TennisFlow {
   const rl = sim(matchId, setIdx, sport);
   let lo = 0, hi = rl.length - 1, idx = 0;
@@ -135,53 +161,42 @@ export function rallyFlowAt(matchId: string, setIdx: number, sport: CourtSport, 
   if (tSec < p.start) return { x: baseX(p.server), y: 100, server: p.server, dead: true };
   if (tSec >= p.holdEnd) {
     const nx = rl[idx + 1];
-    return { x: baseX(nx ? nx.server : p.server), y: 100, server: nx ? nx.server : p.server, dead: true };
+    if (!nx) return { x: p.die.x, y: p.die.y, server: p.server, dead: true };   // SET BİTTİ — set arası
+    return { x: baseX(nx.server), y: 100, server: nx.server, dead: true };
   }
-  if (tSec >= p.end) {
-    // net error: the ball visibly REBOUNDS off the net back to the hitter's
-    // side over ~0.45s, then lies dead there for the rest of the hold
-    if (p.type === 'error') {
-      const f = (tSec - p.end) / 0.45;
-      if (f < 1) {
-        const hit = p.targets[p.strokes - 1];
-        const arc = Math.sin(f * Math.PI) * 6;
-        return { x: hit.x + (p.die.x - hit.x) * f, y: hit.y + (p.die.y - hit.y) * f - arc, server: p.server, dead: false };
-      }
+  if (tSec >= p.end) return { x: p.die.x, y: p.die.y, server: p.server, dead: true };
+  // waypoint interpolasyonu (yay yüksekliği segment tipine göre)
+  let prev: Wp = { t: p.start, x: baseX(p.server), y: 100, arc: 0 };
+  for (const w of p.wps) {
+    if (tSec <= w.t) {
+      const f = clamp((tSec - prev.t) / Math.max(w.t - prev.t, 0.01), 0, 1);
+      const e = f * f * (3 - 2 * f);
+      return {
+        x: prev.x + (w.x - prev.x) * e,
+        y: clamp(prev.y + (w.y - prev.y) * e - Math.sin(f * Math.PI) * w.arc, 22, 176),
+        server: p.server, dead: false,
+      };
     }
-    return { x: p.die.x, y: p.die.y, server: p.server, dead: true };   // point over — ball lies where it died
+    prev = w;
   }
-  const strokeDur = (p.end - p.start) / p.strokes;
-  const k = Math.min(p.strokes - 1, Math.floor((tSec - p.start) / strokeDur));
-  const from = k === 0 ? { x: baseX(p.server), y: 100 } : p.targets[k - 1];
-  const to = p.targets[k];
-  const f = clamp(((tSec - p.start) - k * strokeDur) / strokeDur, 0, 1);
-  const arc = Math.sin(f * Math.PI) * 14;
-  return {
-    x: clamp(from.x + (to.x - from.x) * f, 16, 304),
-    y: clamp(from.y + (to.y - from.y) * f - arc, 26, 174),
-    server: p.server, dead: false,
-  };
+  return { x: p.die.x, y: p.die.y, server: p.server, dead: true };
 }
 
-// Point ladder at set-second tSec — reads the fold stored on the last finished
-// rally, so the score ticks the exact moment the ball lies dead.
-export function rallyState(matchId: string, setIdx: number, sport: CourtSport, tSec: number): { games: [number, number]; point: string; server: Side } {
+export function rallyState(matchId: string, setIdx: number, sport: CourtSport, tSec: number): { games: [number, number]; point: string; server: Side; setOver: boolean } {
   const rl = sim(matchId, setIdx, sport);
   let last: Rally | null = null;
   for (const p of rl) { if (p.end <= tSec) last = p; else break; }
-  const srv = last ? (rl[last.idx + 1]?.server ?? last.server) : rl[0].server;
-  if (!last) return { games: [0, 0], point: sport === 'tennis' ? '0 - 0' : '', server: srv };
-  if (sport === 'volleyball') return { games: [last.gamesH, last.gamesA], point: '', server: srv };
+  const srv = last ? (rl[last.idx + 1]?.server ?? last.server) : rl[0]?.server ?? 'home';
+  if (!last) return { games: [0, 0], point: sport === 'tennis' ? '0 - 0' : '', server: srv, setOver: false };
+  if (sport === 'volleyball') return { games: [last.gamesH, last.gamesA], point: '', server: srv, setOver: last.done };
   const { ph, pa } = last;
   let point: string;
   if (ph >= 3 && pa >= 3) point = ph === pa ? 'Deuce' : ph > pa ? 'Ad ·' : '· Ad';
   else point = `${POINT_MAP[Math.min(3, ph)]} - ${POINT_MAP[Math.min(3, pa)]}`;
-  return { games: [last.gamesH, last.gamesA], point, server: srv };
+  return { games: [last.gamesH, last.gamesA], point, server: srv, setOver: last.done };
 }
 
 export interface TEvent { key: string; sec: number; type: TPlay; side: Side }
-
-// Play feed: the SAME rallies, revealed the moment each point ends.
 export function tennisFeed(matchId: string, setIdx: number, sport: CourtSport, uptoSec: number): TEvent[] {
   return sim(matchId, setIdx, sport)
     .filter((p) => p.end <= uptoSec)

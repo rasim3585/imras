@@ -59,12 +59,13 @@ export default function CourtTV({
       : { x: hoopX - dir * (18 + Math.random() * 16), y: sy };                // two: inside it
     makeSeq.current = [{ until: now + 900, ...spot }, { until: now + 2300, x: hoopX, y: 100 }];
     makeSide.current = scorer;
-    setFlash(scorer);
-    setPops((p) => [...p, ...fresh]);
     const ids = fresh.map((f) => f.id);
-    const tf = setTimeout(() => setFlash(null), 1200);
-    const tp = setTimeout(() => setPops((p) => p.filter((x) => !ids.includes(x.id))), 2300);
-    return () => { clearTimeout(tf); clearTimeout(tp); };
+    // 0715: +2/+3 pop ve pota flaşı TOP POTAYA VARINCA yanar (spot fazı ~900ms)
+    // — basketten ÖNCE değil; animasyonla skor artık senkron
+    const t0 = setTimeout(() => { setFlash(scorer); setPops((p) => [...p, ...fresh]); }, 880);
+    const tf = setTimeout(() => setFlash(null), 2100);
+    const tp = setTimeout(() => setPops((p) => p.filter((x) => !ids.includes(x.id))), 3300);
+    return () => { clearTimeout(t0); clearTimeout(tf); clearTimeout(tp); };
   }, [hs, as]);
 
   // animation loop: ball + badge + possession side from the SAME sim clock
