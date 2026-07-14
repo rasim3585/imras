@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { tennisFlowAt, tennisState, volleyState, type Side } from './tennisSim';
+import { rallyFlowAt, rallyState, setClockSec, type Side } from './tennisSim';
 
-// Tennis / volleyball 2D live view. The ball now rallies across the net every
-// frame (rAF) with a serve indicator, instead of a 1.6s toggle. Sets come from
-// the SERVER (authoritative); the games/points (tennis) or set points
-// (volleyball) below are presentational atmosphere, reset when the server's set
-// count changes. Home baseline on the right.
+// Tennis / volleyball 2D live view. Ball, serve dot and the games/points ladder
+// all read the SAME rally list on the SAME shared set clock (tennisSim): the
+// rally plays out, the ball lies DEAD ≈2.2s where the point ended, and the
+// ladder ticks at that exact moment. Sets come from the SERVER (authoritative);
+// everything inside a set is presentational and resets when the set count
+// changes. Home baseline on the right.
 
 export default function TennisTV({
   home, away, hs, as, period, phase, matchId, sport,
@@ -22,33 +23,30 @@ export default function TennisTV({
   const [sub, setSub] = useState<{ games: [number, number]; point: string } | null>(null);
   const prev = useRef({ hs, as });
   const ready = useRef(false);          // arm after first real score (no spurious flash on load)
-  const setStart = useRef(Date.now());
-  const mount = useRef(Date.now());
+  const subKey = useRef('');
   const sm = useRef<[number, number]>([160, 100]);   // eased ball pos
   const pl = useRef<(HTMLDivElement | null)[]>([]);  // [0..N-1] home, [N..] away
   const nPl = sport === 'volleyball' ? 3 : 1;        // 3 per side (volley) / 1 (tennis)
 
-  // server won a set → flash + reset the presentational sub-score clock
+  // server won a set → flash (the set clock resets itself via setIdx)
   useEffect(() => {
     const dH = hs - prev.current.hs, dA = as - prev.current.as;
     prev.current = { hs, as };
     if (!ready.current) { if (hs > 0 || as > 0) ready.current = true; return; }
     if (dH <= 0 && dA <= 0) return;
     setFlash(dH >= dA ? 'home' : 'away');
-    setStart.current = Date.now();
     const t = setTimeout(() => setFlash(null), 1100);
     return () => clearTimeout(t);
   }, [hs, as]);
 
-  // rally loop: ball + serve + sub-score
+  // rally loop: ball + serve + sub-score — one clock, one rally list
   useEffect(() => {
     if (!live) return;
     let raf = 0;
     const setIdx = hs + as;
     const step = () => {
-      const t = (Date.now() - mount.current) / 1000;
-      const inSet = (Date.now() - setStart.current) / 1000;
-      const flow = tennisFlowAt(matchId, t);
+      const t = setClockSec(matchId, setIdx);
+      const flow = rallyFlowAt(matchId, setIdx, sport, t);
       const s = sm.current; s[0] += (flow.x - s[0]) * 0.28; s[1] += (flow.y - s[1]) * 0.28;
       if (ballRef.current) { ballRef.current.style.left = `${(s[0] / 320) * 100}%`; ballRef.current.style.top = `${(s[1] / 200) * 100}%`; }
       // players: tennis = 1 at baseline tracking the ball; volleyball = 3 per side
@@ -68,20 +66,24 @@ export default function TennisTV({
         if (pa) { pa.style.left = `${(ax / 320) * 100}%`; pa.style.top = `${(ay / 200) * 100}%`; }
       }
       setServer((v) => (v === flow.server ? v : flow.server));
-      if (sport === 'volleyball') {
-        const v = volleyState(matchId, setIdx, inSet);
-        setSub({ games: v.points, point: '' });
-      } else {
-        const st = tennisState(matchId, setIdx, inSet);
-        setSub({ games: st.games, point: st.point });
-      }
+      const st = rallyState(matchId, setIdx, sport, t);
+      const k = `${st.games[0]}-${st.games[1]}:${st.point}`;
+      if (k !== subKey.current) { subKey.current = k; setSub({ games: st.games, point: st.point }); }
       raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [matchId, live, sport, hs, as]);
+  }, [matchId, live, sport, hs, as]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const setsLabel = period ?? (sport === 'volleyball' ? 'Set 1' : 'Set 1');
+  // full-time: ball rests on the net line centre
+  useEffect(() => {
+    if (finished && ballRef.current) { ballRef.current.style.left = '50%'; ballRef.current.style.top = '50%'; sm.current = [160, 100]; }
+  }, [finished]);
+
+  // server period also carries its own in-set points ("Set 4 · 2-1") on a
+  // different schedule than the rally animation — show only "Set N" and let the
+  // rally-locked ladder below be the single in-set story (sets stay server-truth)
+  const setsLabel = (period ?? 'Set 1').split('·')[0].trim();
 
   return (
     <div className={`court-tv tennis-tv ${finished ? 'is-fin' : ''}`}>

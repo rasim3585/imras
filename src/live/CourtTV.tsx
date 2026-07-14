@@ -1,21 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 import { bballClock } from '../lib/format';
-import { courtFlowAt, ambientPlay, type Side, type PlayType } from './courtSim';
+import { courtBallAt, activeCourtEvent, type Side, type PlayType } from './courtSim';
 
-// Basketball 2D live view. The ball now flows between the two hoops one
-// possession at a time (courtSim) instead of teleporting — bring-up, attack,
-// shot, transition — animated every frame. Made baskets come from the SERVER
-// score and trigger a +2/+3 pop + rim flash. Home attacks the RIGHT hoop.
+// Basketball 2D live view driven by the possession sim (courtSim) on the MATCH
+// clock: the ball, the badge and the possession side come from the same
+// timeline, and each ambient event HOLDS the ball ≈2.2s at its spot (miss at
+// the rim, steal where it happened, foul on the drive). Made baskets come from
+// the SERVER score: +pts pop, rim flash and the ball held at the scoring hoop
+// ≥2s. Home attacks the RIGHT hoop.
 
-const PLAY_ICON: Record<PlayType, string> = {
-  make2: '🏀', make3: '🎯', miss: '🧱', rebound: '🔁', steal: '🖐', foul: '⚠', block: '🛡', assist: '➡',
-};
+const PLAY_ICON: Record<PlayType, string> = { miss: '🧱', steal: '🖐', foul: '⚠', block: '🛡' };
+const PLAY_LABEL: Record<PlayType, string> = { miss: 'Miss', steal: 'Steal', foul: 'Foul', block: 'Block' };
 
 export default function CourtTV({
-  home, away, hs, as, period, minute, phase, matchId,
+  home, away, hs, as, period, minute, phase, matchId, dur, getClock,
 }: {
   home: string; away: string; hs: number; as: number;
-  period: string | null; minute: number; phase: 'upcoming' | 'live' | 'finished'; matchId: string;
+  period: string | null; minute: number; phase: 'upcoming' | 'live' | 'finished';
+  matchId: string; dur: number; getClock: () => number;
 }) {
   const finished = phase === 'finished';
   const live = phase === 'live';
@@ -23,18 +25,16 @@ export default function CourtTV({
   const [side, setSide] = useState<Side>('home');
   const [flash, setFlash] = useState<Side | null>(null);
   const [pops, setPops] = useState<{ id: number; side: Side; pts: number }[]>([]);
-  const [badge, setBadge] = useState<{ type: PlayType; side: Side; at: number } | null>(null);
+  const [badge, setBadge] = useState<{ type: PlayType; side: Side } | null>(null);
   const prev = useRef({ hs, as });
   const ready = useRef(false);          // arm only after the first real score loads (no spurious +124 pop)
   const popId = useRef(0);
-  const mount = useRef(Date.now());
   const shownBadge = useRef('');
-  // on-score hold: freeze the ball AT the scoring hoop while the +pts pop shows,
-  // so the animation and the ball describe the same moment (not opposite ends).
-  const hold = useRef<{ until: number; x: number; y: number } | null>(null);
+  // server make → freeze the ball AT the scoring hoop (real ms, ≥2s legible)
+  const hold = useRef<{ until: number; x: number; y: number; side: Side } | null>(null);
   const sm = useRef<[number, number]>([160, 100]);   // eased ball pos (court coords)
 
-  // server basket → scorer flash + +pts pop
+  // server basket → scorer flash + +pts pop + ball held at the hoop
   useEffect(() => {
     const dH = hs - prev.current.hs, dA = as - prev.current.as;
     prev.current = { hs, as };
@@ -47,41 +47,46 @@ export default function CourtTV({
     const scorer: Side = dH >= dA ? 'home' : 'away';
     setFlash(scorer);
     setPops((p) => [...p, ...fresh]);
-    hold.current = { until: Date.now() + 1150, x: scorer === 'home' ? 300 : 20, y: 100 };  // ball → (son) sayi potasi
+    hold.current = { until: Date.now() + 2200, x: scorer === 'home' ? 300 : 20, y: 100, side: scorer };
     const ids = fresh.map((f) => f.id);
-    const tf = setTimeout(() => setFlash(null), 900);
-    const tp = setTimeout(() => setPops((p) => p.filter((x) => !ids.includes(x.id))), 1400);
+    const tf = setTimeout(() => setFlash(null), 1200);
+    const tp = setTimeout(() => setPops((p) => p.filter((x) => !ids.includes(x.id))), 2200);
     return () => { clearTimeout(tf); clearTimeout(tp); };
   }, [hs, as]);
 
-  // animation loop: smooth ball + possession side + ambient badges
+  // animation loop: ball + badge + possession side from the SAME sim clock
   useEffect(() => {
     if (!live) return;
+    hold.current = null;               // stale make-hold must not leak between matches
     let raf = 0;
-    const events = ambientPlay(matchId, 4000);
     const step = () => {
-      const t = (Date.now() - mount.current) / 1000;
-      const held = hold.current && Date.now() < hold.current.until ? hold.current : null;
-      const flow = courtFlowAt(matchId, t);
-      const tx = held ? held.x : flow.x, ty = held ? held.y : flow.y;
+      const clock = getClock();
+      const mh = hold.current && Date.now() < hold.current.until ? hold.current : null;
+      const ev = mh ? null : activeCourtEvent(matchId, clock, dur);
+      const b = courtBallAt(matchId, clock, dur);
+      const tx = mh ? mh.x : b.x, ty = mh ? mh.y : b.y;
       const s = sm.current; s[0] += (tx - s[0]) * 0.2; s[1] += (ty - s[1]) * 0.2;
       if (ballRef.current) {
         ballRef.current.style.left = `${(s[0] / 320) * 100}%`;
         ballRef.current.style.top = `${(s[1] / 200) * 100}%`;
-        ballRef.current.classList.toggle('shooting', !held && flow.phase === 'shot');
+        ballRef.current.classList.toggle('shooting', !mh && b.moving);
       }
-      if (!held) {
-        setSide((v) => (v === flow.side ? v : flow.side));
-        const near = events.find((e) => Math.abs(e.sec - t) < 0.8);
-        if (near && near.key !== shownBadge.current) { shownBadge.current = near.key; setBadge({ type: near.type, side: near.side, at: Date.now() }); }
-      }
+      const sideNow: Side = mh ? mh.side : b.side;
+      setSide((v) => (v === sideNow ? v : sideNow));
+      const bk = ev ? ev.key : '';
+      if (bk !== shownBadge.current) { shownBadge.current = bk; setBadge(ev ? { type: ev.type, side: ev.side } : null); }
       raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [matchId, live]);
+  }, [matchId, live, dur, getClock]);
 
-  useEffect(() => { if (!badge) return; const id = setTimeout(() => setBadge((b) => (b && b.at === badge.at ? null : b)), 2200); return () => clearTimeout(id); }, [badge]);
+  // full-time: ball rests at centre court, no lingering badge
+  useEffect(() => {
+    if (!finished) return;
+    if (ballRef.current) { ballRef.current.style.left = '50%'; ballRef.current.style.top = '50%'; sm.current = [160, 100]; }
+    shownBadge.current = ''; setBadge(null);
+  }, [finished]);
 
   const clock = finished ? '' : bballClock(minute, period);
 
@@ -106,8 +111,9 @@ export default function CourtTV({
       <div ref={ballRef} className={`court-ball ${live ? 'live' : ''}`} style={{ left: '50%', top: '50%' }} aria-hidden />
 
       {badge && (
-        <div className={`pev pev-${badge.type} ${badge.side}`} key={badge.at}>
+        <div className={`pev pev-${badge.type} ${badge.side}`} key={`${badge.type}${badge.side}`}>
           <span className="pev-i">{PLAY_ICON[badge.type]}</span>
+          <span className="pev-t">{PLAY_LABEL[badge.type]}</span>
         </div>
       )}
       {pops.map((p) => <div key={p.id} className={`court-pop ${p.side}`}>+{p.pts}</div>)}

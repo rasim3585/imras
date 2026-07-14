@@ -6,23 +6,23 @@ import CourtTV from '../live/CourtTV';
 import TennisTV from '../live/TennisTV';
 import MatchChat from '../live/ChatPanel';
 import FormStrip from '../live/FormStrip';
-import { courtStatsAt, ambientPlay, type PlayType } from '../live/courtSim';
-import { tennisFeed, type TPlay } from '../live/tennisSim';
+import { courtStats, courtFeed, BB_TOTAL, type PlayType } from '../live/courtSim';
+import { tennisFeed, setClockSec, type TPlay, type CourtSport } from '../live/tennisSim';
 import { supabase } from '../lib/supabase';
 import type { LiveState, Match } from '../lib/types';
 
 interface Quarter { q: number; h: number; a: number }
 
-const TPLAY_ICON: Record<TPlay, string> = { ace: '🎾', winner: '🔥', error: '❌', break: '⚡', rally: '↔' };
+const TPLAY_ICON: Record<TPlay, string> = { ace: '🎾', winner: '🔥', error: '❌', rally: '↔' };
 
-// Tennis / volleyball point feed below the court (presentational atmosphere).
-function TennisPlays({ matchId, setIdx, home, away }: { matchId: string; setIdx: number; home: string; away: string }) {
+// Tennis / volleyball point feed below the court — the SAME rally list and the
+// SAME set clock as the ball animation (a feed line lands the moment the ball
+// lies dead on that point).
+function TennisPlays({ matchId, setIdx, sport, home, away }: { matchId: string; setIdx: number; sport: CourtSport; home: string; away: string }) {
   const { t } = useI18n();
-  const mount = useRef(Date.now());
   const [, force] = useState(0);
-  useEffect(() => { const id = setInterval(() => force((n) => n + 1), 1600); return () => clearInterval(id); }, []);
-  const elapsed = (Date.now() - mount.current) / 1000;
-  const feed = tennisFeed(matchId, setIdx, elapsed).slice(-10).reverse();
+  useEffect(() => { const id = setInterval(() => force((n) => n + 1), 1200); return () => clearInterval(id); }, []);
+  const feed = tennisFeed(matchId, setIdx, sport, setClockSec(matchId, setIdx)).slice(-10).reverse();
   return (
     <>
       <div className="section-head"><h3>{t('live.keymoments')}</h3></div>
@@ -39,18 +39,18 @@ function TennisPlays({ matchId, setIdx, home, away }: { matchId: string; setIdx:
   );
 }
 
-const PLAY_ICON: Record<PlayType, string> = {
-  make2: '🏀', make3: '🎯', miss: '🧱', rebound: '🔁', steal: '🖐', foul: '⚠', block: '🛡', assist: '➡',
-};
+const PLAY_ICON: Record<PlayType, string> = { miss: '🧱', steal: '🖐', foul: '⚠', block: '🛡' };
 
-// Basketball stat strip + play feed below the court. Its own slow clock; makes
-// are pulled from the authoritative server score.
-function CourtStats({ matchId, home, away, hs, as, minute }: { matchId: string; home: string; away: string; hs: number; as: number; minute: number }) {
+// Basketball stat strip + play feed below the court — the SAME possession sim
+// and the SAME match clock as the ball (courtSim), so a "steal" line lands
+// exactly while the ball is held on the steal spot.
+function CourtStats({ matchId, home, away, hs, as, dur, getClock }: {
+  matchId: string; home: string; away: string; hs: number; as: number; dur: number; getClock: () => number;
+}) {
   const { t } = useI18n();
-  const mount = useRef(Date.now());
   const [, force] = useState(0);
   const [quarters, setQuarters] = useState<Quarter[]>([]);
-  useEffect(() => { const id = setInterval(() => force((n) => n + 1), 1600); return () => clearInterval(id); }, []);
+  useEffect(() => { const id = setInterval(() => force((n) => n + 1), 1200); return () => clearInterval(id); }, []);
   // çeyrek skorları (yalnız tamamlanan çeyrekler; server sızıntı yapmıyor)
   useEffect(() => {
     let alive = true;
@@ -58,9 +58,9 @@ function CourtStats({ matchId, home, away, hs, as, minute }: { matchId: string; 
     load(); const id = setInterval(load, 8000);
     return () => { alive = false; clearInterval(id); };
   }, [matchId]);
-  const elapsed = (Date.now() - mount.current) / 1000;
-  const s = courtStatsAt(matchId, Math.max(elapsed, minute * 60));   // stats reflect the actual game progress
-  const feed = ambientPlay(matchId, elapsed).slice(-10).reverse();
+  const clock = getClock();
+  const s = courtStats(matchId, clock, dur, hs, as);
+  const feed = courtFeed(matchId, clock, dur).slice(-10).reverse();
   const rows: [string, [number, number], string][] = [
     ['FG%', s.fgPct, '%'], [t('bb.reb'), s.rebounds, ''], [t('bb.to'), s.turnovers, ''], [t('live.fouls'), s.fouls, ''],
   ];
@@ -94,6 +94,7 @@ function CourtStats({ matchId, home, away, hs, as, minute }: { matchId: string; 
       )}
       <div className="section-head"><h3>{t('live.keymoments')}</h3></div>
       <div className="card cm-feed">
+        {feed.length === 0 && <div className="cm-line"><span className="cm-text muted">{t('live.playersout')}</span></div>}
         {feed.map((e) => (
           <div key={e.key} className="cm-line">
             <span className="cm-ico">{PLAY_ICON[e.type]}</span>
@@ -105,8 +106,10 @@ function CourtStats({ matchId, home, away, hs, as, minute }: { matchId: string; 
   );
 }
 
-// Basketbol 2D canlı izleme ekranı. Maçı + canlı skoru çeker, CourtTV'yi besler.
-// Kazanma olasılığı barı + canlı sohbet de burada (futbol /live ekranıyla tutarlı).
+// Basketbol/tenis/voleybol 2D canlı izleme ekranı. Maçı + canlı skoru çeker,
+// CourtTV/TennisTV'yi besler. Basketbolda futboldaki gibi TEK monoton maç saati
+// kurulur (sunucu dakikasına çıpalı, testere-dişsiz) — top, rozet, feed ve
+// istatistik hep o saatten okur.
 export default function LiveCourtScreen() {
   const { matchId } = useParams<{ matchId: string }>();
   const navigate = useNavigate();
@@ -115,15 +118,38 @@ export default function LiveCourtScreen() {
   const [live, setLive] = useState<LiveState | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // basketbol animasyon saati: bir kez çıpala, yalnız büyük kaymada düzelt
+  // (sunucu dakikası tam sayı — her poll'de yeniden çıpalamak testere dişi yapar)
+  const bbAnchor = useRef<{ sim: number; at: number; rate: number } | null>(null);
+  const getBBClock = useRef(() => {
+    const a = bbAnchor.current;
+    if (!a) return 0;
+    return Math.max(0, Math.min(BB_TOTAL, a.sim + ((Date.now() - a.at) / 1000) * a.rate));
+  }).current;
+
   useEffect(() => {
     if (!matchId) return;
     let alive = true;
+    setMatch(null); setLive(null); setError(null); bbAnchor.current = null;
     matchProvider.getMatch(matchId)
       .then((m) => { if (alive) setMatch(m); })
       .catch((e) => { if (alive) setError(e instanceof Error ? e.message : t('md.err.load')); });
     const poll = async () => {
-      try { const [s] = await matchProvider.getLiveStates([matchId]); if (alive && s) setLive(s); }
-      catch { /* transient */ }
+      try {
+        const [s] = await matchProvider.getLiveStates([matchId]);
+        if (!alive || !s) return;
+        setLive(s);
+        if (s.phase === 'live') {
+          const now = Date.now();
+          const rate = BB_TOTAL / (s.duration_secs > 0 ? s.duration_secs : 480);
+          const serverSim = s.minute * 60;
+          const a = bbAnchor.current;
+          const cur = a ? a.sim + ((now - a.at) / 1000) * a.rate : -1;
+          if (!a || Math.abs(serverSim - cur) > 90) bbAnchor.current = { sim: serverSim, at: now, rate };
+        } else if (s.phase === 'upcoming') {
+          bbAnchor.current = null;
+        }
+      } catch { /* transient */ }
     };
     void poll();
     const id = setInterval(poll, 1400);   // basket skoru ince aralikli guncellensin (basketler tek tek gelsin)
@@ -142,6 +168,7 @@ export default function LiveCourtScreen() {
   const phase = live?.phase === 'live' ? 'live' : live?.phase === 'finished' ? 'finished' : 'upcoming';
   const hs = live?.home_score ?? 0;
   const as = live?.away_score ?? 0;
+  const dur = live?.duration_secs ?? 480;
 
   // kazanma olasılığı (moneyline'dan)
   const rm = match.markets.find((mk) => mk.market_type.endsWith('moneyline') || mk.market_type === 'match_result');
@@ -159,14 +186,16 @@ export default function LiveCourtScreen() {
           period={live?.period ?? null} phase={phase} matchId={matchId!} sport={match.sport} />
       ) : (
         <CourtTV home={match.home_team} away={match.away_team} hs={hs} as={as}
-          period={live?.period ?? null} minute={live?.minute ?? 0} phase={phase} matchId={matchId!} />
+          period={live?.period ?? null} minute={live?.minute ?? 0} phase={phase} matchId={matchId!}
+          dur={dur} getClock={getBBClock} />
       )}
 
       {phase !== 'upcoming' && matchId && match.sport === 'basketball' && (
-        <CourtStats matchId={matchId} home={match.home_team} away={match.away_team} hs={hs} as={as} minute={live?.minute ?? 0} />
+        <CourtStats matchId={matchId} home={match.home_team} away={match.away_team} hs={hs} as={as}
+          dur={dur} getClock={phase === 'finished' ? () => BB_TOTAL : getBBClock} />
       )}
       {phase === 'live' && matchId && (match.sport === 'tennis' || match.sport === 'volleyball') && (
-        <TennisPlays matchId={matchId} setIdx={hs + as} home={match.home_team} away={match.away_team} />
+        <TennisPlays matchId={matchId} setIdx={hs + as} sport={match.sport} home={match.home_team} away={match.away_team} />
       )}
 
       {(ph > 0 || pa > 0) && phase !== 'finished' && (
