@@ -28,14 +28,17 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
   const [judge, setJudge] = useState<{ review: CouponReview; text: string | null } | null>(null);
   const [judging, setJudging] = useState(false);
 
-  // kupon değişince eski kararname geçersiz — sıfırla
-  useEffect(() => { setJudge(null); }, [count, stake]);
+  // kupon değişince eski kararname geçersiz — SEÇİM SETİNE göre sıfırla
+  // (aynı maçta pick değiştirmek count'u değiştirmez; selKey değişir)
+  const selKey = selections.map((s) => `${s.match_id}:${s.market_type}:${s.outcome_key}`).join('|');
+  const [judgeErr, setJudgeErr] = useState(false);
+  useEffect(() => { setJudge(null); setJudgeErr(false); }, [selKey, stake]);
 
   async function askJudge() {
-    setJudging(true); setJudge(null);
+    setJudging(true); setJudge(null); setJudgeErr(false);
     try {
       const review = await fetchCouponReview(selections as unknown as unknown[], stake);
-      if (!review?.ready) { setJudge(null); return; }
+      if (!review?.ready) { setJudgeErr(true); return; }
       logEvent('coupon', 'coupon_ai_reviewed', {
         legs: review.legs, total_odds: review.total_odds, ev_pct: review.ev_pct, stake,
       });
@@ -147,7 +150,7 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
               ) : (
                 <button className="btn btn-ghost btn-block btn-sm ai-btn" style={{ marginTop: 'var(--s2)' }}
                   disabled={judging} onClick={askJudge}>
-                  {judging ? '…' : <>✦ {t('aij.ask')}</>}
+                  {judging ? '…' : judgeErr ? t('aij.err') : <>✦ {t('aij.ask')}</>}
                 </button>
               )
             )}

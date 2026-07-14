@@ -115,7 +115,7 @@ export default function FeedScreen() {
       setMatches(ms);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not load the bulletin');
+      setError(err instanceof Error ? err.message : t('feed.loaderr'));
     } finally {
       setLoading(false);
     }

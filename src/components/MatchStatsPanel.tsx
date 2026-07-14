@@ -76,7 +76,7 @@ export default function MatchStatsPanel({ matchId }: { matchId: string }) {
           </div>
         </>
       ) : (
-        <div className="vstat-note">No previous meetings yet.</div>
+        <div className="vstat-note">{t('ms.nomeetings')}</div>
       )}
     </div>
   );

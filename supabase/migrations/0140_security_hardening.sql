@@ -1,0 +1,25 @@
+-- 0140: guvenlik sikilastirmasi (advisor + tam sistem taramasi, 2026-07-15).
+-- Tam govde MCP ile canliya uygulandi; bu dosya kayittir.
+--
+-- (a) KRITIK: slot_config RLS KAPALIYDI + anon'a INSERT/UPDATE/DELETE/
+--     TRUNCATE dahil tum yetkiler acikti -> anon key'li herkes slot motor
+--     ayarlarini degistirebilirdi. RLS acildi (policy yok) + revoke all.
+--     slot_spin SECURITY DEFINER oldugu icin motor etkilenmedi (dogrulandi).
+-- (b) aviator_fire_crash(bigint) anon-cagrilabilirdi -> turu erken patlatma
+--     (griefing) mumkundu. Edge fn SERVICE_ROLE kullaniyor -> revoke guvenli.
+-- (c) TUM '_' onekli internal fonksiyonlar PostgREST'ten anon-cagrilabilirdi
+--     (_score_match, _bb_seed, _simulate_loop, _tick_live...). FE beyaz
+--     listesi tarandi (grep rpc('...')): FE hicbir '_' fonksiyonu cagirmiyor.
+--     pg_cron=postgres, edge=service_role -> toplu revoke (public, anon,
+--     authenticated) guvenli. Dogrulama: anon get_bulletin/standings OK,
+--     anon _score_match/slot_config -> permission denied.
+-- (d) Diagnostik SECURITY DEFINER view'lar (v_feed_latency,
+--     v_incident_to_goal_window) anon'a acikti -> revoke all.
+-- (e) Legacy olu API DROP: place_coupon(uuid[],integer) [v2 ile degisti],
+--     preview_live_odds, get_watch_timeline, reveal_match — prosrc 0 ic
+--     referans + FE 0 cagri.
+-- (f) record_feed_pulse / record_live_incident / settle_real_fixture yalniz
+--     OLU src/cron (Railway worker kalintisi, ayni commit'te repo'dan
+--     silindi) cagiriyordu -> istemci exec revoke.
+-- NOT/KONVANSIYON: yeni '_' onekli fonksiyon eklerken EXECUTE'u anon/
+-- authenticated'a ACMA; PostgREST /rpc tum public fonksiyonlari acar.

@@ -110,7 +110,7 @@ export default function MatchRow({ m, hideLeague }: { m: BulletinMatch; hideLeag
       <span className={`ll-time tnum ${isLive ? 'live' : startingSoon ? 'soon' : ''}`}>
         {isLive ? (isBB ? bballClock(m.minute, m.period) : (isTN || isVB) ? (m.period ?? 'LIVE') : `${m.minute ?? 0}'`)
           : startingSoon ? (minsToStart <= 0 ? t('feed.startnow') : t('feed.startsin', { n: minsToStart }))
-          : formatKickoff(m.starts_at)}
+          : formatKickoff(m.starts_at, t)}
       </span>
       <span className="ll-teamline">
         <span className="ll-tags">

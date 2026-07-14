@@ -13,6 +13,7 @@ import { matchProvider } from '../lib/matchProvider';
 import { useI18n } from '../i18n/LanguageContext';
 import type { CouponLeg, LiveState } from '../lib/types';
 import { formatOdds, impliedProb } from '../lib/format';
+import { legLiveStatus } from '../lib/legStatus';
 import { teamColor } from '../lib/teams';
 import { playerName } from '../lib/playerNames';
 
@@ -65,12 +66,9 @@ function StatsPanel({ matchId, clockSec, reds, home, away, dur }: {
   );
 }
 
-function computePickState(pick: OutKey, hs: number, as: number): 'win' | 'lose' | 'level' {
-  const leader: OutKey = hs > as ? 'home' : as > hs ? 'away' : 'draw';
-  if (pick === 'draw') return hs === as ? 'win' : 'lose';
-  if (pick === leader) return 'win';
-  return hs === as ? 'level' : 'lose';
-}
+// 0715: bahis durumu artık TÜM market tipleri için doğru — legLiveStatus tüm
+// futbol anahtarlarını çözer (BTTS/alt-üst/çifte şans dahil); eski 1X2-varsayan
+// computePickState BTTS-Yes'i 1-1'de "kaçtı" gösteriyordu.
 
 const secOf = (l: Line) => l.sec ?? l.minute * 60;
 
@@ -258,8 +256,16 @@ export default function LiveMatchScreen() {
   const clockSec = finished ? 5400 : Math.floor(getClock());
   const liveStats = phase !== 'upcoming' ? simStats(matchId!, clockSec, [state.red_home, state.red_away], state.duration_secs) : null;
 
-  const pick = myLeg?.outcome_key as OutKey | undefined;
-  const pickState = pick ? computePickState(pick, hs, as) : null;
+  // İY golleri her zaman (ht_* bacakları için); legLiveStatus bilinmeyen
+  // anahtarda 'pending' döner → bayrak gizlenir. Maç bittiyse sunucunun
+  // KESİNLEŞMİŞ bacak durumu esastır (won/lost), canlı tahmin değil.
+  const htHAll = state.events.filter((e) => e.team === 'home' && e.minute <= 45).length;
+  const htAAll = state.events.filter((e) => e.team === 'away' && e.minute <= 45).length;
+  const liveLeg = myLeg ? legLiveStatus(myLeg.outcome_key, hs, as, htHAll, htAAll) : 'pending';
+  const settled = myLeg && myLeg.status !== 'pending';
+  const pickState: 'win' | 'lose' | 'level' | null =
+    settled ? (myLeg!.status === 'won' ? 'win' : 'lose')
+      : liveLeg === 'pending' ? null : liveLeg;
   const pickLabel = { win: t('live.win'), lose: t('live.lose'), level: t('live.level') } as const;
   const oddsArr = odds ? [odds.home, odds.draw, odds.away].filter((x): x is number => x != null) : [];
   // Kazanma olasılığı (Nesine esinli): canlı oranların ima ettiği ev/deplasman payı.

@@ -1,0 +1,27 @@
+-- 0141: tam sistem denetimi duzeltmeleri (tam govdeler MCP ile canlida).
+--
+-- (1) _vb_odds SET HANDIKAPI canlida KOSULLU: psh=p30+p31 (prematch) canlida
+--     da satiliyordu -> zayif takim 2-0 ondeyken -1.5'e 27.3 (bedava para).
+--     Negatif binom kosullu: a>=2 -> 0; a=1 -> pset^(3-h);
+--     a=0 -> pset^(3-h)*(1+(3-h)*q). h=a=0'da p30+p31 (prematch bit-degismez).
+--     Olcum: zayif ev 2-0 onde sh_home 2.05; 0-2 geride 27.35/kapali.
+-- (2) _tick_live: BSD JSON olmayan govde donunce content::jsonb SELECT icinde
+--     patliyor, yeni istek de atilamiyordu -> safe-parse exception blogu.
+-- (3) get_shared_coupon/get_shared_feed: bacak durumu legacy cs.status yerine
+--     coalesce(leg_status, status) — 20.017 sonuclanmis bacak 'pending'
+--     gorunuyordu (sosyal akis).
+-- (4) coupon_review: default PUBLIC/anon EXECUTE geri alindi.
+-- (5) Olu ikilik DROP: _bb_reveal(int,f8) + _bb_reveal(int,f8,f8)
+--     (_bb_q_reveal ile degisti), vleague_standings() 0-arg.
+-- (6) DML (ayri calistirildi): 620 capraz-spor cop mac silindi (pre-0121
+--     seeder kalintisi, 'Medvedev vs Houston Rockets'; 13020 secenek + 5580
+--     market + 68 yorum kaskad; kupon baglantili 1 mac korundu).
+--
+-- CHASE-BOOST NOTU (onemli ders): denetim '30-50 arasi oran dip'ini bug
+-- olarak isaretledi (0-1 geride 30' 6.63 -> 45' 6.01). Entegre-rampa fix'i
+-- DENENDI ve monotonlugu sagladi AMA Nesine anchorlarini kaydirdi
+-- (Fra-Isp 62' brb 7.07->6.04 [Nesine 7.24], bariz guclu IY 8.05->6.79
+-- [spec 8-10]). Dip tam devre arasina denk geliyor (min 45') ve gercek
+-- kitaplarin IY kovalama fiyatlamasiyla uyumlu -> KALIBRE EDILMIS orijinal
+-- _chase_boost GERI GETIRILDI (nokta-rampa (m-30)/45). Anchor dogrulamasi:
+-- 7.07 / 8.05 / 6.01 birebir. Ilke: kalibrasyon > teorik zarafet.

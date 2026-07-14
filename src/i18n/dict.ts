@@ -328,6 +328,9 @@ const en: Dict = {
   'team.player': 'Player', 'team.team': 'Team', 'team.winstreak': 'win streak', 'team.losestreak': 'loss streak',
   'team.form10': 'Form (last 10)', 'team.fixtures': 'Fixtures', 'team.lastmatches': 'Last matches',
   'team.nomatches': 'No finished matches yet.', 'team.tostandings': 'Full standings',
+  'kick.now': 'starting now', 'kick.inmin': 'in {n} min', 'kick.inh': 'in {h}h', 'kick.inhm': 'in {h}h {m}m',
+  'std.c.p': 'P', 'std.c.w': 'W', 'std.c.d': 'D', 'std.c.l': 'L',
+  'aij.err': 'Could not evaluate — try again', 'feed.loaderr': 'Could not load the bulletin',
   'aij.ask': 'Ask the AI judge', 'aij.title': 'AI Coupon Judge',
   'aij.prob': 'fair chance', 'aij.ev': 'expected (gold)', 'aij.risk': 'riskiest leg',
   'aij.hist': 'Your record on {n} similar coupons: {w} won, net {net} gold.',
@@ -674,6 +677,9 @@ const tr: Dict = {
   'team.player': 'Oyuncu', 'team.team': 'Takım', 'team.winstreak': 'maçlık galibiyet serisi', 'team.losestreak': 'maçlık kayıp serisi',
   'team.form10': 'Form (son 10)', 'team.fixtures': 'Fikstür', 'team.lastmatches': 'Son maçlar',
   'team.nomatches': 'Henüz bitmiş maç yok.', 'team.tostandings': 'Puan durumu',
+  'kick.now': 'başlıyor', 'kick.inmin': '{n} dk sonra', 'kick.inh': '{h} sa sonra', 'kick.inhm': '{h} sa {m} dk sonra',
+  'std.c.p': 'O', 'std.c.w': 'G', 'std.c.d': 'B', 'std.c.l': 'M',
+  'aij.err': 'Değerlendirilemedi — tekrar dene', 'feed.loaderr': 'Bülten yüklenemedi',
   'aij.ask': 'AI hakeme sor', 'aij.title': 'AI Kupon Hakemi',
   'aij.prob': 'adil şans', 'aij.ev': 'beklenen (altın)', 'aij.risk': 'en riskli bacak',
   'aij.hist': '{n} benzer kuponda karnen: {w} kazanç, net {net} altın.',
@@ -712,9 +718,9 @@ const tr: Dict = {
 
 // Diğer diller: navigasyon + Analiz ana başlıkları. Kalan anahtarlar EN'e düşer.
 const es: Dict = {
-  'nav.matches': 'Partidos', 'nav.aviator': 'Aviator', 'nav.gates': 'Gates', 'nav.coupons': 'Cupones',
-  'nav.mirror': 'Mi espejo', 'nav.ranks': 'Ranking', 'nav.social': 'Social', 'nav.profile': 'Perfil',
-  'analiz.title': 'Tu espejo',
+  'nav.matches': 'Partidos', 'nav.aviator': 'Aviator', 'nav.gates': 'Gates of', 'nav.coupons': 'Mis cupones',
+  'nav.mirror': 'Análisis IA', 'nav.ranks': 'Ranking', 'nav.social': 'Social', 'nav.profile': 'Perfil',
+  'analiz.title': 'Análisis IA',
   'analiz.lead': 'Los juegos son una herramienta para recoger datos; el valor real es tu patrón. Sin dinero: mírate, sin riesgo.',
   'analiz.tab.overview': 'General', 'analiz.tab.coupon': 'Apuestas', 'analiz.tab.aviator': 'Aviator',
   'analiz.tab.slot': 'Gates of Goal', 'analiz.tab.other': 'Otros',
@@ -826,9 +832,9 @@ const es: Dict = {
   'lang.label': 'Idioma',
 };
 const de: Dict = {
-  'nav.matches': 'Spiele', 'nav.aviator': 'Aviator', 'nav.gates': 'Gates', 'nav.coupons': 'Scheine',
-  'nav.mirror': 'Spiegel', 'nav.ranks': 'Ränge', 'nav.social': 'Sozial', 'nav.profile': 'Profil',
-  'analiz.title': 'Dein Spiegel',
+  'nav.matches': 'Spiele', 'nav.aviator': 'Aviator', 'nav.gates': 'Gates of', 'nav.coupons': 'Meine Scheine',
+  'nav.mirror': 'KI-Analyse', 'nav.ranks': 'Ränge', 'nav.social': 'Sozial', 'nav.profile': 'Profil',
+  'analiz.title': 'KI-Analyse',
   'analiz.lead': 'Die Spiele sind ein Werkzeug zum Datensammeln; der wahre Wert ist dein Muster. Kein Geld – sieh dich selbst, gefahrlos.',
   'analiz.tab.overview': 'Gesamt', 'analiz.tab.coupon': 'Sportwetten', 'analiz.tab.aviator': 'Aviator',
   'analiz.tab.slot': 'Gates of Goal', 'analiz.tab.other': 'Andere',
@@ -940,9 +946,9 @@ const de: Dict = {
   'lang.label': 'Sprache',
 };
 const ru: Dict = {
-  'nav.matches': 'Матчи', 'nav.aviator': 'Aviator', 'nav.gates': 'Gates', 'nav.coupons': 'Купоны',
-  'nav.mirror': 'Зеркало', 'nav.ranks': 'Рейтинг', 'nav.social': 'Соцсеть', 'nav.profile': 'Профиль',
-  'analiz.title': 'Твоё зеркало',
+  'nav.matches': 'Матчи', 'nav.aviator': 'Aviator', 'nav.gates': 'Gates of', 'nav.coupons': 'Мои купоны',
+  'nav.mirror': 'ИИ-анализ', 'nav.ranks': 'Рейтинг', 'nav.social': 'Соцсеть', 'nav.profile': 'Профиль',
+  'analiz.title': 'ИИ-анализ',
   'analiz.lead': 'Игры — инструмент сбора данных; настоящая ценность — твой паттерн. Денег нет — смотри на себя без риска.',
   'analiz.tab.overview': 'Общее', 'analiz.tab.coupon': 'Ставки', 'analiz.tab.aviator': 'Aviator',
   'analiz.tab.slot': 'Gates of Goal', 'analiz.tab.other': 'Другое',
@@ -1054,9 +1060,9 @@ const ru: Dict = {
   'lang.label': 'Язык',
 };
 const ar: Dict = {
-  'nav.matches': 'المباريات', 'nav.aviator': 'Aviator', 'nav.gates': 'Gates', 'nav.coupons': 'القسائم',
-  'nav.mirror': 'مرآتي', 'nav.ranks': 'الترتيب', 'nav.social': 'اجتماعي', 'nav.profile': 'الملف',
-  'analiz.title': 'مرآتك',
+  'nav.matches': 'المباريات', 'nav.aviator': 'Aviator', 'nav.gates': 'Gates of', 'nav.coupons': 'قسائمي',
+  'nav.mirror': 'تحليل AI', 'nav.ranks': 'الترتيب', 'nav.social': 'اجتماعي', 'nav.profile': 'الملف',
+  'analiz.title': 'تحليل AI',
   'analiz.lead': 'الألعاب أداة لجمع البيانات؛ القيمة الحقيقية هي نمطك. لا مال — انظر إلى نفسك بأمان.',
   'analiz.tab.overview': 'عام', 'analiz.tab.coupon': 'الرهانات', 'analiz.tab.aviator': 'Aviator',
   'analiz.tab.slot': 'Gates of Goal', 'analiz.tab.other': 'أخرى',
@@ -1168,9 +1174,9 @@ const ar: Dict = {
   'lang.label': 'اللغة',
 };
 const zh: Dict = {
-  'nav.matches': '比赛', 'nav.aviator': 'Aviator', 'nav.gates': 'Gates', 'nav.coupons': '投注单',
-  'nav.mirror': '镜子', 'nav.ranks': '排名', 'nav.social': '社交', 'nav.profile': '个人',
-  'analiz.title': '你的镜子',
+  'nav.matches': '比赛', 'nav.aviator': 'Aviator', 'nav.gates': 'Gates of', 'nav.coupons': '我的投注单',
+  'nav.mirror': 'AI分析', 'nav.ranks': '排名', 'nav.social': '社交', 'nav.profile': '个人',
+  'analiz.title': 'AI分析',
   'analiz.lead': '游戏只是收集数据的工具；真正的价值是你的模式。没有真钱——安全地看清自己。',
   'analiz.tab.overview': '总览', 'analiz.tab.coupon': '体育投注', 'analiz.tab.aviator': 'Aviator',
   'analiz.tab.slot': 'Gates of Goal', 'analiz.tab.other': '其他',
@@ -1282,9 +1288,9 @@ const zh: Dict = {
   'lang.label': '语言',
 };
 const hi: Dict = {
-  'nav.matches': 'मैच', 'nav.aviator': 'Aviator', 'nav.gates': 'Gates', 'nav.coupons': 'कूपन',
-  'nav.mirror': 'आईना', 'nav.ranks': 'रैंक', 'nav.social': 'सोशल', 'nav.profile': 'प्रोफ़ाइल',
-  'analiz.title': 'आपका आईना',
+  'nav.matches': 'मैच', 'nav.aviator': 'Aviator', 'nav.gates': 'Gates of', 'nav.coupons': 'मेरे कूपन',
+  'nav.mirror': 'AI विश्लेषण', 'nav.ranks': 'रैंक', 'nav.social': 'सोशल', 'nav.profile': 'प्रोफ़ाइल',
+  'analiz.title': 'AI विश्लेषण',
   'analiz.lead': 'खेल तो डेटा जुटाने का ज़रिया हैं; असली मूल्य आपका पैटर्न है। कोई पैसा नहीं — खुद को बेजोखिम देखें।',
   'analiz.tab.overview': 'कुल', 'analiz.tab.coupon': 'खेल दांव', 'analiz.tab.aviator': 'Aviator',
   'analiz.tab.slot': 'Gates of Goal', 'analiz.tab.other': 'अन्य',

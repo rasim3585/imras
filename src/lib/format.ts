@@ -1,21 +1,24 @@
 /** Human "when does this kick off" label, relative to now.
  *  "starting now" only within a ±10 min window — an older timestamp is a data
  *  gap, and showing the real date/time is honest; a same-day future kickoff
- *  shows the clock time, other days show day + time. */
-export function formatKickoff(iso: string): string {
+ *  shows the clock time, other days show day + time.
+ *  Pass the i18n t() so relative words localize; without it English fallback.
+ *  (0715 denetim: TR arayüzde 'in 3h 15m' İngilizce kalıyordu.) */
+export function formatKickoff(iso: string, t?: (key: string, vars?: Record<string, string | number>) => string): string {
   const d = new Date(iso);
   const ms = d.getTime() - Date.now();
+  const tr = (key: string, vars: Record<string, string | number>, fb: string) => (t ? t(key, vars) : fb);
   if (ms <= 0) {
-    if (ms > -10 * 60000) return 'starting now';
+    if (ms > -10 * 60000) return tr('kick.now', {}, 'starting now');
     return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
       + ' ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
   }
   const mins = Math.round(ms / 60000);
-  if (mins < 60) return `in ${mins} min`;
+  if (mins < 60) return tr('kick.inmin', { n: mins }, `in ${mins} min`);
   if (mins < 8 * 60) {
     const h = Math.floor(mins / 60);
     const m = mins % 60;
-    return m ? `in ${h}h ${m}m` : `in ${h}h`;
+    return m ? tr('kick.inhm', { h, m }, `in ${h}h ${m}m`) : tr('kick.inh', { h }, `in ${h}h`);
   }
   const sameDay = d.toDateString() === new Date().toDateString();
   const time = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });

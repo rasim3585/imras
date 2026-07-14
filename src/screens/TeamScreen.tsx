@@ -43,6 +43,7 @@ export default function TeamScreen() {
 
   useEffect(() => {
     let alive = true;
+    setPage(null);   // takım değişince eski sayfa görünmesin (geri/ileri gezinme)
     matchProvider.getTeamPage(Number(teamId))
       .then((p) => { if (alive) setPage(p ?? 'none'); })
       .catch(() => { if (alive) setPage('none'); });
@@ -60,14 +61,14 @@ export default function TeamScreen() {
   // spor-doğru özet hücreleri
   const cells: [string, string][] = s ? (
     sport === 'football' ? [
-      [t('team.rank'), `#${s.rank}`], ['O', String(s.played)], ['G', String(s.won)],
-      ['B', String(s.drawn)], ['M', String(s.lost)], ['AV', s.gd > 0 ? `+${s.gd}` : String(s.gd)],
+      [t('team.rank'), `#${s.rank}`], [t('std.c.p'), String(s.played)], [t('std.c.w'), String(s.won)],
+      [t('std.c.d'), String(s.drawn)], [t('std.c.l'), String(s.lost)], [t('std.col.gd'), s.gd > 0 ? `+${s.gd}` : String(s.gd)],
       [t('std.col.pts'), String(s.points)],
     ] : sport === 'volleyball' ? [
-      [t('team.rank'), `#${s.rank}`], ['O', String(s.played)], ['G', String(s.won)],
-      ['M', String(s.lost)], [t('team.sets'), `${s.gf}:${s.ga}`], [t('std.col.pts'), String(s.points)],
+      [t('team.rank'), `#${s.rank}`], [t('std.c.p'), String(s.played)], [t('std.c.w'), String(s.won)],
+      [t('std.c.l'), String(s.lost)], [t('team.sets'), `${s.gf}:${s.ga}`], [t('std.col.pts'), String(s.points)],
     ] : [
-      [t('team.rank'), `#${s.rank}`], ['O', String(s.played)],
+      [t('team.rank'), `#${s.rank}`], [t('std.c.p'), String(s.played)],
       ['W-L', `${s.won}-${s.lost}`], [t('std.col.winpct'), pctTxt],
     ]
   ) : [];

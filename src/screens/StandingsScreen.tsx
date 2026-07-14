@@ -46,13 +46,13 @@ export default function StandingsScreen() {
   const header = () => {
     switch (sport) {
       case 'football':
-        return <tr><th>#</th><th className="std-team-h">{t('std.col.team')}</th><th>O</th><th>G</th><th>B</th><th>M</th><th>{t('std.col.gd')}</th><th>{t('std.col.form')}</th><th>{t('std.col.pts')}</th></tr>;
+        return <tr><th>#</th><th className="std-team-h">{t('std.col.team')}</th><th>{t('std.c.p')}</th><th>{t('std.c.w')}</th><th>{t('std.c.d')}</th><th>{t('std.c.l')}</th><th>{t('std.col.gd')}</th><th>{t('std.col.form')}</th><th>{t('std.col.pts')}</th></tr>;
       case 'basketball':
-        return <tr><th>#</th><th className="std-team-h">{t('std.col.team')}</th><th>O</th><th>W</th><th>L</th><th>±</th><th>{t('std.col.form')}</th><th>PCT</th></tr>;
+        return <tr><th>#</th><th className="std-team-h">{t('std.col.team')}</th><th>{t('std.c.p')}</th><th>W</th><th>L</th><th>±</th><th>{t('std.col.form')}</th><th>PCT</th></tr>;
       case 'volleyball':
-        return <tr><th>#</th><th className="std-team-h">{t('std.col.team')}</th><th>O</th><th>G</th><th>M</th><th>{t('std.col.sets')}</th><th>{t('std.col.form')}</th><th>{t('std.col.pts')}</th></tr>;
+        return <tr><th>#</th><th className="std-team-h">{t('std.col.team')}</th><th>{t('std.c.p')}</th><th>{t('std.c.w')}</th><th>{t('std.c.l')}</th><th>{t('std.col.sets')}</th><th>{t('std.col.form')}</th><th>{t('std.col.pts')}</th></tr>;
       case 'tennis':
-        return <tr><th>#</th><th className="std-team-h">{t('std.col.player')}</th><th>O</th><th>W</th><th>L</th><th>{t('std.col.winpct')}</th><th>{t('std.col.form')}</th></tr>;
+        return <tr><th>#</th><th className="std-team-h">{t('std.col.player')}</th><th>{t('std.c.p')}</th><th>W</th><th>L</th><th>{t('std.col.winpct')}</th><th>{t('std.col.form')}</th></tr>;
     }
   };
 

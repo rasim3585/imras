@@ -170,10 +170,13 @@ export default function LiveCourtScreen() {
   const as = live?.away_score ?? 0;
   const dur = live?.duration_secs ?? 480;
 
-  // kazanma olasılığı (moneyline'dan)
+  // kazanma olasılığı — canlıda CANLI oranlardan (statik market satırları
+  // canlıda repriselenmiyor; bar oran butonlarıyla çelişiyordu)
   const rm = match.markets.find((mk) => mk.market_type.endsWith('moneyline') || mk.market_type === 'match_result');
   const oddByLabel = (l: string) => rm?.options.find((o) => o.label === l)?.odds ?? null;
-  const hO = oddByLabel('1'); const aO = oddByLabel('2');
+  const lo = phase === 'live' ? live?.live_odds : null;
+  const hO = (lo ? (lo.ml_home ?? lo.home) : null) ?? oddByLabel('1');
+  const aO = (lo ? (lo.ml_away ?? lo.away) : null) ?? oddByLabel('2');
   const ph = hO ? 1 / hO : 0; const pa = aO ? 1 / aO : 0;
   const homePct = ph + pa > 0 ? Math.round((100 * ph) / (ph + pa)) : 50;
 

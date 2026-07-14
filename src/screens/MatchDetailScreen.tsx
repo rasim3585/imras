@@ -93,7 +93,9 @@ export default function MatchDetailScreen() {
     // Bahis-öncesi ilgi sinyali: hangi maçı incelediğin (oynamadan da). Moat.
     logEvent('match', 'detail_viewed', { match_id: matchId });
     matchProvider.getMatch(matchId)
-      .then((m) => { if (alive) setMatch(m); })
+      // 0715: bilinmeyen id (bozuk/eski link) null döner — sonsuz spinner
+      // yerine hata bandı + Geri butonu
+      .then((m) => { if (alive) { if (m) setMatch(m); else setError(t('md.err.load')); } })
       .catch((e) => { if (alive) setError(e instanceof Error ? e.message : t('md.err.load')); });
     const poll = async () => {
       try { const [s] = await matchProvider.getLiveStates([matchId]); if (alive && s) setLive(s); }
@@ -131,7 +133,7 @@ export default function MatchDetailScreen() {
             ? <><span className="live-badge">LIVE</span><span className="minute-red tnum">{match.sport === 'basketball' ? bballClock(live!.minute, live!.period) : (match.sport === 'tennis' || match.sport === 'volleyball') ? (live!.period ?? 'LIVE') : `${live!.minute}'`}</span></>
             : isFinished
               ? <span className="tag">{t('md.fulltime')}</span>
-              : <span className="soon-timer tnum">{formatKickoff(match.starts_at)}</span>}
+              : <span className="soon-timer tnum">{formatKickoff(match.starts_at, t)}</span>}
           <span className="tag" style={{ marginLeft: 'auto' }}>{match.sport === 'football' ? t('feed.sport.football') : match.sport}</span>
         </div>
         <div className="sb-teams">
@@ -157,7 +159,11 @@ export default function MatchDetailScreen() {
         // Kazanma olasılığı barı (sonuç marketinin ima ettiği ev/deplasman payı).
         const rm = markets.find((mk) => mk.market_type === 'match_result' || mk.market_type.endsWith('moneyline'));
         const oddByLabel = (l: string) => rm?.options.find((o) => o.label === l)?.odds ?? null;
-        const hO = oddByLabel('1'); const aO = oddByLabel('2');
+        // 0715: canlıda bar CANLI oranlardan okur (statik market satırları
+        // canlıda repriselenmiyor — 2-0 geride favori %70 görünüyordu)
+        const lo = isLive ? live?.live_odds : null;
+        const hO = (lo ? (lo.home ?? lo.ml_home) : null) ?? oddByLabel('1');
+        const aO = (lo ? (lo.away ?? lo.ml_away) : null) ?? oddByLabel('2');
         const ph = hO ? 1 / hO : 0; const pa = aO ? 1 / aO : 0;
         if (ph <= 0 && pa <= 0) return null;
         const homePct = Math.round((100 * ph) / (ph + pa));
