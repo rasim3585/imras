@@ -194,7 +194,7 @@ export interface MatchStats {
 
 // --- Gates of Goal (slot) ---------------------------------------------------
 
-/** One tumble step: the 6x5 grid (30 cells; 1-8 symbol, 9 = scatter, negative =
+/** One tumble step: the 6x5 grid (30 cells; 1-9 symbol, 10 = scatter, negative =
  *  multiplier orb of that value, 0 = empty), the win it paid, and winning cells. */
 export interface SlotStep { grid: number[]; win: number; cells: number[]; }
 

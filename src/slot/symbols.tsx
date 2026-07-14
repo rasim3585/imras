@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
 
 // Glossy, dimensional sports symbols for Gates of Goal — original vector art
-// (gradients + specular highlight + per-symbol glow), rendered DIRECTLY on the
-// pitch grid (no tile). Cell value: 1..8 = symbol, 9 = scatter (goal), negative
-// = multiplier orb, 0 = empty.
+// (gradients + specular highlight + per-symbol glow + colored aura), rendered
+// DIRECTLY on the pitch grid (no tile). Cell value: 1..9 = symbol (9 = golden
+// boot), 10 = scatter (goal), negative = multiplier orb, 0 = empty.
 
 interface SymDef { glow: string; body: ReactNode; }
 
@@ -135,6 +135,21 @@ const SYMBOLS: SymDef[] = [
     <rect x="34" y="70" width="32" height="9" rx="2" fill="url(#trophy)" stroke="#6b4610" strokeWidth="2.5" />
     <path d="M42 20c0 8 3 14 8 16" stroke="#fff6d6" strokeWidth="3" fill="none" strokeLinecap="round" opacity="0.85" />
   </> },
+
+  // 9 — golden boot (altın krampon) ------------------------------------------ high
+  { glow: 'rgba(255,196,66,0.95)', body: <>
+    <defs>
+      <linearGradient id="boot" x1="0" y1="0" x2="0.4" y2="1">
+        <stop offset="0" stopColor="#ffe9a8" /><stop offset="0.45" stopColor="#f4b73a" /><stop offset="1" stopColor="#9a6414" />
+      </linearGradient>
+    </defs>
+    <path d="M24 62 L28 32 Q29 26 35 27 L46 30 Q50 31 52 35 L58 47 Q66 57 78 59 L84 61 Q88 62 88 66 L88 69 L24 69 Z"
+      fill="url(#boot)" stroke="#6b4610" strokeWidth="2.5" strokeLinejoin="round" />
+    <path d="M36 34 L46 38 M34 40 L44 44 M32 46 L42 50" stroke="#fff6d6" strokeWidth="2.4" strokeLinecap="round" />
+    <path d="M22 69 h68 v5 a3 3 0 0 1 -3 3 H25 a3 3 0 0 1 -3 -3 Z" fill="#3a2a12" stroke="#241a0c" strokeWidth="1.8" />
+    <path d="M30 78v4M42 78v4M54 78v4M66 78v4M78 78v4" stroke="#3a2a12" strokeWidth="4.6" strokeLinecap="round" />
+    <Shine cx={40} cy={38} rx={10} ry={5} o={0.5} />
+  </> },
 ];
 
 // Scatter (value 9): a football GOAL stamped "SCATTER".
@@ -180,11 +195,14 @@ function OrbBall({ value }: { value: number }) {
 
 export default function SlotSymbol({ v }: { v: number }) {
   if (v === 0) return <span className="slot-empty" />;
-  if (v === 9) return <ScatterBall />;
+  if (v === 10) return <ScatterBall />;
   if (v < 0) return <OrbBall value={-v} />;
   const s = SYMBOLS[v - 1] ?? SYMBOLS[0];
   return (
-    <span className="slot-sym" style={{ filter: `drop-shadow(0 2px 3px rgba(0,0,0,0.55)) drop-shadow(0 0 7px ${s.glow})` }}>
+    <span
+      className="slot-sym"
+      style={{ filter: `drop-shadow(0 2px 3px rgba(0,0,0,0.55)) drop-shadow(0 0 7px ${s.glow})`, ['--sg' as string]: s.glow }}
+    >
       <svg viewBox="0 0 100 100" aria-hidden="true">{s.body}</svg>
     </span>
   );

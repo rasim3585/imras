@@ -17,16 +17,17 @@ type TFn = (k: string, v?: Record<string, string | number>) => string;
 // drop in from the top. Scene art is our own — not a reskin.
 
 const COLS = 6, ROWS = 5, N = COLS * ROWS;
-const BUY_COST = 60;            // mirrors slot_config.buy_cost (buy = bet × 60)
+const BUY_COST = 80;            // mirrors slot_config.buy_cost (buy = bet × 80)
 const MIN_BET = 10, MAX_BET = 1000, BET_STEP = 10;
 const AUTO_OPTIONS = [10, 25, 50, 100, Infinity];
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-// Our paytable (mirrors slot_config: pays PER symbol by count bucket). Lets the
-// callout show each symbol's own win — same as the server's per-symbol step win.
+// Our paytable (mirrors engine v2 / 0127: pays PER symbol by count bucket,
+// GoO-mapped — trophy tops out at 50x). Lets the callout show each symbol's own
+// win — same as the server's per-symbol step win.
 const PAY: Record<number, [number, number, number]> = {
-  1: [0.10, 0.30, 0.80], 2: [0.10, 0.30, 0.80], 3: [0.16, 0.36, 1.00], 4: [0.20, 0.40, 1.20],
-  5: [0.20, 0.48, 1.60], 6: [0.40, 0.80, 2.40], 7: [0.60, 1.60, 4.80], 8: [1.00, 4.00, 10.00],
+  1: [0.25, 0.75, 2], 2: [0.40, 0.90, 4], 3: [0.50, 1.00, 5], 4: [0.80, 1.20, 8],
+  5: [1.00, 1.50, 10], 6: [1.50, 2.00, 12], 7: [2.00, 5.00, 15], 8: [10, 25, 50], 9: [2.50, 10, 25],
 };
 function symbolPay(v: number, count: number, bet: number): number {
   const bucket = count >= 12 ? 2 : count >= 10 ? 1 : 0;
@@ -41,8 +42,15 @@ const ALL_NEW: CellMeta[] = Array.from({ length: N }, () => ({ n: true, dy: 0 })
 
 function initialGrid(): number[] {
   const g: number[] = [];
-  for (let i = 0; i < N; i++) g.push(1 + Math.floor(Math.random() * 8));
+  for (let i = 0; i < N; i++) g.push(1 + Math.floor(Math.random() * 9));
   return g;
+}
+
+// Centre of a winning cluster in grid % — the floating win amount rises there.
+function centroidPct(cells: number[]): { x: number; y: number } {
+  let sx = 0, sy = 0;
+  for (const c of cells) { sx += (c % COLS) + 0.5; sy += Math.floor(c / COLS) + 0.5; }
+  return { x: (sx / cells.length / COLS) * 100, y: (sy / cells.length / ROWS) * 100 };
 }
 
 function cleanErr(m: string, t: TFn): string {
@@ -55,7 +63,7 @@ function cleanErr(m: string, t: TFn): string {
 // Split a winning step into its per-symbol groups (each symbol pays separately).
 function winGroups(grid: number[], cells: number[], bet: number): WinGroup[] {
   const byV: Record<number, number[]> = {};
-  for (const c of cells) { const v = grid[c]; if (v >= 1 && v <= 8) (byV[v] ??= []).push(c); }
+  for (const c of cells) { const v = grid[c]; if (v >= 1 && v <= 9) (byV[v] ??= []).push(c); }
   return Object.keys(byV)
     .map((k) => { const v = Number(k); const cs = byV[v]; return { v, cells: cs, count: cs.length, amount: symbolPay(v, cs.length, bet) }; })
     .filter((g) => g.count >= 8)     // a symbol only wins at 8+ — never flag fewer
@@ -90,7 +98,7 @@ export default function GatesScreen() {
   const [winCells, setWinCells] = useState<Set<number>>(new Set());   // aktif grup (callout + parlak vurgu)
   const [allWin, setAllWin] = useState<Set<number>>(new Set());        // TUM kazanan hucreler (birliktelik cercevesi)
   const [winPhase, setWinPhase] = useState<'show' | 'boom' | null>(null);
-  const [dim, setDim] = useState(false);
+  const [floats, setFloats] = useState<{ id: number; x: number; y: number; amt: number }[]>([]);   // GoO-tarzi grid ustu +kazanc
   const [callout, setCallout] = useState<{ v: number; count: number; amount: number } | null>(null);
   const [breakdown, setBreakdown] = useState<WinGroup[]>([]);          // GoO-tarzi grup kirilim listesi
   const [busy, setBusy] = useState(false);
@@ -114,6 +122,9 @@ export default function GatesScreen() {
   const stake = ante ? Math.round(bet * 1.25) : bet;
   const buyStake = bet * BUY_COST;
 
+  // /gates?demo=1 — animasyon onizleme modu: yerel demo motoru, para/oturum yok
+  const demo = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('demo');
+  const floatId = useRef(0);
   const genRef = useRef(0);
   const autoRef = useRef(false);
   const autoLeftRef = useRef(0);
@@ -130,31 +141,38 @@ export default function GatesScreen() {
   // Drop the whole current board out toward the line (used at spin start).
   async function fallOutBoard() { setBoardOut(true); await wait(500); setBoardOut(false); }
 
-  async function playSteps(steps: SlotStep[], t: { show: number; boom: number; gap: number }, bt: number, onWin?: (w: number) => void) {
+  async function playSteps(steps: SlotStep[], t: { frame: number; show: number; boom: number; gap: number }, bt: number, onWin?: (w: number) => void) {
     if (steps[0]) showGrid(steps[0].grid, ALL_NEW);
     for (let i = 0; i < steps.length; i++) {
       const st = steps[i];
       if (st.win > 0) {
         onWin?.(st.win);
         setTumbles((prev) => [...prev, st.win].slice(-8));   // sol ray: son 8 tumble kazanci
-        // SHOW — frame ALL winning cells together (birliktelik), then walk each
-        // symbol group so the player sees why it won (active group glows brighter)
-        setDim(true); setWinPhase('show'); setAllWin(new Set(st.cells));
+        // IGNITE — fiery frames light up on ALL winning cells first (GoO-style;
+        // the rest of the board stays fully lit — no darkening)
+        setWinPhase('show'); setAllWin(new Set(st.cells));
         const groups = winGroups(st.grid, st.cells, bt);
         setBreakdown(groups);
+        await wait(t.frame);
+        // SHOW — walk each symbol group: it glows brighter + its win amount
+        // floats up right on the cluster (like GoO's on-grid $ labels)
         for (const g of groups) {
           setWinCells(new Set(g.cells));
           setCallout({ v: g.v, count: g.count, amount: g.amount });
+          const c = centroidPct(g.cells);
+          const id = ++floatId.current;
+          setFloats((f) => [...f, { id, x: c.x, y: c.y, amt: g.amount }]);
+          window.setTimeout(() => setFloats((f) => f.filter((x) => x.id !== id)), t.show + t.boom + 500);
           await wait(t.show);
         }
-        // BOOM — all winners EXPLODE in place together
+        // BOOM — all winners burst together (gold core + sparks); survivors stay put
         setWinCells(new Set(st.cells)); setWinPhase('boom'); setCallout(null);
         await wait(t.boom);
-        setWinCells(new Set()); setAllWin(new Set()); setBreakdown([]); setWinPhase(null); setDim(false);
+        setWinCells(new Set()); setAllWin(new Set()); setBreakdown([]); setWinPhase(null);
         if (i + 1 < steps.length) { showGrid(steps[i + 1].grid, computeMeta(st.grid, st.cells)); await wait(t.gap); }
       }
     }
-    setWinCells(new Set()); setWinPhase(null); setCallout(null); setDim(false);
+    setWinCells(new Set()); setWinPhase(null); setCallout(null);
   }
 
   // GoO-tarzi buyuk kazanc sekansi: kademeli baslik + 0'dan hedefe sayan sayac +
@@ -181,8 +199,10 @@ export default function GatesScreen() {
 
   async function animate(res: SlotResult) {
     const tb = turboRef.current;
-    const baseT = tb ? { show: 420, boom: 260, gap: 70 } : { show: 950, boom: 600, gap: 150 };
-    const fsT = tb ? { show: 320, boom: 220, gap: 60 } : { show: 680, boom: 480, gap: 120 };
+    // yavas ve okunur varsayilan (Rasim: "cok hizli geciyor anlasilmiyor");
+    // turbo eskisinden de hizli kaliyor
+    const baseT = tb ? { frame: 140, show: 460, boom: 320, gap: 110 } : { frame: 340, show: 1100, boom: 720, gap: 260 };
+    const fsT = tb ? { frame: 110, show: 380, boom: 260, gap: 90 } : { frame: 260, show: 820, boom: 560, gap: 200 };
     if (!res.buy) await fallOutBoard();           // old board falls away first
     let running = 0;
     await playSteps(res.base.steps, baseT, res.bet, (w) => { running += w; setRunWin(running); });
@@ -219,16 +239,18 @@ export default function GatesScreen() {
   }
 
   async function spin(buy = false) {
-    if (!session) { navigate('/login'); return; }
+    if (!demo && !session) { navigate('/login'); return; }
     const st = buy ? buyStake : stake;
-    if (busy || st > balance || st <= 0) return;
+    if (busy || (!demo && (st > balance || st <= 0))) return;
     setBusy(true); setErr(null); setBanner(null); setBig(false);
     setRunWin(0); setTumbles([]); setMultSum(0); setFs(FS_OFF); setWinCells(new Set()); setAllWin(new Set()); setBreakdown([]); setBigWin(null);
-    setWinPhase(null); setDim(false); setCallout(null);
+    setWinPhase(null); setCallout(null); setFloats([]);
     try {
-      const res = await matchProvider.slotSpin(bet, buy ? false : ante, buy);
+      const res = demo
+        ? (await import('../slot/demoEngine')).demoSpin(bet, buy ? false : ante, buy)
+        : await matchProvider.slotSpin(bet, buy ? false : ante, buy);
       await animate(res);
-      await refreshProfile();
+      if (!demo) await refreshProfile();
     } catch (e) {
       autoRef.current = false; setAuto(false);
       setErr(e instanceof Error ? cleanErr(e.message, t) : t('go.err.spinfail'));
@@ -240,7 +262,7 @@ export default function GatesScreen() {
   async function autoLoop() {
     while (autoRef.current && autoLeftRef.current > 0) {
       const st = anteRef.current ? Math.round(betRef.current * 1.25) : betRef.current;
-      if (st > balRef.current || st <= 0) break;
+      if (!demo && (st > balRef.current || st <= 0)) break;
       await spin(false);
       if (!autoRef.current) break;
       if (autoLeftRef.current !== Infinity) { autoLeftRef.current -= 1; setAutoLeft(autoLeftRef.current); }
@@ -251,13 +273,13 @@ export default function GatesScreen() {
   }
   function startAuto(count: number) {
     setAutoPanel(false);
-    if (stake > balance) return;
+    if (!demo && stake > balance) return;
     autoRef.current = true; setAuto(true);
     autoLeftRef.current = count; setAutoLeft(count);
     if (!busy) void autoLoop();
   }
   function onAutoBtn() {
-    if (!session) { navigate('/login'); return; }
+    if (!demo && !session) { navigate('/login'); return; }
     if (auto) { autoRef.current = false; setAuto(false); return; }
     setAutoPanel(true);
   }
@@ -273,9 +295,9 @@ export default function GatesScreen() {
 
       <div className="go-stage">
         <aside className="go-rail">
-          <button className="go-buy" disabled={busy || !session || buyStake > balance} onClick={() => spin(true)}>
+          <button className="go-buy" disabled={busy || (!demo && (!session || buyStake > balance))} onClick={() => spin(true)}>
             <span className="go-buy-t">{t('go.buyfs')}</span>
-            <span className="go-buy-p tnum">{session ? buyStake.toLocaleString() : '—'}</span>
+            <span className="go-buy-p tnum">{session || demo ? buyStake.toLocaleString() : '—'}</span>
           </button>
 
           <div className="go-double">
@@ -306,17 +328,19 @@ export default function GatesScreen() {
           <div className="go-goal">
             <div className="go-net" aria-hidden="true" />
             <div className="go-reels">
-              <div className={`go-grid ${dim ? 'dim' : ''}`} style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}>
+              <div className="go-grid" style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}>
                 {board.cells.map((v, i) => {
                   const m = board.meta[i] ?? ALL_NEW[i];
                   const enter = boardOut ? 'out' : m.n ? 'drop' : m.dy > 0 ? 'shift' : '';
                   const winCls = winCells.has(i) ? `win ${winPhase ?? ''}` : '';
                   const frameCls = allWin.has(i) && winPhase === 'show' ? 'wframe' : '';
+                  // GoO-tarzi kaskad: soldan saga sutun sutun, sutun icinde yukaridan asagi
+                  const dropDelay = (i % COLS) * 55 + Math.floor(i / COLS) * 35;
                   return (
                     <div
                       key={`${board.gen}-${i}`}
-                      className={`go-cell ${winCls || enter} ${frameCls} ${v < 0 ? 'orb' : ''} ${v === 9 ? 'scat' : ''}`}
-                      style={{ animationDelay: enter === 'drop' ? `${Math.floor(i / COLS) * 40}ms` : '0ms', ['--dy' as string]: m.dy }}
+                      className={`go-cell ${winCls || enter} ${frameCls} ${v < 0 ? 'orb' : ''} ${v === 10 ? 'scat' : ''}`}
+                      style={{ animationDelay: enter === 'drop' ? `${dropDelay}ms` : '0ms', ['--dy' as string]: m.dy }}
                     >
                       <span className="go-sym-wrap" style={{ animationDelay: `${(i % 7) * 0.28}s` }}>
                         <SlotSymbol v={v} />
@@ -325,6 +349,10 @@ export default function GatesScreen() {
                   );
                 })}
               </div>
+
+              {floats.map((f) => (
+                <div key={f.id} className="go-float tnum" style={{ left: `${f.x}%`, top: `${f.y}%` }}>+{f.amt.toLocaleString()}</div>
+              ))}
 
               {callout && (
                 <div className="go-callout">
@@ -409,7 +437,7 @@ export default function GatesScreen() {
       <div className="go-bar">
         <div className="go-credit">
           <span className="muted">{t('go.credit')}</span>
-          <b className="tnum">{session ? balance.toLocaleString() : '—'}</b>
+          <b className="tnum">{demo ? 'DEMO' : session ? balance.toLocaleString() : '—'}</b>
         </div>
 
         <div className="go-betbox">
@@ -423,9 +451,9 @@ export default function GatesScreen() {
             {auto ? <>{t('go.stop')}<span className="go-auto-left tnum">{autoLeft === Infinity ? '∞' : autoLeft}</span></> : t('go.auto')}
           </button>
 
-          <button className="go-spin" disabled={busy || auto || (!!session && stake > balance)} onClick={() => spin(false)}>
+          <button className="go-spin" disabled={busy || auto || (!demo && !!session && stake > balance)} onClick={() => spin(false)}>
             <span className="go-spin-ic" aria-hidden="true" />
-            <span className="go-spin-lbl">{!session ? t('go.login') : busy ? '···' : t('go.spin')}</span>
+            <span className="go-spin-lbl">{!session && !demo ? t('go.login') : busy ? '···' : t('go.spin')}</span>
           </button>
         </div>
       </div>
