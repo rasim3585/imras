@@ -1,27 +1,28 @@
 import { useEffect, useRef, useState } from 'react';
 import TeamCrest from '../components/TeamCrest';
 import { toggleSfx, whistle, cheer } from '../lib/sfx';
-import { flowAt, eventPos, ambientEvents, type Side, type EvType } from './liveSim';
+import { ballAt, simEvents, type Side, type SimEvType } from './matchSim';
 
 // ---------------------------------------------------------------------------
-// Broadcast-style pitch. The ball is animated every frame from flowAt(matchId,
-// clock) — the SAME deterministic simulation that drives the commentary — so the
-// ball, the attack arrow, the event badges and the text can never contradict.
-// Home attacks RIGHT. Goals + red cards come from the server (via `goalPulse` /
-// red counts) and get their own overlay on top. No random drift anywhere.
+// Broadcast-style pitch driven by a real POSSESSION simulation (matchSim): the
+// ball moves through passing sequences, one team clearly in possession, attacks
+// building toward goal and ending in a shot/save/corner. The ball, the attack
+// arrow, the badge and the label all come from the SAME sim at the SAME clock,
+// so they can never contradict. Goals + red cards come from the server (fair)
+// and interrupt with their own overlay. Home attacks RIGHT.
 // ---------------------------------------------------------------------------
 
 const HOME_ARROW = '#4aa3e2';
 const AWAY_ARROW = '#e2a04a';
 
-const EV_ICON: Record<EvType, string> = {
+const EV_ICON: Record<SimEvType, string> = {
   shot: '🎯', save: '🧤', miss: '💨', blocked: '🛡', corner: '⛳', freekick: '🎯',
-  offside: '🚩', foul: '⚠', yellow: '🟨', sub: '🔁', goal: '⚽', red: '🟥',
+  offside: '🚩', foul: '⚠', yellow: '🟨', throwin: '↩', goalkick: '🥅',
 };
-const EV_LABEL: Record<EvType, string> = {
+const EV_LABEL: Record<SimEvType, string> = {
   shot: 'Shot', save: 'Save!', miss: 'Off target', blocked: 'Blocked', corner: 'Corner',
   freekick: 'Free-kick', offside: 'Offside', foul: 'Foul', yellow: 'Yellow card',
-  sub: 'Sub', goal: 'GOAL', red: 'Red card',
+  throwin: 'Throw-in', goalkick: 'Goal kick',
 };
 
 export interface GoalPulse { id: number; team: Side; penalty: boolean }
@@ -41,7 +42,7 @@ export default function PitchTV({
   const ballRef = useRef<HTMLDivElement | null>(null);
   const trailRef = useRef<HTMLDivElement | null>(null);
   const [side, setSide] = useState<Side | 'mid'>('mid');
-  const [badge, setBadge] = useState<{ type: EvType; side: Side } | null>(null);
+  const [badge, setBadge] = useState<{ type: SimEvType; side: Side } | null>(null);
   const [momentum, setMomentum] = useState('Kick-off');
   const [overlay, setOverlay] = useState<{ kind: 'goal' | 'card'; text: string; sub: string } | null>(null);
   const [flash, setFlash] = useState<'goal' | null>(null);
@@ -51,7 +52,7 @@ export default function PitchTV({
   const holdUntil = useRef(0);         // real-ms: freeze ball at centre after a goal
   // on-pitch event hold: freeze the ball AT the event spot while its label shows,
   // so ball + label + badge always describe the same moment (no lingering).
-  const hold = useRef<{ until: number; x: number; y: number; type: EvType; side: Side } | null>(null);
+  const hold = useRef<{ until: number; x: number; y: number; type: SimEvType; side: Side } | null>(null);
   const labelRef = useRef('');
   const badgeKeyRef = useRef('');
   const smooth = useRef<[number, number]>([50, 50]);   // eased ball pos (kills teleport)
@@ -88,17 +89,17 @@ export default function PitchTV({
     ovTimer.current = window.setTimeout(() => setOverlay(null), 1900);
   }, [redHome, redAway]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // how long each event holds the ball at its spot (real ms) — legible, Nesine-style
-  const holdMs = (t: EvType) => (t === 'shot' ? 550 : t === 'yellow' || t === 'sub' ? 1500 : 1250);
+  // how long an event's label/badge lingers (real ms)
+  const holdMs = (t: SimEvType) => (t === 'yellow' ? 1600 : t === 'throwin' || t === 'goalkick' ? 900 : 1300);
 
-  // animation loop: ONE clock drives the ball, the arrows, the label and the
-  // badge — so they can never describe different moments. When an event's clock
-  // is reached the ball freezes AT that spot for holdMs while its label shows,
-  // then resumes. All motion is eased, so nothing teleports.
+  // animation loop: the ball comes from the POSSESSION sim (passing sequences);
+  // the arrow, badge and label are all derived from the SAME clock, so they
+  // always agree. Events light a short label/badge while the ball is naturally
+  // at that spot (the shot pass put it there). Goals hold the ball at centre.
   useEffect(() => {
     if (phase === 'upcoming') { if (ballRef.current) { ballRef.current.style.left = '50%'; ballRef.current.style.top = '50%'; } smooth.current = [50, 50]; return; }
     let raf = 0;
-    const events = ambientEvents(matchId, 90);
+    const events = simEvents(matchId, 90);
     const c0 = finished ? 5400 : getClock();
     let idx = events.findIndex((e) => e.sec > c0);           // skip events already in the past (join)
     if (idx < 0) idx = events.length;
@@ -109,34 +110,28 @@ export default function PitchTV({
       const clock = finished ? 5400 : getClock();
       const goalHeld = Date.now() < holdUntil.current;
 
-      // cross into any events we've just passed → start an on-pitch hold at the spot
+      // cross into any events we've just passed → light their label/badge briefly
       if (!goalHeld) {
         while (idx < events.length && clock >= events[idx].sec) {
           const e = events[idx];
-          const p = eventPos(matchId, e);        // ball AT the real spot (corner flag, goal mouth…)
-          hold.current = { until: Date.now() + holdMs(e.type), x: p.x, y: p.y, type: e.type, side: e.side };
+          hold.current = { until: Date.now() + holdMs(e.type), x: e.x, y: e.y, type: e.type, side: e.team };
           idx++;
         }
       }
       const h = !goalHeld && hold.current && Date.now() < hold.current.until ? hold.current : null;
 
-      let tx: number, ty: number, sideNow: Side | 'mid', intensity: number, label: string, bnow: { type: EvType; side: Side } | null;
-      if (goalHeld) {
-        tx = 50; ty = 50; sideNow = 'mid'; intensity = 0.3; label = 'Kick-off'; bnow = null;
-      } else if (h) {
-        tx = h.x; ty = h.y; sideNow = h.side; intensity = 1;
-        label = `${EV_LABEL[h.type]} · ${teamName(h.side)}`; bnow = { type: h.type, side: h.side };
-      } else {
-        const flow = flowAt(matchId, clock);
-        tx = flow.x; ty = flow.y; sideNow = flow.side; intensity = flow.intensity;
-        label = flow.side === 'mid' ? 'Midfield battle' : `▶ ${teamName(flow.side)} attacking`; bnow = null;
-      }
+      const b = goalHeld ? { x: 50, y: 50, team: 'home' as Side, moving: false } : ballAt(matchId, clock);
+      const sideNow: Side | 'mid' = goalHeld ? 'mid' : b.team;
+      let label: string, bnow: { type: SimEvType; side: Side } | null;
+      if (goalHeld) { label = 'Kick-off'; bnow = null; }
+      else if (h) { label = `${EV_LABEL[h.type]} · ${teamName(h.side)}`; bnow = { type: h.type, side: h.side }; }
+      else { label = `▶ ${teamName(b.team)}`; bnow = null; }
 
-      // ease toward the target (no teleport, smooth hold transitions)
+      // ease lightly (the sim is already continuous; this just softens pass-to-pass)
       const s = smooth.current;
-      s[0] += (tx - s[0]) * 0.22; s[1] += (ty - s[1]) * 0.22;
+      s[0] += (b.x - s[0]) * 0.5; s[1] += (b.y - s[1]) * 0.5;
       if (ballRef.current) { ballRef.current.style.left = `${s[0]}%`; ballRef.current.style.top = `${s[1]}%`; }
-      if (trailRef.current) { trailRef.current.style.left = `${s[0]}%`; trailRef.current.style.top = `${s[1]}%`; trailRef.current.style.opacity = String(0.15 + intensity * 0.35); }
+      if (trailRef.current) { trailRef.current.style.left = `${s[0]}%`; trailRef.current.style.top = `${s[1]}%`; trailRef.current.style.opacity = String(b.moving ? 0.5 : 0.2); }
 
       setSide((v) => (v === sideNow ? v : sideNow));
       if (label !== labelRef.current) { labelRef.current = label; setMomentum(label); }
