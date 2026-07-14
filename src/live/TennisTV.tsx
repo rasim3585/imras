@@ -135,7 +135,7 @@ export default function TennisTV({
       </div>
       <div className="court-score">
         <span className={`court-name ${flash === 'home' ? 'lit' : ''}`}>{server === 'home' && live ? '● ' : ''}{home}</span>
-        <span className="court-nums tnum">{hs} <span className="court-colon">:</span> {as}</span>
+        <span className={`court-nums tnum ${flash ? 'score-shake' : ''}`}>{hs} <span className="court-colon">:</span> {as}</span>
         <span className={`court-name ${flash === 'away' ? 'lit' : ''}`}>{away}{server === 'away' && live ? ' ●' : ''}</span>
       </div>
       {live && <div className="tn-setslabel">Sets</div>}

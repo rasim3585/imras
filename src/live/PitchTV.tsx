@@ -27,6 +27,15 @@ const EV_LABEL: Record<SimEvType, string> = {
 
 export interface GoalPulse { id: number; team: Side; penalty: boolean }
 
+// deterministic little confetti pieces (position %, drift px, delay s, colour)
+const CONF_COLORS = ['#ffd36b', '#4fe89a', '#4aa3e2', '#ff7a7a', '#ffffff'];
+const CONF_PIECES = Array.from({ length: 18 }, (_, i) => ({
+  x: (i * 53 + 11) % 100,
+  dx: ((i * 37) % 48) - 24,
+  d: (i % 6) * 0.08,
+  c: CONF_COLORS[i % CONF_COLORS.length],
+}));
+
 export default function PitchTV({
   home, away, hs, as, minute, phase, redHome, redAway,
   matchId, dur, getClock, goalPulse, homePlayer, awayPlayer, ht, yellows,
@@ -170,7 +179,7 @@ export default function PitchTV({
           <span className="sb2-info"><span className="sb2-name">{home}</span>{homePlayer && <span className="sb2-pl">({homePlayer})</span>}</span>
         </div>
         <div className="sb2-center">
-          <span className="sb2-score tnum">{phase === 'upcoming' ? '– : –' : `${hs}-${as}`}</span>
+          <span className={`sb2-score tnum ${flash === 'goal' ? 'score-shake' : ''}`}>{phase === 'upcoming' ? '– : –' : `${hs}-${as}`}</span>
           <span className="sb2-clock tnum">{phase === 'upcoming' ? 'soon' : finished ? 'FT' : <><span className="dot" />{minute}&apos;</>}</span>
           {ht && phase !== 'upcoming' && <span className="sb2-ht tnum">HT {ht[0]}-{ht[1]}</span>}
         </div>
@@ -215,6 +224,14 @@ export default function PitchTV({
             <div className={`pev pev-${badge.type} ${badge.side}`} key={`${badge.type}${badge.side}`}>
               <span className="pev-i">{EV_ICON[badge.type]}</span>
               <span className="pev-t">{EV_LABEL[badge.type]}</span>
+            </div>
+          )}
+
+          {flash === 'goal' && (
+            <div className="confetti">
+              {CONF_PIECES.map((p, i) => (
+                <i key={i} style={{ ['--x' as string]: `${p.x}%`, ['--dx' as string]: `${p.dx}px`, ['--d' as string]: `${p.d}s`, ['--c' as string]: p.c }} />
+              ))}
             </div>
           )}
 

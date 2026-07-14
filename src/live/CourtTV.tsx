@@ -156,7 +156,7 @@ export default function CourtTV({
       </div>
       <div className="court-score">
         <span className={`court-name ${flash === 'home' ? 'lit' : ''}`}>{home}</span>
-        <span className="court-nums tnum">{hs} <span className="court-colon">:</span> {as}</span>
+        <span className={`court-nums tnum ${flash ? 'score-shake' : ''}`}>{hs} <span className="court-colon">:</span> {as}</span>
         <span className={`court-name ${flash === 'away' ? 'lit' : ''}`}>{away}</span>
       </div>
     </div>
