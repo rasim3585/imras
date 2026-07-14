@@ -1665,6 +1665,11 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .court-ball { position: absolute; top: 50%; left: 50%; width: 15px; height: 15px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffa763, #d9601f); box-shadow: 0 2px 6px rgba(0,0,0,0.35); transform: translate(-50%, -50%); will-change: left, top; z-index: 5; }
 .court-ball.tennis-ball { width: 12px; height: 12px; background: radial-gradient(circle at 35% 30%, #eaff7a, #b7e02a); box-shadow: 0 0 7px rgba(234,255,122,0.6); }
 .court-ball.shooting { box-shadow: 0 0 10px rgba(255,167,99,0.9); }
+/* court players (basketball 5v5 / tennis 1v1) */
+.court-players { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.court-player { position: absolute; width: 12px; height: 12px; border-radius: 50%; transform: translate(-50%, -50%);
+  border: 1.5px solid rgba(255,255,255,0.9); box-shadow: 0 1px 4px rgba(0,0,0,0.55); z-index: 4; will-change: left, top; }
+.court-player.home { background: #2f6fd6; } .court-player.away { background: #d64a3a; }
 /* rim lights up on a made basket */
 .rim-lit { stroke: #ffd36b !important; animation: rim-pop 0.7s ease; }
 @keyframes rim-pop { 0% { stroke-width: 2.5; } 45% { stroke-width: 6; } 100% { stroke-width: 2.5; } }

@@ -25,6 +25,8 @@ export default function TennisTV({
   const setStart = useRef(Date.now());
   const mount = useRef(Date.now());
   const sm = useRef<[number, number]>([160, 100]);   // eased ball pos
+  const pHome = useRef<HTMLDivElement | null>(null);
+  const pAway = useRef<HTMLDivElement | null>(null);
 
   // server won a set → flash + reset the presentational sub-score clock
   useEffect(() => {
@@ -49,6 +51,12 @@ export default function TennisTV({
       const flow = tennisFlowAt(matchId, t);
       const s = sm.current; s[0] += (flow.x - s[0]) * 0.28; s[1] += (flow.y - s[1]) * 0.28;
       if (ballRef.current) { ballRef.current.style.left = `${(s[0] / 320) * 100}%`; ballRef.current.style.top = `${(s[1] / 200) * 100}%`; }
+      // players hold their baseline, tracking the ball laterally (and stepping in on their side)
+      const hy = 100 + (s[1] - 100) * 0.55, ay = 100 + (s[1] - 100) * 0.55;
+      const hx = 288 - Math.max(0, 200 - s[0]) * 0.08;   // steps in when ball is on the home (right) side
+      const ax = 32 + Math.max(0, s[0] - 120) * 0.08;
+      if (pHome.current) { pHome.current.style.left = `${(hx / 320) * 100}%`; pHome.current.style.top = `${(hy / 200) * 100}%`; }
+      if (pAway.current) { pAway.current.style.left = `${(ax / 320) * 100}%`; pAway.current.style.top = `${(ay / 200) * 100}%`; }
       setServer((v) => (v === flow.server ? v : flow.server));
       if (sport === 'volleyball') {
         const v = volleyState(matchId, setIdx, inSet);
@@ -81,6 +89,8 @@ export default function TennisTV({
         <line x1="160" y1="20" x2="160" y2="180" stroke="#ffffff" strokeWidth="1" strokeDasharray="3 3" opacity="0.6" />
       </svg>
 
+      {live && <div ref={pHome} className="court-player home" style={{ left: '90%', top: '50%' }} />}
+      {live && <div ref={pAway} className="court-player away" style={{ left: '10%', top: '50%' }} />}
       <div ref={ballRef} className={`court-ball tennis-ball ${live ? 'live' : ''}`} style={{ left: '50%', top: '50%' }} aria-hidden />
 
       <div className="court-top">

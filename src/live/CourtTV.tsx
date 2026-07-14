@@ -10,6 +10,8 @@ import { courtFlowAt, ambientPlay, type Side, type PlayType } from './courtSim';
 const PLAY_ICON: Record<PlayType, string> = {
   make2: '🏀', make3: '🎯', miss: '🧱', rebound: '🔁', steal: '🖐', foul: '⚠', block: '🛡', assist: '➡',
 };
+// 5-man home formation in court coords (0..320 × 0..200). Away mirrors on x.
+const FORM_BB: [number, number][] = [[95, 100], [150, 60], [150, 140], [210, 85], [210, 135]];
 
 export default function CourtTV({
   home, away, hs, as, period, minute, phase, matchId,
@@ -32,6 +34,7 @@ export default function CourtTV({
   // so the animation and the ball describe the same moment (not opposite ends).
   const hold = useRef<{ until: number; x: number; y: number } | null>(null);
   const sm = useRef<[number, number]>([160, 100]);   // eased ball pos (court coords)
+  const players = useRef<(HTMLDivElement | null)[]>([]);   // [0..4] home, [5..9] away
 
   // server basket → scorer flash + +pts pop
   useEffect(() => {
@@ -69,6 +72,14 @@ export default function CourtTV({
         const near = events.find((e) => Math.abs(e.sec - t) < 0.8);
         if (near && near.key !== shownBadge.current) { shownBadge.current = near.key; setBadge({ type: near.type, side: near.side, at: Date.now() }); }
       }
+      // players follow the ball across the court
+      const shift = (s[0] - 160) * 0.55;
+      for (let i = 0; i < 5; i++) {
+        const nx = Math.sin(t * 0.9 + i) * 8, ny = Math.cos(t * 0.7 + i * 1.3) * 9;
+        const ph = players.current[i], pa = players.current[5 + i];
+        if (ph) { ph.style.left = `${(Math.max(30, Math.min(300, FORM_BB[i][0] + shift + nx)) / 320) * 100}%`; ph.style.top = `${(Math.max(30, Math.min(170, FORM_BB[i][1] + ny)) / 200) * 100}%`; }
+        if (pa) { pa.style.left = `${(Math.max(20, Math.min(290, 320 - FORM_BB[i][0] + shift + nx)) / 320) * 100}%`; pa.style.top = `${(Math.max(30, Math.min(170, FORM_BB[i][1] - ny)) / 200) * 100}%`; }
+      }
       raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
@@ -98,6 +109,12 @@ export default function CourtTV({
       </svg>
 
       {live && <div className={`court-poss ${side}`} />}
+      {live && (
+        <div className="court-players">
+          {FORM_BB.map((_, i) => <div key={`h${i}`} ref={(el) => { players.current[i] = el; }} className="court-player home" />)}
+          {FORM_BB.map((_, i) => <div key={`a${i}`} ref={(el) => { players.current[5 + i] = el; }} className="court-player away" />)}
+        </div>
+      )}
       <div ref={ballRef} className={`court-ball ${live ? 'live' : ''}`} style={{ left: '50%', top: '50%' }} aria-hidden />
 
       {badge && (
