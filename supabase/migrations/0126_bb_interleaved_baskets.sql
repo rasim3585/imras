@@ -1,0 +1,4 @@
+-- MANTIK: tek top -> iki takım AYNI ANDA sayı atamaz. _bb_q_reveal: çeyrekteki tüm
+-- basketleri TEK sıralı diziye örer (ev/deplasman iç içe, her slot bir takım),
+-- fraksiyona göre sırayla açar. Doğrulama: 0.02 çözünürlükte both_at_once=0.
+-- _bb_state bunu kullanır. (Tam gövde 0126 apply ile.) settle etkilenmez (final otoriter).
