@@ -92,6 +92,7 @@ export default function GatesScreen() {
   const [winPhase, setWinPhase] = useState<'show' | 'boom' | null>(null);
   const [dim, setDim] = useState(false);
   const [callout, setCallout] = useState<{ v: number; count: number; amount: number } | null>(null);
+  const [breakdown, setBreakdown] = useState<WinGroup[]>([]);          // GoO-tarzi grup kirilim listesi
   const [busy, setBusy] = useState(false);
   const [bet, setBet] = useState(50);
   const [ante, setAnte] = useState(false);
@@ -139,7 +140,9 @@ export default function GatesScreen() {
         // SHOW — frame ALL winning cells together (birliktelik), then walk each
         // symbol group so the player sees why it won (active group glows brighter)
         setDim(true); setWinPhase('show'); setAllWin(new Set(st.cells));
-        for (const g of winGroups(st.grid, st.cells, bt)) {
+        const groups = winGroups(st.grid, st.cells, bt);
+        setBreakdown(groups);
+        for (const g of groups) {
           setWinCells(new Set(g.cells));
           setCallout({ v: g.v, count: g.count, amount: g.amount });
           await wait(t.show);
@@ -147,7 +150,7 @@ export default function GatesScreen() {
         // BOOM — all winners EXPLODE in place together
         setWinCells(new Set(st.cells)); setWinPhase('boom'); setCallout(null);
         await wait(t.boom);
-        setWinCells(new Set()); setAllWin(new Set()); setWinPhase(null); setDim(false);
+        setWinCells(new Set()); setAllWin(new Set()); setBreakdown([]); setWinPhase(null); setDim(false);
         if (i + 1 < steps.length) { showGrid(steps[i + 1].grid, computeMeta(st.grid, st.cells)); await wait(t.gap); }
       }
     }
@@ -220,7 +223,7 @@ export default function GatesScreen() {
     const st = buy ? buyStake : stake;
     if (busy || st > balance || st <= 0) return;
     setBusy(true); setErr(null); setBanner(null); setBig(false);
-    setRunWin(0); setTumbles([]); setMultSum(0); setFs(FS_OFF); setWinCells(new Set()); setAllWin(new Set()); setBigWin(null);
+    setRunWin(0); setTumbles([]); setMultSum(0); setFs(FS_OFF); setWinCells(new Set()); setAllWin(new Set()); setBreakdown([]); setBigWin(null);
     setWinPhase(null); setDim(false); setCallout(null);
     try {
       const res = await matchProvider.slotSpin(bet, buy ? false : ante, buy);
@@ -328,6 +331,18 @@ export default function GatesScreen() {
                   <span className="go-callout-ic"><SlotSymbol v={callout.v} /></span>
                   <span className="go-callout-cnt tnum">×{callout.count}</span>
                   <b className="go-callout-win tnum">+{callout.amount.toLocaleString()}</b>
+                </div>
+              )}
+
+              {breakdown.length > 0 && !bonus && (
+                <div className="go-breakdown">
+                  {breakdown.map((g) => (
+                    <div key={g.v} className={`go-bd-row ${winCells.has(g.cells[0]) ? 'act' : ''}`}>
+                      <span className="go-bd-ic"><SlotSymbol v={g.v} /></span>
+                      <span className="go-bd-c tnum">×{g.count}</span>
+                      <b className="go-bd-w tnum">+{g.amount.toLocaleString()}</b>
+                    </div>
+                  ))}
                 </div>
               )}
 
