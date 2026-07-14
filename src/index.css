@@ -1599,6 +1599,46 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .av-result { text-align: center; padding: 11px; border-radius: 10px; font-weight: 800; font-size: 0.9rem; }
 .av-won { background: color-mix(in srgb, var(--av-mid) 18%, transparent); color: var(--av-mid); }
 .av-lost { background: color-mix(in srgb, var(--av-low) 15%, transparent); color: var(--av-low); }
+
+/* --- kazanç/kayıp dramaları (profesyonel geri bildirim) -------------------- */
+.av-won-pop { position: relative; animation: av-won-in 0.5s cubic-bezier(0.2, 1.4, 0.4, 1); }
+@keyframes av-won-in { 0% { transform: scale(0.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.av-won-big { display: block; font-size: 1.45rem; line-height: 1.1; color: #4fe89a; text-shadow: 0 0 14px rgba(79, 232, 154, 0.45); }
+.av-won-sub { display: block; font-size: 0.78rem; opacity: 0.85; margin-top: 2px; }
+.av-coinburst { position: absolute; left: 50%; top: 4px; pointer-events: none; }
+.av-coinburst i { position: absolute; width: 7px; height: 7px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffe9a8, #d9a520); opacity: 0;
+  animation: av-coin 0.9s cubic-bezier(0.2, 0.7, 0.4, 1) forwards; animation-delay: calc(var(--i) * 0.045s); }
+@keyframes av-coin {
+  0% { opacity: 1; transform: translate(0, 0) scale(0.6); }
+  100% { opacity: 0; transform: translate(calc((var(--i) - 3) * 15px), -36px) scale(1); }
+}
+.av-lost-pop { animation: av-lost-in 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
+@keyframes av-lost-in {
+  0% { transform: translateY(-7px); opacity: 0; }
+  55% { transform: translateY(2px); opacity: 1; }
+  100% { transform: translateY(0); }
+}
+.av-lost-big { display: block; font-size: 1.3rem; line-height: 1.1; color: #ff8d7a; }
+.av-panel-won { box-shadow: 0 0 0 1.5px rgba(79, 232, 154, 0.45), 0 0 22px rgba(79, 232, 154, 0.2); }
+.av-panel-lost { box-shadow: 0 0 0 1.5px rgba(226, 80, 74, 0.35); }
+
+/* --- crash darbesi: sahne sarsıntısı + kırmızı flaş + top patlaması -------- */
+.av-stage.is-crashed .av-svg { animation: av-crash-shake 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
+@keyframes av-crash-shake {
+  10%, 90% { transform: translate(-2px, 1px); }
+  20%, 80% { transform: translate(3px, -1px); }
+  30%, 50%, 70% { transform: translate(-4px, 2px); }
+  40%, 60% { transform: translate(4px, -2px); }
+}
+.av-crashflash { position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  background: radial-gradient(ellipse at center, rgba(226, 80, 74, 0.30), rgba(226, 80, 74, 0.08) 58%, transparent 80%);
+  animation: av-flashout 0.9s ease-out forwards; }
+@keyframes av-flashout { 0% { opacity: 1; } 100% { opacity: 0; } }
+.av-boom-ring { transform-box: fill-box; transform-origin: center; animation: av-ring 0.6s ease-out forwards; }
+@keyframes av-ring { 0% { transform: scale(0.3); opacity: 1; } 100% { transform: scale(2.6); opacity: 0; } }
+.av-boom-shard { transform-box: fill-box; transform-origin: 0 0; animation: av-shard 0.55s ease-out forwards; }
+@keyframes av-shard { 0% { transform: scale(0.25); opacity: 1; } 100% { transform: scale(1.7); opacity: 0; } }
 .av-placed { background: var(--surface-2); color: var(--text-mut); }
 .av-err { font-size: 0.72rem; color: var(--av-low); text-align: center; }
 

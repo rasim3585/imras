@@ -6,6 +6,22 @@ import type { AviatorStatus, AviatorConfig, AviatorBet } from '../lib/aviator';
 
 type TFn = (k: string, v?: Record<string, string | number>) => string;
 
+// quick count-up for the win amount — makes a cashout FEEL like money landing
+function CountUp({ value }: { value: number }) {
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    let raf = 0; const t0 = performance.now(); const dur = 650;
+    const step = (now: number) => {
+      const p = Math.min(1, (now - t0) / dur);
+      setShown(Math.round(value * (p * p * (3 - 2 * p))));
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
+  return <>{shown.toLocaleString()}</>;
+}
+
 // One bet slot. The app runs TWO of these (slot 1 + slot 2), independent bets on
 // the same round -- the classic Aviator dual bet. Betting is enabled ONLY in the
 // betting phase, cashout ONLY in flying (the backend also enforces both).
@@ -68,16 +84,33 @@ export default function BetPanel({
     }
   }
 
+  // won/lost dramas: coin burst + counting payout on a win, sinking -stake on a
+  // loss — the result reads instantly, no static text blink
+  const wonView = (x: number, p: number) => (
+    <div className="av-result av-won av-won-pop">
+      <span className="av-coinburst" aria-hidden="true">
+        {Array.from({ length: 7 }).map((_, i) => <i key={i} style={{ ['--i' as string]: i }} />)}
+      </span>
+      <b className="av-won-big tnum">+<CountUp value={p} /></b>
+      <span className="av-won-sub tnum">@ {x.toFixed(2)}x</span>
+    </div>
+  );
+
   // ---- states -> what the big button is right now ----
   let body: React.ReactNode;
   if (optimistic) {
-    body = <div className="av-result av-won">{t('av2.cashed', { x: optimistic.multiplier.toFixed(2), p: optimistic.payout })}</div>;
+    body = wonView(optimistic.multiplier, optimistic.payout);
   } else if (!loggedIn) {
     body = <button className="av-btn av-btn-login" onClick={onRequireLogin}>{t('av2.loginPlay')}</button>;
   } else if (bet?.status === 'won') {
-    body = <div className="av-result av-won">{t('av2.cashed', { x: bet.cashout_multiplier?.toFixed(2) ?? '', p: bet.payout ?? 0 })}</div>;
+    body = wonView(bet.cashout_multiplier ?? 0, bet.payout ?? 0);
   } else if (bet?.status === 'lost' || (phase === 'crashed' && bet)) {
-    body = <div className="av-result av-lost">{t('av2.lost', { s: bet?.stake ?? 0 })}</div>;
+    body = (
+      <div className="av-result av-lost av-lost-pop">
+        <b className="av-lost-big tnum">−{(bet?.stake ?? 0).toLocaleString()}</b>
+        <span className="av-won-sub">{t('av2.lost', { s: bet?.stake ?? 0 })}</span>
+      </div>
+    );
   } else if (phase === 'flying' && bet?.status === 'placed') {
     const potential = Math.floor(live * bet.stake);
     body = <button className="av-btn av-btn-cash" disabled={busy} onClick={cash}>

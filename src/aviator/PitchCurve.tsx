@@ -191,11 +191,29 @@ export default function PitchCurve({
           </g>
         )}
 
+        {/* crash: the ball BURSTS where it died — ring + shards fly out */}
+        {crashed && (
+          <g transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`}>
+            <circle className="av-boom-ring" r="11" fill="none" stroke="#ff8d7a" strokeWidth="3" />
+            {Array.from({ length: 8 }).map((_, i) => {
+              const a = (i * Math.PI) / 4;
+              return (
+                <line key={i} className="av-boom-shard" x1="0" y1="0"
+                  x2={(Math.cos(a) * 24).toFixed(1)} y2={(Math.sin(a) * 24).toFixed(1)}
+                  stroke="#ffb199" strokeWidth="2.5" strokeLinecap="round"
+                  style={{ animationDelay: `${i * 0.02}s` }} />
+              );
+            })}
+          </g>
+        )}
+
         {/* ball: rests at kick spot during betting, rides the curve while flying */}
         <g transform={`translate(${(flying || crashed ? x : BASE_X).toFixed(1)} ${(flying || crashed ? y : BASE_Y).toFixed(1)})`}>
           <Ball gone={crashed} stretch={stretch} angle={angleDeg} spinning={flying} />
         </g>
       </svg>
+
+      {crashed && <div className="av-crashflash" aria-hidden="true" />}
 
       <div className="av-mult-wrap">
         {betting ? (
