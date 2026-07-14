@@ -87,7 +87,8 @@ export default function GatesScreen() {
 
   const [board, setBoard] = useState<{ cells: number[]; meta: CellMeta[]; gen: number }>(() => ({ cells: initialGrid(), meta: ALL_NEW, gen: 0 }));
   const [boardOut, setBoardOut] = useState(false);       // whole grid dropping out (spin start)
-  const [winCells, setWinCells] = useState<Set<number>>(new Set());
+  const [winCells, setWinCells] = useState<Set<number>>(new Set());   // aktif grup (callout + parlak vurgu)
+  const [allWin, setAllWin] = useState<Set<number>>(new Set());        // TUM kazanan hucreler (birliktelik cercevesi)
   const [winPhase, setWinPhase] = useState<'show' | 'boom' | null>(null);
   const [dim, setDim] = useState(false);
   const [callout, setCallout] = useState<{ v: number; count: number; amount: number } | null>(null);
@@ -135,17 +136,18 @@ export default function GatesScreen() {
       if (st.win > 0) {
         onWin?.(st.win);
         setTumbles((prev) => [...prev, st.win].slice(-8));   // sol ray: son 8 tumble kazanci
-        // SHOW — each winning symbol group in turn, so the player sees why it won
-        setDim(true); setWinPhase('show');
+        // SHOW — frame ALL winning cells together (birliktelik), then walk each
+        // symbol group so the player sees why it won (active group glows brighter)
+        setDim(true); setWinPhase('show'); setAllWin(new Set(st.cells));
         for (const g of winGroups(st.grid, st.cells, bt)) {
           setWinCells(new Set(g.cells));
           setCallout({ v: g.v, count: g.count, amount: g.amount });
           await wait(t.show);
         }
-        // BOOM — all winners drop out toward the line together
+        // BOOM — all winners EXPLODE in place together
         setWinCells(new Set(st.cells)); setWinPhase('boom'); setCallout(null);
         await wait(t.boom);
-        setWinCells(new Set()); setWinPhase(null); setDim(false);
+        setWinCells(new Set()); setAllWin(new Set()); setWinPhase(null); setDim(false);
         if (i + 1 < steps.length) { showGrid(steps[i + 1].grid, computeMeta(st.grid, st.cells)); await wait(t.gap); }
       }
     }
@@ -218,7 +220,7 @@ export default function GatesScreen() {
     const st = buy ? buyStake : stake;
     if (busy || st > balance || st <= 0) return;
     setBusy(true); setErr(null); setBanner(null); setBig(false);
-    setRunWin(0); setTumbles([]); setMultSum(0); setFs(FS_OFF); setWinCells(new Set()); setBigWin(null);
+    setRunWin(0); setTumbles([]); setMultSum(0); setFs(FS_OFF); setWinCells(new Set()); setAllWin(new Set()); setBigWin(null);
     setWinPhase(null); setDim(false); setCallout(null);
     try {
       const res = await matchProvider.slotSpin(bet, buy ? false : ante, buy);
@@ -306,10 +308,11 @@ export default function GatesScreen() {
                   const m = board.meta[i] ?? ALL_NEW[i];
                   const enter = boardOut ? 'out' : m.n ? 'drop' : m.dy > 0 ? 'shift' : '';
                   const winCls = winCells.has(i) ? `win ${winPhase ?? ''}` : '';
+                  const frameCls = allWin.has(i) && winPhase === 'show' ? 'wframe' : '';
                   return (
                     <div
                       key={`${board.gen}-${i}`}
-                      className={`go-cell ${winCls || enter} ${v < 0 ? 'orb' : ''} ${v === 9 ? 'scat' : ''}`}
+                      className={`go-cell ${winCls || enter} ${frameCls} ${v < 0 ? 'orb' : ''} ${v === 9 ? 'scat' : ''}`}
                       style={{ animationDelay: enter === 'drop' ? `${Math.floor(i / COLS) * 40}ms` : '0ms', ['--dy' as string]: m.dy }}
                     >
                       <span className="go-sym-wrap" style={{ animationDelay: `${(i % 7) * 0.28}s` }}>
