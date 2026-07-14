@@ -21,35 +21,32 @@ function useData<T>(fn: () => Promise<T>): T | null {
   return d;
 }
 
-// --- Mini anket: 4 soru, tek sefer; öz-algı kartını besler --------------------
-export function SurveyCard({ onSaved }: { onSaved: () => void }) {
+// --- Anket formu (ortak): Aynam'da ilk doldurma, Profil'de düzenleme ----------
+function SurveyForm({ initial, title, sub, onSaved }: {
+  initial: Survey | null; title: string; sub: string; onSaved?: () => void;
+}) {
   const { t } = useI18n();
-  const [loaded, setLoaded] = useState(false);
-  const [have, setHave] = useState(false);
-  const [team, setTeam] = useState('');
-  const [fav, setFav] = useState('');
-  const [style, setStyle] = useState<Survey['self_style']>(null);
-  const [city, setCity] = useState('');
+  const [team, setTeam] = useState(initial?.team ?? '');
+  const [fav, setFav] = useState(initial?.fav_game ?? '');
+  const [style, setStyle] = useState<Survey['self_style']>(initial?.self_style ?? null);
+  const [city, setCity] = useState(initial?.city ?? '');
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    fetchSurvey().then((s) => { setHave(!!s?.self_style); setLoaded(true); }).catch(() => setLoaded(true));
-  }, []);
-  if (!loaded || have) return null;
+  const [saved, setSaved] = useState(false);
 
   async function submit() {
     if (!style) return;
-    setBusy(true);
+    setBusy(true); setSaved(false);
     try {
       await saveSurvey({ team: team.trim() || null, fav_game: fav || null, self_style: style, city: city.trim() || null });
-      setHave(true); onSaved();
+      setSaved(true); onSaved?.();
+      window.setTimeout(() => setSaved(false), 2200);
     } catch { /* sessiz */ } finally { setBusy(false); }
   }
 
   return (
     <div className="az-survey">
-      <div className="az-survey-h">🪞 {t('svy.title')}</div>
-      <p className="az-survey-sub">{t('svy.sub')}</p>
+      <div className="az-survey-h">🪞 {title}</div>
+      <p className="az-survey-sub">{sub}</p>
       <div className="az-survey-grid">
         <label>{t('svy.team')}<input value={team} onChange={(e) => setTeam(e.target.value)} placeholder={t('svy.team.ph')} maxLength={40} /></label>
         <label>{t('svy.fav')}
@@ -69,9 +66,34 @@ export function SurveyCard({ onSaved }: { onSaved: () => void }) {
           <button key={s} className={`az-chip ${style === s ? 'on' : ''}`} onClick={() => setStyle(s)}>{t('style.' + s)}</button>
         ))}
       </div>
-      <button className="btn az-survey-save" disabled={!style || busy} onClick={submit}>{busy ? '…' : t('svy.save')}</button>
+      <button className="btn az-survey-save" disabled={!style || busy} onClick={submit}>
+        {busy ? '…' : saved ? t('svy.saved') : t('svy.save')}
+      </button>
     </div>
   );
+}
+
+// Aynam üstü: yalnız hiç doldurulmamışsa görünür; sonrası Profil'den düzenlenir.
+export function SurveyCard({ onSaved }: { onSaved: () => void }) {
+  const { t } = useI18n();
+  const [loaded, setLoaded] = useState(false);
+  const [have, setHave] = useState(false);
+  useEffect(() => {
+    fetchSurvey().then((s) => { setHave(!!s?.self_style); setLoaded(true); }).catch(() => setLoaded(true));
+  }, []);
+  if (!loaded || have) return null;
+  return <SurveyForm initial={null} title={t('svy.title')} sub={t('svy.sub')} onSaved={() => { setHave(true); onSaved(); }} />;
+}
+
+// Profil sekmesi: her zaman görünür, mevcut cevaplarla dolu, düzenlenebilir.
+export function SurveyEditor() {
+  const { t } = useI18n();
+  const [s, setS] = useState<Survey | null | 'load'>('load');
+  useEffect(() => {
+    fetchSurvey().then((x) => setS(x)).catch(() => setS(null));
+  }, []);
+  if (s === 'load') return null;
+  return <SurveyForm key={s ? 'has' : 'new'} initial={s} title={t('svy.edit.title')} sub={t('svy.sub')} />;
 }
 
 // --- Öz-algı vs ölçülen davranış ---------------------------------------------

@@ -5,6 +5,7 @@ import { matchProvider } from '../lib/matchProvider';
 import { useI18n } from '../i18n/LanguageContext';
 import type { Challenge, Coupon } from '../lib/types';
 import { accuracyPct, formatOdds } from '../lib/format';
+import { SurveyEditor } from '../analiz/MirrorPlus';
 
 function isBonusAvailable(last: string | null): boolean {
   if (!last) return true;
@@ -167,6 +168,9 @@ export default function ProfileScreen() {
           );
         })}
       </div>
+
+      <div className="section-head"><h3>🪞 {t('svy.edit.title')}</h3></div>
+      <SurveyEditor />
 
       <div className="section-head"><h3>{t('pr.recent')}</h3></div>
       {loading ? (
