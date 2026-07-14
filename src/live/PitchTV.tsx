@@ -41,14 +41,20 @@ export default function PitchTV({
   const ballRef = useRef<HTMLDivElement | null>(null);
   const trailRef = useRef<HTMLDivElement | null>(null);
   const [side, setSide] = useState<Side | 'mid'>('mid');
-  const [badge, setBadge] = useState<{ type: EvType; side: Side; at: number } | null>(null);
+  const [badge, setBadge] = useState<{ type: EvType; side: Side } | null>(null);
+  const [momentum, setMomentum] = useState('Kick-off');
   const [overlay, setOverlay] = useState<{ kind: 'goal' | 'card'; text: string; sub: string } | null>(null);
   const [flash, setFlash] = useState<'goal' | null>(null);
   const [sound, setSound] = useState(false);
 
   const prevPhase = useRef(phase);
   const holdUntil = useRef(0);         // real-ms: freeze ball at centre after a goal
-  const shownBadge = useRef<string>('');
+  // on-pitch event hold: freeze the ball AT the event spot while its label shows,
+  // so ball + label + badge always describe the same moment (no lingering).
+  const hold = useRef<{ until: number; x: number; y: number; type: EvType; side: Side } | null>(null);
+  const labelRef = useRef('');
+  const badgeKeyRef = useRef('');
+  const smooth = useRef<[number, number]>([50, 50]);   // eased ball pos (kills teleport)
   const ovTimer = useRef<number | null>(null);
   const prevReds = useRef({ h: redHome, a: redAway });
 
@@ -82,50 +88,68 @@ export default function PitchTV({
     ovTimer.current = window.setTimeout(() => setOverlay(null), 1900);
   }, [redHome, redAway]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // animation loop: drive the ball + arrows + event badges off the simulation
+  // how long each event holds the ball at its spot (real ms) — legible, Nesine-style
+  const holdMs = (t: EvType) => (t === 'shot' ? 550 : t === 'yellow' || t === 'sub' ? 1500 : 1250);
+
+  // animation loop: ONE clock drives the ball, the arrows, the label and the
+  // badge — so they can never describe different moments. When an event's clock
+  // is reached the ball freezes AT that spot for holdMs while its label shows,
+  // then resumes. All motion is eased, so nothing teleports.
   useEffect(() => {
-    if (phase === 'upcoming') { if (ballRef.current) { ballRef.current.style.left = '50%'; ballRef.current.style.top = '50%'; } return; }
+    if (phase === 'upcoming') { if (ballRef.current) { ballRef.current.style.left = '50%'; ballRef.current.style.top = '50%'; } smooth.current = [50, 50]; return; }
     let raf = 0;
     const events = ambientEvents(matchId, 90);
+    const c0 = finished ? 5400 : getClock();
+    let idx = events.findIndex((e) => e.sec > c0);           // skip events already in the past (join)
+    if (idx < 0) idx = events.length;
+
+    const teamName = (s: Side) => (s === 'home' ? home : away);
+
     const step = () => {
       const clock = finished ? 5400 : getClock();
-      const held = Date.now() < holdUntil.current;
-      const flow = held ? { x: 50, y: 50, side: 'mid' as const, intensity: 0.2 } : flowAt(matchId, clock);
-      if (ballRef.current) { ballRef.current.style.left = `${flow.x}%`; ballRef.current.style.top = `${flow.y}%`; }
-      if (trailRef.current) { trailRef.current.style.left = `${flow.x}%`; trailRef.current.style.top = `${flow.y}%`; trailRef.current.style.opacity = String(0.15 + flow.intensity * 0.35); }
-      setSide((s) => (s === flow.side ? s : flow.side));
+      const goalHeld = Date.now() < holdUntil.current;
 
-      // nearest ambient event within a short window → floating badge
-      if (!held) {
-        const near = events.find((e) => Math.abs(e.sec - clock) < 1.4);
-        const key = near ? near.key : '';
-        if (key && key !== shownBadge.current) {
-          shownBadge.current = key;
-          setBadge({ type: near!.type, side: near!.side, at: Date.now() });
+      // cross into any events we've just passed → start an on-pitch hold at the spot
+      if (!goalHeld) {
+        while (idx < events.length && clock >= events[idx].sec) {
+          const e = events[idx];
+          const p = flowAt(matchId, e.sec);
+          hold.current = { until: Date.now() + holdMs(e.type), x: p.x, y: p.y, type: e.type, side: e.side };
+          idx++;
         }
       }
+      const h = !goalHeld && hold.current && Date.now() < hold.current.until ? hold.current : null;
+
+      let tx: number, ty: number, sideNow: Side | 'mid', intensity: number, label: string, bnow: { type: EvType; side: Side } | null;
+      if (goalHeld) {
+        tx = 50; ty = 50; sideNow = 'mid'; intensity = 0.3; label = 'Kick-off'; bnow = null;
+      } else if (h) {
+        tx = h.x; ty = h.y; sideNow = h.side; intensity = 1;
+        label = `${EV_LABEL[h.type]} · ${teamName(h.side)}`; bnow = { type: h.type, side: h.side };
+      } else {
+        const flow = flowAt(matchId, clock);
+        tx = flow.x; ty = flow.y; sideNow = flow.side; intensity = flow.intensity;
+        label = flow.side === 'mid' ? 'Midfield battle' : `▶ ${teamName(flow.side)} attacking`; bnow = null;
+      }
+
+      // ease toward the target (no teleport, smooth hold transitions)
+      const s = smooth.current;
+      s[0] += (tx - s[0]) * 0.22; s[1] += (ty - s[1]) * 0.22;
+      if (ballRef.current) { ballRef.current.style.left = `${s[0]}%`; ballRef.current.style.top = `${s[1]}%`; }
+      if (trailRef.current) { trailRef.current.style.left = `${s[0]}%`; trailRef.current.style.top = `${s[1]}%`; trailRef.current.style.opacity = String(0.15 + intensity * 0.35); }
+
+      setSide((v) => (v === sideNow ? v : sideNow));
+      if (label !== labelRef.current) { labelRef.current = label; setMomentum(label); }
+      const bk = bnow ? `${bnow.type}:${bnow.side}:${hold.current?.until}` : '';
+      if (bk !== badgeKeyRef.current) { badgeKeyRef.current = bk; setBadge(bnow); }
+
       raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [matchId, phase, finished, getClock]);
-
-  // auto-clear the small badge
-  useEffect(() => {
-    if (!badge) return;
-    const id = window.setTimeout(() => setBadge((b) => (b && b.at === badge.at ? null : b)), 2600);
-    return () => clearTimeout(id);
-  }, [badge]);
+  }, [matchId, phase, finished, getClock, home, away]);
 
   useEffect(() => () => { if (ovTimer.current) clearTimeout(ovTimer.current); }, []);
-
-  const momentum = (() => {
-    if (phase === 'upcoming') return 'Kick-off soon';
-    if (finished) return 'Full time';
-    if (badge && Date.now() - badge.at < 2000) return `${EV_LABEL[badge.type]} · ${badge.side === 'home' ? home : away}`;
-    if (side === 'mid') return 'Midfield battle';
-    return `▶ ${side === 'home' ? home : away} attacking`;
-  })();
 
   return (
     <div className="pitch-tv">
@@ -174,7 +198,7 @@ export default function PitchTV({
           <div ref={ballRef} className="pitch-ball" style={{ left: '50%', top: '50%' }}><span className="pent" /></div>
 
           {badge && (
-            <div className={`pev pev-${badge.type} ${badge.side}`} key={badge.at}>
+            <div className={`pev pev-${badge.type} ${badge.side}`} key={`${badge.type}${badge.side}`}>
               <span className="pev-i">{EV_ICON[badge.type]}</span>
               <span className="pev-t">{EV_LABEL[badge.type]}</span>
             </div>
