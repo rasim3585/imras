@@ -1,0 +1,6 @@
+-- KÖK NEDEN 2 (2026-07-14): seed_matches'te v_have (bir turda mevcut maç sayısı)
+-- TÜM sporları sayıyordu. Basketbol/tenis/voleybol (0092+) aynı turları doldurunca
+-- v_have>=3 oluyor, v_make=0 kalıyor -> FUTBOL üretilmiyor (açlık). Sonuç: canlı
+-- futbol maçı olmuyor ("e-football başlamıyor"). Düzeltme: v_have + v_busy yalnız
+-- sport='football' saysın (her tur 3 futbol garanti). 0121'deki takım filtresi korundu.
+-- Not: tam gövde 0122 apply_migration ile uygulandı; bu dosya repo kaydı.
