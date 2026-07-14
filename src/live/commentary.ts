@@ -9,12 +9,13 @@ import { simEvents, type SimEvType } from './matchSim';
 
 export type LineKind =
   | 'buildup' | 'shot' | 'goal' | 'miss' | 'save' | 'blocked' | 'corner'
-  | 'foul' | 'freekick' | 'offside' | 'yellow' | 'sub' | 'calm' | 'card' | 'mark';
+  | 'foul' | 'freekick' | 'offside' | 'yellow' | 'goalkick' | 'sub' | 'calm' | 'card' | 'mark';
 
 export interface Line {
   key: string;
   minute: number;
   sub: number;
+  sec?: number;     // match-second the moment happens — feed reveals on the SAME clock the pitch does
   kind: LineKind;
   team?: Side;
   text: string;
@@ -93,9 +94,12 @@ export function atmosphereScript(matchId: string, home: string, away: string): L
 
 // --- feed lines from the POSSESSION sim (matchSim) — so the key-moments text
 //     matches the ball on the pitch exactly (same events). ---------------------
+// EVERY held pitch event maps to a feed line — same events, so the feed and the
+// pitch can never diverge (goal kick included: the pitch now holds on it too).
 const SIM_KIND: Partial<Record<SimEvType, LineKind>> = {
   save: 'save', miss: 'miss', blocked: 'blocked', corner: 'corner',
   freekick: 'freekick', offside: 'offside', foul: 'foul', yellow: 'yellow',
+  goalkick: 'goalkick',
 };
 const SIM_TEXT: Record<string, string[]> = {
   save: ['{T} shoot… and the keeper saves it!', '{T} strike… great stop by the keeper!'],
@@ -105,15 +109,16 @@ const SIM_TEXT: Record<string, string[]> = {
   offside: ['…but the flag is up. Offside, {T}.', '{T} caught offside.'],
   foul: ['Cynical foul stops {T}. Free-kick.', 'Late challenge — free-kick to {T}.'],
   yellow: ['Booked. Yellow card, {T}.', '{T} go into the book.'],
+  goalkick: ['Goal kick, {T}.', '{T} restart from the keeper.'],
 };
 export function simLines(matchId: string, home: string, away: string): Line[] {
   const rng = seeded(`${matchId}:fl`);
   const out: Line[] = [];
   for (const e of simEvents(matchId, 90)) {
-    const kind = SIM_KIND[e.type]; if (!kind) continue;   // skip shot/throw-in/goal-kick noise
-    out.push({ key: e.key, minute: e.minute, sub: 0, kind, team: e.team, text: T(pick(rng, SIM_TEXT[e.type] ?? ['{T}']), e.team, home, away) });
+    const kind = SIM_KIND[e.type]; if (!kind) continue;   // shot is only a sub-beat, never emitted standalone
+    out.push({ key: e.key, minute: e.minute, sub: 0, sec: e.sec, kind, team: e.team, text: T(pick(rng, SIM_TEXT[e.type] ?? ['{T}']), e.team, home, away) });
   }
-  return out.sort((a, b) => a.minute - b.minute);
+  return out.sort((a, b) => (a.sec ?? 0) - (b.sec ?? 0));
 }
 
 /** A goal's build-up burst: attack → shot → GOAL. */
@@ -124,26 +129,27 @@ export function goalBurst(
   const rng = seeded(`${matchId}:g${minute}`);
   const tName = nm(team, home, away);
   const score = `${hs}-${as}`;
-  const goal = { key: `g${minute}2`, minute, sub: 2, kind: 'goal' as const, team, isGoal: true, scoreH: hs, scoreA: as };
+  const s0 = minute * 60;
+  const goal = { key: `g${minute}2`, minute, sub: 2, sec: s0 + 2, kind: 'goal' as const, team, isGoal: true, scoreH: hs, scoreA: as };
   if (penalty) {
     return [
-      { key: `g${minute}0`, minute, sub: 0, kind: 'buildup', team, text: `Penalty to ${tName}! Up steps the taker…` },
-      { key: `g${minute}1`, minute, sub: 1, kind: 'shot', team, text: 'he sends the keeper the wrong way…' },
+      { key: `g${minute}0`, minute, sub: 0, sec: s0, kind: 'buildup', team, text: `Penalty to ${tName}! Up steps the taker…` },
+      { key: `g${minute}1`, minute, sub: 1, sec: s0 + 1, kind: 'shot', team, text: 'he sends the keeper the wrong way…' },
       { ...goal, penalty: true, text: `PENALTY GOAL! ${tName} make it ${score}` },
     ];
   }
   return [
-    { key: `g${minute}0`, minute, sub: 0, kind: 'buildup', team, text: T(pick(rng, BUILDUP), team, home, away) },
-    { key: `g${minute}1`, minute, sub: 1, kind: 'shot', team, text: T(pick(rng, SHOT), team, home, away) },
+    { key: `g${minute}0`, minute, sub: 0, sec: s0, kind: 'buildup', team, text: T(pick(rng, BUILDUP), team, home, away) },
+    { key: `g${minute}1`, minute, sub: 1, sec: s0 + 1, kind: 'shot', team, text: T(pick(rng, SHOT), team, home, away) },
     { ...goal, text: `GOOOAL! ${tName} make it ${score}` },
   ];
 }
 
 export function cardLine(minute: number, team: Side, teamName: string): Line {
-  return { key: `c${minute}${team}`, minute, sub: 3, kind: 'card', team, text: `RED CARD! ${teamName} are down to ten men.` };
+  return { key: `c${minute}${team}`, minute, sub: 3, sec: minute * 60 + 3, kind: 'card', team, text: `RED CARD! ${teamName} are down to ten men.` };
 }
 
 /** A plain history line for goals that already happened before the user joined. */
 export function goalHistoryLine(minute: number, team: Side, teamName: string, hs: number, as: number): Line {
-  return { key: `g${minute}2`, minute, sub: 2, kind: 'goal', team, isGoal: false, scoreH: hs, scoreA: as, text: `Goal — ${teamName} (${hs}-${as})` };
+  return { key: `g${minute}2`, minute, sub: 2, sec: minute * 60 + 2, kind: 'goal', team, isGoal: false, scoreH: hs, scoreA: as, text: `Goal — ${teamName} (${hs}-${as})` };
 }

@@ -20,7 +20,7 @@ type OutKey = 'home' | 'draw' | 'away';
 
 const LINE_ICON: Record<string, string> = {
   goal: '⚽', shot: '🎯', save: '🧤', miss: '💨', blocked: '🛡', corner: '⛳',
-  freekick: '🎯', offside: '🚩', foul: '⚠', yellow: '🟨', card: '🟥', sub: '🔁',
+  freekick: '🎯', offside: '🚩', foul: '⚠', yellow: '🟨', goalkick: '🥅', card: '🟥', sub: '🔁',
   buildup: '▶', calm: '·', mark: '·',
 };
 
@@ -72,10 +72,18 @@ function computePickState(pick: OutKey, hs: number, as: number): 'win' | 'lose' 
   return hs === as ? 'level' : 'lose';
 }
 
-// Full set of commentary lines that should be revealed by `minute`.
-function revealedLines(matchId: string, st: LiveState, minute: number, atmo: Line[], baselineGoals: number): Line[] {
+const secOf = (l: Line) => l.sec ?? l.minute * 60;
+
+// Full set of commentary lines revealed by the match CLOCK (seconds). The ambient
+// sim lines are gated on the exact same second the pitch animates them, so the
+// feed's newest line always matches what the ball is doing on the pitch. Goals +
+// cards come from the server and reveal on their minute.
+function revealedLines(matchId: string, st: LiveState, clockSec: number, atmo: Line[], baselineGoals: number): Line[] {
   const home = st.home_team, away = st.away_team;
-  const out: Line[] = atmo.filter((l) => l.minute <= minute);
+  // ambient sim lines gate on the exact match-second (same clock as the pitch);
+  // goals + cards are already minute-gated server-side (st.events only holds
+  // goals revealed so far), so they pass straight through.
+  const out: Line[] = atmo.filter((l) => secOf(l) <= clockSec);
   let h = 0, a = 0;
   st.events.forEach((g, i) => {
     if (g.team === 'home') h++; else a++;
@@ -84,7 +92,7 @@ function revealedLines(matchId: string, st: LiveState, minute: number, atmo: Lin
     else out.push(...goalBurst(matchId, g.minute, g.team, home, away, h, a, isPenaltyGoal(matchId, g.minute)));
   });
   for (const c of st.cards) out.push(cardLine(c.minute, c.team, c.team === 'home' ? home : away));
-  return out.sort((x, y) => x.minute - y.minute || x.sub - y.sub);
+  return out.sort((x, y) => secOf(x) - secOf(y) || x.sub - y.sub);
 }
 
 export default function LiveMatchScreen() {
@@ -112,8 +120,10 @@ export default function LiveMatchScreen() {
 
   const stateRef = useRef<LiveState | null>(null);
   const minuteRef = useRef(0);
+  const getClockRef = useRef(getClock);
   stateRef.current = state;
   minuteRef.current = minute;
+  getClockRef.current = getClock;
 
   const enqueued = useRef<Set<string>>(new Set());
   const queue = useRef<Line[]>([]);
@@ -135,13 +145,17 @@ export default function LiveMatchScreen() {
     })();
   }, [matchId]);
 
-  // commentary ticker: reveal lines by minute, stream them one at a time
+  // commentary ticker: ambient sim lines drop the instant the pitch reaches them
+  // (same match-second clock), so the feed and the ball never diverge. Only the
+  // goal build-up (buildup→shot→GOAL) still drips beat-by-beat for drama.
   useEffect(() => {
     if (!matchId) return;
+    const isBurst = (l: Line) => l.kind === 'buildup' || l.kind === 'shot' || !!l.isGoal;
     const id = setInterval(() => {
       const st = stateRef.current;
       if (!st) return;
-      const lines = revealedLines(matchId, st, minuteRef.current, atmo, baselineGoals.current);
+      const clockSec = getClockRef.current ? getClockRef.current() : minuteRef.current * 60;
+      const lines = revealedLines(matchId, st, clockSec, atmo, baselineGoals.current);
 
       if (!seeded.current) {
         // join: everything so far is history — show at once, no burst/flash
@@ -157,11 +171,21 @@ export default function LiveMatchScreen() {
       const fresh = lines.filter((l) => !enqueued.current.has(l.key));
       if (fresh.length) {
         fresh.forEach((l) => enqueued.current.add(l.key));
-        queue.current.push(...fresh);
-        queue.current.sort((x, y) => x.minute - y.minute || x.sub - y.sub);
+        // ambient events + cards appear immediately, in chronological order, so
+        // the top feed line matches the badge the pitch is holding right now
+        const now = fresh.filter((l) => !isBurst(l)).sort((x, y) => secOf(x) - secOf(y) || x.sub - y.sub);
+        if (now.length) {
+          feedRef.current = [...now.reverse(), ...feedRef.current].slice(0, 60);
+          setFeed(feedRef.current);
+        }
+        const burst = fresh.filter(isBurst);
+        if (burst.length) {
+          queue.current.push(...burst);
+          queue.current.sort((x, y) => x.minute - y.minute || x.sub - y.sub);
+        }
       }
 
-      // on full time, flush the rest so the feed doesn't lag
+      // on full time, flush the goal drama so the feed doesn't lag behind
       if (st.phase === 'finished' && queue.current.length) {
         const rest = queue.current.splice(0);
         feedRef.current = [...rest.reverse(), ...feedRef.current].slice(0, 60);
