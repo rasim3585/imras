@@ -1,0 +1,4 @@
+-- Basket canlı skoru 1'er artıyordu (lineer round(qh*frac)) -> hiç +2/+3 yoktu.
+-- Düzeltme: _bb_reveal(pts,f) çeyrek puanını GERÇEK BASKETLERLE (2/3 adım) açar;
+-- _bb_state onu kullanır. Yalnız CANLI gösterim; final skor otoriter, settle etkilenmez.
+-- (Tam gövde 0124 apply_migration ile uygulandı; bu dosya repo kaydı.)

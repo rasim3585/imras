@@ -169,7 +169,7 @@ kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40
 ---
 
 ## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0124'ten** devam, sıfır dolgulu 4 hane. (Aviator görsel
+Yeni migration'lar **0125'ten** devam, sıfır dolgulu 4 hane. (Aviator görsel
 senkron 0079–0081; kalıcı sanal lig + settle 0082–0087; slot 0091; sanal
 basketbol/tenis/voleybol 0092–0106; get_bulletin security-definer fix 0101;
 davranış aynası Faz 0 yakalama 0107 + Faz 1a Aviator teşhis 0108 + Faz 1b trend

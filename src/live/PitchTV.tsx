@@ -26,14 +26,6 @@ const EV_LABEL: Record<EvType, string> = {
 
 export interface GoalPulse { id: number; team: Side; penalty: boolean }
 
-// 4-3-3 base formation for the home team (attacks RIGHT). Away mirrors on x.
-// The whole block shifts toward the ball's x each frame, so the teams push up
-// on attacks and drop back on defence — reads like a real match, not a lone ball.
-const FORM: [number, number][] = [
-  [6, 50], [18, 20], [18, 42], [18, 58], [18, 80],
-  [38, 30], [38, 50], [38, 70], [56, 26], [56, 50], [56, 74],
-];
-
 export default function PitchTV({
   home, away, hs, as, minute, phase, redHome, redAway,
   matchId, getClock, goalPulse, homePlayer, awayPlayer, ht, yellows,
@@ -48,7 +40,6 @@ export default function PitchTV({
 
   const ballRef = useRef<HTMLDivElement | null>(null);
   const trailRef = useRef<HTMLDivElement | null>(null);
-  const players = useRef<(HTMLDivElement | null)[]>([]);   // [0..10] home, [11..21] away
   const [side, setSide] = useState<Side | 'mid'>('mid');
   const [badge, setBadge] = useState<{ type: EvType; side: Side } | null>(null);
   const [momentum, setMomentum] = useState('Kick-off');
@@ -147,15 +138,6 @@ export default function PitchTV({
       if (ballRef.current) { ballRef.current.style.left = `${s[0]}%`; ballRef.current.style.top = `${s[1]}%`; }
       if (trailRef.current) { trailRef.current.style.left = `${s[0]}%`; trailRef.current.style.top = `${s[1]}%`; trailRef.current.style.opacity = String(0.15 + intensity * 0.35); }
 
-      // players: the whole block slides toward the ball's x (attack/defend shape)
-      const bx = s[0], shift = (bx - 50) * 0.42, tt = Date.now() / 1000;
-      for (let i = 0; i < 11; i++) {
-        const nx = Math.sin(tt * 0.6 + i) * 1.6, ny = Math.cos(tt * 0.5 + i * 1.4) * 2.2;
-        const ph = players.current[i], pa = players.current[11 + i];
-        if (ph) { ph.style.left = `${Math.max(2, Math.min(84, FORM[i][0] + shift + nx))}%`; ph.style.top = `${Math.max(6, Math.min(94, FORM[i][1] + ny))}%`; }
-        if (pa) { pa.style.left = `${Math.max(16, Math.min(98, 100 - FORM[i][0] + shift + nx))}%`; pa.style.top = `${Math.max(6, Math.min(94, FORM[i][1] - ny))}%`; }
-      }
-
       setSide((v) => (v === sideNow ? v : sideNow));
       if (label !== labelRef.current) { labelRef.current = label; setMomentum(label); }
       const bk = bnow ? `${bnow.type}:${bnow.side}:${hold.current?.until}` : '';
@@ -211,13 +193,6 @@ export default function PitchTV({
 
           {phase === 'live' && (side === 'home' || side === 'mid') && <div className="arrow home" style={{ ['--ac' as string]: HOME_ARROW }} />}
           {phase === 'live' && (side === 'away' || side === 'mid') && <div className="arrow away" style={{ ['--ac' as string]: AWAY_ARROW }} />}
-
-          {phase !== 'upcoming' && (
-            <div className="pitch-players">
-              {FORM.map((_, i) => <div key={`h${i}`} ref={(el) => { players.current[i] = el; }} className={`pplayer home ${i === 0 ? 'gk' : ''}`} />)}
-              {FORM.map((_, i) => <div key={`a${i}`} ref={(el) => { players.current[11 + i] = el; }} className={`pplayer away ${i === 0 ? 'gk' : ''}`} />)}
-            </div>
-          )}
 
           <div ref={trailRef} className="pitch-trail" />
           <div ref={ballRef} className="pitch-ball" style={{ left: '50%', top: '50%' }}><span className="pent" /></div>
