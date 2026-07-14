@@ -23,6 +23,7 @@ export default function TennisTV({
   const prev = useRef({ hs, as });
   const setStart = useRef(Date.now());
   const mount = useRef(Date.now());
+  const sm = useRef<[number, number]>([160, 100]);   // eased ball pos
 
   // server won a set → flash + reset the presentational sub-score clock
   useEffect(() => {
@@ -44,8 +45,9 @@ export default function TennisTV({
       const t = (Date.now() - mount.current) / 1000;
       const inSet = (Date.now() - setStart.current) / 1000;
       const flow = tennisFlowAt(matchId, t);
-      if (ballRef.current) { ballRef.current.style.left = `${(flow.x / 320) * 100}%`; ballRef.current.style.top = `${(flow.y / 200) * 100}%`; }
-      setServer((s) => (s === flow.server ? s : flow.server));
+      const s = sm.current; s[0] += (flow.x - s[0]) * 0.28; s[1] += (flow.y - s[1]) * 0.28;
+      if (ballRef.current) { ballRef.current.style.left = `${(s[0] / 320) * 100}%`; ballRef.current.style.top = `${(s[1] / 200) * 100}%`; }
+      setServer((v) => (v === flow.server ? v : flow.server));
       if (sport === 'volleyball') {
         const v = volleyState(matchId, setIdx, inSet);
         setSub({ games: v.points, point: '' });

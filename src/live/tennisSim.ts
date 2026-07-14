@@ -23,17 +23,24 @@ export interface TennisFlow { x: number; y: number; server: Side; hitting: Side 
 export function tennisFlowAt(matchId: string, tSec: number): TennisFlow {
   const gameIdx = Math.floor(tSec / (RALLY_SECS * 4));
   const server: Side = gameIdx % 2 === 0 ? 'home' : 'away';
+  const rallyIdx = Math.floor(tSec / RALLY_SECS);
   const inRally = tSec % RALLY_SECS;
-  const strokes = Math.floor(tSec / (RALLY_SECS / 4)); // ~4 strokes per rally
+  const active = RALLY_SECS * 0.66;              // rally happens; the rest = point over (ball dead)
+  if (inRally > active) {
+    // point scored → ball settles dead at the winner's baseline (no perpetual motion)
+    const winRight = seeded(`${matchId}:pw${rallyIdx}`)() < 0.5;
+    return { x: winRight ? 292 : 28, y: 100, server, hitting: server };
+  }
+  const stroke = RALLY_SECS / 4;
+  const strokes = Math.floor(tSec / stroke);     // ~4 strokes per rally
   const hitting: Side = strokes % 2 === 0 ? server : (server === 'home' ? 'away' : 'home');
-  // ball travels from the hitter's baseline toward the other, arcing over the net
   const from = hitting === 'home' ? 296 : 24;
   const to = hitting === 'home' ? 24 : 296;
-  const p = (tSec % (RALLY_SECS / 4)) / (RALLY_SECS / 4);
+  const p = (tSec % stroke) / stroke;
   const x = from + (to - from) * p;
-  const swing = seeded(`${matchId}:t${strokes}`)() * 90 + 55;   // lateral placement 55..145 → mapped
-  const y = 100 + Math.sin(p * Math.PI) * -0 + (swing - 100) * (0.4 + 0.3 * Math.sin(p * Math.PI));
-  return { x: clamp(x, 16, 304), y: clamp(y, 30, 170), server, hitting: inRally < RALLY_SECS ? hitting : server };
+  const swing = seeded(`${matchId}:t${strokes}`)() * 90 + 55;
+  const y = 100 + (swing - 100) * (0.4 + 0.3 * Math.sin(p * Math.PI));
+  return { x: clamp(x, 16, 304), y: clamp(y, 30, 170), server, hitting };
 }
 
 export interface TennisScore { games: [number, number]; point: string; server: Side }

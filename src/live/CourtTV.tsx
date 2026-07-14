@@ -27,6 +27,10 @@ export default function CourtTV({
   const prev = useRef({ hs, as });
   const mount = useRef(Date.now());
   const shownBadge = useRef('');
+  // on-score hold: freeze the ball AT the scoring hoop while the +pts pop shows,
+  // so the animation and the ball describe the same moment (not opposite ends).
+  const hold = useRef<{ until: number; x: number; y: number } | null>(null);
+  const sm = useRef<[number, number]>([160, 100]);   // eased ball pos (court coords)
 
   // server basket → scorer flash + +pts pop
   useEffect(() => {
@@ -37,6 +41,7 @@ export default function CourtTV({
     const pts = Math.max(dH, dA);
     setFlash(scorer);
     setPop({ side: scorer, pts, at: Date.now() });
+    hold.current = { until: Date.now() + 1150, x: scorer === 'home' ? 300 : 20, y: 100 };  // ball → scoring hoop
     const t = setTimeout(() => setFlash(null), 900);
     return () => clearTimeout(t);
   }, [hs, as]);
@@ -48,15 +53,20 @@ export default function CourtTV({
     const events = ambientPlay(matchId, 4000);
     const step = () => {
       const t = (Date.now() - mount.current) / 1000;
+      const held = hold.current && Date.now() < hold.current.until ? hold.current : null;
       const flow = courtFlowAt(matchId, t);
+      const tx = held ? held.x : flow.x, ty = held ? held.y : flow.y;
+      const s = sm.current; s[0] += (tx - s[0]) * 0.2; s[1] += (ty - s[1]) * 0.2;
       if (ballRef.current) {
-        ballRef.current.style.left = `${(flow.x / 320) * 100}%`;
-        ballRef.current.style.top = `${(flow.y / 200) * 100}%`;
-        ballRef.current.classList.toggle('shooting', flow.phase === 'shot');
+        ballRef.current.style.left = `${(s[0] / 320) * 100}%`;
+        ballRef.current.style.top = `${(s[1] / 200) * 100}%`;
+        ballRef.current.classList.toggle('shooting', !held && flow.phase === 'shot');
       }
-      setSide((s) => (s === flow.side ? s : flow.side));
-      const near = events.find((e) => Math.abs(e.sec - t) < 0.8);
-      if (near && near.key !== shownBadge.current) { shownBadge.current = near.key; setBadge({ type: near.type, side: near.side, at: Date.now() }); }
+      if (!held) {
+        setSide((v) => (v === flow.side ? v : flow.side));
+        const near = events.find((e) => Math.abs(e.sec - t) < 0.8);
+        if (near && near.key !== shownBadge.current) { shownBadge.current = near.key; setBadge({ type: near.type, side: near.side, at: Date.now() }); }
+      }
       raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
