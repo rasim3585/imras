@@ -5,6 +5,7 @@ import {
   type BenchmarkProfile, type BenchmarkAxis, type PlayerCard, type RealityCheck, type ChatProfile,
 } from '../lib/mirror';
 import { flagContent } from '../analiz/flagText';
+import MirrorPlus from '../analiz/MirrorPlus';
 import AviatorMirror from '../aviator/AviatorMirror';
 import { CoinIcon } from '../components/icons';
 import { useI18n } from '../i18n/LanguageContext';
@@ -216,6 +217,7 @@ function GenelTab() {
   const topPlayed = [...d.products].sort((a, b) => b.plays - a.plays)[0];
   return (
     <div className="az-body">
+      <MirrorPlus />
       <PlayerCardBlock />
       <CoachBlock />
 

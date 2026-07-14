@@ -1914,3 +1914,42 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 @keyframes avFlameFlick { 0%,100% { opacity: 0.95; } 50% { opacity: 0.74; } }
 .av-sparks circle { animation: avSpark 0.5s ease-in-out infinite; }
 @keyframes avSpark { 0%,100% { opacity: 0.2; } 45% { opacity: 0.9; } }
+
+/* --- Ayna+ (0133): anket + öz-algı göstergesi + Paralel Sen + tilt şeridi --- */
+.az-survey { background: var(--card); border: 1px solid var(--card-line); border-radius: var(--radius); padding: 14px; margin-bottom: var(--s3); }
+.az-survey-h { font-weight: 800; margin-bottom: 4px; }
+.az-survey-sub { font-size: 0.8rem; color: var(--text-mut); margin: 0 0 10px; }
+.az-survey-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 10px; }
+.az-survey-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 0.74rem; color: var(--text-mut); font-weight: 600; }
+.az-survey-grid input, .az-survey-grid select { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--card-line); background: var(--bg); color: var(--text); font-size: 0.86rem; }
+.az-survey-style { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.8rem; color: var(--text-mut); margin-bottom: 12px; }
+.az-chip { padding: 6px 14px; border-radius: 999px; border: 1.5px solid var(--card-line); background: var(--bg); color: var(--text); font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+.az-chip.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+.az-survey-save { width: auto; padding: 8px 22px; }
+
+.az-gap-gauge { margin: 6px 0 4px; }
+.az-gap-track { position: relative; height: 12px; border-radius: 999px; overflow: visible; display: flex; }
+.az-gap-zone { height: 100%; }
+.az-gap-zone.z1 { width: 34%; background: #2fbf71; border-radius: 999px 0 0 999px; opacity: 0.55; }
+.az-gap-zone.z2 { width: 33%; background: #e0bc10; opacity: 0.5; }
+.az-gap-zone.z3 { width: 33%; background: #e2504a; border-radius: 0 999px 999px 0; opacity: 0.55; }
+.az-gap-needle { position: absolute; top: -4px; width: 4px; height: 20px; border-radius: 2px; background: var(--text); transform: translateX(-50%); box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+.az-gap-said { position: absolute; top: 14px; width: 0; height: 0; transform: translateX(-50%);
+  border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 7px solid var(--text-mut); }
+.az-gap-labels { display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--text-mut); margin-top: 10px; }
+.az-gap-line { font-size: 0.86rem; margin: 10px 0 6px; line-height: 1.45; }
+.az-gap-comps { display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.74rem; color: var(--text-mut); }
+
+.az-par-svg { width: 100%; height: auto; color: var(--text); background: color-mix(in srgb, var(--card-line) 30%, transparent); border-radius: 10px; }
+.az-par-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.78rem; margin-top: 8px; }
+.az-par-legend .lg { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 4px; }
+.az-par-legend .lg.you { background: #1f9e75; height: 4px; }
+.az-par-legend .lg.b15 { background: #4aa3e2; }
+.az-par-legend .lg.b30 { background: #e2a04a; }
+.az-par-legend .pos { color: #1f9e75; } .az-par-legend .neg { color: #e2504a; }
+
+.az-tilt-strip { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; padding: 8px 0 2px; }
+.az-tilt-dot { width: calc(11px * var(--s, 1)); height: calc(11px * var(--s, 1)); border-radius: 50%; flex: 0 0 auto; }
+.az-tilt-dot.w { background: color-mix(in srgb, #1f9e75 75%, transparent); }
+.az-tilt-dot.l { background: color-mix(in srgb, var(--text-mut) 45%, transparent); }
+.az-tilt-dot.tl { box-shadow: 0 0 0 2px #e2504a; background: #e2504a; }

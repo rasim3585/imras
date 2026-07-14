@@ -113,3 +113,61 @@ export async function fetchSlotMirror(): Promise<SlotProfile> {
   if (error) throw new Error(error.message);
   return (data ?? { ready: false }) as SlotProfile;
 }
+
+// --- Ayna+ (0133): anket + öz-algı + Paralel Sen + tilt şeridi ---------------
+
+export interface Survey { team: string | null; fav_game: string | null; self_style: 'temkinli' | 'dengeli' | 'agresif' | null; city: string | null }
+
+export async function fetchSurvey(): Promise<Survey | null> {
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) return null;
+  const { data } = await supabase.from('user_survey').select('team, fav_game, self_style, city').eq('user_id', u.user.id).maybeSingle();
+  return (data as Survey | null) ?? null;
+}
+
+export async function saveSurvey(s: Survey): Promise<void> {
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) throw new Error('giris gerekli');
+  const { error } = await supabase.from('user_survey').upsert({ user_id: u.user.id, ...s, updated_at: new Date().toISOString() });
+  if (error) throw new Error(error.message);
+}
+
+export type ParallelProfile =
+  | { ready: false; n?: number; need?: number }
+  | {
+      ready: true; n: number; actual: number;
+      strat: { t: number; net: number }[];
+      series: { i: number; a: number; b: number; c: number }[];   // a=gerçek, b=1.5x, c=3x (kümülatif)
+    };
+export async function fetchParallel(): Promise<ParallelProfile> {
+  const { data, error } = await supabase.rpc('mirror_parallel');
+  if (error) throw new Error(error.message);
+  return data as ParallelProfile;
+}
+
+export type TiltProfile =
+  | { ready: false; n?: number; need?: number }
+  | {
+      ready: true; n: number;
+      points: { g: 'av' | 'go'; st: number; net: number; tl: boolean }[];
+      tilt_count: number; tilt_net: number;
+      raise_loss: number | null; raise_win: number | null;
+    };
+export async function fetchTilt(): Promise<TiltProfile> {
+  const { data, error } = await supabase.rpc('mirror_tilt');
+  if (error) throw new Error(error.message);
+  return data as TiltProfile;
+}
+
+export type SelfGapProfile =
+  | { ready: false; n?: number; need?: number; survey?: Survey | null }
+  | {
+      ready: true; score: number; style: 'temkinli' | 'dengeli' | 'agresif';
+      survey: (Survey & { user_id?: string }) | null;
+      comps: { target: number; chase: number; vol: number };
+    };
+export async function fetchSelfGap(): Promise<SelfGapProfile> {
+  const { data, error } = await supabase.rpc('mirror_selfgap');
+  if (error) throw new Error(error.message);
+  return data as SelfGapProfile;
+}
