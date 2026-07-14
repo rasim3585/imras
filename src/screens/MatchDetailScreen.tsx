@@ -8,7 +8,30 @@ import MatchChat from '../live/ChatPanel';
 import TeamCrest from '../components/TeamCrest';
 import { logEvent } from '../lib/behaviorLog';
 import { useI18n } from '../i18n/LanguageContext';
+import { useAuth } from '../auth/AuthContext';
+import { fetchMatchPreview } from '../lib/mirror';
 import type { LiveState, Match } from '../lib/types';
+
+// AI Maç Önizleme — sunucu tarafında maç+dil başına TEK üretim (cache),
+// sayılar vmatch_stats'tan; metin yoksa (key kapalı) kart hiç görünmez.
+function AiPreview({ matchId, upcoming }: { matchId: string; upcoming: boolean }) {
+  const { lang, t } = useI18n();
+  const { session } = useAuth();
+  const [text, setText] = useState<string | null>(null);
+  useEffect(() => {
+    if (!session || !upcoming) { setText(null); return; }
+    let alive = true;
+    fetchMatchPreview(matchId, lang).then((tx) => { if (alive) setText(tx); });
+    return () => { alive = false; };
+  }, [matchId, lang, session, upcoming]);
+  if (!text) return null;
+  return (
+    <div className="ai-card ai-preview">
+      <div className="ai-card-h">✦ {t('aip.title')}</div>
+      <p className="ai-text">{text}</p>
+    </div>
+  );
+}
 
 // First-half markets are bettable pre-match ONLY (mirror of MarketSection's gate).
 const HT_MARKETS = new Set(['ht_result', 'ht_over_under_0_5']);
@@ -153,6 +176,7 @@ export default function MatchDetailScreen() {
         );
       })()}
 
+      <AiPreview matchId={match.id} upcoming={!isLive && !isFinished} />
       <MatchStatsPanel matchId={match.id} />
 
       {groupsWith.length > 1 && (

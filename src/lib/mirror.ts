@@ -49,6 +49,48 @@ export async function fetchCoach(summary: unknown, lang = 'en'): Promise<string 
   }
 }
 
+// --- AI Kupon Hakemi + AI Maç Önizleme (0715) --------------------------------
+// İlke aynı: SAYILAR deterministik (coupon_review RPC / vmatch_stats), LLM
+// yalnız cümleye döker. Key yoksa text null — deterministik kart yine çalışır.
+
+export interface CouponReview {
+  ready: boolean; reason?: string;
+  legs?: number; stake?: number; total_odds?: number; combined_prob_pct?: number;
+  ev_pct?: number; ev_gold?: number; potential?: number;
+  riskiest?: { label: string; market: string; match: string; odds: number };
+  history?: {
+    rounds: number; won: number; net: number;
+    similar_played: number; similar_won: number; similar_net: number;
+  };
+  mirror_flags?: MirrorFlag[];
+}
+
+export async function fetchCouponReview(selections: unknown[], stake: number): Promise<CouponReview | null> {
+  const { data, error } = await supabase.rpc('coupon_review', { p_selections: selections, p_stake: stake });
+  if (error) return null;
+  return (data ?? null) as CouponReview | null;
+}
+
+export async function fetchCouponJudge(review: CouponReview, lang = 'en'): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke('coupon-judge', { body: { review, lang } });
+    if (error) return null;
+    return ((data as { text?: string | null })?.text ?? null);
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchMatchPreview(matchId: string, lang = 'en'): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke('match-preview', { body: { match_id: matchId, lang } });
+    if (error) return null;
+    return ((data as { text?: string | null })?.text ?? null);
+  } catch {
+    return null;
+  }
+}
+
 // Gerçeklik kontrolü (anti-kumar ayıraçları).
 export interface RealityAlert { code: string; level: 'danger' | 'warn'; value: Record<string, number> }
 export type RealityCheck =

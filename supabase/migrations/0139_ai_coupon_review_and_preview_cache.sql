@@ -1,0 +1,16 @@
+-- 0139: AI katmani deterministik taban (tam govdeler MCP ile canlida).
+-- (1) coupon_review(p_selections jsonb, p_stake numeric): AI Kupon Hakemi'nin
+--     TUM sayilari — birlesik adil olasilik (per-bacak 1/oran/1.06), parlay
+--     EV'si (1.06^-n - 1: her bacak marj tasir, oranlardan bagimsiz), en
+--     riskli bacak, kullanici gecmisi (benzer bacak sayisinda oynanan/kazanan/
+--     net), mirror_coupon bayraklari. auth.uid() zorunlu. LLM sayi uretmez.
+--     Test (canli, en yogun kullanici): 3 bacak 11.25 -> %7.46 adil sans,
+--     EV -%16, benzer 3314 kuponda 336 kazanc net -32,527.
+--     NOT: ilk surumde plpgsql degisken/alias cakismasi ('s') testte yakalandi
+--     ve duzeltildi (v_s / el).
+-- (2) match_preview_cache(fixture_id, lang) PK: AI Mac Onizleme cache'i —
+--     mac+dil basina TEK Haiku cagrisi. RLS acik, policy yok (yalniz
+--     service-role/edge function).
+-- Edge functions (deploy edildi, verify_jwt=true): coupon-judge v1,
+-- match-preview v1 — mirror-coach kalibi; ANTHROPIC_API_KEY yoksa
+-- {text:null} ve FE yalniz deterministik karti gosterir.

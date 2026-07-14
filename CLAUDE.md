@@ -169,7 +169,23 @@ kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40
 ---
 
 ## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0136'dan** devam, sıfır dolgulu 4 hane. (**0134 liderlik
+Yeni migration'lar **0140'tan** devam, sıfır dolgulu 4 hane. (**0136 oran
+soft-cap**: tavan 20→27.68, `_soft_cap` rasyonel kompresör — 20'ye kadar
+birebir, üstü asimptotik; tavanda eşitlenme bitti (0-2'de 85' beraberlik 26.35
+≠ galibiyet 27.60); tek dokunuş `_odds_line`+`_price`+`_make_display_odds`,
+4 spor otomatik miras. **0137 bülten hijyeni**: BSD'den event almadan düşen
+bayat 'notstarted' fikstürler "starting now" hayaleti yaratıyordu —
+get_bulletin'e 3 saat kickoff penceresi + reaper'a cancelled/void dalı (5
+fikstür temizlendi, kuponlar void). **0138 e-spor istatistik**:
+vleague_standings_ex (spor-doğru puan: futbol 3G+1B, basket PCT, voleybol VNL
+3/2/1, tenis ATP-race + form + seri), vteam_page/vteam_h2h/_finished_detail
+(set/çeyrek dizgileri yalnız finished), parsiyel indeksler; FE /team/:id +
+StandingsScreen spor-doğru kolonlar. **0139 AI tabanı**: coupon_review RPC
+(adil olasılık, parlay EV=1.06^-n-1, benzer-kupon karnesi) +
+match_preview_cache; edge fn **coupon-judge** + **match-preview** (haiku,
+mirror-coach kalıbı, key yoksa text:null). İlke korunur: sayılar HEP
+deterministik, LLM yalnız cümleye döker; para yoluna analiz mutasyonu ASLA.)
+(**0134 liderlik
 net birliği**: day/week net artık kupon+aviator+slot toplamı — eskiden yalnız
 kupon olduğundan 0 görünüyordu; **0135**: eski 0-parametreli get_leaderboard()
 düşürüldü, tek sürüm kaldı.) (**0133 Ayna+**:

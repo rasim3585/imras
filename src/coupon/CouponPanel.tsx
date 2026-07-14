@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from './CartContext';
 import { useAuth } from '../auth/AuthContext';
@@ -6,6 +6,7 @@ import { matchProvider } from '../lib/matchProvider';
 import { formatOdds } from '../lib/format';
 import { logEvent } from '../lib/behaviorLog';
 import { useI18n } from '../i18n/LanguageContext';
+import { fetchCouponReview, fetchCouponJudge, type CouponReview } from '../lib/mirror';
 
 const QUICK = [100, 250, 500];
 
@@ -14,7 +15,7 @@ const QUICK = [100, 250, 500];
 export default function CouponPanel({ onClose }: { onClose?: () => void }) {
   const { selections, count, totalOdds, remove, clear, saveDraft } = useCart();
   const { profile, session, refreshProfile } = useAuth();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const navigate = useNavigate();
 
   const balance = profile?.gold_balance ?? 0;
@@ -23,6 +24,25 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [placed, setPlaced] = useState(false);
   const [savedMsg, setSavedMsg] = useState(false);
+  // AI Kupon Hakemi: sayılar deterministik (coupon_review), LLM yalnız yorumlar
+  const [judge, setJudge] = useState<{ review: CouponReview; text: string | null } | null>(null);
+  const [judging, setJudging] = useState(false);
+
+  // kupon değişince eski kararname geçersiz — sıfırla
+  useEffect(() => { setJudge(null); }, [count, stake]);
+
+  async function askJudge() {
+    setJudging(true); setJudge(null);
+    try {
+      const review = await fetchCouponReview(selections as unknown as unknown[], stake);
+      if (!review?.ready) { setJudge(null); return; }
+      logEvent('coupon', 'coupon_ai_reviewed', {
+        legs: review.legs, total_odds: review.total_odds, ev_pct: review.ev_pct, stake,
+      });
+      const text = await fetchCouponJudge(review, lang);
+      setJudge({ review, text });
+    } finally { setJudging(false); }
+  }
 
   function save() {
     saveDraft();
@@ -102,6 +122,35 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
               </div>
             </div>
             <div className="cpn-row cpn-win"><span>{t('cpn.potential')}</span><b className="tnum">{potential} <span className="coin" aria-hidden="true" /></b></div>
+
+            {session && (
+              judge ? (
+                <div className="ai-card">
+                  <div className="ai-card-h">✦ {t('aij.title')}</div>
+                  <div className="ai-nums">
+                    <span className="ai-num"><b className="tnum">%{judge.review.combined_prob_pct}</b> {t('aij.prob')}</span>
+                    <span className="ai-num ai-neg"><b className="tnum">{judge.review.ev_gold}</b> {t('aij.ev')}</span>
+                    {judge.review.riskiest && (
+                      <span className="ai-num">{t('aij.risk')}: <b>{judge.review.riskiest.label} @{Number(judge.review.riskiest.odds).toFixed(2)}</b></span>
+                    )}
+                  </div>
+                  {judge.review.history && judge.review.history.similar_played >= 5 && (
+                    <div className="ai-hist">
+                      {t('aij.hist')
+                        .replace('{n}', String(judge.review.history.similar_played))
+                        .replace('{w}', String(judge.review.history.similar_won))
+                        .replace('{net}', String(judge.review.history.similar_net))}
+                    </div>
+                  )}
+                  {judge.text && <p className="ai-text">{judge.text}</p>}
+                </div>
+              ) : (
+                <button className="btn btn-ghost btn-block btn-sm ai-btn" style={{ marginTop: 'var(--s2)' }}
+                  disabled={judging} onClick={askJudge}>
+                  {judging ? '…' : <>✦ {t('aij.ask')}</>}
+                </button>
+              )
+            )}
             {session && <div className="cpn-bal dim tnum">{t('cpn.balance')}: {balance} <span className="coin" aria-hidden="true" /></div>}
             {error && <div className="banner banner-error" style={{ marginTop: 'var(--s2)' }}>{error}</div>}
 
