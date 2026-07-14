@@ -50,8 +50,9 @@ export default function PitchTV({
 
   const prevPhase = useRef(phase);
   const holdUntil = useRef(0);         // real-ms: freeze ball at centre after a goal
-  // a goal first shows the ball IN the net (or on the penalty spot), THEN centre
-  const goalSpot = useRef<{ until: number; x: number; y: number } | null>(null);
+  // goal drama: a timed sequence of ball spots (penalty spot → net → centre),
+  // each held long enough to read — no rapid ping-pong
+  const goalSeq = useRef<{ until: number; x: number; y: number }[]>([]);
   const labelRef = useRef('');
   const badgeKeyRef = useRef('');
   const smooth = useRef<[number, number]>([50, 50]);   // eased ball pos (kills teleport)
@@ -71,16 +72,21 @@ export default function PitchTV({
   useEffect(() => {
     if (!goalPulse) return;
     const now = Date.now();
-    // home attacks RIGHT → scores at the right goal; penalties sit on the spot
-    const home = goalPulse.team === 'home';
-    const gx = goalPulse.penalty ? (home ? 84 : 16) : (home ? 97 : 3);
-    goalSpot.current = { until: now + 1600, x: gx, y: 50 };   // ball at goal / penalty spot first…
-    holdUntil.current = now + 3400;                            // …then centre for the restart
+    // home attacks RIGHT → scores at the right goal. Penalty: ball WAITS on the
+    // spot (~2s), then beats the keeper into the net; open play: straight into
+    // the net (~2s). Then centre for the kick-off. Each beat is long enough to
+    // read — no rapid side-to-side jumps.
+    const isHome = goalPulse.team === 'home';
+    const net = { x: isHome ? 96 : 4, y: 50 };
+    goalSeq.current = goalPulse.penalty
+      ? [{ until: now + 2000, x: isHome ? 84 : 16, y: 50 }, { until: now + 3200, ...net }]
+      : [{ until: now + 2000, ...net }];
+    holdUntil.current = now + (goalPulse.penalty ? 4800 : 3600);
     cheer();
     setFlash('goal');
     setOverlay({ kind: 'goal', text: goalPulse.penalty ? 'PENALTY!' : 'GOAL!', sub: `${goalPulse.team === 'home' ? home : away} ${hs}-${as}` });
     if (ovTimer.current) clearTimeout(ovTimer.current);
-    ovTimer.current = window.setTimeout(() => { setOverlay(null); setFlash(null); }, 2100);
+    ovTimer.current = window.setTimeout(() => { setOverlay(null); setFlash(null); }, goalPulse.penalty ? 3200 : 2100);
   }, [goalPulse?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // server RED card → overlay
@@ -99,16 +105,34 @@ export default function PitchTV({
   // they are one and the same moment, held for ≈2 real seconds. Goals hold the
   // ball at the net/penalty spot then centre (server-driven, separate).
   useEffect(() => {
+    // stale goal drama must not leak into another match
+    goalSeq.current = []; holdUntil.current = 0;
     if (phase === 'upcoming') { if (ballRef.current) { ballRef.current.style.left = '50%'; ballRef.current.style.top = '50%'; } smooth.current = [50, 50]; return; }
     let raf = 0;
     const teamName = (s: Side) => (s === 'home' ? home : away);
 
     const step = () => {
-      const clock = finished ? 5400 : getClock();
+      // full-time: the ball rests at the centre spot (the sim path is over; never
+      // leave it frozen wherever the last pass happened to end)
+      if (finished) {
+        const s = smooth.current;
+        s[0] += (50 - s[0]) * 0.35; s[1] += (50 - s[1]) * 0.35;
+        if (ballRef.current) { ballRef.current.style.left = `${s[0]}%`; ballRef.current.style.top = `${s[1]}%`; }
+        if (trailRef.current) { trailRef.current.style.left = `${s[0]}%`; trailRef.current.style.top = `${s[1]}%`; trailRef.current.style.opacity = '0.2'; }
+        setSide((v) => (v === 'mid' ? v : 'mid'));
+        if (labelRef.current !== 'Full-time') { labelRef.current = 'Full-time'; setMomentum('Full-time'); }
+        if (badgeKeyRef.current !== '') { badgeKeyRef.current = ''; setBadge(null); }
+        raf = requestAnimationFrame(step);
+        return;
+      }
+
+      const clock = getClock();
+      const seq = goalSeq.current;
+      while (seq.length && Date.now() >= seq[0].until) seq.shift();
+      const gs = seq.length ? seq[0] : null;
       const goalHeld = Date.now() < holdUntil.current;
       const ev = goalHeld ? null : activeEvent(matchId, clock, dur);
 
-      const gs = goalSpot.current && Date.now() < goalSpot.current.until ? goalSpot.current : null;
       const b = gs ? { x: gs.x, y: gs.y, team: 'home' as Side, moving: false }
         : goalHeld ? { x: 50, y: 50, team: 'home' as Side, moving: false } : ballAt(matchId, clock, dur);
       const sideNow: Side | 'mid' = goalHeld ? 'mid' : b.team;

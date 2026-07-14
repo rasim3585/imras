@@ -25,11 +25,11 @@ const LINE_ICON: Record<string, string> = {
 };
 
 // Nesine-style live stats strip: possession bar + a compact row per metric.
-function StatsPanel({ matchId, minute, reds, home, away, dur }: {
-  matchId: string; minute: number; reds: [number, number]; home: string; away: string; dur: number;
+function StatsPanel({ matchId, clockSec, reds, home, away, dur }: {
+  matchId: string; clockSec: number; reds: [number, number]; home: string; away: string; dur: number;
 }) {
   const { t } = useI18n();
-  const s = simStats(matchId, minute, reds, dur);
+  const s = simStats(matchId, clockSec, reds, dur);
   const [ph, pa] = s.possession;
   const rows: [string, [number, number]][] = [
     [t('live.shots'), s.shots], [t('live.ontarget'), s.onTarget], [t('live.corners'), s.corners],
@@ -130,6 +130,21 @@ export default function LiveMatchScreen() {
   const feedRef = useRef<Line[]>([]);
   const seeded = useRef(false);
   const baselineGoals = useRef(0);
+
+  // switching to another match without an unmount: the ambient keys (e0, e1, …)
+  // repeat per match, so everything must reset or the new match's lines would be
+  // swallowed and old ones would linger
+  useEffect(() => {
+    seeded.current = false;
+    enqueued.current.clear();
+    queue.current = [];
+    feedRef.current = [];
+    baselineGoals.current = 0;
+    setFeed([]);
+    setScore({ h: 0, a: 0 });
+    setGoalPulse(null);
+    setFlash(null);
+  }, [matchId]);
   const atmo = useMemo(() => (state ? simLines(matchId!, state.home_team, state.away_team, state.duration_secs) : []), [matchId, state?.home_team, state?.duration_secs]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // find the user's pick on this match
@@ -154,7 +169,9 @@ export default function LiveMatchScreen() {
     const id = setInterval(() => {
       const st = stateRef.current;
       if (!st) return;
-      const clockSec = getClockRef.current ? getClockRef.current() : minuteRef.current * 60;
+      // finished: the anim clock may never have been anchored (joined after FT) —
+      // reveal everything; otherwise use the same clock the pitch animates on
+      const clockSec = st.phase === 'finished' ? 5400 : getClockRef.current();
       const lines = revealedLines(matchId, st, clockSec, atmo, baselineGoals.current);
 
       if (!seeded.current) {
@@ -232,7 +249,10 @@ export default function LiveMatchScreen() {
   const htH = htPast ? state.events.filter((e) => e.team === 'home' && e.minute <= 45).length : null;
   const htA = htPast ? state.events.filter((e) => e.team === 'away' && e.minute <= 45).length : null;
   const ht = htH != null && htA != null ? ([htH, htA] as [number, number]) : null;
-  const liveStats = phase !== 'upcoming' ? simStats(matchId!, shownMinute, [state.red_home, state.red_away], state.duration_secs) : null;
+  // stats run on the SAME clock as the pitch (match-seconds), so a corner counts
+  // the moment the ball reaches the flag — not up to a minute early/late
+  const clockSec = finished ? 5400 : Math.floor(getClock());
+  const liveStats = phase !== 'upcoming' ? simStats(matchId!, clockSec, [state.red_home, state.red_away], state.duration_secs) : null;
 
   const pick = myLeg?.outcome_key as OutKey | undefined;
   const pickState = pick ? computePickState(pick, hs, as) : null;
@@ -267,7 +287,7 @@ export default function LiveMatchScreen() {
       />
 
       {phase !== 'upcoming' && matchId && (
-        <StatsPanel matchId={matchId} minute={shownMinute} reds={[state.red_home, state.red_away]} home={home} away={away} dur={state.duration_secs} />
+        <StatsPanel matchId={matchId} clockSec={clockSec} reds={[state.red_home, state.red_away]} home={home} away={away} dur={state.duration_secs} />
       )}
 
       {odds && !finished && (ph > 0 || pa > 0) && (

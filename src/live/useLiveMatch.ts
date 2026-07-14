@@ -40,14 +40,19 @@ export function useLiveMatch(matchId: string | undefined) {
         setState(s);
         const now = Date.now();
         anchor.current = { minute: s.minute, startsIn: s.starts_in, at: now, dur: s.duration_secs };
-        // Set the animation clock once; afterwards only nudge on a big desync so
-        // the ball stays smooth (no per-poll sawtooth).
-        const rate = 5400 / s.duration_secs;
-        const serverSim = s.minute * 60;
-        const aa = animAnchor.current;
-        const cur = aa ? aa.sim + ((now - aa.at) / 1000) * aa.rate : -1;
-        if (!aa || Math.abs(serverSim - cur) > 90) {
-          animAnchor.current = { sim: serverSim, at: now, rate };
+        // Set the animation clock once (only while LIVE — during the countdown it
+        // must not tick); afterwards only nudge on a big desync so the ball stays
+        // smooth (no per-poll sawtooth).
+        if (s.phase === 'live') {
+          const rate = 5400 / s.duration_secs;
+          const serverSim = s.minute * 60;
+          const aa = animAnchor.current;
+          const cur = aa ? aa.sim + ((now - aa.at) / 1000) * aa.rate : -1;
+          if (!aa || Math.abs(serverSim - cur) > 90) {
+            animAnchor.current = { sim: serverSim, at: now, rate };
+          }
+        } else if (s.phase === 'upcoming') {
+          animAnchor.current = null;
         }
         if (s.phase === 'finished') clearInterval(poll);
       } catch (e) {

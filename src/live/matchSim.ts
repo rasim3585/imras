@@ -32,7 +32,9 @@ const other = (s: Side): Side => (s === 'home' ? 'away' : 'home');
 // second real-ms clock that drifts out of sync with the ball).
 const HOLD_REAL = 2.2;
 export function holdSecFor(dur: number): number {
-  return clamp(HOLD_REAL * (5400 / (dur > 0 ? dur : 480)), 6, 40);
+  // upper bound must fit the fastest real compression (dur=100 → 118.8 sim-sec
+  // IS ≈2.2 real seconds); clamping lower would silently shrink the hold
+  return clamp(HOLD_REAL * (5400 / (dur > 0 ? dur : 480)), 4, 160);
 }
 
 function seeded(str: string) {
@@ -110,6 +112,14 @@ function build(matchId: string, dur: number): Sim {
     passes.push({ t, dur: 1.8, x0: e.x, y0: e.y, x1: rx, y1: 50, team: e.team });
     t += 1.8; x = rx; y = 50;
   }
+  // Keep playing to FULL TIME. Without this tail the pass path ended at the last
+  // event (~82'-87') and the ball froze at that restart spot — often (x≈83,y=50),
+  // which reads as "stuck on the penalty spot until the end of the match".
+  while (t < MATCH_SECS - 4) {
+    if (rng() < 0.3) team = other(team);
+    addPass(40 + rng() * 20, 22 + rng() * 56, 4.5 + rng() * 4, team);
+    t += 0.7;
+  }
   const s = { passes, events, holdSec };
   cache.set(`${matchId}:${dur}`, s);
   return s;
@@ -175,15 +185,16 @@ export interface SimStats {
   possession: [number, number]; shots: [number, number]; onTarget: [number, number];
   corners: [number, number]; fouls: [number, number]; yellows: [number, number]; reds: [number, number];
 }
-// Match stats derived from the SAME possession sim, so they agree with the ball
-// and the feed (and are realistically asymmetric — not a mirror 10/10).
-export function simStats(matchId: string, uptoMin: number, reds: [number, number], dur: number): SimStats {
+// Match stats derived from the SAME possession sim ON THE SAME CLOCK (match-
+// seconds): a corner increments the count the moment the ball reaches the flag,
+// not up to a minute earlier. Realistically asymmetric — not a mirror 10/10.
+export function simStats(matchId: string, uptoSec: number, reds: [number, number], dur: number): SimStats {
   const s = sim(matchId, dur);
   const sh: [number, number] = [0, 0], ot: [number, number] = [0, 0], co: [number, number] = [0, 0];
   const fo: [number, number] = [0, 0], ye: [number, number] = [0, 0];
   const i = (t: Side) => (t === 'home' ? 0 : 1);
   for (const e of s.events) {
-    if (e.minute > uptoMin) continue;
+    if (e.sec > uptoSec) continue;
     if (e.type === 'shot') sh[i(e.team)]++;
     else if (e.type === 'save') ot[i(e.team)]++;
     else if (e.type === 'corner') { co[i(e.team)]++; ot[i(e.team)]++; }
@@ -191,7 +202,7 @@ export function simStats(matchId: string, uptoMin: number, reds: [number, number
     else if (e.type === 'yellow') ye[i(e.team)]++;
   }
   let hp = 0, ap = 0;
-  for (const p of s.passes) { if (p.t / 60 > uptoMin) break; if (p.team === 'home') hp += p.dur; else ap += p.dur; }
+  for (const p of s.passes) { if (p.t > uptoSec) break; if (p.team === 'home') hp += p.dur; else ap += p.dur; }
   const tot = hp + ap;
   const hpc = tot > 0 ? Math.round((100 * hp) / tot) : 50;
   return { possession: [hpc, 100 - hpc], shots: sh, onTarget: ot, corners: co, fouls: fo, yellows: ye, reds };
