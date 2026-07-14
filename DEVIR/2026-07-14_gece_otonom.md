@@ -36,6 +36,21 @@ komut soruyordu. Geniş joker izinlerle değiştirildi (bare `Bash`,`PowerShell`
 - **QA sweep** (10 public rota): hiç JS hatası/çökme YOK. Kalan tek şey anon 401
   gürültüsü (log_events/getMyCoupons/housekeeping — sen giriş yapınca çalışır).
 
+## EN BÜYÜK DÖNÜŞÜM: 2D tracker'lar amatör→profesyonel
+Headless kayıtlarla frame-frame doğrulandı. Sabah `git pull && npm run dev` ile bak.
+- **Futbol** (mobil+koyu tema dahil): 11v11 oyuncu (blok topla kayar), top oyunu
+  takip eder (ışınlanmaz), olaylar gerçek yerde (korner→köşe/kurtarış→kale), İY
+  skoru + kart sayacı, tam stat paneli, kazanma barı, form+H2H. **Nesine ayarında.**
+- **Basket**: 5v5 oyuncu, +pop sayı-potaya gider, saat düzgün, stat maç-dakikasına
+  göre birikir, **çeyrek tablosu** (Q1..Qn, sızıntı yok), form+H2H.
+- **Tenis/Voleybol**: 1v1 oyuncu, ralli topu + puan-sonu duraklama, servis, set
+  skorboardu, form+H2H.
+
+## Ek düzeltmeler
+- Basket saati çift-period, stat mount-yerine-maç-dakikası, çeyrek tablosu (0123).
+- Doğrulama altyapısı: headless Playwright + ffmpeg (scratchpad/pw). Rasim'in
+  gönderdiği videoları da böyle inceledim.
+
 ## Yapılamayan / açık
 - **Gates of Goal gameplay**: spin login ister → headless'ta oynatamadım. Kod build
   temiz + ekler-3 referansıyla juice eklenmişti; canlı oynanışı sen doğrulamalısın.
