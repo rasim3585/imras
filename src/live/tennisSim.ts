@@ -41,8 +41,12 @@ const cache = new Map<string, Rally[]>();
 function build(matchId: string, setIdx: number, sport: CourtSport): Rally[] {
   const rng = seeded(`${matchId}:set${setIdx}:${sport}:v2`);
   const vb = sport === 'volleyball';
-  const HOLD = vb ? 0.8 : 1.3;
-  const GAP = vb ? 0.5 : 0.8;
+  // Tempo SUNUCU set penceresine göre: maç toplam 480sn, sayılar orantılı →
+  // voleybol seti ~108-160sn, tenis seti ~160-240sn. Sim seti pencereden ERKEN
+  // bitirmeli (kalan süre = set arası, top ölü); geç kalırsa merdiven sete
+  // yetişemeden sunucu çevirir. Hedef: vb ~95sn, tenis ~155sn.
+  const HOLD = vb ? 0.6 : 0.7;
+  const GAP = vb ? 0.3 : 0.35;
   const target = vb ? (setIdx >= 4 ? 15 : 25) : 0;      // vb sayı hedefi (5. set 15)
   const capPts = vb ? target + 2 : 0;                    // 27 / 17 tavanı
   const rallies: Rally[] = [];
@@ -71,18 +75,18 @@ function build(matchId: string, setIdx: number, sport: CourtSport): Rally[] {
 
     if (vb) {
       // servis: yüksek yayla karşı sahaya
-      push(loserRight && type === 'ace' ? 200 : server === 'home' ? 96 : 224, yIn(), 0.55, 20);
+      push(loserRight && type === 'ace' ? 200 : server === 'home' ? 96 : 224, yIn(), 0.4, 20);
       const crossings = type === 'ace' ? 0 : type === 'error' ? (rng() < 0.5 ? 0 : 1) : 1 + Math.floor(rng() * 2);
       let sideNow: Side = other(server);
       for (let c = 0; c < crossings; c++) {
-        push(backX(sideNow), yIn(), 0.3, 6);             // manşet (geri saha)
-        push(netX(sideNow), yIn(), 0.3, 9);              // pas (file önü)
+        push(backX(sideNow), yIn(), 0.22, 6);            // manşet (geri saha)
+        push(netX(sideNow), yIn(), 0.22, 9);             // pas (file önü)
         sideNow = other(sideNow);
-        push(sideNow === 'home' ? 200 + rng() * 70 : 50 + rng() * 70, yIn(), 0.4, 16);  // SMAÇ
+        push(sideNow === 'home' ? 200 + rng() * 70 : 50 + rng() * 70, yIn(), 0.3, 16);  // SMAÇ
       }
       if (type === 'error') {
-        push(160, 60 + rng() * 80, 0.3, 8);              // fileye takıldı
-        push(loserRight ? 174 : 146, yIn(), 0.3, 5);     // geri sekti
+        push(160, 60 + rng() * 80, 0.22, 8);             // fileye takıldı
+        push(loserRight ? 174 : 146, yIn(), 0.22, 5);    // geri sekti
       } else if (type !== 'ace') {
         // son smaç kaybedenin sahasında öldü — düzelt: sondaki nokta loser tarafında olsun
         const last = wps[wps.length - 1];
@@ -98,11 +102,11 @@ function build(matchId: string, setIdx: number, sport: CourtSport): Rally[] {
       }
       for (let k = 0; k < strokes; k++) {
         const recvRight = (k % 2 === 0 ? other(server) : server) === 'home';
-        push(recvRight ? 196 + rng() * 84 : 40 + rng() * 84, yIn(), 0.65, 11);
+        push(recvRight ? 196 + rng() * 84 : 40 + rng() * 84, yIn(), 0.38, 11);
       }
       if (type === 'error') {
         wps[wps.length - 1].x = 160; wps[wps.length - 1].arc = 8;
-        push(loserRight ? 173 : 147, yIn(), 0.35, 5);    // fileden geri sekme
+        push(loserRight ? 173 : 147, yIn(), 0.3, 5);     // fileden geri sekme
       } else if (type === 'ace') {
         wps[0].x = loserRight ? 208 : 112; wps[0].y = rng() < 0.5 ? 62 : 138;
       } else {
@@ -132,6 +136,26 @@ function build(matchId: string, setIdx: number, sport: CourtSport): Rally[] {
 
     rallies.push({ idx: i, start: t, end: wt, holdEnd: wt + HOLD, winner, type, server: srvThis, wps, die, gamesH: gh, gamesA: ga, ph, pa, done });
     t = wt + HOLD + GAP;
+  }
+
+  // GARANTİ: sunucu seti orantılı akıtır (480sn / maçın toplam sayısı·oyunu),
+  // yani pencere = birim × sunucu-temposu. Sim birim başına BÜTÇEYİ (vb 2.0
+  // sn/sayı — toplam ≤240 sayıya kadar güvenli; tenis 13 sn/oyun — toplam ≤36
+  // oyuna kadar) aşıyorsa tüm zaman çizelgesi orantılı sıkışır → deuce/uzun
+  // set dahil merdiven HEP sunucudan önce set skorunu tamamlar, kalan süre
+  // doğal "set arası" (top ölü) olur.
+  const lastR = rallies[rallies.length - 1];
+  if (lastR) {
+    const units = lastR.gamesH + lastR.gamesA;   // vb: sayılar · tenis: oyunlar
+    const budget = units * (vb ? 2.0 : 13);
+    const natural = lastR.holdEnd + GAP;
+    if (natural > budget && budget > 10) {
+      const k = budget / natural;
+      for (const r of rallies) {
+        r.start *= k; r.end *= k; r.holdEnd *= k;
+        for (const w of r.wps) w.t *= k;
+      }
+    }
   }
   cache.set(`${matchId}:${setIdx}:${sport}:v2`, rallies);
   return rallies;
