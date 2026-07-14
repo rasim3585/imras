@@ -126,18 +126,17 @@ export function EVolleyballIcon({ size = 22 }: { size?: number }) {
   );
 }
 
-// Virtual-money coin (green) — replaces the gold dot / coin emoji. Original art.
-// Sanal para: üst üste sikke yığını + $ — tek disk yerine anında "para" okunur.
+// Sanal para: TEK kağıt banknot — sikke yığını "bozuk para" okunuyordu.
 export function CoinIcon({ size = 16 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-      <g stroke="#0b6e39" strokeWidth="1.3" strokeLinejoin="round">
-        <ellipse cx="12" cy="16.6" rx="7.6" ry="3" fill="#0e8f47" />
-        <ellipse cx="12" cy="13" rx="7.6" ry="3" fill="#12a150" />
-        <ellipse cx="12" cy="9.4" rx="7.6" ry="3" fill="#1bbf63" />
-      </g>
-      <path d="M12 7.9v3M13 8.5h-1.5a0.8 0.8 0 0 0 0 1.6h1a0.8 0.8 0 0 1 0 1.6h-1.6"
-        fill="none" stroke="#eefaf2" strokeWidth="1.05" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="1.6" y="6.4" width="20.8" height="11.2" rx="1.8" fill="#12a150" stroke="#0b6e39" strokeWidth="1.2" />
+      <rect x="3.8" y="8.5" width="16.4" height="7" rx="1" fill="none" stroke="#eefaf2" strokeWidth="0.9" opacity="0.75" />
+      <circle cx="12" cy="12" r="2.9" fill="#0e8f47" stroke="#eefaf2" strokeWidth="0.9" />
+      <path d="M12 10.5v3M12.9 11h-1.3a0.75 0.75 0 0 0 0 1.5h0.8a0.75 0.75 0 0 1 0 1.5h-1.4"
+        fill="none" stroke="#eefaf2" strokeWidth="0.85" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="6" cy="12" r="0.85" fill="#eefaf2" opacity="0.85" />
+      <circle cx="18" cy="12" r="0.85" fill="#eefaf2" opacity="0.85" />
     </svg>
   );
 }
@@ -176,11 +175,12 @@ export function RanksIcon() {
 }
 
 export function SettingsIcon() {
+  // standart dişli çark (eski hâli güneş gibi okunuyordu)
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"
          strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="3.2" />
-      <path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6" />
+      <circle cx="12" cy="12" r="3.1" />
+      <path d="M19.4 13.4a7.8 7.8 0 0 0 0-2.8l2.1-1.6-2-3.4-2.5.9a7.8 7.8 0 0 0-2.4-1.4L14.1 2.4h-4l-.5 2.7a7.8 7.8 0 0 0-2.4 1.4l-2.5-.9-2 3.4 2.1 1.6a7.8 7.8 0 0 0 0 2.8l-2.1 1.6 2 3.4 2.5-.9a7.8 7.8 0 0 0 2.4 1.4l.5 2.7h4l.5-2.7a7.8 7.8 0 0 0 2.4-1.4l2.5.9 2-3.4z" />
     </svg>
   );
 }
@@ -207,12 +207,13 @@ export function SoundOffIcon() {
 
 // Ayna/analiz: el aynası — desenini yansıtan yüzey.
 export function MirrorIcon() {
+  // AI kıvılcımları — "yapay zekâ bahis karakterini analiz eder"
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"
          strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <ellipse cx="12" cy="9" rx="7" ry="8" />
-      <path d="M9 5.5a4.6 4.6 0 0 0-2.4 3.2" opacity="0.7" />
-      <path d="M12 17v4M9 21h6" />
+      <path d="M12 3.2 13.7 8l4.8 1.7-4.8 1.7L12 16.2l-1.7-4.8L5.5 9.7 10.3 8z" />
+      <path d="M18.6 14.6l.75 2.05 2.05.75-2.05.75-.75 2.05-.75-2.05-2.05-.75 2.05-.75z" />
+      <path d="M5.2 15.8l.6 1.6 1.6.6-1.6.6-.6 1.6-.6-1.6-1.6-.6 1.6-.6z" />
     </svg>
   );
 }
@@ -227,13 +228,15 @@ export function ProfileIcon() {
   );
 }
 
-// Gates of Goal: a reel grid (slot). Brand-free.
+// Gates of: Olimpos tapınağı — alınlık + sütunlar. Brand-free.
 export function GatesIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"
          strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="3" y="4" width="18" height="16" rx="2.5" />
-      <path d="M3 9.5h18M3 14.5h18M9 4v16M15 4v16" />
+      <path d="M3.5 7.5 12 3l8.5 4.5" />
+      <path d="M4.5 7.5h15" />
+      <path d="M6 10v7.5M10 10v7.5M14 10v7.5M18 10v7.5" />
+      <path d="M4 20.5h16M5 18h14" />
     </svg>
   );
 }

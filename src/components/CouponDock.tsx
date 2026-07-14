@@ -14,7 +14,12 @@ export default function CouponDock() {
   const { pathname } = useLocation();
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
-  if (pathname === '/coupon' || pathname.startsWith('/c/') || pathname.startsWith('/login')) return null;
+  // 0715: kupon paneli yalnız bahis akışında görünür (bülten, maç detay, canlı
+  // izleme). Gates/Aviator/AI Analiz/Profil gibi sayfalarda gereksizdi.
+  const betting = pathname === '/'
+    || pathname.startsWith('/match') || pathname.startsWith('/live')
+    || pathname.startsWith('/court') || pathname.startsWith('/standings');
+  if (!betting) return null;
 
   const lastMatch = selections.length ? selections[selections.length - 1].match_id : null;
 

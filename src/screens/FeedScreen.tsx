@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import MatchRow from '../components/MatchRow';
 import { EFootballIcon, EBasketballIcon, ETennisIcon, EVolleyballIcon, BallIcon } from '../components/icons';
 import { useAuth } from '../auth/AuthContext';
@@ -11,7 +11,7 @@ import type { BulletinMatch } from '../lib/types';
 const LIVE = new Set(['inprogress', 'live', 'penalties']);
 
 type SportKey = 'live' | 'all' | 'football' | 'efootball' | 'basketball' | 'tennis' | 'volley';
-const SPORTS: { key: SportKey; tkey: string; icon: string; soon?: boolean }[] = [
+const SPORTS: { key: SportKey | 'luck'; tkey: string; icon: string; soon?: boolean }[] = [
   { key: 'live', tkey: 'feed.tab.live', icon: '⚡' },
   { key: 'all', tkey: 'feed.tab.all', icon: '📋' },
   { key: 'football', tkey: 'feed.tab.football', icon: '⚽' },
@@ -19,6 +19,7 @@ const SPORTS: { key: SportKey; tkey: string; icon: string; soon?: boolean }[] = 
   { key: 'basketball', tkey: 'feed.tab.basketball', icon: '🏀' },
   { key: 'tennis', tkey: 'feed.tab.tennis', icon: '🎾' },
   { key: 'volley', tkey: 'feed.tab.volley', icon: '🏐' },
+  { key: 'luck', tkey: 'feed.tab.luck', icon: '🎰' },
 ];
 
 function Cols({ bb, tn, vb }: { bb?: boolean; tn?: boolean; vb?: boolean } = {}) {
@@ -101,6 +102,8 @@ export default function FeedScreen() {
   };
   const [matches, setMatches] = useState<BulletinMatch[]>([]);
   const [sport, setSport] = useState<SportKey>('all');
+  const [luckOpen, setLuckOpen] = useState(false);   // Şans Oyunları sekmesi: Aviator/Gates seçici
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -184,7 +187,11 @@ export default function FeedScreen() {
             : s.key === 'basketball' ? basketballOnes.length : s.key === 'tennis' ? tennisOnes.length
             : s.key === 'volley' ? volleyOnes.length : null;
           return (
-            <button key={s.key} className={`sport-tab ${sport === s.key ? 'active' : ''} ${s.soon ? 'soon' : ''}`} onClick={() => setSport(s.key)}>
+            <button
+              key={s.key}
+              className={`sport-tab ${sport === s.key ? 'active' : ''} ${s.soon ? 'soon' : ''} ${s.key === 'luck' && luckOpen ? 'active' : ''}`}
+              onClick={() => { if (s.key === 'luck') { setLuckOpen((o) => !o); } else { setLuckOpen(false); setSport(s.key as SportKey); } }}
+            >
               {s.key === 'efootball' ? <EFootballIcon size={19} /> : s.key === 'basketball' ? <EBasketballIcon size={19} /> : s.key === 'tennis' ? <ETennisIcon size={19} /> : s.key === 'volley' ? <EVolleyballIcon size={19} /> : <span className="sport-ic">{s.icon}</span>}
               {t(s.tkey)}
               {s.soon ? <span className="soon-badge">{t('feed.soon')}</span> : cnt != null ? <span className="sport-cnt">{cnt}</span> : null}
@@ -192,6 +199,13 @@ export default function FeedScreen() {
           );
         })}
       </div>
+      {luckOpen && (
+        <div className="luck-pop">
+          <span className="luck-pop-t">{t('luck.choose')}</span>
+          <button className="luck-opt" onClick={() => navigate('/aviator')}>✈️ Aviator</button>
+          <button className="luck-opt" onClick={() => navigate('/gates')}>🏛️ Gates of</button>
+        </div>
+      )}
 
       <div className="std-link-row"><Link to="/standings" className="std-link">{t('feed.stdlink')}</Link></div>
 

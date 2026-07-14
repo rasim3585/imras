@@ -339,7 +339,7 @@ a:hover { color: var(--win); }
 .auth-legal { text-align: center; margin-top: var(--s5); font-size: 0.78rem; color: var(--text-mut); }
 
 /* line-line bulletin (Nesine layout, our light/green theme) */
-.app-shell-wide { max-width: 900px; }
+.app-shell-wide { max-width: 1100px; }   /* 0715: bülten genişletildi — oranlara nefes */
 .ll { border: 1px solid var(--card-line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); background: var(--surface); margin-top: var(--s3); }
 .ll-bar { display: flex; align-items: center; justify-content: space-between; background: var(--league); color: #cfe9dd; padding: 7px 12px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.3px; }
 .ll-bar-l { display: inline-flex; align-items: center; gap: 7px; }
@@ -405,7 +405,14 @@ a:hover { color: var(--win); }
 }
 
 /* sports bar */
-.sport-bar { display: flex; gap: 6px; overflow-x: auto; padding: var(--s3) 0 var(--s2); }
+/* 0715: scrollbar yok — sekmeler gerekirse ikinci satıra sarar */
+.sport-bar { display: flex; gap: 6px; flex-wrap: wrap; overflow: visible; padding: var(--s3) 0 var(--s2); }
+.luck-pop { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: var(--s2);
+  background: var(--card); border: 1px solid var(--card-line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.luck-pop-t { font-size: 0.8rem; font-weight: 700; color: var(--text-mut); }
+.luck-opt { padding: 8px 16px; border-radius: var(--radius-pill); border: 1.5px solid var(--card-line);
+  background: var(--surface); font: inherit; font-weight: 700; cursor: pointer; }
+.luck-opt:hover { border-color: var(--accent); color: var(--accent); }
 .sport-tab { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: var(--radius-pill); border: 1px solid var(--line); background: var(--surface); color: var(--text-2); font: inherit; font-weight: 600; font-size: 0.82rem; cursor: pointer; white-space: nowrap; }
 .sport-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: var(--shadow); }
 .sport-tab.active .dot { background: #fff; }
@@ -516,15 +523,14 @@ a:hover { color: var(--win); }
 }
 .outcome:hover:not(:disabled) { background: var(--surface-2); border-color: var(--cell-sel-line); }
 .outcome:active:not(:disabled) { transform: scale(0.98); }
-/* favourite (lowest odds): soft green tint */
-.outcome.fav { background: var(--cell-sel); border-color: var(--win-line); }
-.outcome.fav .outcome-name { color: var(--odds-bright); }
+/* 0715: favori-yeşili kaldırıldı — tüm oranlar aynı nötr renkte */
 /* selected (user pick): stronger green */
 .outcome.sel { background: #d6f2e5; border: 1.5px solid var(--cell-sel-line); padding: 6.5px 6px; }
 .outcome.sel .outcome-name { color: var(--odds-bright); }
 .outcome-name { font-size: 0.74rem; color: var(--text-mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.outcome-odds { font-family: var(--mono); font-size: 1.08rem; font-weight: 600; color: var(--odds-plain); font-variant-numeric: tabular-nums; }
-.outcome.fav .outcome-odds, .outcome.sel .outcome-odds { color: var(--odds-bright); }
+/* 0715: mono yerine gövde yazı tipi + tabular rakam — 0/8 karışması biter */
+.outcome-odds { font-family: inherit; font-size: 1.02rem; font-weight: 800; letter-spacing: 0.01em; color: var(--odds-plain); font-variant-numeric: tabular-nums lining-nums; }
+.outcome.sel .outcome-odds { color: var(--odds-bright); }
 .outcome-prob { font-size: 0.7rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
 
 /* live / upcoming card affordances (mockup) */
@@ -1953,3 +1959,17 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .az-tilt-dot.w { background: color-mix(in srgb, #1f9e75 75%, transparent); }
 .az-tilt-dot.l { background: color-mix(in srgb, var(--text-mut) 45%, transparent); }
 .az-tilt-dot.tl { box-shadow: 0 0 0 2px #e2504a; background: #e2504a; }
+
+/* --- 0715 UI turu (Rasim listesi) ------------------------------------------ */
+/* oran hücreleri: beyaz yerine yumuşak zemin + biraz nefes */
+.outcome { background: var(--surface-2); }
+.ll-cols { column-gap: 7px; }
+/* kupon paneli biraz aşağıdan başlar → üst sekme barına sağda yer açılır */
+.coupon-dock { top: calc(var(--topbar-h) + 46px); }
+/* oyun/analiz ekranlarında başlık üste yapışmasın */
+.av-screen, .az-screen { padding-top: var(--s4); }
+.go { padding-top: 10px; }
+/* aviator: sahne+oyuncular satırı ile bahis panelleri aynı genişlikte otursun */
+.av-main, .av-bets { width: 100%; }
+.av-main { grid-template-columns: 1fr 280px; }
+.mc-unfin { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; margin-bottom: var(--s3); border-left: 3px solid var(--accent); }

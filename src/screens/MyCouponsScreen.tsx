@@ -72,7 +72,7 @@ export default function MyCouponsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { saved, loadDraft, deleteDraft } = useCart();
+  const { saved, loadDraft, deleteDraft, count: cartCount } = useCart();
 
   const linkFor = (id: string) => `${window.location.origin}/c/${id}`;
   const waHref = (id: string) => `https://wa.me/?text=${encodeURIComponent('Check out my pickplay coupon: ' + linkFor(id))}`;
@@ -164,6 +164,17 @@ export default function MyCouponsScreen() {
       <div className="page-head" style={{ paddingBottom: 'var(--s3)' }}>
         <h1>{t('mc.title')}</h1>
       </div>
+
+      {/* 0715: seçilmiş ama oynanmamış/kaydedilmemiş kupon → tamamlanmamış */}
+      {cartCount > 0 && (
+        <div className="card mc-unfin">
+          <div>
+            <b>⏳ {t('mc.unfinished')}</b>
+            <p className="dim" style={{ margin: '2px 0 0', fontSize: '0.8rem' }}>{t('mc.unfinished.sub', { n: cartCount })}</p>
+          </div>
+          <button className="btn btn-primary btn-sm" onClick={() => navigate('/coupon')}>{t('mc.unfinished.cta')}</button>
+        </div>
+      )}
 
       <div className="segmented">
         {TABS.map((tb) => (
