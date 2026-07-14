@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import TeamCrest from '../components/TeamCrest';
 import { toggleSfx, whistle, cheer } from '../lib/sfx';
-import { flowAt, ambientEvents, type Side, type EvType } from './liveSim';
+import { flowAt, eventPos, ambientEvents, type Side, type EvType } from './liveSim';
 
 // ---------------------------------------------------------------------------
 // Broadcast-style pitch. The ball is animated every frame from flowAt(matchId,
@@ -113,7 +113,7 @@ export default function PitchTV({
       if (!goalHeld) {
         while (idx < events.length && clock >= events[idx].sec) {
           const e = events[idx];
-          const p = flowAt(matchId, e.sec);
+          const p = eventPos(matchId, e);        // ball AT the real spot (corner flag, goal mouth…)
           hold.current = { until: Date.now() + holdMs(e.type), x: p.x, y: p.y, type: e.type, side: e.side };
           idx++;
         }

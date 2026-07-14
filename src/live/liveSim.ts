@@ -60,7 +60,7 @@ export function waves(matchId: string): Wave[] {
     const side: Side = rng() < 0.52 ? 'home' : 'away';
     const peak = t + dur * (0.5 + rng() * 0.2);
     out.push({ start: t, peak, end: t + dur, side, outcome: rollOutcome(rng()) });
-    t += dur + 22 + rng() * 46;            // gap 22–68s between attacks
+    t += dur + 14 + rng() * 28;            // gap 14–42s between attacks (livelier)
   }
   waveCache.set(matchId, out);
   return out;
@@ -83,11 +83,14 @@ export interface Flow { x: number; y: number; side: Side | 'mid'; intensity: num
 export function flowAt(matchId: string, tSec: number): Flow {
   const t = clamp(tSec, 0, MATCH_SECS);
   const active = waves(matchId).find((w) => t >= w.start && t <= w.end);
-  const ny = noise(`${matchId}:y`, t / 6) * 22;
+  const ny = noise(`${matchId}:y`, t / 7) * 26;
   if (!active) {
-    // idle: play meanders around the middle third
-    const x = 50 + noise(`${matchId}:x`, t / 9) * 16;
-    return { x: clamp(x, 30, 70), y: clamp(50 + ny, 16, 84), side: 'mid', intensity: 0.2 };
+    // between attacks the play still ROAMS the whole pitch (not stuck centre):
+    // a slow wander across most of the width, so it always feels alive
+    const x = 50 + noise(`${matchId}:x`, t / 8) * 36;              // ~[14,86]
+    const xc = clamp(x, 9, 91);
+    const side: Side | 'mid' = xc > 61 ? 'home' : xc < 39 ? 'away' : 'mid';
+    return { x: xc, y: clamp(50 + ny, 13, 87), side, intensity: 0.35 };
   }
   const tx = boxX(active.side);
   // travel: mid → box by the peak, then recede toward mid by the end
@@ -102,9 +105,26 @@ export function flowAt(matchId: string, tSec: number): Flow {
     x = tx + (backTo - tx) * p * (active.outcome === 'corner' ? 0 : 1);
     intensity = 1 - 0.6 * p;
   }
-  // near the box the ball drifts wide (wings/corners)
   const wideY = 50 + ny * (0.6 + 0.4 * Math.abs(x - 50) / 40);
   return { x: clamp(x, 4, 96), y: clamp(wideY, 10, 90), side: active.side, intensity };
+}
+
+// Where each event actually happens on the pitch, so the ball is AT the corner
+// flag on a corner, at the goal mouth on a save, wide on a miss, etc. Home
+// attacks the RIGHT goal. Returns 0..100 coords matching flowAt.
+export function eventPos(matchId: string, ev: SimEvent): { x: number; y: number } {
+  const r = seeded(`${matchId}:ep${ev.sec}`);
+  const home = ev.side === 'home';
+  switch (ev.type) {
+    case 'corner':   return { x: home ? 93 : 7, y: r() < 0.5 ? 15 : 85 };        // corner flag
+    case 'save':     return { x: home ? 95 : 5, y: 42 + r() * 16 };              // keeper at goal
+    case 'miss':     return { x: home ? 91 : 9, y: r() < 0.5 ? 18 : 82 };        // dragged wide
+    case 'blocked':  return { x: home ? 80 : 20, y: 38 + r() * 24 };
+    case 'freekick': return { x: home ? 68 : 32, y: 26 + r() * 48 };
+    case 'offside':  return { x: home ? 84 : 16, y: 28 + r() * 44 };
+    case 'shot':     return { x: home ? 82 : 18, y: 40 + r() * 20 };
+    default: { const f = flowAt(matchId, ev.sec); return { x: f.x, y: f.y }; }   // foul/yellow/sub: where play was
+  }
 }
 
 // ---- discrete events (ambient) --------------------------------------------

@@ -60,8 +60,9 @@ const T = (s: string, team: Side, home: string, away: string) =>
 export function atmosphereScript(matchId: string, home: string, away: string): Line[] {
   const rng = seeded(`${matchId}:cm`);
   const lines: Line[] = [];
+  let k = 0;   // unique, deterministic per line (two waves can share a minute)
   const push = (min: number, sub: number, kind: LineKind, team: Side | undefined, text: string) =>
-    lines.push({ key: `a${min}s${sub}${kind}`, minute: min, sub, kind, team, text });
+    lines.push({ key: `a${min}-${sub}-${kind}-${k++}`, minute: min, sub, kind, team, text });
 
   for (const w of waves(matchId)) {
     const min = Math.floor(w.peak / 60);
