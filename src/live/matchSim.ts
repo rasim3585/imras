@@ -23,9 +23,6 @@ const MATCH_SECS = 90 * 60;
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 const smooth = (t: number) => t * t * (3 - 2 * t);
 const other = (s: Side): Side => (s === 'home' ? 'away' : 'home');
-const attackDir = (s: Side) => (s === 'home' ? 1 : -1);
-const goalX = (s: Side) => (s === 'home' ? 96 : 4);
-const inFinalThird = (s: Side, x: number) => (s === 'home' ? x > 70 : x < 30);
 
 function seeded(str: string) {
   let h = 2166136261;
@@ -33,73 +30,62 @@ function seeded(str: string) {
   return () => { h = (Math.imul(h, 16807) % 2147483647) >>> 0; return (h % 100000) / 100000; };
 }
 
-const SHOT_OUT: [SimEvType, number][] = [
-  ['save', 0.26], ['miss', 0.24], ['blocked', 0.18], ['corner', 0.2], ['offside', 0.12],
-];
-const rollShot = (r: number): SimEvType => { let a = 0; for (const [o, w] of SHOT_OUT) { a += w; if (r < a) return o; } return 'miss'; };
-
 interface Sim { passes: Pass[]; events: SimEvent[] }
 const cache = new Map<string, Sim>();
 
+// Realistic per-90-minutes event budget PER TEAM. Kept low on purpose: a real
+// match is mostly midfield play with occasional events — not constant action.
+// (corner ~4–6, shots on target/off/blocked ~8–13, fouls ~7–12, so both teams
+//  combined land near real totals: ~10 corners, ~22 shots, ~22 fouls.)
 function build(matchId: string): Sim {
-  const rng = seeded(`${matchId}:poss`);
-  const passes: Pass[] = [];
+  const rng = seeded(`${matchId}:sim`);
   const events: SimEvent[] = [];
-  let t = 1.5;
-  let team: Side = rng() < 0.5 ? 'home' : 'away';
-  let x = 50, y = 50;                                   // ball at centre for kick-off
   let ei = 0;
-
-  const addPass = (x1: number, y1: number, dur: number) => {
-    passes.push({ t, dur, x0: x, y0: y, x1, y1, team });
-    t += dur + 0.12 + rng() * 0.22;                     // brief settle at the receiver
-    x = x1; y = y1;
+  const addEv = (type: SimEvType, team: Side, minute: number) => {
+    const s = eventSpotRaw(team, type, rng);
+    events.push({ key: `e${ei++}`, minute, sec: minute * 60 + Math.floor(rng() * 55), type, team, x: s.x, y: s.y });
   };
-  const ev = (type: SimEvType, ex: number, ey: number) => {
-    events.push({ key: `e${ei++}`, sec: Math.round(t), minute: Math.floor(t / 60), type, team, x: clamp(ex, 3, 97), y: clamp(ey, 8, 92) });
+  const spread = (n: number, type: SimEvType, team: Side) => { for (let i = 0; i < n; i++) addEv(type, team, 2 + Math.floor(rng() * 86)); };
+  for (const team of ['home', 'away'] as Side[]) {
+    spread(3 + Math.floor(rng() * 3), 'corner', team);
+    spread(3 + Math.floor(rng() * 4), 'save', team);
+    spread(3 + Math.floor(rng() * 4), 'miss', team);
+    spread(2 + Math.floor(rng() * 3), 'blocked', team);
+    spread(1 + Math.floor(rng() * 2), 'offside', team);
+    spread(6 + Math.floor(rng() * 5), 'foul', team);
+    if (rng() < 0.75) spread(1 + Math.floor(rng() * 2), 'yellow', team);
+    spread(3 + Math.floor(rng() * 4), 'goalkick', team);
+  }
+  events.sort((a, b) => a.sec - b.sec);
+
+  // Build a calm ball path (passes) that wanders midfield and arrives AT each
+  // event's spot right on its clock. Passes are ~1.6–3s, so the ball moves at a
+  // watchable pace — no frantic action.
+  const passes: Pass[] = [];
+  let t = 1.5, x = 50, y = 50;
+  let team: Side = rng() < 0.5 ? 'home' : 'away';
+  const addPass = (x1: number, y1: number, dur: number, tm: Side) => {
+    passes.push({ t, dur, x0: x, y0: y, x1: clamp(x1, 4, 96), y1: clamp(y1, 8, 92), team: tm });
+    t += dur; x = clamp(x1, 4, 96); y = clamp(y1, 8, 92);
   };
-
-  while (t < MATCH_SECS - 4) {
-    const dir = attackDir(team);
-    const chain = 2 + Math.floor(rng() * 5);            // 2–6 passes this possession
-    let shot = false;
-    for (let p = 0; p < chain; p++) {
-      // advance toward goal with lateral movement (build-up)
-      const adv = 5 + rng() * 16;
-      const nx = clamp(x + dir * adv, 6, 94);
-      const ny = clamp(y + (rng() - 0.5) * 42, 12, 88);
-      addPass(nx, ny, 0.55 + rng() * 0.85);
-      if (inFinalThird(team, x) && rng() < 0.55) { shot = true; break; }
+  for (const e of events) {
+    // fill the gap up to the event with unhurried midfield passing
+    while (e.sec - t > 6) {
+      if (rng() < 0.3) team = other(team);                     // possession changes hands
+      const wx = 38 + rng() * 24 + (e.x - 50) * 0.15;          // drift gently toward the event zone
+      const wy = 18 + rng() * 64;
+      addPass(wx, wy, 1.5 + rng() * 1.5, team);
+      t += 0.3;                                                // settle at the receiver
     }
-
-    // sprinkle a foul / throw-in occasionally between phases
-    const spice = rng();
-    if (!shot && spice < 0.12) { ev('foul', x, y); if (rng() < 0.3) ev('yellow', x, y); team = other(team); t += 0.6; x = clamp(x, 8, 92); continue; }
-    if (!shot && spice < 0.2) { ev('throwin', x, y < 50 ? 12 : 88); }
-
-    if (shot || inFinalThird(team, x)) {
-      // a shot on goal → outcome
-      const gx = goalX(team);
-      addPass(gx, clamp(y + (rng() - 0.5) * 20, 36, 64), 0.34 + rng() * 0.14);   // strike toward goal
-      const out = rollShot(rng());
-      const spot = eventSpotRaw(team, out, rng);
-      ev('shot', spot.x, spot.y);
-      ev(out, spot.x, spot.y);
-      if (out === 'corner') {                            // corner: ball to the flag, same team keeps
-        x = team === 'home' ? 95 : 5; y = rng() < 0.5 ? 12 : 88;
-        t += 1.4;
-      } else {                                           // cleared → other team restarts from the back
-        ev('goalkick', gx, 50);
-        team = other(team);
-        x = goalX(team) + (team === 'home' ? 10 : -10); y = 50;
-        t += 1.6;
-      }
-    } else {
-      // turnover: the other team wins it here and plays out
-      team = other(team);
-      x = clamp(x + (rng() - 0.5) * 10, 8, 92);
-      t += 0.4 + rng() * 0.5;
-    }
+    // approach and arrive at the event spot exactly on its clock, event team leads
+    team = e.team;
+    if (e.sec - t > 2.4) addPass(x + (e.x - x) * 0.5, y + (e.y - y) * 0.5, (e.sec - t) * 0.5, team);
+    addPass(e.x, e.y, Math.max(0.4, Math.min(1.4, e.sec - t)), team);
+    t = e.sec + 1.1;                                           // brief pause on the event
+    // restart from the spot
+    const rx = e.type === 'corner' ? e.x : clamp(e.x + (e.team === 'home' ? -9 : 9), 6, 94);
+    passes.push({ t, dur: 0.6, x0: e.x, y0: e.y, x1: rx, y1: 50, team: e.team });
+    t += 0.6; x = rx; y = 50;
   }
   const sim = { passes, events };
   cache.set(matchId, sim);
