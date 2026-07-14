@@ -5,7 +5,7 @@ import {
   simLines, goalBurst, goalHistoryLine, cardLine, type Line,
 } from '../live/commentary';
 import { isPenaltyGoal } from '../live/liveModel';
-import { statsAt } from '../live/liveSim';
+import { simStats } from '../live/matchSim';
 import PitchTV, { type GoalPulse } from '../live/PitchTV';
 import MatchChat from '../live/ChatPanel';
 import FormStrip from '../live/FormStrip';
@@ -29,7 +29,7 @@ function StatsPanel({ matchId, minute, reds, home, away }: {
   matchId: string; minute: number; reds: [number, number]; home: string; away: string;
 }) {
   const { t } = useI18n();
-  const s = statsAt(matchId, minute, reds);
+  const s = simStats(matchId, minute, reds);
   const [ph, pa] = s.possession;
   const rows: [string, [number, number]][] = [
     [t('live.shots'), s.shots], [t('live.ontarget'), s.onTarget], [t('live.corners'), s.corners],
@@ -208,7 +208,7 @@ export default function LiveMatchScreen() {
   const htH = htPast ? state.events.filter((e) => e.team === 'home' && e.minute <= 45).length : null;
   const htA = htPast ? state.events.filter((e) => e.team === 'away' && e.minute <= 45).length : null;
   const ht = htH != null && htA != null ? ([htH, htA] as [number, number]) : null;
-  const liveStats = phase !== 'upcoming' ? statsAt(matchId!, shownMinute, [state.red_home, state.red_away]) : null;
+  const liveStats = phase !== 'upcoming' ? simStats(matchId!, shownMinute, [state.red_home, state.red_away]) : null;
 
   const pick = myLeg?.outcome_key as OutKey | undefined;
   const pickState = pick ? computePickState(pick, hs, as) : null;

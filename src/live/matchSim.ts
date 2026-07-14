@@ -149,3 +149,29 @@ export function ballAt(matchId: string, tSec: number): Ball {
 export function simEvents(matchId: string, uptoMin: number): SimEvent[] {
   return sim(matchId).events.filter((e) => e.minute <= uptoMin);
 }
+
+export interface SimStats {
+  possession: [number, number]; shots: [number, number]; onTarget: [number, number];
+  corners: [number, number]; fouls: [number, number]; yellows: [number, number]; reds: [number, number];
+}
+// Match stats derived from the SAME possession sim, so they agree with the ball
+// and the feed (and are realistically asymmetric — not a mirror 10/10).
+export function simStats(matchId: string, uptoMin: number, reds: [number, number]): SimStats {
+  const s = sim(matchId);
+  const sh: [number, number] = [0, 0], ot: [number, number] = [0, 0], co: [number, number] = [0, 0];
+  const fo: [number, number] = [0, 0], ye: [number, number] = [0, 0];
+  const i = (t: Side) => (t === 'home' ? 0 : 1);
+  for (const e of s.events) {
+    if (e.minute > uptoMin) continue;
+    if (e.type === 'shot') sh[i(e.team)]++;
+    else if (e.type === 'save') ot[i(e.team)]++;
+    else if (e.type === 'corner') { co[i(e.team)]++; ot[i(e.team)]++; }
+    else if (e.type === 'foul') fo[i(e.team)]++;
+    else if (e.type === 'yellow') ye[i(e.team)]++;
+  }
+  let hp = 0, ap = 0;
+  for (const p of s.passes) { if (p.t / 60 > uptoMin) break; if (p.team === 'home') hp += p.dur; else ap += p.dur; }
+  const tot = hp + ap;
+  const hpc = tot > 0 ? Math.round((100 * hp) / tot) : 50;
+  return { possession: [hpc, 100 - hpc], shots: sh, onTarget: ot, corners: co, fouls: fo, yellows: ye, reds };
+}
