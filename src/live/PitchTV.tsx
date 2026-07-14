@@ -78,8 +78,9 @@ export default function PitchTV({
     // read — no rapid side-to-side jumps.
     const isHome = goalPulse.team === 'home';
     const net = { x: isHome ? 96 : 4, y: 50 };
+    // penalty is taken from the DRAWN penalty spot (11% from the goal line)
     goalSeq.current = goalPulse.penalty
-      ? [{ until: now + 2000, x: isHome ? 84 : 16, y: 50 }, { until: now + 3200, ...net }]
+      ? [{ until: now + 2000, x: isHome ? 89 : 11, y: 50 }, { until: now + 3200, ...net }]
       : [{ until: now + 2000, ...net }];
     holdUntil.current = now + (goalPulse.penalty ? 4800 : 3600);
     cheer();
@@ -196,7 +197,11 @@ export default function PitchTV({
         <div className={`pitch ${flash === 'goal' ? 'pitch-flash' : ''}`}>
           <div className="pl midline" /><div className="pl circle" /><div className="pl spot" />
           <div className="pl box box-l" /><div className="pl box box-r" />
+          <div className="pl goalbox goal-l" /><div className="pl goalbox goal-r" />
+          <div className="pl pspot l" /><div className="pl pspot r" />
           <div className="pl arc arc-l" /><div className="pl arc arc-r" />
+          <div className="pl corner tl" /><div className="pl corner tr" />
+          <div className="pl corner bl" /><div className="pl corner br" />
           <div className={`pgoal l ${flash === 'goal' && side === 'away' ? 'net-bulge' : ''}`} />
           <div className={`pgoal r ${flash === 'goal' && side === 'home' ? 'net-bulge' : ''}`} />
 

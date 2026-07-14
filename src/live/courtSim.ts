@@ -18,6 +18,11 @@ export interface CourtMove { t: number; dur: number; x0: number; y0: number; x1:
 export interface CourtEvent { key: string; sec: number; type: PlayType; side: Side; x: number; y: number }
 
 export const BB_TOTAL = 48 * 60;      // 4×12 min in sim-seconds
+// Court geometry shared with the SVG in CourtTV — hoops at (20,100)/(300,100),
+// three-point arc radius and free-throw-line distance FROM the hoop. Shots must
+// visibly launch from the correct side of the line.
+export const BB_R3 = 74;
+export const BB_FT = 36;
 const HOLD_REAL = 2.2;
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
@@ -59,9 +64,13 @@ function build(matchId: string, dur: number): CSim {
     for (let i = 0; i < swings; i++) mv(hoopX - dir * (40 + rng() * 60), 40 + rng() * 120, 4 + rng() * 3, side);
     const r = rng();
     if (r < 0.46) {
-      // drive → shot at the rim; about half become a held MISS, rest play on
-      mv(hoopX - dir * (12 + rng() * 26), 66 + rng() * 68, 3 + rng() * 2, side);
-      mv(hoopX, 100, 2.2, side);
+      // shot attempt: ~1/3 launch from THREE-point range (outside the arc), the
+      // rest from inside it — the ball visibly leaves the correct zone
+      const three = rng() < 0.34;
+      const ang = (rng() * 2 - 1) * (three ? 0.95 : 1.15);
+      const rad = three ? BB_R3 + 6 + rng() * 12 : 16 + rng() * 40;
+      mv(hoopX - dir * Math.cos(ang) * rad, 100 + Math.sin(ang) * rad, 3 + rng() * 2, side);
+      mv(hoopX, 100, three ? 2.8 : 2.2, side);
       if (rng() < 0.5) { events.push({ key: `b${ei++}`, sec: t, type: 'miss', side, x: hoopX, y: 100 }); t += holdSec; }
       side = other(side);
       mv(hoopX - dir * (26 + rng() * 12), 76 + rng() * 48, 2.6, side);      // board cleared, play out

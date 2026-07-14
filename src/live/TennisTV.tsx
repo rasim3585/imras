@@ -87,19 +87,34 @@ export default function TennisTV({
 
   return (
     <div className={`court-tv tennis-tv ${finished ? 'is-fin' : ''}`}>
-      <svg viewBox="0 0 320 200" className="court-svg" preserveAspectRatio="xMidYMid slice" aria-hidden>
-        <rect x="0" y="0" width="320" height="200" fill="#2f7d6b" />
-        <rect x="26" y="24" width="268" height="152" fill="#3f9c86" stroke="#eef7f2" strokeWidth="2" />
-        <line x1="46" y1="24" x2="46" y2="176" stroke="#eef7f2" strokeWidth="1.5" opacity="0.8" />
-        <line x1="274" y1="24" x2="274" y2="176" stroke="#eef7f2" strokeWidth="1.5" opacity="0.8" />
-        <line x1="100" y1="46" x2="220" y2="46" stroke="#eef7f2" strokeWidth="1.5" opacity="0.7" />
-        <line x1="100" y1="154" x2="220" y2="154" stroke="#eef7f2" strokeWidth="1.5" opacity="0.7" />
-        <line x1="100" y1="46" x2="100" y2="154" stroke="#eef7f2" strokeWidth="1.5" opacity="0.7" />
-        <line x1="220" y1="46" x2="220" y2="154" stroke="#eef7f2" strokeWidth="1.5" opacity="0.7" />
-        <line x1="160" y1="46" x2="160" y2="154" stroke="#eef7f2" strokeWidth="1.5" opacity="0.7" />
-        <line x1="160" y1="20" x2="160" y2="180" stroke="#0d3a30" strokeWidth="3" opacity="0.75" />
-        <line x1="160" y1="20" x2="160" y2="180" stroke="#ffffff" strokeWidth="1" strokeDasharray="3 3" opacity="0.6" />
-      </svg>
+      {sport === 'volleyball' ? (
+        <svg viewBox="0 0 320 200" className="court-svg" preserveAspectRatio="xMidYMid slice" aria-hidden>
+          {/* indoor volleyball: blue surround, orange court, 3m attack lines */}
+          <rect x="0" y="0" width="320" height="200" fill="#234f66" />
+          <rect x="48" y="30" width="224" height="140" fill="#c8793f" stroke="#f4efe7" strokeWidth="2" />
+          <line x1="123" y1="30" x2="123" y2="170" stroke="#f4efe7" strokeWidth="1.5" opacity="0.75" strokeDasharray="5 4" />
+          <line x1="197" y1="30" x2="197" y2="170" stroke="#f4efe7" strokeWidth="1.5" opacity="0.75" strokeDasharray="5 4" />
+          <line x1="160" y1="30" x2="160" y2="170" stroke="#f4efe7" strokeWidth="1.5" opacity="0.9" />
+          <line x1="160" y1="16" x2="160" y2="184" stroke="#0d2a36" strokeWidth="4" opacity="0.8" />
+          <line x1="160" y1="16" x2="160" y2="184" stroke="#ffffff" strokeWidth="1" strokeDasharray="3 3" opacity="0.65" />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 320 200" className="court-svg" preserveAspectRatio="xMidYMid slice" aria-hidden>
+          {/* tennis: doubles rect, singles sidelines, service boxes with the
+              CENTRE service line, baseline centre marks */}
+          <rect x="0" y="0" width="320" height="200" fill="#2f7d6b" />
+          <rect x="26" y="24" width="268" height="152" fill="#3f9c86" stroke="#eef7f2" strokeWidth="2" />
+          <line x1="26" y1="44" x2="294" y2="44" stroke="#eef7f2" strokeWidth="1.5" opacity="0.8" />
+          <line x1="26" y1="156" x2="294" y2="156" stroke="#eef7f2" strokeWidth="1.5" opacity="0.8" />
+          <line x1="100" y1="44" x2="100" y2="156" stroke="#eef7f2" strokeWidth="1.5" opacity="0.75" />
+          <line x1="220" y1="44" x2="220" y2="156" stroke="#eef7f2" strokeWidth="1.5" opacity="0.75" />
+          <line x1="100" y1="100" x2="220" y2="100" stroke="#eef7f2" strokeWidth="1.5" opacity="0.75" />
+          <line x1="26" y1="100" x2="32" y2="100" stroke="#eef7f2" strokeWidth="1.5" opacity="0.8" />
+          <line x1="288" y1="100" x2="294" y2="100" stroke="#eef7f2" strokeWidth="1.5" opacity="0.8" />
+          <line x1="160" y1="20" x2="160" y2="180" stroke="#0d3a30" strokeWidth="3" opacity="0.75" />
+          <line x1="160" y1="20" x2="160" y2="180" stroke="#ffffff" strokeWidth="1" strokeDasharray="3 3" opacity="0.6" />
+        </svg>
+      )}
 
       {live && Array.from({ length: nPl }).map((_, i) => <div key={`h${i}`} ref={(el) => { pl.current[i] = el; }} className="court-player home" style={{ left: '85%', top: '50%' }} />)}
       {live && Array.from({ length: nPl }).map((_, i) => <div key={`a${i}`} ref={(el) => { pl.current[nPl + i] = el; }} className="court-player away" style={{ left: '15%', top: '50%' }} />)}

@@ -18,7 +18,8 @@ export type CourtSport = 'tennis' | 'volleyball';
 export interface Rally {
   idx: number; start: number; end: number; holdEnd: number;
   winner: Side; type: TPlay; server: Side; strokes: number;
-  targets: { x: number; y: number }[];   // landing spot of each stroke; last = where the ball dies
+  targets: { x: number; y: number }[];   // landing spot of each stroke (error: the net contact)
+  die: { x: number; y: number };         // where the ball finally lies dead (error: bounced BACK off the net)
   gamesH: number; gamesA: number;        // ladder AFTER this rally (volley: set points)
   ph: number; pa: number;                // tennis: points inside the running game
 }
@@ -47,18 +48,50 @@ function build(matchId: string, setIdx: number, sport: CourtSport): Rally[] {
   for (let i = 0; i < 220; i++) {
     const r = rng();
     const type: TPlay = r < 0.1 ? 'ace' : r < 0.42 ? 'winner' : r < 0.78 ? 'error' : 'rally';
-    const strokes = type === 'ace' ? 1 : type === 'rally' ? 6 + Math.floor(rng() * 5) : 2 + Math.floor(rng() * 4);
+    let strokes = type === 'ace' ? 1 : type === 'rally' ? 6 + Math.floor(rng() * 5) : 2 + Math.floor(rng() * 4);
     const winner: Side = type === 'ace' ? server : rng() < (server === 'home' ? 0.55 : 0.45) ? 'home' : 'away';
-    const loserRight = other(winner) === 'home';
-    // stroke landing spots: alternate court halves; the LAST lands where the point dies
+    const loser = other(winner);
+    const loserRight = loser === 'home';
+    // the LAST stroke must come off the right racket: the WINNER finishes a
+    // winner/long rally; the LOSER is the one who puts an error into the net
+    const lastHitter: Side = type === 'error' ? loser : winner;
+    if (type !== 'ace') {
+      const hitterOf = (k: number): Side => (k % 2 === 0 ? server : other(server));
+      if (hitterOf(strokes - 1) !== lastHitter) strokes += strokes > 2 ? -1 : 1;
+    }
+    // stroke landing spots: alternate court halves, always INSIDE the lines
+    // (tennis: singles court 34..286 × 50..150; volleyball: 56..264 × 44..156)
+    const vb = sport === 'volleyball';
+    const yIn = () => (vb ? 44 + rng() * 112 : 50 + rng() * 100);
+    const midX = (right: boolean) => (right ? (vb ? 190 + rng() * 66 : 196 + rng() * 84) : (vb ? 64 + rng() * 66 : 40 + rng() * 84));
     const targets: { x: number; y: number }[] = [];
     for (let k = 0; k < strokes; k++) {
       const receiverRight = (k % 2 === 0 ? other(server) : server) === 'home';
-      targets.push({ x: receiverRight ? 200 + rng() * 84 : 36 + rng() * 84, y: 40 + rng() * 120 });
+      targets.push({ x: midX(receiverRight), y: yIn() });
     }
-    if (type === 'error') targets[strokes - 1] = { x: 160 + (rng() < 0.5 ? -5 : 5), y: 60 + rng() * 80 };
-    else if (type === 'ace') targets[0] = { x: loserRight ? 208 : 112, y: rng() < 0.5 ? 62 : 138 };
-    else targets[strokes - 1] = { x: loserRight ? 236 + rng() * 54 : 30 + rng() * 54, y: 34 + rng() * 132 };
+    let die: { x: number; y: number };
+    if (type === 'error') {
+      // into the NET: contact on the net line, then the ball bounces BACK to
+      // the mistaken hitter's side and lies there
+      const ny = 60 + rng() * 80;
+      targets[strokes - 1] = { x: 160, y: ny };
+      die = { x: loserRight ? 173 : 147, y: ny + (rng() * 8 - 4) };
+    } else if (type === 'ace') {
+      // untouchable serve: tennis → the receiver's service box corner;
+      // volleyball → drops just behind the net in the receiver's court
+      targets[0] = vb
+        ? { x: loserRight ? 188 : 132, y: yIn() }
+        : { x: loserRight ? 208 : 112, y: rng() < 0.5 ? 62 : 138 };
+      die = targets[0];
+    } else {
+      // winner: the ball crosses and dies deep in the opponent's open court —
+      // a point only happens when the other side can't reach it
+      targets[strokes - 1] = {
+        x: loserRight ? (vb ? 214 + rng() * 48 : 230 + rng() * 56) : (vb ? 58 + rng() * 48 : 34 + rng() * 56),
+        y: yIn(),
+      };
+      die = targets[strokes - 1];
+    }
     // fold the point into the ladder (frozen near set end — server decides sets)
     if (sport === 'volleyball') {
       if (gh < 24 && ga < 24) { if (winner === 'home') gh++; else ga++; }
@@ -67,7 +100,7 @@ function build(matchId: string, setIdx: number, sport: CourtSport): Rally[] {
       if ((ph >= 4 || pa >= 4) && Math.abs(ph - pa) >= 2) { if (ph > pa) gh++; else ga++; ph = 0; pa = 0; }
     }
     const dur = strokes * (sport === 'volleyball' ? 0.9 : 1.1) + 0.6;
-    rallies.push({ idx: i, start: t, end: t + dur, holdEnd: t + dur + HOLD, winner, type, server, strokes, targets, gamesH: gh, gamesA: ga, ph, pa });
+    rallies.push({ idx: i, start: t, end: t + dur, holdEnd: t + dur + HOLD, winner, type, server, strokes, targets, die, gamesH: gh, gamesA: ga, ph, pa });
     t += dur + HOLD + (sport === 'volleyball' ? 1.2 : 1.6);
     server = sport === 'volleyball' ? winner : (gh + ga) % 2 === 0 ? startServer : other(startServer);
   }
@@ -104,8 +137,19 @@ export function rallyFlowAt(matchId: string, setIdx: number, sport: CourtSport, 
     const nx = rl[idx + 1];
     return { x: baseX(nx ? nx.server : p.server), y: 100, server: nx ? nx.server : p.server, dead: true };
   }
-  const last = p.targets[p.strokes - 1];
-  if (tSec >= p.end) return { x: last.x, y: last.y, server: p.server, dead: true };   // point over — ball lies where it died
+  if (tSec >= p.end) {
+    // net error: the ball visibly REBOUNDS off the net back to the hitter's
+    // side over ~0.45s, then lies dead there for the rest of the hold
+    if (p.type === 'error') {
+      const f = (tSec - p.end) / 0.45;
+      if (f < 1) {
+        const hit = p.targets[p.strokes - 1];
+        const arc = Math.sin(f * Math.PI) * 6;
+        return { x: hit.x + (p.die.x - hit.x) * f, y: hit.y + (p.die.y - hit.y) * f - arc, server: p.server, dead: false };
+      }
+    }
+    return { x: p.die.x, y: p.die.y, server: p.server, dead: true };   // point over — ball lies where it died
+  }
   const strokeDur = (p.end - p.start) / p.strokes;
   const k = Math.min(p.strokes - 1, Math.floor((tSec - p.start) / strokeDur));
   const from = k === 0 ? { x: baseX(p.server), y: 100 } : p.targets[k - 1];
