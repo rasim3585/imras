@@ -169,7 +169,10 @@ kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40
 ---
 
 ## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0134'ten** devam, sıfır dolgulu 4 hane. (**0133 Ayna+**:
+Yeni migration'lar **0136'dan** devam, sıfır dolgulu 4 hane. (**0134 liderlik
+net birliği**: day/week net artık kupon+aviator+slot toplamı — eskiden yalnız
+kupon olduğundan 0 görünüyordu; **0135**: eski 0-parametreli get_leaderboard()
+düşürüldü, tek sürüm kaldı.) (**0133 Ayna+**:
 user_survey (anket, RLS) + mirror_parallel (kanıtlı karşı-olgusal: gerçek vs
 "hep X'te çek") + mirror_tilt (kayıp-sonrası büyütme şeridi + maliyet) +
 mirror_selfgap (ölçülen risk skoru 0-100 vs öz-tanım). FE: /analiz Genel
