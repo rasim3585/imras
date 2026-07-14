@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLiveMatch } from '../live/useLiveMatch';
 import {
-  atmosphereScript, goalBurst, goalHistoryLine, cardLine, type Line,
+  simLines, goalBurst, goalHistoryLine, cardLine, type Line,
 } from '../live/commentary';
 import { isPenaltyGoal } from '../live/liveModel';
 import { statsAt } from '../live/liveSim';
@@ -120,7 +120,7 @@ export default function LiveMatchScreen() {
   const feedRef = useRef<Line[]>([]);
   const seeded = useRef(false);
   const baselineGoals = useRef(0);
-  const atmo = useMemo(() => (state ? atmosphereScript(matchId!, state.home_team, state.away_team) : []), [matchId, state?.home_team]); // eslint-disable-line react-hooks/exhaustive-deps
+  const atmo = useMemo(() => (state ? simLines(matchId!, state.home_team, state.away_team) : []), [matchId, state?.home_team]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // find the user's pick on this match
   useEffect(() => {

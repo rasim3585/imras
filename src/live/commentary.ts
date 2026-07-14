@@ -5,6 +5,7 @@
 // authoritative) and get their own burst on top.
 
 import { waves, disciplineEventsFor, type Side } from './liveSim';
+import { simEvents, type SimEvType } from './matchSim';
 
 export type LineKind =
   | 'buildup' | 'shot' | 'goal' | 'miss' | 'save' | 'blocked' | 'corner'
@@ -88,6 +89,31 @@ export function atmosphereScript(matchId: string, home: string, away: string): L
     push(min, 4, 'calm', side, T(pick(rng2, CALM), side, home, away));
   }
   return lines.sort((a, b) => a.minute - b.minute || a.sub - b.sub);
+}
+
+// --- feed lines from the POSSESSION sim (matchSim) — so the key-moments text
+//     matches the ball on the pitch exactly (same events). ---------------------
+const SIM_KIND: Partial<Record<SimEvType, LineKind>> = {
+  save: 'save', miss: 'miss', blocked: 'blocked', corner: 'corner',
+  freekick: 'freekick', offside: 'offside', foul: 'foul', yellow: 'yellow',
+};
+const SIM_TEXT: Record<string, string[]> = {
+  save: ['{T} shoot… and the keeper saves it!', '{T} strike… great stop by the keeper!'],
+  miss: ['{T} shoot… just wide!', '{T} go for goal… over the bar!'],
+  blocked: ['{T} shoot… blocked at the last moment!', '{T} effort… a defender throws himself in the way!'],
+  corner: ['…deflected behind. Corner {T}.', '…scrambled away. Corner {T}.'],
+  offside: ['…but the flag is up. Offside, {T}.', '{T} caught offside.'],
+  foul: ['Cynical foul stops {T}. Free-kick.', 'Late challenge — free-kick to {T}.'],
+  yellow: ['Booked. Yellow card, {T}.', '{T} go into the book.'],
+};
+export function simLines(matchId: string, home: string, away: string): Line[] {
+  const rng = seeded(`${matchId}:fl`);
+  const out: Line[] = [];
+  for (const e of simEvents(matchId, 90)) {
+    const kind = SIM_KIND[e.type]; if (!kind) continue;   // skip shot/throw-in/goal-kick noise
+    out.push({ key: e.key, minute: e.minute, sub: 0, kind, team: e.team, text: T(pick(rng, SIM_TEXT[e.type] ?? ['{T}']), e.team, home, away) });
+  }
+  return out.sort((a, b) => a.minute - b.minute);
 }
 
 /** A goal's build-up burst: attack → shot → GOAL. */
