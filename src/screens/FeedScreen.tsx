@@ -98,7 +98,9 @@ export default function FeedScreen() {
     const diff = Math.round(
       (new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
         - new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()) / 86400000);
-    return diff <= 0 ? t('feed.today') : diff === 1 ? t('feed.tomorrow') : d.toLocaleDateString();
+    // 0715: geçmiş gün ASLA "Bugün" sayılmaz (bayat fikstür tüm grubu
+    // "Today" damgalıyordu) — sadece tam bugün/yarın etiketlenir.
+    return diff === 0 ? t('feed.today') : diff === 1 ? t('feed.tomorrow') : d.toLocaleDateString();
   };
   const [matches, setMatches] = useState<BulletinMatch[]>([]);
   const [sport, setSport] = useState<SportKey>('all');

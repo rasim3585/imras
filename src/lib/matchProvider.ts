@@ -1,7 +1,7 @@
 import type {
   Match, Coupon, CouponSettlement, LiveState, DailyBonus, Challenge, Leaderboard,
   League, LeagueDetail, Rival, SharedCoupon, BulletinMatch, CartSelection, MatchStats, StandingsRow,
-  SlotResult,
+  TeamPage, SlotResult,
 } from './types';
 import { SupabaseMatchProvider } from './supabaseMatchProvider';
 
@@ -37,6 +37,9 @@ export interface MatchProvider {
 
   /** Full league table for a sport (rows carry `league` for per-league split). */
   getStandings(sport: 'football' | 'basketball' | 'tennis' | 'volleyball'): Promise<StandingsRow[]>;
+
+  /** Team/player page: standing + form + last matches (with set/quarter detail) + fixtures. */
+  getTeamPage(teamId: number): Promise<TeamPage | null>;
 
   /** Gates of Goal: play one slot spin; server computes, client animates steps. */
   slotSpin(bet: number, ante: boolean, buy: boolean): Promise<SlotResult>;

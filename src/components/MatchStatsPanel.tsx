@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { matchProvider } from '../lib/matchProvider';
 import { useI18n } from '../i18n/LanguageContext';
 import type { MatchStats, VTeamStat } from '../lib/types';
@@ -16,14 +17,17 @@ function FormDots({ form }: { form: ('W' | 'D' | 'L')[] }) {
   );
 }
 
-function TeamRow({ t, bb }: { t: VTeamStat; bb?: boolean }) {
+function TeamRow({ t, sport }: { t: VTeamStat; sport?: string }) {
+  // spor-doğru sağ hücre: basket/tenis W-L, voleybol VNL puanı, futbol puan
+  const right = sport === 'basketball' || sport === 'tennis'
+    ? `${t.won}-${t.lost}` : `${t.points} pt`;
   return (
-    <div className="vstat-team">
+    <Link className="vstat-team vstat-link" to={`/team/${t.team_id}`}>
       <span className="vstat-rank tnum">#{t.rank}</span>
       <span className="vstat-name">{t.name}</span>
       <FormDots form={t.form} />
-      <span className="vstat-pts tnum">{bb ? `${t.won}-${t.lost}` : `${t.points} pt`}</span>
-    </div>
+      <span className="vstat-pts tnum">{right}</span>
+    </Link>
   );
 }
 
@@ -42,7 +46,6 @@ export default function MatchStatsPanel({ matchId }: { matchId: string }) {
   if (stats === null || stats === 'none') return null;   // loading, or real match → hide
 
   const played = stats.home.played + stats.away.played;
-  const noDraw = stats.sport === 'basketball' || stats.sport === 'tennis' || stats.sport === 'volleyball';
   const head = stats.sport === 'basketball' ? `${t('feed.tab.basketball')} · ${t('ms.simleague')}`
     : stats.sport === 'tennis' ? `${t('feed.tab.tennis')} · ${t('ms.simleague')}`
     : stats.sport === 'volleyball' ? `${t('feed.tab.volley')} · ${t('ms.simleague')}` : t('ms.simleague');
@@ -51,8 +54,8 @@ export default function MatchStatsPanel({ matchId }: { matchId: string }) {
     <div className="vstats card">
       <div className="vstats-head">{head}</div>
       <div className="vstat-teams">
-        <TeamRow t={stats.home} bb={noDraw} />
-        <TeamRow t={stats.away} bb={noDraw} />
+        <TeamRow t={stats.home} sport={stats.sport} />
+        <TeamRow t={stats.away} sport={stats.sport} />
       </div>
       {played === 0 ? (
         <div className="vstat-note">{t('ms.newleague')}</div>
@@ -63,7 +66,10 @@ export default function MatchStatsPanel({ matchId }: { matchId: string }) {
             {stats.h2h.map((h, i) => (
               <div key={i} className="vh2h-row">
                 <span className="vh2h-team">{h.home_team}</span>
-                <span className="vh2h-score tnum">{h.home_score} - {h.away_score}</span>
+                <span className="vh2h-score tnum">
+                  {h.home_score} - {h.away_score}
+                  {h.detail && <span className="vh2h-detail tnum">{h.detail}</span>}
+                </span>
                 <span className="vh2h-team vh2h-away">{h.away_team}</span>
               </div>
             ))}

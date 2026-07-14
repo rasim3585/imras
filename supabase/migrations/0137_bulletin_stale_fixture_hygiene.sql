@@ -1,0 +1,15 @@
+-- 0137: "starting now" hayalet mac fix — bayat gercek fikstur hijyeni.
+-- Kok neden: BSD feed'inden event almadan dusen fiksturler sonsuza dek
+-- 'notstarted' kaliyordu; get_bulletin saat penceresi kontrol etmiyordu ->
+-- 10-13 Temmuz kickoff'lu 5 curuk satir bultenin EN USTUNE siralanip hepsi
+-- "starting now" gosteriyor, grubun gun etiketi de en eski mactan geldigi
+-- icin "World Cup 2026 - Today" altina yarinki mac giriyordu.
+-- Fix 1: get_bulletin real_rows'a kickoff penceresi:
+--        and f.kickoff_at > now() - interval '3 hours'
+-- Fix 2: _reap_stale_real_fixtures'a ikinci dal — bayat 'notstarted' fikstur
+--        (kickoff 3 saati gecmis + 10 dk sync yok) 'cancelled' yapilir,
+--        settle_real_fixture'in MEVCUT void yolu kupon bacaklarini iade eder.
+-- Uygulama sonucu (2026-07-15): 5 fikstur cancelled/voided (Spain-Belgium,
+-- VPS-SJK, Juventude-Vila Nova, Sport Recife-Botafogo SP, Djurgardens-
+-- Halmstads); get_bulletin dogrulama: 19 satir, 0 bayat, en erken kickoff
+-- yarin. Tam govdeler MCP ile canliya uygulandi; bu dosya kayittir.

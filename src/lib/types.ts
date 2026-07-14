@@ -169,11 +169,15 @@ export interface VTeamStat {
   form: ('W' | 'D' | 'L')[];   // most recent first
 }
 
-/** One row of a full league table (from vleague_standings). Basketball reads
- *  gf/ga as points-for/against and has no draws. */
+/** One row of a full league table (from vleague_standings_ex). Points are
+ *  sport-true: football 3W+1D, volleyball VNL (3-0/3-1→3, 3-2→2, 2-3→1),
+ *  basketball/tennis wins. gf/ga = goals | points | sets by sport. */
 export interface StandingsRow {
   rank: number; team_id: number; name: string; short_name: string; league: string | null;
   played: number; won: number; drawn: number; lost: number; gf: number; ga: number; gd: number; points: number;
+  pct?: number | null;                 // win ratio 0..1
+  form?: ('W' | 'D' | 'L')[];          // last 5, most recent first
+  streak?: number;                     // +N winning / -N losing run
 }
 
 export interface VH2H {
@@ -182,6 +186,23 @@ export interface VH2H {
   away_team: string;
   home_score: number;
   away_score: number;
+  detail?: string | null;              // finished sets/quarters, e.g. "6-2  6-4"
+}
+
+// --- Team / player page (from vteam_page RPC) --------------------------------
+
+export interface TeamPageMatch {
+  id: string; starts_at: string; home_team: string; away_team: string;
+  home_score?: number; away_score?: number; is_home: boolean;
+  res?: 'W' | 'D' | 'L'; detail?: string | null;
+}
+
+export interface TeamPage {
+  team: { id: number; name: string; short_name: string; sport: string; league: string | null };
+  standing: StandingsRow | null;
+  form: ('W' | 'D' | 'L')[];           // last 10, most recent first
+  last_matches: TeamPageMatch[];
+  upcoming: TeamPageMatch[];
 }
 
 /** Stats bundle for a virtual match; null for real/legacy matches (no team ids). */

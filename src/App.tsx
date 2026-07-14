@@ -16,6 +16,7 @@ import AviatorScreen from './screens/AviatorScreen';
 import GatesScreen from './screens/GatesScreen';
 import AnalizScreen from './screens/AnalizScreen';
 import StandingsScreen from './screens/StandingsScreen';
+import TeamScreen from './screens/TeamScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import LeaderboardScreen from './screens/LeaderboardScreen';
 import SocialScreen from './screens/SocialScreen';
@@ -68,6 +69,7 @@ function App() {
           <Route path="/aviator" element={<AviatorScreen />} />
           <Route path="/gates" element={<GatesScreen />} />
           <Route path="/standings" element={<StandingsScreen />} />
+          <Route path="/team/:teamId" element={<TeamScreen />} />
           <Route path="/coupon" element={<CouponScreen />} />
           <Route path="/login" element={session ? <Navigate to="/" replace /> : <AuthScreen />} />
           <Route path="/coupons" element={<RequireAuth><MyCouponsScreen /></RequireAuth>} />

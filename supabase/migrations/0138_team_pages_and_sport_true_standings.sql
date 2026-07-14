@@ -1,0 +1,16 @@
+-- 0138: e-spor Nesine-duzeyi istatistik paketi (tam govdeler MCP ile canlida).
+-- (1) Parsiyel indeksler idx_matches_home/away_finished: takim taramasi seq
+--     scan'di (olculdu: 15857 satir elenip 119 bulunuyordu, 7.5ms).
+-- (2) vleague_standings_ex(p_sport): spor-DOGRU lig tablosu + form(5) + seri.
+--     futbol 3G+1B | basket W-L + PCT (NBA) | voleybol VNL puani
+--     (3-0/3-1 -> 3p, 3-2 -> 2p, 2-3 -> 1p) + set orani | tenis ATP-race
+--     (galibiyet + win%). Eski vleague_standings korunur (geri uyum).
+-- (3) _finished_detail(match): bitmis macin set/ceyrek dizgisi
+--     ("25-19  25-23  22-25  25-20" / "28-24  22-26  30-25  27-22").
+--     secret_outcome YALNIZ status='finished' icin okunur.
+-- (4) vteam_page(team): takim/oyuncu sayfasi — sira, form 10, son 15 mac
+--     (detayli), gelecek 3 mac. attack/defense ASLA disari cikmaz.
+-- (5) vteam_h2h(a,b): mac-bagimsiz ikili gecmis (son 10 + ozet).
+-- (6) vmatch_stats: h2h satirlarina 'detail' eklendi.
+-- Dogrulama: VNL Men tablosu (Poland 286p, streak -1, form dizisi);
+-- vteam_page(305)=USA: rank 7, 185p, son mac "28-26 16-25 28-26 22-25 8-15".
