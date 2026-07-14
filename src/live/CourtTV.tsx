@@ -109,7 +109,7 @@ export default function CourtTV({
 
       <div className="court-top">
         {finished ? <span className="court-clk fin">FT</span>
-          : <span className="court-clk"><span className="court-q">{period ?? 'Q1'}</span> {clock}</span>}
+          : <span className="court-clk court-q">{clock}</span>}
       </div>
       <div className="court-score">
         <span className={`court-name ${flash === 'home' ? 'lit' : ''}`}>{home}</span>

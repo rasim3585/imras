@@ -1015,6 +1015,12 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 /* soft comet trail behind the ball (opacity set from attack intensity) */
 .pitch-trail { position: absolute; width: 26px; height: 26px; border-radius: 50%; transform: translate(-50%, -50%);
   background: radial-gradient(circle, rgba(255,255,255,0.7), transparent 70%); z-index: 4; pointer-events: none; will-change: left, top; }
+/* player dots — the whole block slides toward the ball each frame */
+.pitch-players { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.pplayer { position: absolute; width: 11px; height: 11px; border-radius: 50%; transform: translate(-50%, -50%);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5); border: 1.5px solid rgba(255,255,255,0.85); will-change: left, top; }
+.pplayer.home { background: #3f7fd6; } .pplayer.away { background: #e08a3a; }
+.pplayer.gk { border-color: #ffe27a; box-shadow: 0 0 6px rgba(255,226,122,0.6); }
 
 /* attack-direction arrows (colour via --ac) */
 .arrow { position: absolute; top: 50%; height: 4px; border-radius: 2px; transform: translateY(-50%); z-index: 3; background: linear-gradient(90deg, transparent, var(--ac)); }
