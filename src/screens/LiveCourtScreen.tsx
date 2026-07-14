@@ -45,7 +45,7 @@ const PLAY_ICON: Record<PlayType, string> = {
 
 // Basketball stat strip + play feed below the court. Its own slow clock; makes
 // are pulled from the authoritative server score.
-function CourtStats({ matchId, home, away, hs, as }: { matchId: string; home: string; away: string; hs: number; as: number }) {
+function CourtStats({ matchId, home, away, hs, as, minute }: { matchId: string; home: string; away: string; hs: number; as: number; minute: number }) {
   const { t } = useI18n();
   const mount = useRef(Date.now());
   const [, force] = useState(0);
@@ -59,7 +59,7 @@ function CourtStats({ matchId, home, away, hs, as }: { matchId: string; home: st
     return () => { alive = false; clearInterval(id); };
   }, [matchId]);
   const elapsed = (Date.now() - mount.current) / 1000;
-  const s = courtStatsAt(matchId, elapsed);
+  const s = courtStatsAt(matchId, Math.max(elapsed, minute * 60));   // stats reflect the actual game progress
   const feed = ambientPlay(matchId, elapsed).slice(-10).reverse();
   const rows: [string, [number, number], string][] = [
     ['FG%', s.fgPct, '%'], [t('bb.reb'), s.rebounds, ''], [t('bb.to'), s.turnovers, ''], [t('live.fouls'), s.fouls, ''],
@@ -163,7 +163,7 @@ export default function LiveCourtScreen() {
       )}
 
       {phase !== 'upcoming' && matchId && match.sport === 'basketball' && (
-        <CourtStats matchId={matchId} home={match.home_team} away={match.away_team} hs={hs} as={as} />
+        <CourtStats matchId={matchId} home={match.home_team} away={match.away_team} hs={hs} as={as} minute={live?.minute ?? 0} />
       )}
       {phase === 'live' && matchId && (match.sport === 'tennis' || match.sport === 'volleyball') && (
         <TennisPlays matchId={matchId} setIdx={hs + as} home={match.home_team} away={match.away_team} />
