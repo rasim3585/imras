@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { rallyFlowAt, rallyState, setClockSec, type Side } from './tennisSim';
+import { Confetti } from './PitchTV';
 
 // Tennis / volleyball 2D live view. Ball, serve dot and the games/points ladder
 // all read the SAME rally list on the SAME shared set clock (tennisSim): the
@@ -119,6 +120,8 @@ export default function TennisTV({
       {live && Array.from({ length: nPl }).map((_, i) => <div key={`h${i}`} ref={(el) => { pl.current[i] = el; }} className="court-player home" style={{ left: '85%', top: '50%' }} />)}
       {live && Array.from({ length: nPl }).map((_, i) => <div key={`a${i}`} ref={(el) => { pl.current[nPl + i] = el; }} className="court-player away" style={{ left: '15%', top: '50%' }} />)}
       <div ref={ballRef} className={`court-ball tennis-ball ${live ? 'live' : ''}`} style={{ left: '50%', top: '50%' }} aria-hidden />
+
+      {flash && <Confetti />}
 
       <div className="court-top">
         {finished ? <span className="court-clk fin">FT</span>

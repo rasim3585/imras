@@ -175,17 +175,26 @@ function ScatterBall() {
   );
 }
 
-// Multiplier orb — glossy sphere with ×N.
+// Multiplier orb — glossy GEM sphere, coloured by value tier like GoO's orbs
+// (blue = small, green = mid, purple = big, crimson = huge). Detonates via the
+// .orbfire cell class when its value is added to the multiplier.
+const ORB_TIERS = [
+  { min: 100, id: 'orbR', stops: ['#ffd9d0', '#f04438', '#7a1408'], ring: '#4a0d05' },
+  { min: 20, id: 'orbP', stops: ['#f0dcff', '#a855f7', '#4c1580'], ring: '#2e0a52' },
+  { min: 6, id: 'orbG', stops: ['#d8ffe9', '#2fbf71', '#0e5c34'], ring: '#083a20' },
+  { min: 0, id: 'orbB', stops: ['#d6ecff', '#3b82f6', '#123a80'], ring: '#0a2450' },
+];
 function OrbBall({ value }: { value: number }) {
+  const t = ORB_TIERS.find((x) => value >= x.min) ?? ORB_TIERS[3];
   return (
     <div className="slot-orb">
       <svg viewBox="0 0 100 100" aria-hidden="true">
         <defs>
-          <radialGradient id="orb" cx="0.36" cy="0.3" r="0.8">
-            <stop offset="0" stopColor="#fff2b0" /><stop offset="0.5" stopColor="#ffcf3a" /><stop offset="1" stopColor="#a9741a" />
+          <radialGradient id={t.id} cx="0.36" cy="0.3" r="0.8">
+            <stop offset="0" stopColor={t.stops[0]} /><stop offset="0.5" stopColor={t.stops[1]} /><stop offset="1" stopColor={t.stops[2]} />
           </radialGradient>
         </defs>
-        <circle cx="50" cy="50" r="40" fill="url(#orb)" stroke="#6b4610" strokeWidth="3" />
+        <circle cx="50" cy="50" r="40" fill={`url(#${t.id})`} stroke={t.ring} strokeWidth="3" />
         <ellipse cx="38" cy="34" rx="14" ry="9" fill="#ffffff" opacity="0.6" transform="rotate(-28 38 34)" />
       </svg>
       <span className="slot-orb-x tnum">×{value}</span>

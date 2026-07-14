@@ -28,13 +28,24 @@ const EV_LABEL: Record<SimEvType, string> = {
 export interface GoalPulse { id: number; team: Side; penalty: boolean }
 
 // deterministic little confetti pieces (position %, drift px, delay s, colour)
+// — shared with the court trackers (basketball threes, tennis/volley set wins)
 const CONF_COLORS = ['#ffd36b', '#4fe89a', '#4aa3e2', '#ff7a7a', '#ffffff'];
-const CONF_PIECES = Array.from({ length: 18 }, (_, i) => ({
+export const CONF_PIECES = Array.from({ length: 18 }, (_, i) => ({
   x: (i * 53 + 11) % 100,
   dx: ((i * 37) % 48) - 24,
   d: (i % 6) * 0.08,
   c: CONF_COLORS[i % CONF_COLORS.length],
 }));
+
+export function Confetti() {
+  return (
+    <div className="confetti">
+      {CONF_PIECES.map((p, i) => (
+        <i key={i} style={{ ['--x' as string]: `${p.x}%`, ['--dx' as string]: `${p.dx}px`, ['--d' as string]: `${p.d}s`, ['--c' as string]: p.c }} />
+      ))}
+    </div>
+  );
+}
 
 export default function PitchTV({
   home, away, hs, as, minute, phase, redHome, redAway,
@@ -227,13 +238,7 @@ export default function PitchTV({
             </div>
           )}
 
-          {flash === 'goal' && (
-            <div className="confetti">
-              {CONF_PIECES.map((p, i) => (
-                <i key={i} style={{ ['--x' as string]: `${p.x}%`, ['--dx' as string]: `${p.dx}px`, ['--d' as string]: `${p.d}s`, ['--c' as string]: p.c }} />
-              ))}
-            </div>
-          )}
+          {flash === 'goal' && <Confetti />}
 
           {phase === 'live' && <div className="momentum">{momentum}</div>}
           {overlay && (

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { bballClock } from '../lib/format';
 import { courtBallAt, activeCourtEvent, BB_R3, BB_FT, type Side, type PlayType } from './courtSim';
+import { Confetti } from './PitchTV';
 
 // Basketball 2D live view driven by the possession sim (courtSim) on the MATCH
 // clock: the ball, the badge and the possession side come from the same
@@ -149,6 +150,7 @@ export default function CourtTV({
         </div>
       )}
       {pops.map((p) => <div key={p.id} className={`court-pop ${p.side}`}>+{p.pts}</div>)}
+      {pops.some((p) => p.pts >= 3) && <Confetti />}
 
       <div className="court-top">
         {finished ? <span className="court-clk fin">FT</span>
