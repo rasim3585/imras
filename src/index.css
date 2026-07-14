@@ -1966,8 +1966,18 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 /* oran hücreleri: beyaz yerine yumuşak zemin + biraz nefes */
 .outcome { background: var(--surface-2); }
 .ll-cols { column-gap: 7px; }
-/* kupon paneli biraz aşağıdan başlar → üst sekme barına sağda yer açılır */
-.coupon-dock { top: calc(var(--topbar-h) + 46px); }
+/* 0715c: desktop'ta spor sekme barı dock sütununun ÜZERİNDEN sayfanın sağ
+   ucuna uzanır (tek satır, Luck Games dahil); kupon paneli barın ALTINDAN
+   başlar. --cb = sidebar sonrası içerik kutusu genişliği. */
+@media (min-width: 1100px) {
+  .sport-bar {
+    --cb: calc(100vw - var(--sidebar-w) - var(--coupon-w));
+    flex-wrap: nowrap;
+    position: relative; z-index: 21;
+    margin-right: calc(-1 * ((var(--cb) - min(var(--cb), 1100px)) / 2 + var(--coupon-w) - 20px));
+  }
+  .coupon-dock { top: calc(var(--topbar-h) + 68px); }
+}
 /* 0715b: başlık üste yapışmasın — görünür boşluk (16px yetmedi) */
 .av-screen, .az-screen { padding-top: 28px; }
 .go { padding-top: 14px; }
