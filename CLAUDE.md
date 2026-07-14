@@ -169,7 +169,17 @@ kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40
 ---
 
 ## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0140'tan** devam, sıfır dolgulu 4 hane. (**0136 oran
+Yeni migration'lar **0142'den** devam, sıfır dolgulu 4 hane. (**0140 güvenlik**:
+slot_config RLS açığı kapatıldı (anon her şeyi yazabiliyordu!), tüm `_` önekli
+fonksiyonlar + aviator_fire_crash anon/auth'a kapatıldı (PostgREST /rpc tüm
+public fonksiyonları açar — YENİ `_` FONKSİYONDA EXECUTE VERME), legacy
+place_coupon vb. DROP, ölü src/cron worker silindi. **0141 denetim**: voleybol
+canlı set handikapı set skoruna koşullu (2-0 önde -1.5: 27.3→2.05), paylaşılan
+kupon bacakları leg_status'tan, _tick_live safe-parse, 620 çapraz-spor çöp maç
+silindi; chase-boost "dip" fix'i Nesine anchorlarını bozduğu ölçülünce GERİ
+ALINDI (7.07/8.05 korundu) — kalibrasyon > teorik zarafet. FE: canlı bahis
+durumu legLiveStatus, winprob barı canlı oranlardan, formatKickoff yerelleşti,
+6 dilde eski marka temizlendi.) (**0136 oran
 soft-cap**: tavan 20→27.68, `_soft_cap` rasyonel kompresör — 20'ye kadar
 birebir, üstü asimptotik; tavanda eşitlenme bitti (0-2'de 85' beraberlik 26.35
 ≠ galibiyet 27.60); tek dokunuş `_odds_line`+`_price`+`_make_display_odds`,
