@@ -22,10 +22,11 @@ export default function CourtTV({
   const ballRef = useRef<HTMLDivElement | null>(null);
   const [side, setSide] = useState<Side>('home');
   const [flash, setFlash] = useState<Side | null>(null);
-  const [pop, setPop] = useState<{ side: Side; pts: number; at: number } | null>(null);
+  const [pops, setPops] = useState<{ id: number; side: Side; pts: number }[]>([]);
   const [badge, setBadge] = useState<{ type: PlayType; side: Side; at: number } | null>(null);
   const prev = useRef({ hs, as });
   const ready = useRef(false);          // arm only after the first real score loads (no spurious +124 pop)
+  const popId = useRef(0);
   const mount = useRef(Date.now());
   const shownBadge = useRef('');
   // on-score hold: freeze the ball AT the scoring hoop while the +pts pop shows,
@@ -39,13 +40,18 @@ export default function CourtTV({
     prev.current = { hs, as };
     if (!ready.current) { if (hs > 0 || as > 0) ready.current = true; return; }   // skip the initial data load
     if (dH <= 0 && dA <= 0) return;
+    // her artan takim icin ayri pop (ikisi de attiysa ikisi de gorunur, biri kacmaz)
+    const fresh: { id: number; side: Side; pts: number }[] = [];
+    if (dH > 0) fresh.push({ id: ++popId.current, side: 'home', pts: Math.min(6, dH) });
+    if (dA > 0) fresh.push({ id: ++popId.current, side: 'away', pts: Math.min(6, dA) });
     const scorer: Side = dH >= dA ? 'home' : 'away';
-    const pts = Math.min(6, Math.max(dH, dA));   // skor artik gercek basketlerle geliyor (2/3)
     setFlash(scorer);
-    setPop({ side: scorer, pts, at: Date.now() });
-    hold.current = { until: Date.now() + 1150, x: scorer === 'home' ? 300 : 20, y: 100 };  // ball → scoring hoop
-    const t = setTimeout(() => setFlash(null), 900);
-    return () => clearTimeout(t);
+    setPops((p) => [...p, ...fresh]);
+    hold.current = { until: Date.now() + 1150, x: scorer === 'home' ? 300 : 20, y: 100 };  // ball → (son) sayi potasi
+    const ids = fresh.map((f) => f.id);
+    const tf = setTimeout(() => setFlash(null), 900);
+    const tp = setTimeout(() => setPops((p) => p.filter((x) => !ids.includes(x.id))), 1400);
+    return () => { clearTimeout(tf); clearTimeout(tp); };
   }, [hs, as]);
 
   // animation loop: smooth ball + possession side + ambient badges
@@ -75,7 +81,6 @@ export default function CourtTV({
     return () => cancelAnimationFrame(raf);
   }, [matchId, live]);
 
-  useEffect(() => { if (!pop) return; const id = setTimeout(() => setPop((p) => (p && p.at === pop.at ? null : p)), 1400); return () => clearTimeout(id); }, [pop]);
   useEffect(() => { if (!badge) return; const id = setTimeout(() => setBadge((b) => (b && b.at === badge.at ? null : b)), 2200); return () => clearTimeout(id); }, [badge]);
 
   const clock = finished ? '' : bballClock(minute, period);
@@ -105,7 +110,7 @@ export default function CourtTV({
           <span className="pev-i">{PLAY_ICON[badge.type]}</span>
         </div>
       )}
-      {pop && <div className={`court-pop ${pop.side}`} key={pop.at}>+{pop.pts}</div>}
+      {pops.map((p) => <div key={p.id} className={`court-pop ${p.side}`}>+{p.pts}</div>)}
 
       <div className="court-top">
         {finished ? <span className="court-clk fin">FT</span>

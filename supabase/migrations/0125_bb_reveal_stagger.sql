@@ -1,0 +1,5 @@
+-- Ev/deplasman basketleri aynı fraksiyonlarda açığa çıkıyordu (senkron) -> bir
+-- poll'da ikisi de +2 ("iki takıma da 2 puan") + frontend birini kaçırıyordu.
+-- _bb_reveal'e off param: deplasman yarım-basket kaydırık (off=0.5) -> sırayla.
+-- f=1'de ikisi de tam. (Tam gövde 0125 apply ile.) Frontend: CourtTV her artan
+-- takima ayri pop (biri kacmaz).
