@@ -55,42 +55,58 @@ const SYMBOLS: SymDef[] = [
     <Shine cx={38} cy={34} rx={12} ry={7} o={0.55} />
   </> },
 
-  // 4 — volleyball ---------------------------------------------------------- mid
+  // 4 — volleyball (gerçekçi: panel şeritleri + küresel gölge) --------------- mid
   { glow: 'rgba(120,170,255,0.8)', body: <>
     <defs>
-      <radialGradient id="vb" cx="0.38" cy="0.32" r="0.85">
-        <stop offset="0" stopColor="#ffffff" /><stop offset="0.66" stopColor="#dbe6f6" /><stop offset="1" stopColor="#93a6c4" />
+      <radialGradient id="vb" cx="0.36" cy="0.3" r="0.9">
+        <stop offset="0" stopColor="#ffffff" /><stop offset="0.45" stopColor="#f2f6fb" />
+        <stop offset="0.78" stopColor="#d3deee" /><stop offset="1" stopColor="#8fa3c0" />
       </radialGradient>
     </defs>
-    <circle cx="50" cy="50" r="38" fill="url(#vb)" stroke="#6f7f97" strokeWidth="2" />
-    <g fill="none" stroke="#1666e0" strokeWidth="3.1" strokeLinecap="round">
-      <path d="M50 12 Q42 40 22 62" /><path d="M50 12 Q48 42 40 84" />
-      <path d="M50 12 Q60 38 82 52" /><path d="M50 12 Q56 44 70 82" />
-      <path d="M22 62 Q54 58 82 52" /><path d="M40 84 Q56 66 70 82" />
+    <circle cx="50" cy="50" r="38" fill="url(#vb)" stroke="#5f7292" strokeWidth="1.6" />
+    {/* üç panel bölgesi — Mikasa tarzı akışkan şeritler */}
+    <g fill="none" strokeLinecap="round">
+      <g stroke="#1666e0" strokeWidth="2.6" opacity="0.9">
+        <path d="M50 12 Q40 38 21 60" /><path d="M50 12 Q47 44 39 85" />
+        <path d="M50 12 Q62 36 84 50" /><path d="M50 12 Q57 46 71 83" />
+        <path d="M21 60 Q52 56 84 50" /><path d="M39 85 Q55 68 71 83" />
+      </g>
+      {/* şerit içi ince eşlik çizgileri: derinlik */}
+      <g stroke="#8fb4ec" strokeWidth="1.1" opacity="0.75">
+        <path d="M46 14 Q37 39 20 56" /><path d="M54 14 Q64 37 83 46" />
+        <path d="M24 64 Q52 60 83 54" /><path d="M43 84 Q56 70 68 81" />
+      </g>
     </g>
-    <Shine cx={38} cy={32} rx={12} ry={7} o={0.5} />
+    <ellipse cx="56" cy="66" rx="26" ry="16" fill="#31415c" opacity="0.14" />
+    <Shine cx={37} cy={30} rx={13} ry={8} o={0.65} />
   </> },
 
-  // 5 — football (classic black & white pentagons) -------------------------- mid
+  // 5 — football (gerçekçi: kavisli dikişler + sarılan panolar + AO) --------- mid
   { glow: 'rgba(255,255,255,0.8)', body: <>
     <defs>
-      <radialGradient id="ball" cx="0.38" cy="0.3" r="0.9">
-        <stop offset="0" stopColor="#ffffff" /><stop offset="0.66" stopColor="#e4e9ef" /><stop offset="1" stopColor="#9fabb8" />
+      <radialGradient id="ball" cx="0.36" cy="0.28" r="0.92">
+        <stop offset="0" stopColor="#ffffff" /><stop offset="0.5" stopColor="#eef2f5" />
+        <stop offset="0.8" stopColor="#cdd7de" /><stop offset="1" stopColor="#93a3af" />
       </radialGradient>
     </defs>
-    <circle cx="50" cy="50" r="38" fill="url(#ball)" stroke="#5e6773" strokeWidth="2" />
-    <g stroke="#5c6570" strokeWidth="1.6" fill="none">
-      <path d="M50 35V27.7M62.4 44 68 37.8M57.6 58.5 58.6 66.8M42.4 58.5 41.4 66.8M37.6 44 32 37.8" />
+    <circle cx="50" cy="50" r="38" fill="url(#ball)" stroke="#4c565f" strokeWidth="1.5" />
+    {/* kavisli dikişler: düz çizgi değil, küre üstünde eğri */}
+    <g stroke="#3f4750" strokeWidth="1.7" fill="none" strokeLinecap="round">
+      <path d="M50 35 Q50.5 31 50 27.7" /><path d="M62.4 44 Q65.6 40.6 68 37.8" />
+      <path d="M57.6 58.5 Q58.6 62.6 58.6 66.8" /><path d="M42.4 58.5 Q41.4 62.6 41.4 66.8" />
+      <path d="M37.6 44 Q34.4 40.6 32 37.8" />
     </g>
-    <g fill="#0c1016">
+    <g fill="#171d24">
       <polygon points="50,35 62.4,44 57.6,58.5 42.4,58.5 37.6,44" />
-      <polygon points="50,15 56.7,19.8 54.1,27.7 45.9,27.7 43.3,19.8" />
-      <polygon points="81.4,37.8 78.8,45.7 70.6,45.7 68,37.8 74.7,33" />
-      <polygon points="69.4,74.7 61.2,74.7 58.6,66.8 65.3,62 72,66.8" />
-      <polygon points="30.6,74.7 38.8,74.7 41.4,66.8 34.7,62 28,66.8" />
-      <polygon points="18.6,37.8 21.2,45.7 29.4,45.7 32,37.8 25.3,33" />
+      {/* kenar panoları hafif eğimli — küreye sarılıyor hissi */}
+      <path d="M50 15 l6.7 4.8 -2.6 7.9 -8.2 0 -2.6 -7.9 z" />
+      <path d="M81.4 37.8 q-1 4.2 -2.6 7.9 l-8.2 0 -2.6 -7.9 6.7 -4.8 z" />
+      <path d="M69.4 74.7 l-8.2 0 -2.6 -7.9 6.7 -4.8 6.7 4.8 q-1.1 4.2 -2.6 7.9 z" />
+      <path d="M30.6 74.7 l8.2 0 2.6 -7.9 -6.7 -4.8 -6.7 4.8 q1.1 4.2 2.6 7.9 z" />
+      <path d="M18.6 37.8 q1 4.2 2.6 7.9 l8.2 0 2.6 -7.9 -6.7 -4.8 z" />
     </g>
-    <Shine cx={36} cy={31} rx={11} ry={7} o={0.55} />
+    <ellipse cx="57" cy="66" rx="26" ry="16" fill="#20262e" opacity="0.16" />
+    <Shine cx={36} cy={29} rx={12} ry={7.5} o={0.7} />
   </> },
 
   // 6 — basketball ---------------------------------------------------------- mid
@@ -106,19 +122,26 @@ const SYMBOLS: SymDef[] = [
     <Shine cx={37} cy={33} rx={12} ry={7} o={0.5} />
   </> },
 
-  // 7 — american football (gold-brown) -------------------------------------- high
+  // 7 — american football (gerçekçi deri: radyal derinlik + dikiş detayı) ---- high
   { glow: 'rgba(210,150,60,0.9)', body: <>
     <defs>
-      <linearGradient id="afball" x1="0" y1="0" x2="0.3" y2="1">
-        <stop offset="0" stopColor="#f0c774" /><stop offset="0.5" stopColor="#c1852f" /><stop offset="1" stopColor="#7a4a15" />
-      </linearGradient>
+      <radialGradient id="afball" cx="0.36" cy="0.3" r="0.95">
+        <stop offset="0" stopColor="#e8a94f" /><stop offset="0.45" stopColor="#b5762a" />
+        <stop offset="0.8" stopColor="#8a521a" /><stop offset="1" stopColor="#5c340e" />
+      </radialGradient>
     </defs>
     <g transform="rotate(-22 50 50)">
-      <ellipse cx="50" cy="50" rx="40" ry="24" fill="url(#afball)" stroke="#4a2a0e" strokeWidth="2.5" />
-      <path d="M18 50h6M76 50h6" stroke="#fff3d6" strokeWidth="4" strokeLinecap="round" />
-      <path d="M38 50h24" stroke="#fff3d6" strokeWidth="3.5" strokeLinecap="round" />
-      <path d="M42 45v10M48 44v12M54 45v10" stroke="#fff3d6" strokeWidth="2.6" strokeLinecap="round" />
-      <Shine cx={40} cy={40} rx={14} ry={6} o={0.4} />
+      <ellipse cx="50" cy="50" rx="40" ry="24" fill="url(#afball)" stroke="#3c2109" strokeWidth="1.8" />
+      {/* deri boyuna dikişleri: hacim veren eğriler */}
+      <path d="M14 50 Q50 34 86 50" fill="none" stroke="#4a2a0e" strokeWidth="1.1" opacity="0.7" />
+      <path d="M14 50 Q50 66 86 50" fill="none" stroke="#4a2a0e" strokeWidth="1.1" opacity="0.55" />
+      {/* uç bantları */}
+      <path d="M19 44.5 q-2.4 5.5 0 11M81 44.5 q2.4 5.5 0 11" stroke="#fff3d6" strokeWidth="3.4" fill="none" strokeLinecap="round" />
+      {/* bağcık: şerit + çapraz ilmekler */}
+      <path d="M36 50h28" stroke="#fff3d6" strokeWidth="3" strokeLinecap="round" />
+      <path d="M40 45.5v9M45 44.8v10.4M50 44.5v11M55 44.8v10.4M60 45.5v9" stroke="#fff3d6" strokeWidth="2.3" strokeLinecap="round" />
+      <ellipse cx="58" cy="60" rx="26" ry="9" fill="#2c1a08" opacity="0.22" />
+      <Shine cx={38} cy={39} rx={15} ry={5.5} o={0.5} />
     </g>
   </> },
 

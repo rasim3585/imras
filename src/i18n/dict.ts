@@ -28,7 +28,7 @@ const en: Dict = {
   'nav.social': 'Social',
   'nav.profile': 'Profile',
 
-  'analiz.title': 'Your Mirror',
+  'analiz.title': 'AI Analysis',
   'analiz.lead': 'The games are a data-gathering tool; the real value is your pattern. No money — see yourself, safely.',
   'analiz.tab.overview': 'Overall',
   'analiz.tab.coupon': 'Sports bets',
@@ -338,7 +338,7 @@ const en: Dict = {
   'grp.points.i': 'Total points in the match over or under a set line.',
 
   'dock.empty': 'Tap any odds to start a coupon.', 'dock.coupon': 'Coupon',
-  'mc.title': 'My coupons',
+  'mc.title': 'My Coupons',
   'mc.tab.ongoing': 'Ongoing', 'mc.tab.won': 'Won', 'mc.tab.lost': 'Lost', 'mc.tab.saved': 'Saved',
   'mc.st.lost': 'Lost', 'mc.st.won': 'Won', 'mc.st.open': 'Open', 'mc.st.cashedout': 'Cashed out',
   'mc.nosaved': 'No saved coupons. Build one and tap “Save for later”.', 'mc.gotomarkets': 'Go to markets',
@@ -365,7 +365,7 @@ const tr: Dict = {
   'nav.social': 'Sosyal',
   'nav.profile': 'Profil',
 
-  'analiz.title': 'Aynam',
+  'analiz.title': 'AI Analiz',
   'analiz.lead': 'Oyunlar bir veri toplama aracı; asıl değer senin desenin. Para yok — kendini zararsız gör.',
   'analiz.tab.overview': 'Genel',
   'analiz.tab.coupon': 'Maç bahisleri',
