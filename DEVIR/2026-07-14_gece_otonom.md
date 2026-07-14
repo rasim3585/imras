@@ -59,4 +59,25 @@ Headless kayıtlarla frame-frame doğrulandı. Sabah `git pull && npm run dev` i
 - Basket çeyrek tablosu: `secret_outcome.quarters` VAR → canlıda geleceği sızdırmadan
   açığa çıkarılıp eklenebilir (sırada).
 
-Devam ediyor...
+## Ek bulunan+çözülen (gece devamı)
+- **Aviator i18n sızıntısı**: İngilizce modda crash "Auta gitti!" (Türkçe sabit) →
+  `av2.flew` ile localize. Genel tarama: başka kullanıcı-yüzü TR sızıntısı yok.
+- **Basket FG%/ribaunt 0 görünüyordu** (mount'tan sayıyordu) → maç-dakikasına göre.
+  Doğrulandı: FG% 63/61, ribaunt 34/32.
+- Mobil (390px) + koyu tema doğrulandı: futbol/basket/aviator/gates/feed — kırılma yok.
+
+## KALAN düşük-öncelikli (bug değil, iyileştirme — sen karar ver)
+- **Voleybol** TennisTV'yi paylaşıyor (tenis kortu görseli + 1 oyuncu). Çalışıyor
+  ama tema: voleybol kortu + 6 oyuncu daha iyi olur. En az kullanılan spor → ertelendi.
+- **Tenis feed'de "+0 market"**: tenis maçlarında yalnız 1/2 marketi var (set/oyun
+  bahsi yok). Backend market üretimi genişletilebilir (özellik boşluğu).
+- **Bitmiş maç detayında "Watch live" + canlı marketler** görünüyor (edge-case;
+  bitmiş maçlar feed'den hızla düşüyor).
+- **Anon 401 gürültüsü** (log_events/getMyCoupons/housekeeping): sadece girişsizde,
+  para yoluna dokunmamak için bilerek bırakıldı (sana etkisi yok).
+- **Login-arkası akışlar** (kupon/Aviator cashout/Gates spin/Ayna): headless'ta
+  login yapamadığım için oynanış doğrulanamadı — sen giriş yapıp bak.
+
+## Toplam: bu gece ~20 commit, 3 migration (0121-0123), 0 çökme, hepsi build temiz.
+2D tracker'lar amatör→profesyonel (oyuncular+tutarlılık+olay-yeri+çeyrek+form+H2H),
+2 kritik veri bug'ı (çapraz-spor + futbol açlığı) çözüldü, Aviator sağlam.
