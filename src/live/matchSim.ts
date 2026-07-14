@@ -69,23 +69,24 @@ function build(matchId: string): Sim {
     t += dur; x = clamp(x1, 4, 96); y = clamp(y1, 8, 92);
   };
   for (const e of events) {
-    // fill the gap up to the event with unhurried midfield passing
-    while (e.sec - t > 6) {
+    // fill the gap up to the event with unhurried midfield passing (slow, ~1/3
+    // pace: long passes so the ball drifts calmly rather than darting)
+    while (e.sec - t > 12) {
       if (rng() < 0.3) team = other(team);                     // possession changes hands
-      const wx = 38 + rng() * 24 + (e.x - 50) * 0.15;          // drift gently toward the event zone
-      const wy = 18 + rng() * 64;
-      addPass(wx, wy, 1.5 + rng() * 1.5, team);
-      t += 0.3;                                                // settle at the receiver
+      const wx = 40 + rng() * 20 + (e.x - 50) * 0.12;          // drift gently toward the event zone
+      const wy = 22 + rng() * 56;
+      addPass(wx, wy, 4.5 + rng() * 4, team);
+      t += 0.7;                                                // settle at the receiver
     }
     // approach and arrive at the event spot exactly on its clock, event team leads
     team = e.team;
-    if (e.sec - t > 2.4) addPass(x + (e.x - x) * 0.5, y + (e.y - y) * 0.5, (e.sec - t) * 0.5, team);
-    addPass(e.x, e.y, Math.max(0.4, Math.min(1.4, e.sec - t)), team);
-    t = e.sec + 1.1;                                           // brief pause on the event
+    if (e.sec - t > 5) addPass(x + (e.x - x) * 0.5, y + (e.y - y) * 0.5, (e.sec - t) * 0.5, team);
+    addPass(e.x, e.y, Math.max(1, Math.min(4.5, e.sec - t)), team);
+    t = e.sec + 1.4;                                           // brief pause on the event
     // restart from the spot
     const rx = e.type === 'corner' ? e.x : clamp(e.x + (e.team === 'home' ? -9 : 9), 6, 94);
-    passes.push({ t, dur: 0.6, x0: e.x, y0: e.y, x1: rx, y1: 50, team: e.team });
-    t += 0.6; x = rx; y = 50;
+    passes.push({ t, dur: 1.8, x0: e.x, y0: e.y, x1: rx, y1: 50, team: e.team });
+    t += 1.8; x = rx; y = 50;
   }
   const sim = { passes, events };
   cache.set(matchId, sim);

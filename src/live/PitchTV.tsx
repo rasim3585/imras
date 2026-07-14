@@ -129,7 +129,7 @@ export default function PitchTV({
 
       // ease lightly (the sim is already continuous; this just softens pass-to-pass)
       const s = smooth.current;
-      s[0] += (b.x - s[0]) * 0.5; s[1] += (b.y - s[1]) * 0.5;
+      s[0] += (b.x - s[0]) * 0.35; s[1] += (b.y - s[1]) * 0.35;
       if (ballRef.current) { ballRef.current.style.left = `${s[0]}%`; ballRef.current.style.top = `${s[1]}%`; }
       if (trailRef.current) { trailRef.current.style.left = `${s[0]}%`; trailRef.current.style.top = `${s[1]}%`; trailRef.current.style.opacity = String(b.moving ? 0.5 : 0.2); }
 
