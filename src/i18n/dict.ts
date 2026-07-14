@@ -195,6 +195,7 @@ const en: Dict = {
   'avs.phase.crashed': 'Flew away — new round soon',
   'avs.phase.connecting': 'Connecting…',
   'avs.fair': 'verifiable',
+  'avs.fair.info': 'Provably fair: the crash point is locked with a SHA-256 hash BEFORE the round starts (the code you see). After the crash the seed is revealed, so anyone can verify the outcome was fixed in advance and never altered mid-flight.',
 
   'av.rounds': '{n} rounds',
   'av.wait': 'Need a bit more data to read your pattern — {have}/{need} rounds. It sharpens as you play.',
@@ -531,6 +532,7 @@ const tr: Dict = {
   'avs.phase.crashed': 'Uçtu — yeni tur geliyor',
   'avs.phase.connecting': 'Bağlanıyor…',
   'avs.fair': 'doğrulanabilir',
+  'avs.fair.info': 'Kanıtlanabilir adalet: crash noktası tur BAŞLAMADAN SHA-256 özetiyle kilitlenir (gördüğün kod). Tur bitince tohum açıklanır — sonucun önceden sabitlendiğini ve uçuş sırasında değiştirilmediğini herkes doğrulayabilir.',
 
   'av.rounds': '{n} tur',
   'av.wait': 'Deseni çıkarmak için biraz daha veri gerekiyor — {have}/{need} tur. Oynadıkça aynan netleşir.',

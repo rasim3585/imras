@@ -1973,3 +1973,8 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .av-main, .av-bets { width: 100%; }
 .av-main { grid-template-columns: 1fr 280px; }
 .mc-unfin { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; margin-bottom: var(--s3); border-left: 3px solid var(--accent); }
+.av-fair-wrap { position: relative; }
+.av-fair { cursor: pointer; border: 0; background: none; font: inherit; color: inherit; display: inline-flex; align-items: center; gap: 4px; }
+.av-fair-pop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; width: 280px;
+  background: var(--card); border: 1px solid var(--card-line); border-radius: 10px; box-shadow: var(--shadow);
+  padding: 10px 12px; font-size: 0.78rem; line-height: 1.5; color: var(--text); }

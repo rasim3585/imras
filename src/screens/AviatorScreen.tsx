@@ -33,11 +33,7 @@ export default function AviatorScreen() {
         </div>
         <div className="av-top-right">
           {loggedIn && <span className="av-bal-chip tnum"><CoinIcon size={14} /> {(profile?.gold_balance ?? 0).toLocaleString()}</span>}
-          {seed && (
-            <span className="av-fair" title={`Provably fair · server seed hash:\n${seed}`}>
-              🔒 <Fair /> <span className="av-fair-hash tnum">{seed.slice(0, 8)}…</span>
-            </span>
-          )}
+          {seed && <FairBadge seed={seed} />}
         </div>
       </div>
 
@@ -81,6 +77,25 @@ export default function AviatorScreen() {
 function Fair() {
   const { t } = useI18n();
   return <>{t('avs.fair')}</>;
+}
+
+// "🔒 verifiable" ne demek? Tıklayınca sade Türkçe/İngilizce açıklama açılır:
+// crash noktası turdan ÖNCE hash'lenip yayınlanır — sonradan değiştirilemez.
+function FairBadge({ seed }: { seed: string }) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  return (
+    <span className="av-fair-wrap">
+      <button className="av-fair" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+        🔒 <Fair /> <span className="av-fair-hash tnum">{seed.slice(0, 8)}…</span>
+      </button>
+      {open && (
+        <span className="av-fair-pop" role="note">
+          {t('avs.fair.info')}
+        </span>
+      )}
+    </span>
+  );
 }
 
 function PhaseTag({ phase, bettingEndsAtMs }: { phase: string | undefined; bettingEndsAtMs: number | null }) {

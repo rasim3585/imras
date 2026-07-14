@@ -66,16 +66,24 @@ function Ball({ gone, stretch, angle, spinning }: { gone: boolean; stretch: numb
   return (
     <g className={gone ? 'av-ball av-ball-gone' : 'av-ball'}>
       <g transform={`rotate(${angle.toFixed(1)}) scale(${sx} ${sy})`}>
-        <ellipse rx="13.5" ry="13.5" fill="url(#avBallFill)" stroke="#0d1b12" strokeWidth="1.4" />
+        <ellipse rx="13.5" ry="13.5" fill="url(#avBallFill)" stroke="#1a232b" strokeWidth="1" />
         <g className={spinning ? 'av-ball-spin' : ''}>
-          <polygon points="0,-6.5 6.2,-2 3.8,5.4 -3.8,5.4 -6.2,-2" fill="#14261b" />
-          <g stroke="#14261b" strokeWidth="1.2" strokeLinecap="round">
-            <line x1="0" y1="-6.5" x2="0" y2="-12" /><line x1="6.2" y1="-2" x2="11" y2="-4.4" />
-            <line x1="3.8" y1="5.4" x2="6.5" y2="10.5" /><line x1="-3.8" y1="5.4" x2="-6.5" y2="10.5" />
-            <line x1="-6.2" y1="-2" x2="-11" y2="-4.4" />
+          {/* merkez beşgen + kenarlara SARILAN komşu panolar (küre hissi) */}
+          <polygon points="0,-6.3 6,-1.9 3.7,5.2 -3.7,5.2 -6,-1.9" fill="#1c242e" />
+          <path d="M-13.1 -3.2 a13.5 13.5 0 0 1 3.6 -8.3 l4 3 -1.6 4.9 -4.6 1z" fill="#1c242e" opacity="0.92" />
+          <path d="M9.5 -9.6 a13.5 13.5 0 0 1 3.9 7.2 l-4.5 0.8 -2.5 -4.3z" fill="#1c242e" opacity="0.92" />
+          <path d="M-4.3 12.8 a13.5 13.5 0 0 0 8.7 0 l-1.6 -4.6 -5.4 0z" fill="#1c242e" opacity="0.92" />
+          {/* KAVİSLİ dikişler (düz çizgi yerine küresel eğri) */}
+          <g stroke="#252f3a" strokeWidth="1.1" fill="none" strokeLinecap="round">
+            <path d="M0 -6.3 Q 0.8 -9.6 0.4 -13.2" /><path d="M6 -1.9 Q 9.4 -2.6 12.6 -4.4" />
+            <path d="M3.7 5.2 Q 5.6 8.2 6.4 11.8" /><path d="M-3.7 5.2 Q -5.6 8.2 -6.4 11.8" />
+            <path d="M-6 -1.9 Q -9.4 -2.6 -12.6 -4.4" />
           </g>
         </g>
-        <ellipse cx="-4" cy="-4.5" rx="4" ry="3" fill="#ffffff" opacity="0.55" />
+        {/* alt yarıda ortam gölgesi + üstte parlak speküler: hacim */}
+        <ellipse cx="3" cy="7" rx="9.6" ry="5.4" fill="#0a1014" opacity="0.2" />
+        <ellipse cx="-4.6" cy="-5.4" rx="4.6" ry="2.9" fill="#ffffff" opacity="0.75" transform="rotate(-24)" />
+        <ellipse cx="-2.5" cy="-3" rx="8.5" ry="6" fill="#ffffff" opacity="0.12" />
       </g>
     </g>
   );
@@ -138,8 +146,9 @@ export default function PitchCurve({
             <stop offset="0.85" stopColor="#ffd36b" stopOpacity="0.7" />
             <stop offset="1" stopColor="#fff6d8" stopOpacity="0.95" />
           </linearGradient>
-          <radialGradient id="avBallFill" cx="0.38" cy="0.34" r="0.75">
-            <stop offset="0" stopColor="#ffffff" /><stop offset="1" stopColor="#c9d6cf" />
+          <radialGradient id="avBallFill" cx="0.36" cy="0.3" r="0.85">
+            <stop offset="0" stopColor="#ffffff" /><stop offset="0.5" stopColor="#eef2f4" />
+            <stop offset="0.8" stopColor="#ccd6dc" /><stop offset="1" stopColor="#96a7b2" />
           </radialGradient>
           <filter id="avGlow" x="-60%" y="-60%" width="220%" height="220%">
             <feGaussianBlur stdDeviation="3.6" />
