@@ -21,6 +21,7 @@ export default function TennisTV({
   const [flash, setFlash] = useState<Side | null>(null);
   const [sub, setSub] = useState<{ games: [number, number]; point: string } | null>(null);
   const prev = useRef({ hs, as });
+  const ready = useRef(false);          // arm after first real score (no spurious flash on load)
   const setStart = useRef(Date.now());
   const mount = useRef(Date.now());
   const sm = useRef<[number, number]>([160, 100]);   // eased ball pos
@@ -29,6 +30,7 @@ export default function TennisTV({
   useEffect(() => {
     const dH = hs - prev.current.hs, dA = as - prev.current.as;
     prev.current = { hs, as };
+    if (!ready.current) { if (hs > 0 || as > 0) ready.current = true; return; }
     if (dH <= 0 && dA <= 0) return;
     setFlash(dH >= dA ? 'home' : 'away');
     setStart.current = Date.now();

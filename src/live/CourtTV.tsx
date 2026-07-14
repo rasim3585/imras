@@ -25,6 +25,7 @@ export default function CourtTV({
   const [pop, setPop] = useState<{ side: Side; pts: number; at: number } | null>(null);
   const [badge, setBadge] = useState<{ type: PlayType; side: Side; at: number } | null>(null);
   const prev = useRef({ hs, as });
+  const ready = useRef(false);          // arm only after the first real score loads (no spurious +124 pop)
   const mount = useRef(Date.now());
   const shownBadge = useRef('');
   // on-score hold: freeze the ball AT the scoring hoop while the +pts pop shows,
@@ -36,9 +37,10 @@ export default function CourtTV({
   useEffect(() => {
     const dH = hs - prev.current.hs, dA = as - prev.current.as;
     prev.current = { hs, as };
+    if (!ready.current) { if (hs > 0 || as > 0) ready.current = true; return; }   // skip the initial data load
     if (dH <= 0 && dA <= 0) return;
     const scorer: Side = dH >= dA ? 'home' : 'away';
-    const pts = Math.max(dH, dA);
+    const pts = Math.min(3, Math.max(dH, dA));   // a single possession is 1–3 pts
     setFlash(scorer);
     setPop({ side: scorer, pts, at: Date.now() });
     hold.current = { until: Date.now() + 1150, x: scorer === 'home' ? 300 : 20, y: 100 };  // ball → scoring hoop
