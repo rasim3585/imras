@@ -169,7 +169,13 @@ kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40
 ---
 
 ## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0133'ten** devam, sıfır dolgulu 4 hane. (**0132 skor
+Yeni migration'lar **0134'ten** devam, sıfır dolgulu 4 hane. (**0133 Ayna+**:
+user_survey (anket, RLS) + mirror_parallel (kanıtlı karşı-olgusal: gerçek vs
+"hep X'te çek") + mirror_tilt (kayıp-sonrası büyütme şeridi + maliyet) +
+mirror_selfgap (ölçülen risk skoru 0-100 vs öz-tanım). FE: /analiz Genel
+sekmesi üstünde SurveyCard/SelfGapCard/ParallelCard/TiltCard, SVG grafikler.
+İlke: her kart = 1 metrik + 1 grafik + 1 cümle; Nesine sürekli scraping
+YAPILMAZ — aylık manuel kalibrasyon turu, gerekirse lisanslı odds API.) (**0132 skor
 etkisi + çift yönlü çapa**: geriye düşen takımın kalan λ'sı rampalı büyür
 (30'→75', ×1.6/×2.2 tavan), önde olan ×0.85'e iner — Fransa 0-2 İspanya 62'
 beraberliği 16.65'ten 7.07'ye indi (Nesine 7.24!); bariz güçlü geride ise
