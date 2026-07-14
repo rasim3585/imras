@@ -50,6 +50,8 @@ export default function PitchTV({
 
   const prevPhase = useRef(phase);
   const holdUntil = useRef(0);         // real-ms: freeze ball at centre after a goal
+  // a goal first shows the ball IN the net (or on the penalty spot), THEN centre
+  const goalSpot = useRef<{ until: number; x: number; y: number } | null>(null);
   // on-pitch event hold: freeze the ball AT the event spot while its label shows,
   // so ball + label + badge always describe the same moment (no lingering).
   const hold = useRef<{ until: number; x: number; y: number; type: SimEvType; side: Side } | null>(null);
@@ -71,7 +73,12 @@ export default function PitchTV({
   // server GOAL → centre-circle hold + cheer + flash + overlay
   useEffect(() => {
     if (!goalPulse) return;
-    holdUntil.current = Date.now() + 2200;
+    const now = Date.now();
+    // home attacks RIGHT → scores at the right goal; penalties sit on the spot
+    const home = goalPulse.team === 'home';
+    const gx = goalPulse.penalty ? (home ? 84 : 16) : (home ? 97 : 3);
+    goalSpot.current = { until: now + 1600, x: gx, y: 50 };   // ball at goal / penalty spot first…
+    holdUntil.current = now + 3400;                            // …then centre for the restart
     cheer();
     setFlash('goal');
     setOverlay({ kind: 'goal', text: goalPulse.penalty ? 'PENALTY!' : 'GOAL!', sub: `${goalPulse.team === 'home' ? home : away} ${hs}-${as}` });
@@ -89,8 +96,9 @@ export default function PitchTV({
     ovTimer.current = window.setTimeout(() => setOverlay(null), 1900);
   }, [redHome, redAway]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // how long an event's label/badge lingers (real ms)
-  const holdMs = (t: SimEvType) => (t === 'yellow' ? 1600 : t === 'throwin' || t === 'goalkick' ? 900 : 1300);
+  // how long an event's label/badge lingers (real ms) — matches the ball's ~2.6s
+  // pause on the spot so you actually SEE the action taken
+  const holdMs = (t: SimEvType) => (t === 'throwin' ? 1400 : 2400);
 
   // animation loop: the ball comes from the POSSESSION sim (passing sequences);
   // the arrow, badge and label are all derived from the SAME clock, so they
@@ -120,7 +128,9 @@ export default function PitchTV({
       }
       const h = !goalHeld && hold.current && Date.now() < hold.current.until ? hold.current : null;
 
-      const b = goalHeld ? { x: 50, y: 50, team: 'home' as Side, moving: false } : ballAt(matchId, clock);
+      const gs = goalSpot.current && Date.now() < goalSpot.current.until ? goalSpot.current : null;
+      const b = gs ? { x: gs.x, y: gs.y, team: 'home' as Side, moving: false }
+        : goalHeld ? { x: 50, y: 50, team: 'home' as Side, moving: false } : ballAt(matchId, clock);
       const sideNow: Side | 'mid' = goalHeld ? 'mid' : b.team;
       let label: string, bnow: { type: SimEvType; side: Side } | null;
       if (goalHeld) { label = 'Kick-off'; bnow = null; }

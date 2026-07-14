@@ -82,7 +82,7 @@ function build(matchId: string): Sim {
     team = e.team;
     if (e.sec - t > 5) addPass(x + (e.x - x) * 0.5, y + (e.y - y) * 0.5, (e.sec - t) * 0.5, team);
     addPass(e.x, e.y, Math.max(1, Math.min(4.5, e.sec - t)), team);
-    t = e.sec + 1.4;                                           // brief pause on the event
+    t = e.sec + 2.6;                                           // HOLD the ball on the spot so the action is legible
     // restart from the spot
     const rx = e.type === 'corner' ? e.x : clamp(e.x + (e.team === 'home' ? -9 : 9), 6, 94);
     passes.push({ t, dur: 1.8, x0: e.x, y0: e.y, x1: rx, y1: 50, team: e.team });
@@ -97,16 +97,18 @@ function sim(matchId: string): Sim {
   return cache.get(matchId) ?? build(matchId);
 }
 
-// Where an event sits on the pitch (corner flag, goal mouth, wide, …).
+// Where an event sits on the pitch — home attacks RIGHT (its goal is on the LEFT).
 function eventSpotRaw(team: Side, type: SimEvType, r: () => number): { x: number; y: number } {
   const home = team === 'home';
   switch (type) {
-    case 'corner':   return { x: home ? 95 : 5, y: r() < 0.5 ? 12 : 88 };
-    case 'save':     return { x: home ? 96 : 4, y: 42 + r() * 16 };
-    case 'miss':     return { x: home ? 93 : 7, y: r() < 0.5 ? 16 : 84 };
-    case 'blocked':  return { x: home ? 82 : 18, y: 36 + r() * 28 };
-    case 'offside':  return { x: home ? 86 : 14, y: 26 + r() * 48 };
-    default:         return { x: home ? 84 : 16, y: 40 + r() * 20 };
+    case 'corner':   return { x: home ? 97 : 3, y: r() < 0.5 ? 9 : 91 };     // corner flag
+    case 'save':     return { x: home ? 95 : 5, y: 42 + r() * 16 };          // shot at the goal mouth
+    case 'miss':     return { x: home ? 92 : 8, y: r() < 0.5 ? 13 : 87 };    // dragged wide
+    case 'blocked':  return { x: home ? 80 : 20, y: 36 + r() * 28 };
+    case 'offside':  return { x: home ? 85 : 15, y: 26 + r() * 48 };
+    case 'goalkick': return { x: home ? 8 : 92, y: 50 };                     // OWN keeper's area
+    case 'foul':     return { x: 24 + r() * 52, y: 14 + r() * 72 };          // wherever it happened
+    default:         return { x: home ? 82 : 18, y: 40 + r() * 20 };
   }
 }
 
