@@ -169,7 +169,12 @@ kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40
 ---
 
 ## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0131'den** devam, sıfır dolgulu 4 hane. (0121-0126 sanal
+Yeni migration'lar **0132'den** devam, sıfır dolgulu 4 hane. (**0131 oran
+kalibrasyonu — Nesine canlı ölçümleriyle**: futbol geri dönüş tabanı yumuşatıldı
+(bariz güçlü 0-1 geride 82' → 9.41, Nesine 8.84); basket kuyruk genişletildi
+(sd 12.5√rem+1.5; güçlü 8 fark %90'da 5.76, eski 14.96); voleybol canlı ML tam
+Bo5 koşullu olasılık (zayıf 0-2 geride 4.06 saçmalığı → 20 cap); tenis ölçüldü,
+zaten kitap bandında — dokunulmadı.) (0121-0126 sanal
 maç/basket düzeltmeleri; **0127 Gates motor v2**: 9 sembol, scatter=10,
 GoO-haritalı ödemeler, cap 5000x, FS 15, buy 80x — 500K spin simülasyonuyla
 ayarlandı, RTP %95.4 / hit %25.5; **0128-0129 basket serbest atış** (tek sıralı
