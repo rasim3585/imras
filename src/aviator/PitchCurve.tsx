@@ -107,6 +107,7 @@ export default function PitchCurve({
   bettingEndsAtMs: number | null;
   bettingMs: number;
 }) {
+  const { t } = useI18n();
   const m = useLiveMultiplier(phase, anchor, crashMultiplier, cap);
   const flying = phase === 'flying';
   const crashed = phase === 'crashed';
@@ -204,7 +205,7 @@ export default function PitchCurve({
             <div className={bigClass}>
               {(crashed && crashMultiplier != null ? crashMultiplier : m).toFixed(2)}<span className="av-x">x</span>
             </div>
-            {crashed && <div className="av-flew">Auta gitti!</div>}
+            {crashed && <div className="av-flew">{t('av2.flew')}</div>}
           </>
         )}
       </div>

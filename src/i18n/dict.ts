@@ -205,7 +205,7 @@ const en: Dict = {
   'av2.err.insufficient': 'Insufficient balance', 'av2.err.closed': 'Betting closed',
   'av2.err.already': 'Already a bet in this slot', 'av2.err.cantCash': "Can't cash out now", 'av2.err.failed': 'Action failed',
   'av2.betFail': 'Could not place bet', 'av2.cashFail': 'Could not cash out',
-  'av2.noBets': 'No bets for this round yet', 'av2.takeoff': 'Takeoff!', 'av2.betsClosing': 'Bets closing',
+  'av2.noBets': 'No bets for this round yet', 'av2.takeoff': 'Takeoff!', 'av2.betsClosing': 'Bets closing', 'av2.flew': 'Flew away!',
   'av2.players': 'Players', 'av2.you': 'You',
 
   'feed.tab.live': 'Live', 'feed.tab.all': 'All', 'feed.tab.football': 'Football', 'feed.tab.efootball': 'E-Football',
@@ -503,7 +503,7 @@ const tr: Dict = {
   'av2.err.insufficient': 'Yetersiz bakiye', 'av2.err.closed': 'Bahis kapandı',
   'av2.err.already': 'Bu slotta zaten bahis var', 'av2.err.cantCash': 'Şu an çekilemez', 'av2.err.failed': 'İşlem başarısız',
   'av2.betFail': 'Bahis alınamadı', 'av2.cashFail': 'Çekilemedi',
-  'av2.noBets': 'Bu tur için henüz bahis yok', 'av2.takeoff': 'Kalkış!', 'av2.betsClosing': 'Bahisler kapanıyor',
+  'av2.noBets': 'Bu tur için henüz bahis yok', 'av2.takeoff': 'Kalkış!', 'av2.betsClosing': 'Bahisler kapanıyor', 'av2.flew': 'Auta gitti!',
   'av2.players': 'Oyuncular', 'av2.you': 'Sen',
 
   'feed.tab.live': 'Canlı', 'feed.tab.all': 'Tümü', 'feed.tab.football': 'Futbol', 'feed.tab.efootball': 'E-Futbol',
