@@ -195,9 +195,11 @@ export function simStats(matchId: string, uptoSec: number, reds: [number, number
   const i = (t: Side) => (t === 'home' ? 0 : 1);
   for (const e of s.events) {
     if (e.sec > uptoSec) continue;
-    if (e.type === 'shot') sh[i(e.team)]++;
-    else if (e.type === 'save') ot[i(e.team)]++;
-    else if (e.type === 'corner') { co[i(e.team)]++; ot[i(e.team)]++; }
+    // a "shot" is any attempt: saved, off target or blocked (the sim emits those
+    // three, never a bare 'shot' event — counting 'shot' left the row at 0-0)
+    if (e.type === 'save') { sh[i(e.team)]++; ot[i(e.team)]++; }
+    else if (e.type === 'miss' || e.type === 'blocked') sh[i(e.team)]++;
+    else if (e.type === 'corner') co[i(e.team)]++;
     else if (e.type === 'foul') fo[i(e.team)]++;
     else if (e.type === 'yellow') ye[i(e.team)]++;
   }

@@ -31,7 +31,13 @@ export function useLiveMatch(matchId: string | undefined) {
   useEffect(() => {
     if (!matchId) return;
     let alive = true;
-    animAnchor.current = null;   // fresh match → re-anchor the animation clock
+    // fresh match → drop the previous match's state entirely (otherwise the
+    // screen renders — and the feed seeds from — the OLD match until the first
+    // poll of the new one lands)
+    setState(null);
+    setMinute(0);
+    anchor.current = null;
+    animAnchor.current = null;
 
     const fetchOnce = async () => {
       try {

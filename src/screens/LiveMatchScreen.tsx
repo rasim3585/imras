@@ -172,18 +172,22 @@ export default function LiveMatchScreen() {
       // finished: the anim clock may never have been anchored (joined after FT) —
       // reveal everything; otherwise use the same clock the pitch animates on
       const clockSec = st.phase === 'finished' ? 5400 : getClockRef.current();
-      const lines = revealedLines(matchId, st, clockSec, atmo, baselineGoals.current);
 
       if (!seeded.current) {
-        // join: everything so far is history — show at once, no burst/flash
+        // join: everything so far is history — show at once, no burst/flash.
+        // baseline FIRST, so pre-join goals render as single history lines, not
+        // as three-beat dramas
+        baselineGoals.current = st.events.length;
+        const lines = revealedLines(matchId, st, clockSec, atmo, baselineGoals.current);
         lines.forEach((l) => enqueued.current.add(l.key));
         feedRef.current = [...lines].reverse().slice(0, 60);
-        baselineGoals.current = st.events.length;
         setFeed(feedRef.current);
         setScore({ h: st.home_score, a: st.away_score });
         seeded.current = true;
         return;
       }
+
+      const lines = revealedLines(matchId, st, clockSec, atmo, baselineGoals.current);
 
       const fresh = lines.filter((l) => !enqueued.current.has(l.key));
       if (fresh.length) {
