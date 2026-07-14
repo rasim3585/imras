@@ -169,7 +169,10 @@ kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40
 ---
 
 ## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0127'den** devam, sıfır dolgulu 4 hane. (Aviator görsel
+Yeni migration'lar **0128'den** devam, sıfır dolgulu 4 hane. (0121-0126 sanal
+maç/basket düzeltmeleri; **0127 Gates motor v2**: 9 sembol, scatter=10,
+GoO-haritalı ödemeler, cap 5000x, FS 15, buy 80x — 500K spin simülasyonuyla
+ayarlandı, RTP %95.4 / hit %25.5. Aviator görsel
 senkron 0079–0081; kalıcı sanal lig + settle 0082–0087; slot 0091; sanal
 basketbol/tenis/voleybol 0092–0106; get_bulletin security-definer fix 0101;
 davranış aynası Faz 0 yakalama 0107 + Faz 1a Aviator teşhis 0108 + Faz 1b trend
