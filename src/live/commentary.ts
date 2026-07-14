@@ -111,10 +111,10 @@ const SIM_TEXT: Record<string, string[]> = {
   yellow: ['Booked. Yellow card, {T}.', '{T} go into the book.'],
   goalkick: ['Goal kick, {T}.', '{T} restart from the keeper.'],
 };
-export function simLines(matchId: string, home: string, away: string): Line[] {
+export function simLines(matchId: string, home: string, away: string, dur: number): Line[] {
   const rng = seeded(`${matchId}:fl`);
   const out: Line[] = [];
-  for (const e of simEvents(matchId, 90)) {
+  for (const e of simEvents(matchId, 90, dur)) {
     const kind = SIM_KIND[e.type]; if (!kind) continue;   // shot is only a sub-beat, never emitted standalone
     out.push({ key: e.key, minute: e.minute, sub: 0, sec: e.sec, kind, team: e.team, text: T(pick(rng, SIM_TEXT[e.type] ?? ['{T}']), e.team, home, away) });
   }

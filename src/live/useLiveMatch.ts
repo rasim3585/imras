@@ -11,28 +11,44 @@ export function useLiveMatch(matchId: string | undefined) {
   const [countdown, setCountdown] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const anchor = useRef<{ minute: number; startsIn: number; at: number; dur: number } | null>(null);
+  // Animation clock anchor — set ONCE (not re-anchored every poll). The server
+  // minute is an integer, so re-anchoring to minute*60 each poll made getClock a
+  // SAWTOOTH (±~25 sim-sec every 2s), which jittered the ball and flickered event
+  // holds. Client and server advance at the exact same rate (5400/dur from the
+  // same real clock), so a single anchor stays in sync with no drift; we only
+  // hard-correct on a big desync (join lag / tab was asleep).
+  const animAnchor = useRef<{ sim: number; at: number; rate: number } | null>(null);
 
-  // Continuous simulation clock in seconds (0..5400) — so the pitch can animate
-  // the ball every animation frame, not just every poll. Extrapolated from the
-  // last server anchor; never runs past 90'.
+  // Continuous simulation clock in seconds (0..5400) — smooth & monotonic, so the
+  // pitch can animate the ball every frame and hold events without stutter.
   const getClock = useRef(() => {
-    const a = anchor.current;
+    const a = animAnchor.current;
     if (!a) return 0;
-    const elapsed = (Date.now() - a.at) / 1000;                 // real seconds
-    const sim = a.minute * 60 + elapsed * (5400 / a.dur);       // sim seconds
+    const sim = a.sim + ((Date.now() - a.at) / 1000) * a.rate;
     return Math.max(0, Math.min(5400, sim));
   }).current;
 
   useEffect(() => {
     if (!matchId) return;
     let alive = true;
+    animAnchor.current = null;   // fresh match → re-anchor the animation clock
 
     const fetchOnce = async () => {
       try {
         const [s] = await matchProvider.getLiveStates([matchId]);
         if (!alive || !s) return;
         setState(s);
-        anchor.current = { minute: s.minute, startsIn: s.starts_in, at: Date.now(), dur: s.duration_secs };
+        const now = Date.now();
+        anchor.current = { minute: s.minute, startsIn: s.starts_in, at: now, dur: s.duration_secs };
+        // Set the animation clock once; afterwards only nudge on a big desync so
+        // the ball stays smooth (no per-poll sawtooth).
+        const rate = 5400 / s.duration_secs;
+        const serverSim = s.minute * 60;
+        const aa = animAnchor.current;
+        const cur = aa ? aa.sim + ((now - aa.at) / 1000) * aa.rate : -1;
+        if (!aa || Math.abs(serverSim - cur) > 90) {
+          animAnchor.current = { sim: serverSim, at: now, rate };
+        }
         if (s.phase === 'finished') clearInterval(poll);
       } catch (e) {
         if (alive) setError(e instanceof Error ? e.message : 'Live feed unavailable');

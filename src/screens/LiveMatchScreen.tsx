@@ -25,11 +25,11 @@ const LINE_ICON: Record<string, string> = {
 };
 
 // Nesine-style live stats strip: possession bar + a compact row per metric.
-function StatsPanel({ matchId, minute, reds, home, away }: {
-  matchId: string; minute: number; reds: [number, number]; home: string; away: string;
+function StatsPanel({ matchId, minute, reds, home, away, dur }: {
+  matchId: string; minute: number; reds: [number, number]; home: string; away: string; dur: number;
 }) {
   const { t } = useI18n();
-  const s = simStats(matchId, minute, reds);
+  const s = simStats(matchId, minute, reds, dur);
   const [ph, pa] = s.possession;
   const rows: [string, [number, number]][] = [
     [t('live.shots'), s.shots], [t('live.ontarget'), s.onTarget], [t('live.corners'), s.corners],
@@ -130,7 +130,7 @@ export default function LiveMatchScreen() {
   const feedRef = useRef<Line[]>([]);
   const seeded = useRef(false);
   const baselineGoals = useRef(0);
-  const atmo = useMemo(() => (state ? simLines(matchId!, state.home_team, state.away_team) : []), [matchId, state?.home_team]); // eslint-disable-line react-hooks/exhaustive-deps
+  const atmo = useMemo(() => (state ? simLines(matchId!, state.home_team, state.away_team, state.duration_secs) : []), [matchId, state?.home_team, state?.duration_secs]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // find the user's pick on this match
   useEffect(() => {
@@ -232,7 +232,7 @@ export default function LiveMatchScreen() {
   const htH = htPast ? state.events.filter((e) => e.team === 'home' && e.minute <= 45).length : null;
   const htA = htPast ? state.events.filter((e) => e.team === 'away' && e.minute <= 45).length : null;
   const ht = htH != null && htA != null ? ([htH, htA] as [number, number]) : null;
-  const liveStats = phase !== 'upcoming' ? simStats(matchId!, shownMinute, [state.red_home, state.red_away]) : null;
+  const liveStats = phase !== 'upcoming' ? simStats(matchId!, shownMinute, [state.red_home, state.red_away], state.duration_secs) : null;
 
   const pick = myLeg?.outcome_key as OutKey | undefined;
   const pickState = pick ? computePickState(pick, hs, as) : null;
@@ -261,13 +261,13 @@ export default function LiveMatchScreen() {
       <PitchTV
         home={home} away={away} hs={phase === 'upcoming' ? 0 : hs} as={phase === 'upcoming' ? 0 : as}
         minute={shownMinute} phase={phase} redHome={state.red_home} redAway={state.red_away}
-        matchId={matchId!} getClock={getClock} goalPulse={goalPulse}
+        matchId={matchId!} dur={state.duration_secs} getClock={getClock} goalPulse={goalPulse}
         homePlayer={playerName(matchId + 'h')} awayPlayer={playerName(matchId + 'a')}
         ht={ht} yellows={liveStats?.yellows}
       />
 
       {phase !== 'upcoming' && matchId && (
-        <StatsPanel matchId={matchId} minute={shownMinute} reds={[state.red_home, state.red_away]} home={home} away={away} />
+        <StatsPanel matchId={matchId} minute={shownMinute} reds={[state.red_home, state.red_away]} home={home} away={away} dur={state.duration_secs} />
       )}
 
       {odds && !finished && (ph > 0 || pa > 0) && (

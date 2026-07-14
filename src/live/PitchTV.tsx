@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import TeamCrest from '../components/TeamCrest';
 import { toggleSfx, whistle, cheer } from '../lib/sfx';
-import { ballAt, simEvents, type Side, type SimEvType } from './matchSim';
+import { ballAt, activeEvent, type Side, type SimEvType } from './matchSim';
 
 // ---------------------------------------------------------------------------
 // Broadcast-style pitch driven by a real POSSESSION simulation (matchSim): the
@@ -29,11 +29,11 @@ export interface GoalPulse { id: number; team: Side; penalty: boolean }
 
 export default function PitchTV({
   home, away, hs, as, minute, phase, redHome, redAway,
-  matchId, getClock, goalPulse, homePlayer, awayPlayer, ht, yellows,
+  matchId, dur, getClock, goalPulse, homePlayer, awayPlayer, ht, yellows,
 }: {
   home: string; away: string; hs: number; as: number; minute: number;
   phase: 'upcoming' | 'live' | 'finished'; redHome: number; redAway: number;
-  matchId: string; getClock: () => number; goalPulse: GoalPulse | null;
+  matchId: string; dur: number; getClock: () => number; goalPulse: GoalPulse | null;
   homePlayer?: string; awayPlayer?: string;
   ht?: [number, number] | null; yellows?: [number, number];
 }) {
@@ -52,9 +52,6 @@ export default function PitchTV({
   const holdUntil = useRef(0);         // real-ms: freeze ball at centre after a goal
   // a goal first shows the ball IN the net (or on the penalty spot), THEN centre
   const goalSpot = useRef<{ until: number; x: number; y: number } | null>(null);
-  // on-pitch event hold: freeze the ball AT the event spot while its label shows,
-  // so ball + label + badge always describe the same moment (no lingering).
-  const hold = useRef<{ until: number; x: number; y: number; type: SimEvType; side: Side } | null>(null);
   const labelRef = useRef('');
   const badgeKeyRef = useRef('');
   const smooth = useRef<[number, number]>([50, 50]);   // eased ball pos (kills teleport)
@@ -96,45 +93,28 @@ export default function PitchTV({
     ovTimer.current = window.setTimeout(() => setOverlay(null), 1900);
   }, [redHome, redAway]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // how long an event's label/badge lingers (real ms) — matches the ball's ~2.6s
-  // pause on the spot so you actually SEE the action taken
-  const holdMs = (t: SimEvType) => (t === 'throwin' ? 1400 : 2400);
-
-  // animation loop: the ball comes from the POSSESSION sim (passing sequences);
-  // the arrow, badge and label are all derived from the SAME clock, so they
-  // always agree. Events light a short label/badge while the ball is naturally
-  // at that spot (the shot pass put it there). Goals hold the ball at centre.
+  // animation loop: ball + arrow + badge + label ALL come from matchSim on the
+  // SAME getClock. When the ball rests on an event spot (activeEvent → clock is
+  // inside [sec, sec+holdSec]), ballAt returns that spot AND the badge lights —
+  // they are one and the same moment, held for ≈2 real seconds. Goals hold the
+  // ball at the net/penalty spot then centre (server-driven, separate).
   useEffect(() => {
     if (phase === 'upcoming') { if (ballRef.current) { ballRef.current.style.left = '50%'; ballRef.current.style.top = '50%'; } smooth.current = [50, 50]; return; }
     let raf = 0;
-    const events = simEvents(matchId, 90);
-    const c0 = finished ? 5400 : getClock();
-    let idx = events.findIndex((e) => e.sec > c0);           // skip events already in the past (join)
-    if (idx < 0) idx = events.length;
-
     const teamName = (s: Side) => (s === 'home' ? home : away);
 
     const step = () => {
       const clock = finished ? 5400 : getClock();
       const goalHeld = Date.now() < holdUntil.current;
-
-      // cross into any events we've just passed → light their label/badge briefly
-      if (!goalHeld) {
-        while (idx < events.length && clock >= events[idx].sec) {
-          const e = events[idx];
-          hold.current = { until: Date.now() + holdMs(e.type), x: e.x, y: e.y, type: e.type, side: e.team };
-          idx++;
-        }
-      }
-      const h = !goalHeld && hold.current && Date.now() < hold.current.until ? hold.current : null;
+      const ev = goalHeld ? null : activeEvent(matchId, clock, dur);
 
       const gs = goalSpot.current && Date.now() < goalSpot.current.until ? goalSpot.current : null;
       const b = gs ? { x: gs.x, y: gs.y, team: 'home' as Side, moving: false }
-        : goalHeld ? { x: 50, y: 50, team: 'home' as Side, moving: false } : ballAt(matchId, clock);
+        : goalHeld ? { x: 50, y: 50, team: 'home' as Side, moving: false } : ballAt(matchId, clock, dur);
       const sideNow: Side | 'mid' = goalHeld ? 'mid' : b.team;
       let label: string, bnow: { type: SimEvType; side: Side } | null;
       if (goalHeld) { label = 'Kick-off'; bnow = null; }
-      else if (h) { label = `${EV_LABEL[h.type]} · ${teamName(h.side)}`; bnow = { type: h.type, side: h.side }; }
+      else if (ev) { label = `${EV_LABEL[ev.type]} · ${teamName(ev.team)}`; bnow = { type: ev.type, side: ev.team }; }
       else { label = `▶ ${teamName(b.team)}`; bnow = null; }
 
       // ease lightly (the sim is already continuous; this just softens pass-to-pass)
@@ -145,14 +125,14 @@ export default function PitchTV({
 
       setSide((v) => (v === sideNow ? v : sideNow));
       if (label !== labelRef.current) { labelRef.current = label; setMomentum(label); }
-      const bk = bnow ? `${bnow.type}:${bnow.side}:${hold.current?.until}` : '';
+      const bk = bnow ? `${bnow.type}:${bnow.side}:${ev?.key}` : '';
       if (bk !== badgeKeyRef.current) { badgeKeyRef.current = bk; setBadge(bnow); }
 
       raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [matchId, phase, finished, getClock, home, away]);
+  }, [matchId, dur, phase, finished, getClock, home, away]);
 
   useEffect(() => () => { if (ovTimer.current) clearTimeout(ovTimer.current); }, []);
 
