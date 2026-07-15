@@ -169,7 +169,14 @@ kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40
 ---
 
 ## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0144'ten** devam, sıfır dolgulu 4 hane. (**0143 Bahis AI
+Yeni migration'lar **0146'dan** devam, sıfır dolgulu 4 hane. (**0144-0145 Luck
+Games**: 3 yeni şans oyunu — **Mines** (durumlu, 5×5, mayınlar RLS-kapalı
+mines_secrets tablosunda = aviator secrets kalıbı; fair mult 0.97·C(25,k)/
+C(25-M,k); start/reveal/cashout; "bir kutu daha mı" = Aviator kardeşi, ayna
+sinyali), **Dice** (kullanıcı kazanma-şansını=çarpanı seçer, risk iştahı
+beyanı), **Plinko** (16 sıra, 3 risk, tablolar 0.97 RTP'ye ölçekli). Hepsi
+sunucu-otoriter + provably fair + %97 RTP + prev_result yakalamalı; 3 ekran +
+Luck menüsü 5 oyun; i18n 8 dilde 565/565.) (**0143 Bahis AI
 sohbeti**: betting-ai edge fn — kullanıcının deterministik ayna paketi (9
 mirror_* RPC) sistem prompt'unda, haiku yalnız o sayılardan konuşur, tahmin/
 oran ASLA; 30 mesaj/gün (ai_chat_usage); FE AnalizScreen kartı, 8 dil.
