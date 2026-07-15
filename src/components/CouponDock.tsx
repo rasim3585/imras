@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useCart } from '../coupon/CartContext';
 import CouponPanel from '../coupon/CouponPanel';
-import MiniWatch from '../coupon/MiniWatch';
+import MiniWatch, { type MiniSport } from '../coupon/MiniWatch';
 import { formatOdds } from '../lib/format';
 import { useI18n } from '../i18n/LanguageContext';
 
@@ -21,7 +21,12 @@ export default function CouponDock() {
     || pathname.startsWith('/court') || pathname.startsWith('/standings');
   if (!betting) return null;
 
-  const lastMatch = selections.length ? selections[selections.length - 1].match_id : null;
+  // 0715: mini izleme yalnız SANAL maçlarda anlamlı (gerçek maçın simülasyonu
+  // yok) — son sanal seçimi göster; spor, market tipinin önekinden gelir.
+  const lastVirtual = [...selections].reverse().find((s) => s.kind === 'virtual') ?? null;
+  const sportOf = (mt: string): MiniSport =>
+    mt.startsWith('bb_') ? 'basketball' : mt.startsWith('tn_') ? 'tennis'
+      : mt.startsWith('vb_') ? 'volleyball' : 'football';
 
   return (
     <>
@@ -30,7 +35,7 @@ export default function CouponDock() {
         {count > 0 ? (
           <div className="dock-stack">
             <CouponPanel />
-            {lastMatch && <MiniWatch matchId={lastMatch} />}
+            {lastVirtual && <MiniWatch matchId={lastVirtual.match_id} sport={sportOf(lastVirtual.market_type)} />}
           </div>
         ) : (
           <div className="dock-empty"><p className="dim">{t('dock.empty')}</p></div>
@@ -53,7 +58,7 @@ export default function CouponDock() {
             <div className="coupon-sheet-back" onClick={() => setOpen(false)}>
               <div className="coupon-sheet" onClick={(e) => e.stopPropagation()}>
                 <CouponPanel onClose={() => setOpen(false)} />
-                {lastMatch && <MiniWatch matchId={lastMatch} />}
+                {lastVirtual && <MiniWatch matchId={lastVirtual.match_id} sport={sportOf(lastVirtual.market_type)} />}
               </div>
             </div>
           )}

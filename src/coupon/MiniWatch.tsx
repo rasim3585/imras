@@ -2,102 +2,118 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { matchProvider } from '../lib/matchProvider';
 import { simLines } from '../live/commentary';
-import { ballAt } from '../live/matchSim';
+import { isPenaltyGoal } from '../live/liveModel';
+import PitchTV, { type GoalPulse } from '../live/PitchTV';
+import CourtTV from '../live/CourtTV';
+import TennisTV from '../live/TennisTV';
+import { playerName } from '../lib/playerNames';
 import type { LiveState } from '../lib/types';
 
-// Compact live view of the coupon's LAST-ADDED match: mini scoreboard + a tiny
-// pitch + key moments. Ball and feed come from the SAME possession sim on the
-// SAME clock as the full /live screen, so the two views always tell one story.
-export default function MiniWatch({ matchId }: { matchId: string }) {
+// Kuponun son eklenen SANAL maçının kompakt canlı izlemesi. 0715: el yapımı
+// mini saha yerine Watch Live'daki GERÇEK TV bileşenleri gömülür
+// (futbol→PitchTV, basket→CourtTV, tenis/voleybol→TennisTV) — aynı motor,
+// aynı saat, aynı görsel; iki görünüm asla farklı hikâye anlatamaz.
+export type MiniSport = 'football' | 'basketball' | 'tennis' | 'volleyball';
+
+export default function MiniWatch({ matchId, sport }: { matchId: string; sport: MiniSport }) {
   const [st, setSt] = useState<LiveState | null>(null);
-  const [ball, setBall] = useState<{ x: number; y: number; team: 'home' | 'away' }>({ x: 50, y: 50, team: 'home' });
+  const [pulse, setPulse] = useState<GoalPulse | null>(null);
   const anchor = useRef<{ sim: number; at: number; rate: number } | null>(null);
+  const evCount = useRef(0);
+  const pulseId = useRef(0);
+  // sim saat ölçeği: futbol 0..5400, basket 0..2880 (maç dakikası × 60)
+  const simTotal = sport === 'basketball' ? 2880 : 5400;
 
   const clock = () => {
     const a = anchor.current;
-    return a ? Math.max(0, Math.min(5400, a.sim + ((Date.now() - a.at) / 1000) * a.rate)) : 0;
+    return a ? Math.max(0, Math.min(simTotal, a.sim + ((Date.now() - a.at) / 1000) * a.rate)) : 0;
   };
 
   useEffect(() => {
     let alive = true;
     anchor.current = null;
+    evCount.current = 0;
+    setSt(null); setPulse(null);
     const poll = async () => {
       try {
         const [s] = await matchProvider.getLiveStates([matchId]);
         if (!alive || !s) return;
         setSt(s);
-        // monotonic sim clock (same scheme as useLiveMatch): anchor once, only
-        // hard-correct on a big desync — no per-poll sawtooth
+        // monotonik sim saati (useLiveMatch ile aynı şema): bir kez çapa,
+        // yalnız büyük sapmada düzelt — poll başına testere dişi yok
         if (s.phase === 'live') {
           const now = Date.now();
-          const rate = 5400 / s.duration_secs;
+          const rate = simTotal / s.duration_secs;
           const serverSim = s.minute * 60;
           const a = anchor.current;
           const cur = a ? a.sim + ((now - a.at) / 1000) * a.rate : -1;
           if (!a || Math.abs(serverSim - cur) > 90) anchor.current = { sim: serverSim, at: now, rate };
+        }
+        // gol darbesi (futbol): yeni sunucu golü → PitchTV'nin kendi gol
+        // draması (ağ sahnesi/penaltı) büyük ekrandakiyle birebir çalışsın
+        if (sport === 'football') {
+          const evs = s.events ?? [];
+          if (evs.length > evCount.current) {
+            const g = evs[evs.length - 1];
+            setPulse({ id: ++pulseId.current, team: g.team, penalty: isPenaltyGoal(matchId, g.minute) });
+          }
+          evCount.current = evs.length;
         }
       } catch { /* transient */ }
     };
     void poll();
     const id = setInterval(poll, 2500);
     return () => { alive = false; clearInterval(id); };
-  }, [matchId]);
+  }, [matchId, sport, simTotal]);
 
-  // the mini ball follows the SAME possession sim as the big tracker
-  useEffect(() => {
-    if (st?.phase !== 'live') return;
-    const dur = st.duration_secs;
-    const id = setInterval(() => {
-      const b = ballAt(matchId, clock(), dur);
-      setBall({ x: b.x, y: b.y, team: b.team });
-    }, 400);
-    return () => clearInterval(id);
-  }, [matchId, st?.phase, st?.duration_secs]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // key moments: server goals/cards + the same sim feed the /live screen shows
+  // futbol akışı: /live ekranıyla AYNI sim satırları + sunucu golleri
   const evs = useMemo(() => {
-    if (!st) return [] as { m: number; t: string; g: boolean }[];
+    if (!st || sport !== 'football') return [] as { m: number; t: string; g: boolean }[];
     let h = 0, a = 0;
     const goals = (st.events ?? []).map((e) => { if (e.team === 'home') h++; else a++; return { m: e.minute, t: `GOAL — ${e.team === 'home' ? st.home_team : st.away_team} ${h}-${a}`, g: true }; });
-    const cards = (st.cards ?? []).map((c) => ({ m: c.minute, t: `Red card — ${c.team === 'home' ? st.home_team : st.away_team}`, g: false }));
     const upto = st.phase === 'finished' ? 5400 : clock();
     const atmo = simLines(matchId, st.home_team, st.away_team, st.duration_secs)
       .filter((l) => (l.sec ?? l.minute * 60) <= upto)
       .map((l) => ({ m: l.minute, t: l.text, g: false }));
-    return [...goals, ...cards, ...atmo].sort((a1, b1) => b1.m - a1.m).slice(0, 4);
-  }, [matchId, st?.home_team, st?.minute, st?.events?.length, st?.cards?.length]); // eslint-disable-line react-hooks/exhaustive-deps
+    return [...goals, ...atmo].sort((a1, b1) => b1.m - a1.m).slice(0, 4);
+  }, [matchId, sport, st?.home_team, st?.minute, st?.events?.length, st?.phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!st) return null;
-  const live = st.phase === 'live';
-  const label = st.phase === 'upcoming' ? 'Starting soon' : st.phase === 'finished' ? 'FT' : `${st.minute}'`;
-  const side: 'home' | 'away' | 'mid' = !live ? 'mid' : ball.team;
-  const status = !live ? (st.phase === 'upcoming' ? 'Kick-off soon' : 'Full time')
-    : side === 'home' ? `▶ ${st.home_team}` : `▶ ${st.away_team}`;
+  const phase = st.phase === 'live' ? 'live' : st.phase === 'finished' ? 'finished' : 'upcoming';
+  const watchTo = sport === 'football' ? `/live/${matchId}` : `/court/${matchId}`;
 
   return (
     <div className="minitv">
-      <div className="mtv-sb">
-        <Link className="mtv-lg" to={`/live/${matchId}`}>Watch · {st.home_team} - {st.away_team} ›</Link>
-        <div className="mtv-main">
-          <span className="mtv-t">{st.home_team}</span>
-          <span className="mtv-sc">{st.phase === 'upcoming' ? '–' : `${st.home_score}-${st.away_score}`}<span className={`mtv-min ${live ? 'on' : ''}`}>{label}</span></span>
-          <span className="mtv-t a">{st.away_team}</span>
+      <Link className="mtv-lg" to={watchTo}>Watch · {st.home_team} - {st.away_team} ›</Link>
+      <div className="mtv-embed">
+        {sport === 'football' ? (
+          <PitchTV
+            home={st.home_team} away={st.away_team}
+            hs={phase === 'upcoming' ? 0 : st.home_score} as={phase === 'upcoming' ? 0 : st.away_score}
+            minute={st.minute} phase={phase} redHome={st.red_home} redAway={st.red_away}
+            matchId={matchId} dur={st.duration_secs} getClock={clock} goalPulse={pulse}
+            homePlayer={playerName(matchId + 'h')} awayPlayer={playerName(matchId + 'a')}
+          />
+        ) : sport === 'basketball' ? (
+          <CourtTV
+            home={st.home_team} away={st.away_team} hs={st.home_score} as={st.away_score}
+            period={st.period ?? null} minute={st.minute} phase={phase}
+            matchId={matchId} dur={st.duration_secs} getClock={clock}
+          />
+        ) : (
+          <TennisTV
+            home={st.home_team} away={st.away_team} hs={st.home_score} as={st.away_score}
+            period={st.period ?? null} phase={phase} matchId={matchId} sport={sport}
+          />
+        )}
+      </div>
+      {sport === 'football' && (
+        <div className="mtv-feed">
+          <div className="mtv-fh">Key attacks</div>
+          {evs.length === 0 ? <div className="mtv-row"><span className="dim">No big moments yet.</span></div>
+            : evs.map((e, i) => <div key={i} className={`mtv-row ${e.g ? 'g' : ''}`}><span className="mn">{e.m}&apos;</span><span>{e.t}</span></div>)}
         </div>
-      </div>
-      <div className="mtv-pitch">
-        <div className="mtv-ml" /><div className="mtv-circ" />
-        <div className="mtv-box l" /><div className="mtv-box r" />
-        <div className="mtv-goal l" /><div className="mtv-goal r" />
-        {live && (side === 'home' || side === 'mid') && <div className="arrow home" style={{ ['--ac' as string]: '#4aa3e2' }} />}
-        {live && (side === 'away' || side === 'mid') && <div className="arrow away" style={{ ['--ac' as string]: '#e2a04a' }} />}
-        {(live || st.phase === 'finished') && <div className="mtv-ball" style={{ left: `${live ? ball.x : 50}%`, top: `${live ? ball.y : 50}%` }} />}
-        <div className="mtv-status">{status}</div>
-      </div>
-      <div className="mtv-feed">
-        <div className="mtv-fh">Key attacks</div>
-        {evs.length === 0 ? <div className="mtv-row"><span className="dim">No big moments yet.</span></div>
-          : evs.map((e, i) => <div key={i} className={`mtv-row ${e.g ? 'g' : ''}`}><span className="mn">{e.m}&apos;</span><span>{e.t}</span></div>)}
-      </div>
+      )}
     </div>
   );
 }

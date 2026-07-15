@@ -2036,3 +2036,10 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .ai-text { margin: 8px 0 0; font-size: 0.82rem; line-height: 1.45; }
 .ai-btn { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); color: var(--accent); }
 .ai-preview { margin: var(--s3) 0 0; }
+
+/* --- MiniWatch: gerçek TV gömme (0715) — Watch Live ile birebir aynı sahne */
+.mtv-embed { border-radius: 10px; overflow: hidden; margin-top: 6px; }
+.mtv-embed .pitch-tv, .mtv-embed .court-tv { font-size: 0.82rem; }
+.mtv-embed .sb2-score { font-size: 1rem; }
+.mtv-embed .court-nums { font-size: 0.95rem; }
+.minitv .mtv-lg { display: block; margin-bottom: 2px; }
