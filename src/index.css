@@ -240,10 +240,12 @@ a:hover { color: var(--win); }
   .coupon-bar { left: var(--sidebar-w); }
 }
 .tab {
-  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 3px; color: var(--text-mut); font-size: 0.7rem; font-weight: 500;
+  flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; color: var(--text-mut); font-size: 0.74rem; font-weight: 500;
+  background: none; border: 0; cursor: pointer; padding: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
 }
-.tab svg { width: 20px; height: 20px; }
+.tab svg { width: 21px; height: 21px; }
 .tab:hover { color: var(--text-2); }
 .tab.active { color: var(--accent); }
 
@@ -2170,3 +2172,82 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .dice-roll-num.l { color: #d9534f; }
 /* plinko kova × işareti biraz küçük, sayı büyük dursun */
 .plinko-bkt .bkt-x { font-size: 0.62em; opacity: 0.65; margin-left: 1px; }
+
+/* ============ MOBİL DÜZELTMELER (0715 audit) ============================== */
+/* Oyunlar sheet (mobil alt bar "Oyunlar" sekmesi açar) */
+.games-sheet-back { position: fixed; inset: 0; z-index: 34; background: rgba(0,0,0,0.32); }
+.games-sheet { position: fixed; left: 0; right: 0; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px)); z-index: 35;
+  max-width: 680px; margin: 0 auto; background: var(--bg); border-top: 1px solid var(--line);
+  border-radius: 16px 16px 0 0; box-shadow: 0 -8px 32px rgba(0,0,0,0.24); padding: 14px 12px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px;
+  animation: sheet-up 0.22s cubic-bezier(.2,1,.4,1) both; }
+@keyframes sheet-up { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.games-sheet-item { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 15px 8px;
+  border-radius: 13px; background: var(--surface-2); border: 1px solid var(--line); color: var(--text-2);
+  font-size: 0.8rem; font-weight: 600; min-height: 66px; text-decoration: none; }
+.games-sheet-item svg { width: 26px; height: 26px; }
+.games-sheet-item:active { transform: scale(0.96); }
+.games-sheet-item.active { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+@media (min-width: 900px) { .games-sheet, .games-sheet-back { display: none; } }
+
+/* Standings: yatay scroll (tablo + sekme satırı mobilde kesiliyordu) */
+.std-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 calc(-1 * var(--s4)); padding: 0 var(--s4); }
+.std-scroll .std-table { min-width: 460px; }
+.std-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.std-tabs::-webkit-scrollbar { display: none; }
+.std-tab { flex: none; white-space: nowrap; min-height: 40px; }
+
+/* Bahis AI sohbeti — CSS eksikti (kart stilsizdi) */
+.bai { padding: var(--s3); }
+.bai-head { font-weight: 800; font-size: 0.95rem; }
+.bai-sub { margin: 4px 0 10px; font-size: 0.78rem; color: var(--text-2); }
+.bai-starters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.bai-chip { flex: none; min-height: 40px; padding: 8px 13px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--surface-2); color: var(--text); font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+.bai-chip:hover { border-color: var(--accent); color: var(--accent); }
+.bai-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; margin-bottom: 10px; padding-right: 2px; }
+.bai-msg { max-width: 86%; padding: 8px 11px; border-radius: 13px; font-size: 0.86rem; line-height: 1.45; word-break: break-word; white-space: pre-wrap; }
+.bai-msg.user { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+.bai-msg.assistant { align-self: flex-start; background: var(--surface-2); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.bai-typing { color: var(--text-2); }
+.bai-note { font-size: 0.78rem; color: var(--text-2); margin-bottom: 8px; }
+.bai-row { display: flex; gap: 6px; align-items: center; }
+.bai-input { flex: 1; }
+
+/* Plinko kova: mobilde küçük ekrana sığsın (eşit daralma, taşma yok) */
+.plinko-bkt { min-width: 0; overflow: hidden; }
+@media (max-width: 560px) {
+  .plinko-bkt { font-size: 0.6rem; padding: 6px 0; }
+  .plinko-bkt .bkt-x { display: none; }
+}
+
+/* Kupon bottom-sheet: tüm sheet kaysın (MiniWatch/butonlar kırpılmasın) + safe-area */
+.coupon-sheet { overflow-y: auto; padding-bottom: env(safe-area-inset-bottom, 0px); }
+.coupon-sheet .cpn-legs { overflow: visible; flex: 0 0 auto; }
+
+/* Dokunma hedefleri + okunurluk (mobil) */
+@media (max-width: 560px) {
+  .ll-odd { min-height: 40px; display: flex; align-items: center; justify-content: center; }
+  .ll-plus { min-height: 40px; }
+  .ll-cols { font-size: 0.68rem; }
+  .sport-tab { min-height: 40px; align-items: center; }
+  .luck-quick .btn-sm { min-height: 40px; padding: 9px 12px; }
+  .av-chip { padding: 9px 0; font-size: 0.78rem; }
+  .dice-tick { font-size: 0.7rem; }
+  .luck-stat .k { font-size: 0.72rem; }
+  .detail-markets .outcome-name { font-size: 0.72rem; }
+}
+
+/* Gates alt kontrol barı mobilde tek satıra sığmıyordu → sar */
+@media (max-width: 720px) {
+  .go-bar { flex-wrap: wrap; gap: 8px; }
+  .go-actions { width: 100%; order: 3; justify-content: space-between; }
+  .go { padding: 0 8px; }
+}
+
+/* Profil hızlı linkler (mobilde Sıralama/Sosyal buraya taşındı) */
+.pr-quicklinks { display: flex; gap: 8px; margin-bottom: var(--s3); }
+.pr-qlink { flex: 1; min-height: 44px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--surface-2); color: var(--text); font-weight: 700; font-size: 0.9rem; cursor: pointer; }
+.pr-qlink:hover { border-color: var(--accent); color: var(--accent); }
+@media (min-width: 900px) { .pr-quicklinks { display: none; } }  /* masaüstünde sidebar'da zaten var */

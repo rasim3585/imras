@@ -251,3 +251,43 @@ export function AviatorIcon() {
     </svg>
   );
 }
+
+export function DiceIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"
+         strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4" y="4" width="16" height="16" rx="3.5" />
+      <circle cx="9" cy="9" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="9" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="9" cy="15" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="15" r="1.1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function MinesIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"
+         strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="13" r="6" />
+      <path d="M12 7V4M18 13h2M4 13h2M16.5 8.5l1.5-1.5" />
+      <path d="M18 6l1.5-1.5" />
+    </svg>
+  );
+}
+
+export function PlinkoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"
+         strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="8" cy="7" r="1" fill="currentColor" stroke="none" />
+      <circle cx="16" cy="7" r="1" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="11" r="1" fill="currentColor" stroke="none" />
+      <circle cx="7" cy="11" r="1" fill="currentColor" stroke="none" />
+      <circle cx="17" cy="11" r="1" fill="currentColor" stroke="none" />
+      <path d="M12 3 C11 6 9 8 8 11 C7 14 12 15 12 19" />
+      <path d="M5 20h14" />
+    </svg>
+  );
+}

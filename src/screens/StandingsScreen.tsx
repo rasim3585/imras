@@ -86,18 +86,20 @@ export default function StandingsScreen() {
       ) : leagues.map((lg) => (
         <div key={lg} className="std-league">
           <div className="std-league-h">{lg}</div>
-          <table className="std-table">
-            <thead>{header()}</thead>
-            <tbody>
-              {rows.filter((r) => bucket(r) === lg).map((r) => (
-                <tr key={r.team_id} className="std-row-link" onClick={() => navigate(`/team/${r.team_id}`)}>
-                  <td className="tnum">{r.rank}</td>
-                  <td className="std-team"><TeamCrest name={r.name} size={18} className="std-crest" /><span>{r.name}</span></td>
-                  {cells(r)}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="std-scroll">
+            <table className="std-table">
+              <thead>{header()}</thead>
+              <tbody>
+                {rows.filter((r) => bucket(r) === lg).map((r) => (
+                  <tr key={r.team_id} className="std-row-link" onClick={() => navigate(`/team/${r.team_id}`)}>
+                    <td className="tnum">{r.rank}</td>
+                    <td className="std-team"><TeamCrest name={r.name} size={18} className="std-crest" /><span>{r.name}</span></td>
+                    {cells(r)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ))}
     </div>

@@ -96,6 +96,12 @@ export default function ProfileScreen() {
 
       {error && <div className="banner banner-error">{error}</div>}
 
+      {/* Mobilde alt bardan kaldırılan hedefler burada erişilebilir kalır */}
+      <div className="pr-quicklinks">
+        <button className="pr-qlink" onClick={() => navigate('/ranks')}>🏆 {t('nav.ranks')}</button>
+        <button className="pr-qlink" onClick={() => navigate('/social')}>👥 {t('nav.social')}</button>
+      </div>
+
       <div className="card gold-panel">
         <div className="gold-main">
           <span className="stat-k">{t('pr.gold')}</span>

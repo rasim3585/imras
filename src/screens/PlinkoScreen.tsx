@@ -6,8 +6,8 @@ import { CoinIcon } from '../components/icons';
 import { Confetti } from '../live/PitchTV';
 import { plinkoDrop, plinkoMult, PLINKO_TABLES, type PlinkoResult } from '../lib/luck';
 
-// kova çarpanını kompakt yaz: 10+ tam sayı, altı 1 ondalık (okunurluk)
-const fmtMult = (m: number) => (m >= 10 ? Math.round(m).toString() : m.toFixed(1));
+// kova çarpanını kompakt yaz: 1000+ → 1k, 10+ tam sayı, altı 1 ondalık (mobil okunurluk)
+const fmtMult = (m: number) => (m >= 1000 ? `${Math.round(m / 100) / 10}k` : m >= 10 ? Math.round(m).toString() : m.toFixed(1));
 
 // Plinko — 16 sıra, 3 risk. Top yolu sunucu seed'inden (path 'LRLR…'); istemci
 // GERÇEK FİZİKLE oynatır (yerçekimi + peg'de sapma/sıçrama), kova/çarpan

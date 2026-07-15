@@ -6,8 +6,9 @@ import { useI18n } from '../i18n/LanguageContext';
 import { useSound } from '../settings/SoundContext';
 import { LANGS, type Lang } from '../i18n/dict';
 import { Brand } from './Brand';
-import { MarketsIcon, CouponIcon, RanksIcon, SocialIcon, ProfileIcon, HomeIcon, AviatorIcon, GatesIcon, MirrorIcon, CoinIcon, SettingsIcon, SoundOnIcon, SoundOffIcon } from './icons';
+import { MarketsIcon, CouponIcon, RanksIcon, SocialIcon, ProfileIcon, HomeIcon, AviatorIcon, GatesIcon, MirrorIcon, CoinIcon, SettingsIcon, SoundOnIcon, SoundOffIcon, DiceIcon, MinesIcon, PlinkoIcon } from './icons';
 
+// Masaüstü kenar çubuğu: tüm hedefler (yer var).
 const NAV = [
   { to: '/', end: true, key: 'nav.matches', Icon: MarketsIcon },
   { to: '/aviator', end: false, key: 'nav.aviator', Icon: AviatorIcon },
@@ -17,6 +18,21 @@ const NAV = [
   { to: '/ranks', end: false, key: 'nav.ranks', Icon: RanksIcon },
   { to: '/social', end: false, key: 'nav.social', Icon: SocialIcon },
   { to: '/profile', end: false, key: 'nav.profile', Icon: ProfileIcon },
+];
+
+// Mobil alt bar: 5 birincil sekme (Nesine-tarzı) — "Oyunlar" bir sheet açar.
+const TAB = [
+  { to: '/', end: true, key: 'nav.matches', Icon: MarketsIcon },
+  { to: '/coupons', end: false, key: 'nav.coupons', Icon: CouponIcon },
+  { to: '/analiz', end: false, key: 'nav.mirror', Icon: MirrorIcon },
+  { to: '/profile', end: false, key: 'nav.profile', Icon: ProfileIcon },
+];
+const GAMES = [
+  { to: '/aviator', key: 'nav.aviator', Icon: AviatorIcon },
+  { to: '/gates', key: 'nav.gates', Icon: GatesIcon },
+  { to: '/mines', key: 'nav.mines', Icon: MinesIcon },
+  { to: '/dice', key: 'nav.dice', Icon: DiceIcon },
+  { to: '/plinko', key: 'nav.plinko', Icon: PlinkoIcon },
 ];
 
 // Settings gear (between home and balance): language, sound on/off, sign out.
@@ -102,6 +118,7 @@ export default function NavBar() {
   const { profile } = useAuth();
   const { count } = useCart();
   const { t } = useI18n();
+  const [gamesOpen, setGamesOpen] = useState(false);
 
   // icon + an active-selection count badge on the Coupons item
   const navIcon = (icon: ReactNode, to: string) => (
@@ -141,17 +158,35 @@ export default function NavBar() {
         ))}
       </nav>
 
-      {/* mobile bottom bar */}
+      {/* mobile bottom bar — 5 primary tabs; "Oyunlar" opens a games sheet */}
       <nav className="tabbar">
         <div className="tabbar-inner">
-          {NAV.map(({ to, end, key, Icon }) => (
-            <NavLink key={to} to={to} end={end} className="tab">
+          <NavLink to="/" end className="tab">{navIcon(<MarketsIcon />, '/')}{t('nav.matches')}</NavLink>
+          <button className={`tab ${gamesOpen ? 'active' : ''}`} onClick={() => setGamesOpen((o) => !o)}>
+            {navIcon(<GatesIcon />, '/games')}{t('nav.games')}
+          </button>
+          {TAB.slice(1).map(({ to, end, key, Icon }) => (
+            <NavLink key={to} to={to} end={end} className="tab" onClick={() => setGamesOpen(false)}>
               {navIcon(<Icon />, to)}
               {t(key)}
             </NavLink>
           ))}
         </div>
       </nav>
+
+      {/* games sheet (mobile) */}
+      {gamesOpen && (
+        <>
+          <div className="games-sheet-back" onClick={() => setGamesOpen(false)} />
+          <div className="games-sheet" role="menu">
+            {GAMES.map(({ to, key, Icon }) => (
+              <NavLink key={to} to={to} className="games-sheet-item" onClick={() => setGamesOpen(false)}>
+                <Icon />{t(key)}
+              </NavLink>
+            ))}
+          </div>
+        </>
+      )}
     </>
   );
 }
