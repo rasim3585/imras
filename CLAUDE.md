@@ -169,7 +169,13 @@ kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40
 ---
 
 ## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0143'ten** devam, sıfır dolgulu 4 hane. (**0142 e-maç
+Yeni migration'lar **0144'ten** devam, sıfır dolgulu 4 hane. (**0143 Bahis AI
+sohbeti**: betting-ai edge fn — kullanıcının deterministik ayna paketi (9
+mirror_* RPC) sistem prompt'unda, haiku yalnız o sayılardan konuşur, tahmin/
+oran ASLA; 30 mesaj/gün (ai_chat_usage); FE AnalizScreen kartı, 8 dil.
+**Nesine Temmuz turu**: beraberlik bandı + MS1-kapama kitapla uyumlu; zayıf
+taraf longshot'unda kitap ~17'de donduruyor biz ~26 — n=1, dokunulmadı;
+gelecek ay 3+ nokta.) (**0142 e-maç
 yoğunluğu**: seeder'lar tur başına 3+5 tur ileri → spor başına ~24 maç
 üretiyordu; yeni denge futbol 6-8, basket 5-6, tenis/voleybol 3-4 (ölçüldü:
 8/6/4/4). FE bülten limiti 120 ("hep 60" görünümü bitti), oran kutuları gap
