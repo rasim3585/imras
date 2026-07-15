@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useI18n } from '../i18n/LanguageContext';
@@ -10,10 +10,15 @@ import { plinkoDrop, plinkoMult, PLINKO_TABLES, type PlinkoResult } from '../lib
 const fmtMult = (m: number) => (m >= 10 ? Math.round(m).toString() : m.toFixed(1));
 
 // Plinko — 16 sıra, 3 risk. Top yolu sunucu seed'inden (path 'LRLR…'); istemci
-// yalnız animasyonu oynatır, kova/çarpan sunucudan. RTP %97.
+// GERÇEK FİZİKLE oynatır (yerçekimi + peg'de sapma/sıçrama), kova/çarpan
+// sunucudan. RTP %97.
 const ROWS = 16;
 const QUICK = [50, 100, 250, 500];
 type Risk = 'low' | 'med' | 'high';
+
+// yumuşatmalar
+const easeOutBack = (p: number) => { const c = 1.9; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); };
+const easeInQuad = (p: number) => p * p;
 
 export default function PlinkoScreen() {
   const { session, profile, refreshProfile } = useAuth();
@@ -23,35 +28,70 @@ export default function PlinkoScreen() {
   const [risk, setRisk] = useState<Risk>('med');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [ballX, setBallX] = useState(50);
-  const [ballRow, setBallRow] = useState(-1);
+  const [dropping, setDropping] = useState(false);
   const [landed, setLanded] = useState<PlinkoResult | null>(null);
   const [flash, setFlash] = useState<number | null>(null);   // kova indeksi
   const [litRow, setLitRow] = useState(-1);                   // o an aydınlanan peg sırası
-  const timers = useRef<number[]>([]);
+  const ballRef = useRef<HTMLDivElement | null>(null);
+  const raf = useRef(0);
 
   const bal = profile?.gold_balance ?? 0;
   const tab = PLINKO_TABLES[risk];
 
+  useEffect(() => () => cancelAnimationFrame(raf.current), []);
+
   function animate(path: string, bucket: number, res: PlinkoResult) {
-    timers.current.forEach(clearTimeout);
-    timers.current = [];
+    cancelAnimationFrame(raf.current);
+    setLanded(null); setFlash(null); setLitRow(-1); setDropping(true);
+
+    // --- yol noktaları: merkezden başla, her peg'de yarım-kova sapma ---
+    const half = 50 / (ROWS + 1);                 // bir sağ/sol adımın yatay payı (%)
+    const rowGap = 100 / (ROWS + 2);              // peg satırları arası dikey pay (%)
+    const pts: { x: number; y: number }[] = [{ x: 50, y: 0 }];
     let x = 50;
-    setBallRow(0); setBallX(50); setLanded(null); setFlash(null); setLitRow(-1);
     for (let r = 0; r < ROWS; r++) {
-      const goRight = path[r] === 'R';
-      const t = window.setTimeout(() => {
-        // her sırada yatayda ±(yarı-genişlik/sıra) kayma
-        x += (goRight ? 1 : -1) * (46 / ROWS);
-        setBallX(x); setBallRow(r + 1); setLitRow(r);   // topun çarptığı peg sırası yansın
-      }, 95 * (r + 1));
-      timers.current.push(t);
+      x += (path[r] === 'R' ? 1 : -1) * half;
+      pts.push({ x, y: (r + 1) * rowGap });
     }
-    const done = window.setTimeout(() => {
-      setLanded(res); setFlash(bucket); setBallRow(-1); setLitRow(-1);
-      void refreshProfile();
-    }, 95 * (ROWS + 1) + 130);
-    timers.current.push(done);
+    pts.push({ x, y: (ROWS + 1.3) * rowGap });     // kovaya son düşüş
+    // segment süreleri: yerçekimi → aşağı indikçe hızlanır (süre kısalır)
+    const durs = pts.slice(1).map((_, i) => Math.max(85, 165 - i * 5));
+    const total = durs.reduce((a, b) => a + b, 0);
+
+    let start = 0; let lastSeg = -1;
+    const step = (ts: number) => {
+      if (!start) start = ts;
+      const el = ts - start;
+      if (el >= total) {
+        // yerine oturdu
+        const last = pts[pts.length - 1];
+        if (ballRef.current) { ballRef.current.style.left = `${last.x}%`; ballRef.current.style.top = `${last.y}%`; ballRef.current.style.transform = 'translate(-50%,-50%) scale(1)'; }
+        setLitRow(-1); setDropping(false); setLanded(res); setFlash(bucket);
+        void refreshProfile();
+        return;
+      }
+      // hangi segmentteyiz
+      let acc = 0, seg = 0;
+      while (seg < durs.length && el > acc + durs[seg]) { acc += durs[seg]; seg++; }
+      const p = Math.min(1, (el - acc) / durs[seg]);
+      const a = pts[seg], b = pts[seg + 1];
+      // x: peg'e çarpıp sapma (overshoot + otur) · y: hızlanan düşüş + küçük hop
+      const ex = easeOutBack(p);
+      const hop = 1.5;                                       // % board — peg'den sıçrama
+      const px = a.x + (b.x - a.x) * ex;
+      const py = a.y + (b.y - a.y) * easeInQuad(p) - hop * Math.sin(p * Math.PI);
+      // squash: peg'e değince ez, sonra topla (segment başında güçlü)
+      const sq = Math.max(0, 1 - p * 3.2);
+      const sx = 1 + 0.4 * sq, sy = 1 - 0.34 * sq;
+      if (ballRef.current) {
+        ballRef.current.style.left = `${px}%`;
+        ballRef.current.style.top = `${py}%`;
+        ballRef.current.style.transform = `translate(-50%,-50%) scale(${sx.toFixed(3)},${sy.toFixed(3)})`;
+      }
+      if (seg !== lastSeg) { lastSeg = seg; if (seg >= 1) setLitRow(seg - 1); }
+      raf.current = requestAnimationFrame(step);
+    };
+    raf.current = requestAnimationFrame(step);
   }
 
   async function drop() {
@@ -81,7 +121,7 @@ export default function PlinkoScreen() {
             {Array.from({ length: r + 3 }, (_, i) => <span key={i} className={`plinko-peg ${litRow === r ? 'lit' : ''}`} />)}
           </div>
         ))}
-        {ballRow >= 0 && <div className="plinko-ball" style={{ left: `${ballX}%`, top: `${ballRow * (100 / (ROWS + 2))}%` }} />}
+        <div ref={ballRef} className={`plinko-ball ${dropping ? 'on' : ''}`} style={{ left: '50%', top: '0%' }} aria-hidden />
       </div>
 
       {/* kova çarpanları */}
@@ -93,7 +133,7 @@ export default function PlinkoScreen() {
 
       <div className="dice-dir plinko-risk">
         {(['low', 'med', 'high'] as Risk[]).map((rk) => (
-          <button key={rk} className={`seg ${risk === rk ? 'on' : ''}`} disabled={busy} onClick={() => setRisk(rk)}>{t('plinko.' + rk)}</button>
+          <button key={rk} className={`seg ${risk === rk ? 'on' : ''}`} disabled={busy || dropping} onClick={() => setRisk(rk)}>{t('plinko.' + rk)}</button>
         ))}
       </div>
 
@@ -107,16 +147,16 @@ export default function PlinkoScreen() {
 
       <div className="luck-bet">
         <input className="input tnum" type="number" min={1} max={bal} value={bet}
-          onChange={(e) => setBet(Math.max(0, Math.floor(Number(e.target.value) || 0)))} disabled={busy} />
+          onChange={(e) => setBet(Math.max(0, Math.floor(Number(e.target.value) || 0)))} disabled={busy || dropping} />
         <div className="luck-quick">
-          {QUICK.map((q) => <button key={q} className="btn btn-sm" disabled={busy} onClick={() => setBet(q)}>{q}</button>)}
-          <button className="btn btn-sm" disabled={busy || bal <= 0} onClick={() => setBet(bal)}>MAX</button>
+          {QUICK.map((q) => <button key={q} className="btn btn-sm" disabled={busy || dropping} onClick={() => setBet(q)}>{q}</button>)}
+          <button className="btn btn-sm" disabled={busy || dropping || bal <= 0} onClick={() => setBet(bal)}>MAX</button>
         </div>
       </div>
 
       {session ? (
-        <button className="btn btn-primary btn-block luck-go" disabled={busy || bet < 1 || bet > bal} onClick={drop}>
-          {busy ? '…' : `${t('plinko.drop')} · ${bet}`}
+        <button className="btn btn-primary btn-block luck-go" disabled={busy || dropping || bet < 1 || bet > bal} onClick={drop}>
+          {busy || dropping ? '…' : `${t('plinko.drop')} · ${bet}`}
         </button>
       ) : (
         <button className="btn btn-primary btn-block luck-go" onClick={() => navigate('/login')}>{t('luck.login')}</button>
