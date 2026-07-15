@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useI18n } from '../i18n/LanguageContext';
 import { CoinIcon } from '../components/icons';
+import { Confetti } from '../live/PitchTV';
 import { minesStart, minesReveal, minesCashout, minesMult, type MinesState } from '../lib/luck';
 
 // Mines — "bir kutu daha mı, çek mi" gerilimi. 5×5, M mayın; her güvenli açış
@@ -105,6 +106,7 @@ export default function MinesScreen() {
       )}
 
       <div className={`mines-grid ${active ? 'on' : ''} ${blast ? 'blast' : ''}`}>
+        {done?.won && <Confetti />}
         {cells.map((c, i) => (
           <button key={i} className={`mine-cell ${c}`} disabled={!active || busy || c !== 'hidden'} onClick={() => reveal(i)}>
             {c === 'mine' || c === 'reveal-mine' ? '💣' : c === 'boom' ? '💥' : ''}

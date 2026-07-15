@@ -2078,10 +2078,10 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 /* Plinko */
 .plinko-board { position: relative; height: 300px; background: var(--surface-2); border-radius: 12px; overflow: hidden; }
 .plinko-prow { position: absolute; left: 0; right: 0; display: flex; justify-content: center; gap: 5.2%; }
-.plinko-peg { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.35); }
+.plinko-peg { width: 6px; height: 6px; border-radius: 50%; background: color-mix(in srgb, var(--text) 42%, transparent); }
 .plinko-ball { position: absolute; width: 11px; height: 11px; border-radius: 50%; background: #ffd36b; box-shadow: 0 0 8px #ffd36b; transform: translate(-50%, -50%); transition: left 0.09s linear, top 0.09s linear; z-index: 2; }
 .plinko-buckets { display: flex; gap: 2px; }
-.plinko-bkt { flex: 1; text-align: center; font-size: 0.56rem; font-weight: 800; padding: 5px 1px; border-radius: 5px; background: var(--surface-2); border: 1px solid var(--line); }
+.plinko-bkt { flex: 1; text-align: center; font-size: 0.72rem; font-weight: 800; padding: 7px 1px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--line); line-height: 1; }
 .plinko-buckets.r-high .plinko-bkt:first-child, .plinko-buckets.r-high .plinko-bkt:last-child,
 .plinko-buckets.r-med .plinko-bkt:first-child, .plinko-buckets.r-med .plinko-bkt:last-child { color: #ffd36b; }
 .plinko-bkt.hit { background: var(--accent); color: #fff; border-color: var(--accent); transform: scale(1.12); }
@@ -2126,8 +2126,8 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 
 /* --- PLINKO cilası: parıltılı top + iz + kova vuruş dalgası --- */
 .plinko-board { background: radial-gradient(120% 90% at 50% -10%, color-mix(in srgb, var(--accent) 10%, var(--surface-2)), var(--surface-2)); box-shadow: inset 0 2px 10px rgba(0,0,0,0.3); }
-.plinko-peg { box-shadow: 0 0 3px rgba(255,255,255,0.25); transition: transform 0.08s, background 0.1s; }
-.plinko-peg.lit { background: #fff; transform: scale(1.5); box-shadow: 0 0 8px #fff; }
+.plinko-peg { background: color-mix(in srgb, var(--text) 42%, transparent); box-shadow: none; transition: transform 0.08s, background 0.1s; }
+.plinko-peg.lit { background: var(--accent); transform: scale(1.7); box-shadow: 0 0 9px var(--accent); }
 .plinko-ball { background: radial-gradient(circle at 35% 30%, #fff2c0, #ffb347 60%, #e08a1e); box-shadow: 0 0 12px #ffd36b, 0 2px 4px rgba(0,0,0,0.4); }
 .plinko-ball::after { content: ''; position: absolute; inset: -3px; border-radius: 50%; background: radial-gradient(circle, rgba(255,211,107,0.4), transparent 70%); }
 .plinko-bkt { transition: transform 0.18s cubic-bezier(.2,1.4,.4,1), background 0.18s, box-shadow 0.18s; }
@@ -2151,3 +2151,21 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 /* mines canlı çarpan büyük gösterge */
 .mines-mult-big { text-align: center; font-size: 2.4rem; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 60%, var(--text))); -webkit-background-clip: text; background-clip: text; color: transparent; transition: transform 0.15s; }
 .mines-mult-big.bump { animation: luck-pop-in 0.3s cubic-bezier(.2,1.5,.4,1); }
+
+/* --- Dice: iki fiziksel zar sahnesi + nokta yüzleri (0715) ------------------ */
+.dice-stage { position: relative; display: flex; justify-content: center; align-items: center; gap: 16px; height: 108px; }
+.die { width: 66px; height: 66px; border-radius: 14px; background: linear-gradient(155deg, #fbfbfd, #d7dbe2); box-shadow: 0 4px 10px rgba(0,0,0,0.28), inset 0 2px 3px rgba(255,255,255,0.9), inset 0 -3px 5px rgba(0,0,0,0.12); display: grid; place-items: center; }
+.die-face { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 46px; height: 46px; gap: 3px; }
+.die-pip { width: 10px; height: 10px; border-radius: 50%; background: transparent; place-self: center; }
+.die-pip.on { background: radial-gradient(circle at 35% 30%, #4a5160, #14181f); box-shadow: inset 0 1px 1px rgba(255,255,255,0.3); }
+@keyframes die-tumble { 0% { transform: rotate(0) translateY(0); } 25% { transform: rotate(90deg) translateY(-10px); } 50% { transform: rotate(180deg) translateY(4px); } 75% { transform: rotate(270deg) translateY(-6px); } 100% { transform: rotate(360deg) translateY(0); } }
+.die.tumbling { animation: die-tumble 0.4s linear infinite; }
+@keyframes die-land { 0% { transform: scale(1.18); } 60% { transform: scale(0.94); } 100% { transform: scale(1); } }
+.die.landed { animation: die-land 0.32s cubic-bezier(.2,1.4,.4,1) both; }
+.dice-stage.w .die { box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 45%, transparent), inset 0 2px 3px rgba(255,255,255,0.9); }
+.dice-stage.l .die { box-shadow: 0 4px 14px color-mix(in srgb, #ff5a5a 40%, transparent), inset 0 2px 3px rgba(255,255,255,0.9); }
+.dice-roll-num { position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); font-size: 0.9rem; font-weight: 800; padding: 3px 12px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); }
+.dice-roll-num.w { color: var(--accent); border-color: var(--accent); }
+.dice-roll-num.l { color: #d9534f; }
+/* plinko kova × işareti biraz küçük, sayı büyük dursun */
+.plinko-bkt .bkt-x { font-size: 0.62em; opacity: 0.65; margin-left: 1px; }

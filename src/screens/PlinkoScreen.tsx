@@ -3,7 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useI18n } from '../i18n/LanguageContext';
 import { CoinIcon } from '../components/icons';
+import { Confetti } from '../live/PitchTV';
 import { plinkoDrop, plinkoMult, PLINKO_TABLES, type PlinkoResult } from '../lib/luck';
+
+// kova çarpanını kompakt yaz: 10+ tam sayı, altı 1 ondalık (okunurluk)
+const fmtMult = (m: number) => (m >= 10 ? Math.round(m).toString() : m.toFixed(1));
 
 // Plinko — 16 sıra, 3 risk. Top yolu sunucu seed'inden (path 'LRLR…'); istemci
 // yalnız animasyonu oynatır, kova/çarpan sunucudan. RTP %97.
@@ -70,6 +74,7 @@ export default function PlinkoScreen() {
       <h1 className="luck-h1">🔻 Plinko</h1>
 
       <div className="plinko-board">
+        {landed && landed.payout > bet && <Confetti />}
         {/* pegler */}
         {Array.from({ length: ROWS }, (_, r) => (
           <div key={r} className="plinko-prow" style={{ top: `${(r + 1) * (100 / (ROWS + 2))}%` }}>
@@ -82,7 +87,7 @@ export default function PlinkoScreen() {
       {/* kova çarpanları */}
       <div className={`plinko-buckets r-${risk}`}>
         {tab.map((_, i) => (
-          <span key={i} className={`plinko-bkt ${flash === i ? 'hit' : ''} ${flash != null && Math.abs(flash - i) === 1 ? 'wave' : ''}`}>{plinkoMult(risk, i)}×</span>
+          <span key={i} className={`plinko-bkt ${flash === i ? 'hit' : ''} ${flash != null && Math.abs(flash - i) === 1 ? 'wave' : ''}`}>{fmtMult(plinkoMult(risk, i))}<span className="bkt-x">×</span></span>
         ))}
       </div>
 

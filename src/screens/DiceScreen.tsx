@@ -1,9 +1,23 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useI18n } from '../i18n/LanguageContext';
 import { CoinIcon } from '../components/icons';
+import { Confetti } from '../live/PitchTV';
 import { diceRoll, type DiceResult } from '../lib/luck';
+
+// Zar yüzü: 0..99.99 sonucu iki fiziksel zara böl (onlar/birler basamağı, 1-6
+// aralığına eşle) — kullanıcı gerçek zar görsün. Büyük değer ayrıca üstte yazılı.
+function pips(n: number) {
+  // 1..6 nokta düzeni (dot grid 3×3 pozisyonları)
+  const P: Record<number, number[]> = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+  const on = new Set(P[n] ?? [4]);
+  return (
+    <span className="die-face" aria-label={`${n}`}>
+      {Array.from({ length: 9 }, (_, i) => <span key={i} className={`die-pip ${on.has(i) ? 'on' : ''}`} />)}
+    </span>
+  );
+}
 
 // Dice — kazanma şansını (dolayısıyla çarpanı) kullanıcı SEÇER; her atış risk
 // iştahının doğrudan beyanı (ayna için altın sinyal). Sunucu-otoriter, RTP %97.
@@ -26,6 +40,21 @@ export default function DiceScreen() {
   // slider: sonucun düştüğü nokta (0..100) — çubukta işaret
   const marker = res ? res.roll : null;
   const [rolling, setRolling] = useState(false);
+  const [faces, setFaces] = useState<[number, number]>([2, 5]);
+
+  // atarken zar yüzleri hızlı dönsün; sonuçta iki basamağı zar yüzüne eşle
+  useEffect(() => {
+    if (!rolling) return;
+    const id = setInterval(() => setFaces([1 + Math.floor(Math.random() * 6), 1 + Math.floor(Math.random() * 6)] as [number, number]), 80);
+    return () => clearInterval(id);
+  }, [rolling]);
+  useEffect(() => {
+    if (!res) return;
+    // 0..99.99 → onlar/birler basamağı, 1-6'ya sıkıştır (görsel zar)
+    const tens = Math.min(6, Math.max(1, Math.floor(res.roll / 100 * 6) + 1));
+    const units = Math.min(6, Math.max(1, Math.floor((res.roll % 10) / 10 * 6) + 1));
+    setFaces([tens, units]);
+  }, [res]);
 
   async function roll() {
     if (busy || bet < 1 || bet > bal) return;
@@ -48,6 +77,16 @@ export default function DiceScreen() {
         <span className="av-bal-chip tnum"><CoinIcon size={14} /> {bal.toLocaleString()}</span>
       </div>
       <h1 className="luck-h1"><span className={`dice-h-icon ${rolling ? 'rolling' : ''}`}>🎲</span> Dice</h1>
+
+      {/* iki fiziksel zar — atarken döner, sonuçta yerine oturur */}
+      <div className={`dice-stage ${res ? (win ? 'w' : 'l') : ''}`}>
+        {win && !rolling && <Confetti />}
+        <div className={`die ${rolling ? 'tumbling' : res ? 'landed' : ''}`}>{pips(faces[0])}</div>
+        <div className={`die ${rolling ? 'tumbling' : res ? 'landed' : ''}`} style={{ animationDelay: '0.06s' }}>{pips(faces[1])}</div>
+        {res && !rolling && (
+          <div className={`dice-roll-num tnum ${win ? 'w' : 'l'}`}>{res.roll.toFixed(2)}</div>
+        )}
+      </div>
 
       {/* çubuk: soldan sağa 0..100; under yeşil sol, over yeşil sağ */}
       <div className="dice-track">
