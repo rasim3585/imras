@@ -78,12 +78,15 @@ function groupMatches(list: BulletinMatch[]): { countries: CountryGroup[]; virtu
     lg.matches.push(m);
   }
   const byKickoff = (a: BulletinMatch, b: BulletinMatch) => a.starts_at.localeCompare(b.starts_at);
+  // 0715: gerçek maçlar ZAMANA göre — başlaması en yakın olan en üstte.
+  // Maçları lig içinde kickoff'a diz, sonra ligleri ve ülkeleri en erken
+  // maçının kickoff'una göre sırala (kalabalık lig değil, yakın maç üstte).
+  const earliest = (lg: LeagueGroup) => lg.matches[0]?.starts_at ?? '￿';
   for (const cg of countries) {
     for (const lg of cg.leagues) lg.matches.sort(byKickoff);
-    // busiest league first; alphabetical tiebreak keeps it deterministic
-    cg.leagues.sort((a, b) => b.matches.length - a.matches.length || a.league.localeCompare(b.league));
+    cg.leagues.sort((a, b) => earliest(a).localeCompare(earliest(b)) || a.league.localeCompare(b.league));
   }
-  countries.sort((a, b) => b.count - a.count || a.country.localeCompare(b.country));
+  countries.sort((a, b) => earliest(a.leagues[0]).localeCompare(earliest(b.leagues[0])) || a.country.localeCompare(b.country));
   virtual.sort(byKickoff);
   return { countries, virtual };
 }
