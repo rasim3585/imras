@@ -10,7 +10,7 @@ const PENTA = '32,17.5 46.7,28.2 41.1,45.5 22.9,45.5 17.3,28.2';
 
 function Ball(props: { className?: string; style?: React.CSSProperties }) {
   return (
-    <svg viewBox="0 0 64 64" aria-label="pickplay" role="img" {...props}>
+    <svg viewBox="0 0 64 64" aria-label="I'm Ras" role="img" {...props}>
       <circle cx="32" cy="32" r="28" fill="#fff" stroke={INK} strokeWidth="4.5" />
       <polygon points={PENTA} fill={GREEN} stroke={INK} strokeWidth="1.3" strokeLinejoin="round" />
     </svg>

@@ -31,7 +31,7 @@ export default function SharedCouponScreen() {
         {state === 'missing' && (
           <div className="empty" style={{ marginTop: 'var(--s4)' }}>
             <p>This coupon link isn't available.</p>
-            <Link to="/" className="btn btn-primary">Explore pickplay</Link>
+            <Link to="/" className="btn btn-primary">Explore imras</Link>
           </div>
         )}
 
