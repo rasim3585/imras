@@ -169,7 +169,13 @@ kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40
 ---
 
 ## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0146'dan** devam, sıfır dolgulu 4 hane. (**0144-0145 Luck
+Yeni migration'lar **0147'den** devam, sıfır dolgulu 4 hane. (**0146 luck
+entegrasyon**: dice/plinko/mines artık get_leaderboard net + mirror_overview
+(ürün listesi/AI paketi/flag) + mirror_reality_check net7 + mirror_card
+(+ 'luck_chaser' arketipi) hepsinde hesaplanıyor; product.* 8 dilde. Görsel
+cila: coin yağmuru + shine, Dice zar dönüşü, Plinko peg-aydınlatma + top hale +
+kova dalgası, Mines büyük canlı çarpan + elmas flip + patlama grid-shake. Lig
+tabloları vteams'e ait — şans oyunları liderlik NET'inde yer alır.) (**0144-0145 Luck
 Games**: 3 yeni şans oyunu — **Mines** (durumlu, 5×5, mayınlar RLS-kapalı
 mines_secrets tablosunda = aviator secrets kalıbı; fair mult 0.97·C(25,k)/
 C(25-M,k); start/reveal/cashout; "bir kutu daha mı" = Aviator kardeşi, ayna
