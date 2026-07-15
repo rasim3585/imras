@@ -21,13 +21,13 @@ function Ball(props: { className?: string; style?: React.CSSProperties }) {
 export function LogoMark({ size = 30 }: { size?: number }) { return <Ball style={{ width: size, height: size, display: 'block' }} />; }
 export function LogoMarkLarge({ size = 76 }: { size?: number }) { return <Ball style={{ width: size, height: size, display: 'block' }} />; }
 
-// Wordmark: "I'm Ras" (Ras = green highlight) with a small "Risk Awareness
-// System" descriptor beneath. Brand line is English-only.
+// Wordmark: "I'm Ras" (Ras = green) centred over the "Risk Awareness System"
+// descriptor whose R/A/S initials are the same green. Brand line is English-only.
 export function Wordmark({ size = 26 }: { size?: number }) {
   return (
     <span className="wordmark-stack" style={{ fontSize: size }}>
       <span className="wm-name"><span className="wm-im">I&apos;m </span><span className="wm-ras">Ras</span></span>
-      <span className="wm-tag">Risk Awareness System</span>
+      <span className="wm-tag"><b>R</b>isk <b>A</b>wareness <b>S</b>ystem</span>
     </span>
   );
 }

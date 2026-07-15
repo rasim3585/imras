@@ -14,7 +14,7 @@ const NAV = [
   { to: '/aviator', end: false, key: 'nav.aviator', Icon: AviatorIcon },
   { to: '/gates', end: false, key: 'nav.gates', Icon: GatesIcon },
   { to: '/coupons', end: false, key: 'nav.coupons', Icon: CouponIcon },
-  { to: '/analiz', end: false, key: 'nav.mirror', Icon: MirrorIcon },
+  { to: '/analysis', end: false, key: 'nav.mirror', Icon: MirrorIcon },
   { to: '/ranks', end: false, key: 'nav.ranks', Icon: RanksIcon },
   { to: '/social', end: false, key: 'nav.social', Icon: SocialIcon },
   { to: '/profile', end: false, key: 'nav.profile', Icon: ProfileIcon },
@@ -24,7 +24,7 @@ const NAV = [
 const TAB = [
   { to: '/', end: true, key: 'nav.matches', Icon: MarketsIcon },
   { to: '/coupons', end: false, key: 'nav.coupons', Icon: CouponIcon },
-  { to: '/analiz', end: false, key: 'nav.mirror', Icon: MirrorIcon },
+  { to: '/analysis', end: false, key: 'nav.mirror', Icon: MirrorIcon },
   { to: '/profile', end: false, key: 'nav.profile', Icon: ProfileIcon },
 ];
 const GAMES = [

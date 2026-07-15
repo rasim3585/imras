@@ -254,12 +254,13 @@ a:hover { color: var(--win); }
 .brand { display: inline-flex; align-items: center; gap: 0.34em; white-space: nowrap; line-height: 1; }
 .brand-ball { height: 1.7em; width: 1.7em; flex: none; }
 /* stacked wordmark: "I'm Ras" + descriptor */
-.wordmark-stack { display: inline-flex; flex-direction: column; justify-content: center; line-height: 1; }
+.wordmark-stack { display: inline-flex; flex-direction: column; justify-content: center; align-items: center; line-height: 1; }
 .wm-name { font-family: 'Montserrat', system-ui, sans-serif; font-weight: 800; letter-spacing: -0.01em; line-height: 1; }
 .wm-im { color: #16261c; }
 .wm-ras { color: #12a150; }
 :root[data-theme="dark"] .wm-im { color: #eef2ee; }
-.wm-tag { margin-top: 0.14em; font-size: 0.34em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); }
+.wm-tag { margin-top: 0.14em; font-size: 0.34em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); text-align: center; }
+.wm-tag b { color: #12a150; font-weight: 800; }
 /* eski wordmark sınıfları (yer kalırsa) */
 .wordmark { font-family: 'Montserrat', system-ui, sans-serif; font-weight: 800; letter-spacing: -0.01em; line-height: 1; }
 .wm-pick { color: #12a150; }

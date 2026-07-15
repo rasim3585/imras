@@ -80,7 +80,9 @@ function App() {
           <Route path="/login" element={session ? <Navigate to="/" replace /> : <AuthScreen />} />
           <Route path="/coupons" element={<RequireAuth><MyCouponsScreen /></RequireAuth>} />
           <Route path="/settle/:couponId" element={<RequireAuth><SettleScreen /></RequireAuth>} />
-          <Route path="/analiz" element={<RequireAuth><AnalizScreen /></RequireAuth>} />
+          {/* 0716: rota İngilizce — /analiz eski linkler için yönlendirme */}
+          <Route path="/analysis" element={<RequireAuth><AnalizScreen /></RequireAuth>} />
+          <Route path="/analiz" element={<Navigate to="/analysis" replace />} />
           <Route path="/ranks" element={<RequireAuth><LeaderboardScreen /></RequireAuth>} />
           <Route path="/social" element={<RequireAuth><SocialScreen /></RequireAuth>} />
           <Route path="/league/:leagueId" element={<RequireAuth><LeagueDetailScreen /></RequireAuth>} />
