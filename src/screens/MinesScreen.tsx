@@ -9,7 +9,7 @@ import { minesStart, minesReveal, minesCashout, minesMult, type MinesState } fro
 // çarpanı yükseltir, mayın kaybeder, çekince öder. Sunucu-otoriter (mayınlar
 // gizli tabloda), provably fair. Ayna için Aviator'ın kardeşi.
 const QUICK = [50, 100, 250, 500];
-type Cell = 'hidden' | 'safe' | 'mine' | 'boom';
+type Cell = 'hidden' | 'safe' | 'mine' | 'boom' | 'reveal-mine';
 
 export default function MinesScreen() {
   const { session, profile, refreshProfile } = useAuth();
@@ -22,6 +22,8 @@ export default function MinesScreen() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [done, setDone] = useState<{ won: boolean; payout: number } | null>(null);
+  const [blast, setBlast] = useState(false);       // patlama sarsıntısı
+  const [bump, setBump] = useState(false);         // çarpan yükselince zıplama
 
   const bal = profile?.gold_balance ?? 0;
   const active = game?.status === 'active';
@@ -49,12 +51,14 @@ export default function MinesScreen() {
       const r = await minesReveal(game!.game_id, i);
       if (r.safe) {
         setCells((c) => c.map((x, idx) => (idx === i ? 'safe' : x)));
+        setBump(true); setTimeout(() => setBump(false), 320);
         if (r.status === 'cashed') endGame(r, true);          // tüm güvenliler açıldı → oto cashout
         else setGame((g) => ({ ...g!, mult: r.mult ?? g!.mult }));
       } else {
-        // patladı: mayınları göster
+        // patladı: mayınları göster + sarsıntı
         const mc = r.mine_cells ?? [];
-        setCells((c) => c.map((x, idx) => (idx === i ? 'boom' : mc.includes(idx) ? 'mine' : x)));
+        setCells((c) => c.map((x, idx) => (idx === i ? 'boom' : mc.includes(idx) ? 'reveal-mine' : x)));
+        setBlast(true); setTimeout(() => setBlast(false), 460);
         endGame(r, false);
       }
     } catch (e) {
@@ -68,7 +72,7 @@ export default function MinesScreen() {
     try {
       const r = await minesCashout(game!.game_id);
       const mc = r.mine_cells ?? [];
-      setCells((c) => c.map((x, idx) => (mc.includes(idx) ? 'mine' : x)));
+      setCells((c) => c.map((x, idx) => (mc.includes(idx) && x === 'hidden' ? 'reveal-mine' : x)));
       endGame(r, true);
     } catch (e) {
       setErr(e instanceof Error ? e.message : t('luck.err'));
@@ -90,17 +94,20 @@ export default function MinesScreen() {
       <h1 className="luck-h1">💣 Mines</h1>
 
       {active && (
-        <div className="luck-stats3 mines-live">
-          <div className="luck-stat"><span className="k">{t('mines.current')}</span><b className="tnum">{curMult}×</b></div>
-          <div className="luck-stat"><span className="k">{t('mines.next')}</span><b className="tnum">{nextMult}×</b></div>
-          <div className="luck-stat"><span className="k">{t('mines.safe')}</span><b className="tnum">{k}</b></div>
-        </div>
+        <>
+          <div className={`mines-mult-big ${bump ? 'bump' : ''}`}>{curMult}×</div>
+          <div className="luck-stats3 mines-live">
+            <div className="luck-stat"><span className="k">{t('mines.next')}</span><b className="tnum">{nextMult}×</b></div>
+            <div className="luck-stat"><span className="k">{t('mines.safe')}</span><b className="tnum">{k}</b></div>
+            <div className="luck-stat"><span className="k">{t('mines.count')}</span><b className="tnum">{mines}</b></div>
+          </div>
+        </>
       )}
 
-      <div className={`mines-grid ${active ? 'on' : ''}`}>
+      <div className={`mines-grid ${active ? 'on' : ''} ${blast ? 'blast' : ''}`}>
         {cells.map((c, i) => (
           <button key={i} className={`mine-cell ${c}`} disabled={!active || busy || c !== 'hidden'} onClick={() => reveal(i)}>
-            {c === 'safe' ? '💎' : c === 'mine' ? '💣' : c === 'boom' ? '💥' : ''}
+            {c === 'mine' || c === 'reveal-mine' ? '💣' : c === 'boom' ? '💥' : ''}
           </button>
         ))}
       </div>
@@ -108,6 +115,7 @@ export default function MinesScreen() {
       {err && <div className="banner banner-error">{err}</div>}
       {done && (
         <div className={`luck-result ${done.won ? 'w' : 'l'}`}>
+          {done.won && <span className="luck-coins" aria-hidden>{Array.from({ length: 7 }, (_, i) => <i key={i} style={{ left: `${12 + i * 12}%`, animationDelay: `${i * 0.05}s` }} />)}</span>}
           {done.won ? `+${done.payout}` : `−${bet}`} <CoinIcon size={14} />
           <span className="luck-result-sub">{done.won ? t('luck.won') : t('mines.boom')}</span>
         </div>

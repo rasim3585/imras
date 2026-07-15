@@ -25,17 +25,20 @@ export default function DiceScreen() {
   const win = res?.win;
   // slider: sonucun düştüğü nokta (0..100) — çubukta işaret
   const marker = res ? res.roll : null;
+  const [rolling, setRolling] = useState(false);
 
   async function roll() {
     if (busy || bet < 1 || bet > bal) return;
-    setBusy(true); setErr(null);
+    setBusy(true); setErr(null); setRolling(true); setRes(null);
     try {
       const r = await diceRoll(bet, chance, dir);
+      // kısa "zar dönüyor" gerilimi, sonra sonuç
+      await new Promise((res) => setTimeout(res, 480));
       setRes(r);
       await refreshProfile();
     } catch (e) {
       setErr(e instanceof Error ? e.message : t('luck.err'));
-    } finally { setBusy(false); }
+    } finally { setBusy(false); setRolling(false); }
   }
 
   return (
@@ -44,7 +47,7 @@ export default function DiceScreen() {
         <button className="detail-back" onClick={() => navigate('/')}>&lsaquo; {t('luck.back')}</button>
         <span className="av-bal-chip tnum"><CoinIcon size={14} /> {bal.toLocaleString()}</span>
       </div>
-      <h1 className="luck-h1">🎲 Dice</h1>
+      <h1 className="luck-h1"><span className={`dice-h-icon ${rolling ? 'rolling' : ''}`}>🎲</span> Dice</h1>
 
       {/* çubuk: soldan sağa 0..100; under yeşil sol, over yeşil sağ */}
       <div className="dice-track">
@@ -83,9 +86,10 @@ export default function DiceScreen() {
       </div>
 
       {err && <div className="banner banner-error">{err}</div>}
-      {res && (
+      {res && !rolling && (
         <div className={`luck-result ${win ? 'w' : 'l'}`}>
-          {win ? `+${res.payout}` : `−${res.id && bet}`} <CoinIcon size={14} />
+          {win && <span className="luck-coins" aria-hidden>{Array.from({ length: 7 }, (_, i) => <i key={i} style={{ left: `${12 + i * 12}%`, animationDelay: `${i * 0.05}s` }} />)}</span>}
+          {win ? `+${res.payout}` : `−${bet}`} <CoinIcon size={14} />
           <span className="luck-result-sub">{res.roll.toFixed(2)} · {win ? t('luck.won') : t('luck.lost')}</span>
         </div>
       )}

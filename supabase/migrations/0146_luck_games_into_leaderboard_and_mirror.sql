@@ -1,0 +1,16 @@
+-- 0146: 3 yeni sans oyunu (dice/plinko/mines) leaderboard + ayna + AI paketine
+-- dahil edildi (tam govdeler MCP ile canlida). Onceden yalniz kupon+aviator+
+-- slot sayiliyordu; oyunlar net/analizde gorunmuyordu. Mevcut mantik korundu,
+-- yalniz union'lara ekleme. betting-ai paketi bu RPC'leri cagirdigindan AI
+-- sohbet de otomatik gorur. Net: dice/plinko payout-bet; mines terminal
+-- (status<>'active') payout-bet.
+--   get_leaderboard: day/week net birligine 3 oyun
+--   mirror_overview: per CTE + lbl (Mines/Dice/Plinko) — Genel sekmesi urun
+--     listesi + AI paketi + flag'ler
+--   mirror_reality_check: net7 + bugunku oturum sayisina 3 oyun
+--   mirror_card: per CTE + esik + total_plays; yeni arketip 'luck_chaser'
+--     (most_k in mines/dice/plinko)
+-- Dogrulama (gercek kullanici): overview urunleri "aviator, coupon, dice,
+-- mines, plinko, slot"; card total_plays 10469; reality ready; leaderboard
+-- me.value hesaplandi. (Lig TABLOLARI vteams icindir — sans oyunlarinin ligi
+-- yok; onlar liderlik NET'inde yer alir, dogru davranis bu.)

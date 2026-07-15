@@ -23,6 +23,7 @@ export default function PlinkoScreen() {
   const [ballRow, setBallRow] = useState(-1);
   const [landed, setLanded] = useState<PlinkoResult | null>(null);
   const [flash, setFlash] = useState<number | null>(null);   // kova indeksi
+  const [litRow, setLitRow] = useState(-1);                   // o an aydınlanan peg sırası
   const timers = useRef<number[]>([]);
 
   const bal = profile?.gold_balance ?? 0;
@@ -31,22 +32,21 @@ export default function PlinkoScreen() {
   function animate(path: string, bucket: number, res: PlinkoResult) {
     timers.current.forEach(clearTimeout);
     timers.current = [];
-    let x = 50, rights = 0;
-    setBallRow(0); setBallX(50); setLanded(null); setFlash(null);
+    let x = 50;
+    setBallRow(0); setBallX(50); setLanded(null); setFlash(null); setLitRow(-1);
     for (let r = 0; r < ROWS; r++) {
       const goRight = path[r] === 'R';
       const t = window.setTimeout(() => {
-        if (goRight) rights++;
         // her sırada yatayda ±(yarı-genişlik/sıra) kayma
         x += (goRight ? 1 : -1) * (46 / ROWS);
-        setBallX(x); setBallRow(r + 1);
-      }, 90 * (r + 1));
+        setBallX(x); setBallRow(r + 1); setLitRow(r);   // topun çarptığı peg sırası yansın
+      }, 95 * (r + 1));
       timers.current.push(t);
     }
     const done = window.setTimeout(() => {
-      setLanded(res); setFlash(bucket); setBallRow(-1);
+      setLanded(res); setFlash(bucket); setBallRow(-1); setLitRow(-1);
       void refreshProfile();
-    }, 90 * (ROWS + 1) + 120);
+    }, 95 * (ROWS + 1) + 130);
     timers.current.push(done);
   }
 
@@ -73,7 +73,7 @@ export default function PlinkoScreen() {
         {/* pegler */}
         {Array.from({ length: ROWS }, (_, r) => (
           <div key={r} className="plinko-prow" style={{ top: `${(r + 1) * (100 / (ROWS + 2))}%` }}>
-            {Array.from({ length: r + 3 }, (_, i) => <span key={i} className="plinko-peg" />)}
+            {Array.from({ length: r + 3 }, (_, i) => <span key={i} className={`plinko-peg ${litRow === r ? 'lit' : ''}`} />)}
           </div>
         ))}
         {ballRow >= 0 && <div className="plinko-ball" style={{ left: `${ballX}%`, top: `${ballRow * (100 / (ROWS + 2))}%` }} />}
@@ -82,7 +82,7 @@ export default function PlinkoScreen() {
       {/* kova çarpanları */}
       <div className={`plinko-buckets r-${risk}`}>
         {tab.map((_, i) => (
-          <span key={i} className={`plinko-bkt ${flash === i ? 'hit' : ''}`}>{plinkoMult(risk, i)}×</span>
+          <span key={i} className={`plinko-bkt ${flash === i ? 'hit' : ''} ${flash != null && Math.abs(flash - i) === 1 ? 'wave' : ''}`}>{plinkoMult(risk, i)}×</span>
         ))}
       </div>
 
@@ -95,6 +95,7 @@ export default function PlinkoScreen() {
       {err && <div className="banner banner-error">{err}</div>}
       {landed && (
         <div className={`luck-result ${landed.payout > bet ? 'w' : landed.payout > 0 ? 'p' : 'l'}`}>
+          {landed.payout > bet && <span className="luck-coins" aria-hidden>{Array.from({ length: 7 }, (_, i) => <i key={i} style={{ left: `${12 + i * 12}%`, animationDelay: `${i * 0.05}s` }} />)}</span>}
           {landed.mult}× · {landed.payout > 0 ? `+${landed.payout}` : `−${bet}`} <CoinIcon size={14} />
         </div>
       )}
