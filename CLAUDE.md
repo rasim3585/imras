@@ -62,14 +62,19 @@ retention. Ayna henüz KURULMADI (en büyük iş bu, senkron bitince başlanacak
 ## 2. ÜÇ-KOLLU MİMARİ (danışman + Rasim konsensüsü)
 
 ```
-GERÇEK FUTBOL   → sadece MAÇ ÖNCESİ bahis (canlı yok)   ─┐
-SANAL FUTBOL    → sadece CANLI bahis (kurgusal maçlar)  ─┼→ DAVRANIŞ MOTORU → Ayna
-AVIATOR (crash) → "ne zaman çekerim" oyunu              ─┘
+GERÇEK FUTBOL   → maç öncesi + CANLI bahis (0147 önbellek) ─┐
+SANAL FUTBOL    → sadece CANLI bahis (kurgusal maçlar)     ─┼→ DAVRANIŞ MOTORU → Ayna
+AVIATOR (crash) → "ne zaman çekerim" oyunu                 ─┘
 ```
 
-- **Gerçek futbol maç öncesi:** Canlı gerçek maçta motor absürt oran veriyor
-  (girdisi fakir: takım gücü/form yok). Absürtlük SADECE canlıda. Karar: gerçek
-  maçta canlı bahsi kaldır. NOT: karar verildi, HENÜZ UYGULANMADI.
+- **Gerçek futbol canlı bahis — KARAR REVİZE (2026-07-16):** Eski karar
+  "canlıyı kaldır"dı (absürt oran nedeniyle). Motor 0130-0136'da Nesine'yle
+  kalibre edilince Rasim kararı çevirdi: **canlı bahis KALIYOR.** Ölçek sorunu
+  (istek başına Poisson hesabı; 3 USA maçı canlıya düşünce DB doygunluğu +
+  bülten timeout — 2026-07-16 gecesi yaşandı, ölçümle kanıtlandı) 0147
+  önbelleğiyle çözüldü: oranlar `real_fixtures.markets_cache`'te hazır durur,
+  BEFORE trigger sync yazınca tazeler, get_bulletin SADECE okur (~600ms).
+  Para yolu (place_coupon_v2, cashout) taze hesaba devam eder (~10-50ms/bacak).
 - **Sanal futbol canlı:** Kurgusal ("Real Madrid (Alexander)"), inandırıcılık
   sorunu yok, canlı heyecanı güvenle verir. Takım isim kuralı: gerçek takım +
   parantez içi sanal oyuncu adı → "sanal maç" sinyali.
@@ -169,7 +174,20 @@ kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40
 ---
 
 ## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0147'den** devam, sıfır dolgulu 4 hane. (**0146 luck
+Yeni migration'lar **0148'den** devam, sıfır dolgulu 4 hane. (**0147 gerçek maç
+oran önbelleği**: ÜRETİM KAZASI fix'i — USA maçları canlıya düşünce (2026-07-16
+23:12 UTC) get_bulletin herkese timeout verdi. Ölçümle kanıt: gerçek kol her
+istekte her lambda'lı fikstür için Poisson ızgarası hesaplıyordu (sakin ~460ms,
+FE 5sn'de bir yoklayınca eşzamanlı yığılma → 24.5sn → anon 8sn limiti → sarmal;
+pg_stat_activity'deki 116sn'lik _tick KURBANdı, neden değil).
+Fix: `real_fixtures.markets_cache` + BEFORE INSERT/UPDATE trigger (durum
+değişince `_real_markets_build` bir kez hesaplar), `_real_fixture_markets`
+artık sadece cache okur (bayat-feed koruması aynen), para yolu taze hesapta.
+Sonuç: anon tam bülten ~600ms, 3 canlı gerçek maç oranlı en üstte. DERS:
+istek-başına hesap = O(kullanıcı) → asla; hesap yazma-anına, okuma düz satır.
+FE'nin 5sn poll'unda timeout backoff'u yok — gelecek sertleştirme adayı.
+Ayrıca aynı gece: marka lockup ortalandı + R/A/S yeşil, yeni favicon,
+/analiz→/analysis.) (**0146 luck
 entegrasyon**: dice/plinko/mines artık get_leaderboard net + mirror_overview
 (ürün listesi/AI paketi/flag) + mirror_reality_check net7 + mirror_card
 (+ 'luck_chaser' arketipi) hepsinde hesaplanıyor; product.* 8 dilde. Görsel
