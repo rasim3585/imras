@@ -5,6 +5,7 @@ import {
   type BenchmarkProfile, type BenchmarkAxis, type PlayerCard, type RealityCheck, type ChatProfile,
 } from '../lib/mirror';
 import { flagContent } from '../analiz/flagText';
+import BettingAiChat from '../analiz/BettingAiChat';
 import MirrorPlus from '../analiz/MirrorPlus';
 import AviatorMirror from '../aviator/AviatorMirror';
 import { CoinIcon } from '../components/icons';
@@ -220,6 +221,7 @@ function GenelTab() {
       <MirrorPlus />
       <PlayerCardBlock />
       <CoachBlock />
+      <BettingAiChat />
 
       <div className="az-stats3">
         <Stat k={t('analiz.stat.totalPlays')}>{d.plays.toLocaleString()}</Stat>

@@ -19,6 +19,15 @@ export const LANGS: { code: Lang; label: string }[] = [
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  'bai.title': 'Talk to your Betting AI',
+  'bai.sub': 'Asks nothing, invents nothing — answers only from your own measured play data.',
+  'bai.q1': 'What is my biggest leak?',
+  'bai.q2': 'Am I chasing losses?',
+  'bai.q3': 'How disciplined am I compared to others?',
+  'bai.placeholder': 'Ask about your own game…',
+  'bai.send': 'Send',
+  'bai.err': 'Could not answer — try again.',
+  'bai.limit': 'Daily chat limit reached — back tomorrow.',
   'nav.matches': 'Matches',
   'nav.aviator': 'Aviator',
   'nav.gates': 'Gates of',
@@ -375,6 +384,15 @@ const en: Dict = {
 };
 
 const tr: Dict = {
+  'bai.title': 'Bahis AI\'ınla Konuş',
+  'bai.sub': 'Hiçbir şey uydurmaz — yalnız senin ölçülmüş oyun verinden konuşur.',
+  'bai.q1': 'En büyük kaçağım ne?',
+  'bai.q2': 'Kayıp mı kovalıyorum?',
+  'bai.q3': 'Diğerlerine göre ne kadar disiplinliyim?',
+  'bai.placeholder': 'Kendi oyunun hakkında sor…',
+  'bai.send': 'Gönder',
+  'bai.err': 'Cevaplanamadı — tekrar dene.',
+  'bai.limit': 'Günlük sohbet limiti doldu — yarın devam.',
   'nav.matches': 'Maçlar',
   'nav.aviator': 'Aviator',
   'nav.gates': 'Gates of',
@@ -732,6 +750,15 @@ const tr: Dict = {
 
 // Diğer diller: navigasyon + Analiz ana başlıkları. Kalan anahtarlar EN'e düşer.
 const es: Dict = {
+  'bai.title': 'Habla con tu IA de apuestas',
+  'bai.sub': 'No inventa nada: responde solo con tus datos de juego medidos.',
+  'bai.q1': '¿Cuál es mi mayor fuga?',
+  'bai.q2': '¿Estoy persiguiendo pérdidas?',
+  'bai.q3': '¿Qué tan disciplinado soy comparado con otros?',
+  'bai.placeholder': 'Pregunta sobre tu propio juego…',
+  'bai.send': 'Enviar',
+  'bai.err': 'No se pudo responder — inténtalo de nuevo.',
+  'bai.limit': 'Límite diario de chat alcanzado — vuelve mañana.',
   'nav.matches': 'Partidos', 'nav.aviator': 'Aviator', 'nav.gates': 'Gates of', 'nav.coupons': 'Mis cupones',
   'nav.mirror': 'Análisis IA', 'nav.ranks': 'Ranking', 'nav.social': 'Social', 'nav.profile': 'Perfil',
   'analiz.title': 'Análisis IA',
@@ -1258,6 +1285,15 @@ const es: Dict = {
   'user.err': 'No se pudo establecer el nombre',
 };
 const de: Dict = {
+  'bai.title': 'Sprich mit deiner Wett-KI',
+  'bai.sub': 'Erfindet nichts — antwortet nur aus deinen gemessenen Spieldaten.',
+  'bai.q1': 'Was ist mein größtes Leck?',
+  'bai.q2': 'Jage ich Verlusten hinterher?',
+  'bai.q3': 'Wie diszipliniert bin ich im Vergleich?',
+  'bai.placeholder': 'Frag zu deinem eigenen Spiel…',
+  'bai.send': 'Senden',
+  'bai.err': 'Keine Antwort möglich — versuch es erneut.',
+  'bai.limit': 'Tageslimit erreicht — morgen wieder.',
   'nav.matches': 'Spiele', 'nav.aviator': 'Aviator', 'nav.gates': 'Gates of', 'nav.coupons': 'Meine Scheine',
   'nav.mirror': 'KI-Analyse', 'nav.ranks': 'Ränge', 'nav.social': 'Sozial', 'nav.profile': 'Profil',
   'analiz.title': 'KI-Analyse',
@@ -1784,6 +1820,15 @@ const de: Dict = {
   'user.err': 'Benutzername konnte nicht gesetzt werden',
 };
 const ru: Dict = {
+  'bai.title': 'Поговори со своим ИИ по ставкам',
+  'bai.sub': 'Ничего не выдумывает — отвечает только по твоим измеренным данным игры.',
+  'bai.q1': 'Где моя главная утечка?',
+  'bai.q2': 'Я гонюсь за проигрышами?',
+  'bai.q3': 'Насколько я дисциплинирован по сравнению с другими?',
+  'bai.placeholder': 'Спроси о своей игре…',
+  'bai.send': 'Отправить',
+  'bai.err': 'Не удалось ответить — попробуй ещё раз.',
+  'bai.limit': 'Дневной лимит чата исчерпан — до завтра.',
   'nav.matches': 'Матчи', 'nav.aviator': 'Aviator', 'nav.gates': 'Gates of', 'nav.coupons': 'Мои купоны',
   'nav.mirror': 'ИИ-анализ', 'nav.ranks': 'Рейтинг', 'nav.social': 'Соцсеть', 'nav.profile': 'Профиль',
   'analiz.title': 'ИИ-анализ',
@@ -2310,6 +2355,15 @@ const ru: Dict = {
   'user.err': 'Не удалось задать имя',
 };
 const ar: Dict = {
+  'bai.title': 'تحدث مع ذكائك الاصطناعي للمراهنات',
+  'bai.sub': 'لا يخترع شيئاً — يجيب فقط من بيانات لعبك المقاسة.',
+  'bai.q1': 'ما أكبر تسريب عندي؟',
+  'bai.q2': 'هل أطارد الخسائر؟',
+  'bai.q3': 'ما مدى انضباطي مقارنة بالآخرين؟',
+  'bai.placeholder': 'اسأل عن لعبك أنت…',
+  'bai.send': 'إرسال',
+  'bai.err': 'تعذر الرد — حاول مجدداً.',
+  'bai.limit': 'اكتمل الحد اليومي — عد غداً.',
   'nav.matches': 'المباريات', 'nav.aviator': 'Aviator', 'nav.gates': 'Gates of', 'nav.coupons': 'قسائمي',
   'nav.mirror': 'تحليل AI', 'nav.ranks': 'الترتيب', 'nav.social': 'اجتماعي', 'nav.profile': 'الملف',
   'analiz.title': 'تحليل AI',
@@ -2836,6 +2890,15 @@ const ar: Dict = {
   'user.err': 'تعذر تعيين الاسم',
 };
 const zh: Dict = {
+  'bai.title': '和你的投注AI聊聊',
+  'bai.sub': '不编造任何内容——只根据你被测量的游戏数据回答。',
+  'bai.q1': '我最大的漏洞是什么？',
+  'bai.q2': '我在追损吗？',
+  'bai.q3': '和其他人比我有多自律？',
+  'bai.placeholder': '问问你自己的游戏…',
+  'bai.send': '发送',
+  'bai.err': '无法回答——请重试。',
+  'bai.limit': '今日聊天次数已用完——明天再来。',
   'nav.matches': '比赛', 'nav.aviator': 'Aviator', 'nav.gates': 'Gates of', 'nav.coupons': '我的投注单',
   'nav.mirror': 'AI分析', 'nav.ranks': '排名', 'nav.social': '社交', 'nav.profile': '个人',
   'analiz.title': 'AI分析',
@@ -3362,6 +3425,15 @@ const zh: Dict = {
   'user.err': '无法设置用户名',
 };
 const hi: Dict = {
+  'bai.title': 'अपने बेटिंग AI से बात करें',
+  'bai.sub': 'कुछ नहीं गढ़ता — सिर्फ आपके मापे गए खेल डेटा से जवाब देता है।',
+  'bai.q1': 'मेरी सबसे बड़ी कमज़ोरी क्या है?',
+  'bai.q2': 'क्या मैं नुकसान का पीछा कर रहा हूँ?',
+  'bai.q3': 'दूसरों की तुलना में मैं कितना अनुशासित हूँ?',
+  'bai.placeholder': 'अपने खेल के बारे में पूछें…',
+  'bai.send': 'भेजें',
+  'bai.err': 'जवाब नहीं मिला — फिर कोशिश करें।',
+  'bai.limit': 'आज की चैट सीमा पूरी — कल फिर आएँ।',
   'nav.matches': 'मैच', 'nav.aviator': 'Aviator', 'nav.gates': 'Gates of', 'nav.coupons': 'मेरे कूपन',
   'nav.mirror': 'AI विश्लेषण', 'nav.ranks': 'रैंक', 'nav.social': 'सोशल', 'nav.profile': 'प्रोफ़ाइल',
   'analiz.title': 'AI विश्लेषण',

@@ -1,0 +1,9 @@
+-- 0143: "Bahis AI'inla Konus" — gunluk mesaj limiti tablosu (canliya MCP ile
+-- uygulandi). ai_chat_usage(user_id, day, msgs) PK(user_id,day); RLS acik,
+-- policy yok -> yalniz service-role (betting-ai edge fn) sayar.
+-- Edge fn betting-ai (verify_jwt=true, deploy edildi): her mesajda kullanicinin
+-- DETERMINISTIK ayna paketi (9 mirror_* RPC, kullanici JWT'siyle) sisteme
+-- gomulur; haiku yalniz o sayilardan konusur. Kurallar: mac tahmini/oran/
+-- "suna oyna" YOK; gunde 30 mesaj; key yoksa {text:null} FE karti gizler.
+-- FE: AnalizScreen Genel sekmesinde BettingAiChat karti (baslangic sorulari +
+-- cok turlu sohbet); bai.* anahtarlari 8 dilde (540/540 tamlik korundu).

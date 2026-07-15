@@ -49,3 +49,19 @@
   289p 337:180), tenis Win% kolonu; /team/301 16 maç + set detayı; 0 JS hatası.
 - coupon_review canlı test (yoğun kullanıcı): 3 bacak → %7.46, EV −16%,
   benzer 3314/336 net −32,527.
+
+## Ek (ayni gun, 2. tur): Bahis AI sohbeti + Nesine Temmuz kalibrasyon turu
+- ANTHROPIC_API_KEY ZATEN CALISIYOR (mirror_coach_cache'te LLM metni var,
+  2026-07-14). Secret proje geneli — yeni fn'ler otomatik kullanir.
+- "Bahis AI'inla Konus" CANLI: betting-ai edge fn + ai_chat_usage (0143) +
+  AnalizScreen karti. Ilke: yalniz deterministik paket, tahmin/oran yok,
+  30 mesaj/gun.
+- NESINE KALIBRASYON (Temmuz turu, canli olcum):
+  F.Dusseldorf 1-0 Ruzomberok (guclu ev):
+  * 80': Nesine X 5.07 / MS2 17.00 / MS1 kapali — biz X 5.43-6.04 / MS2 ~25.8 / MS1 1.12-1.18
+  * 82': Nesine X 5.30 (yukseliyor) — biz 5.87 (ayni yon, ayni bant) ✓
+  SONUC: beraberlik bandi ve MS1-kapama davranisi kitapla uyumlu. TEK fark:
+  zayif taraf longshot'inda kitap ~17'de DONDURUYOR (longshot bias/limit
+  yonetimi), biz ~26 (matematiksel adil). n=1 -> motor AYARLANMADI (kural:
+  olcmeden dokunma). Gelecek ay: 3+ longshot noktasi topla; desen dogrulanirsa
+  _odds_line'a longshot-golgeleme egrisi dusun (raw>10 bolgesi).
