@@ -14,6 +14,9 @@ import LiveMatchScreen from './screens/LiveMatchScreen';
 import LiveCourtScreen from './screens/LiveCourtScreen';
 import AviatorScreen from './screens/AviatorScreen';
 import GatesScreen from './screens/GatesScreen';
+import MinesScreen from './screens/MinesScreen';
+import DiceScreen from './screens/DiceScreen';
+import PlinkoScreen from './screens/PlinkoScreen';
 import AnalizScreen from './screens/AnalizScreen';
 import StandingsScreen from './screens/StandingsScreen';
 import TeamScreen from './screens/TeamScreen';
@@ -68,6 +71,9 @@ function App() {
           <Route path="/court/:matchId" element={<LiveCourtScreen />} />
           <Route path="/aviator" element={<AviatorScreen />} />
           <Route path="/gates" element={<GatesScreen />} />
+          <Route path="/mines" element={<MinesScreen />} />
+          <Route path="/dice" element={<DiceScreen />} />
+          <Route path="/plinko" element={<PlinkoScreen />} />
           <Route path="/standings" element={<StandingsScreen />} />
           <Route path="/team/:teamId" element={<TeamScreen />} />
           <Route path="/coupon" element={<CouponScreen />} />

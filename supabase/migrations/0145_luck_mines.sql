@@ -1,0 +1,11 @@
+-- 0145: Luck Games — Mines (durumlu; "bir kutu daha mi, cek mi" = Aviator'in
+-- kardesi, davranis aynasi icin en zengin 2. sinyal). Tam govdeler canlida.
+-- Para: bahis mines_start'ta duser, mines_cashout'ta oder. Provably fair:
+-- M mayin seed'den deterministik (md5(seed||i)%25).
+-- GUVENLIK: mayin konumlari AYRI mines_secrets tablosunda (RLS acik, policy YOK
+-- = aviator_round_secrets kalibi 0073) — aktif oyunda oyuncu goremez, oyun
+-- bitince ana satira kopyalanir. fair mult = 0.97*C(25,k)/C(25-M,k), tavan
+-- 10000x. RPC'ler: mines_start / mines_reveal (mayinsa lost+plan acilir,
+-- guvenliyse mult yukselir, tum guvenli acilirsa oto cashout) / mines_cashout.
+-- Uctan uca test (gercek kullanici): dice 194, plinko 146, mines 100->cek->110;
+-- bakiye dogru dus/iade.

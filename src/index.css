@@ -2043,3 +2043,54 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .mtv-embed .sb2-score { font-size: 1rem; }
 .mtv-embed .court-nums { font-size: 0.95rem; }
 .minitv .mtv-lg { display: block; margin-bottom: 2px; }
+
+/* --- Luck Games (Dice / Plinko / Mines) — 0715 -------------------------------- */
+.luck-screen { max-width: 520px; padding-top: 20px; display: flex; flex-direction: column; gap: var(--s3); }
+.luck-top { display: flex; align-items: center; justify-content: space-between; }
+.luck-h1 { margin: 0; font-size: 1.4rem; }
+.luck-stats3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.luck-stat { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 8px; text-align: center; }
+.luck-stat .k { display: block; font-size: 0.68rem; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; }
+.luck-stat b { font-size: 1.05rem; }
+.luck-bet { display: flex; flex-direction: column; gap: 8px; }
+.luck-quick { display: flex; gap: 6px; flex-wrap: wrap; }
+.luck-go { margin-top: 4px; }
+.luck-fair { font-size: 0.72rem; color: var(--text-2); text-align: center; margin: 2px 0 0; }
+.luck-result { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 1.3rem; font-weight: 800; padding: 10px; border-radius: 12px; }
+.luck-result.w { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.luck-result.l { color: #c0392b; background: color-mix(in srgb, #c0392b 10%, transparent); }
+.luck-result.p { color: var(--text); background: var(--surface-2); }
+.luck-result-sub { font-size: 0.8rem; font-weight: 600; color: var(--text-2); }
+.seg { flex: 1; padding: 9px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface-2); font-weight: 700; font-size: 0.82rem; cursor: pointer; }
+.seg.on { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.dice-dir { display: flex; gap: 8px; }
+.dice-slider-l { font-size: 0.8rem; color: var(--text-2); display: block; }
+.dice-slider { width: 100%; accent-color: var(--accent); margin-top: 6px; }
+/* Dice çubuğu */
+.dice-track { position: relative; height: 44px; border-radius: 10px; background: color-mix(in srgb, #c0392b 22%, var(--surface-2)); overflow: hidden; }
+.dice-win { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--accent) 55%, transparent); }
+.dice-marker { position: absolute; top: -2px; transform: translateX(-50%); }
+.dice-marker::before { content: ''; display: block; width: 3px; height: 48px; background: #fff; margin: 0 auto; }
+.dice-marker-v { position: absolute; top: 48px; left: 50%; transform: translateX(-50%); font-size: 0.72rem; font-weight: 800; white-space: nowrap; }
+.dice-marker.w .dice-marker-v { color: var(--accent); } .dice-marker.l .dice-marker-v { color: #c0392b; }
+.dice-tick { position: absolute; bottom: 3px; font-size: 0.62rem; color: rgba(255,255,255,0.7); }
+.dice-tick.l { left: 5px; } .dice-tick.m { left: 50%; transform: translateX(-50%); } .dice-tick.r { right: 5px; }
+/* Plinko */
+.plinko-board { position: relative; height: 300px; background: var(--surface-2); border-radius: 12px; overflow: hidden; }
+.plinko-prow { position: absolute; left: 0; right: 0; display: flex; justify-content: center; gap: 5.2%; }
+.plinko-peg { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.35); }
+.plinko-ball { position: absolute; width: 11px; height: 11px; border-radius: 50%; background: #ffd36b; box-shadow: 0 0 8px #ffd36b; transform: translate(-50%, -50%); transition: left 0.09s linear, top 0.09s linear; z-index: 2; }
+.plinko-buckets { display: flex; gap: 2px; }
+.plinko-bkt { flex: 1; text-align: center; font-size: 0.56rem; font-weight: 800; padding: 5px 1px; border-radius: 5px; background: var(--surface-2); border: 1px solid var(--line); }
+.plinko-buckets.r-high .plinko-bkt:first-child, .plinko-buckets.r-high .plinko-bkt:last-child,
+.plinko-buckets.r-med .plinko-bkt:first-child, .plinko-buckets.r-med .plinko-bkt:last-child { color: #ffd36b; }
+.plinko-bkt.hit { background: var(--accent); color: #fff; border-color: var(--accent); transform: scale(1.12); }
+.plinko-risk { margin-top: 2px; }
+/* Mines 5×5 */
+.mines-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.mine-cell { aspect-ratio: 1; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); font-size: 1.5rem; cursor: pointer; transition: transform 0.1s, background 0.15s; }
+.mines-grid.on .mine-cell:not(:disabled):hover { border-color: var(--accent); transform: translateY(-2px); }
+.mine-cell.safe { background: color-mix(in srgb, var(--accent) 22%, var(--surface-2)); border-color: var(--accent); }
+.mine-cell.mine { background: color-mix(in srgb, #c0392b 14%, var(--surface-2)); opacity: 0.75; }
+.mine-cell.boom { background: #c0392b; }
+.mines-cash { background: var(--accent); }

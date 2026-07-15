@@ -1,0 +1,8 @@
+-- 0144: Luck Games — Dice + Plinko (durumsuz tek RPC; slot_spin para kalibi,
+-- RTP %97, provably fair). Tam govdeler MCP ile canliya uygulandi.
+-- DICE: kazanma sansi c (%2..95) + yon under/over; mult = 0.97*100/c; roll
+--   seed'in ilk 8 hex hanesinden deterministik 0..99.99.
+-- PLINKO: 16 sira, risk low/med/high; kova = seed'in 16 bitindeki 1 sayisi
+--   (binom); carpan tablolari 0.97 RTP'ye olcekli (_plinko_scale SQL ile
+--   dogrulandi: 3 risk de tam 0.9700). dice_rolls/plinko_drops (RLS owner-read,
+--   prev_result/prev_bet ayna icin).

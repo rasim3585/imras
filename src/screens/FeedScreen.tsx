@@ -206,6 +206,9 @@ export default function FeedScreen() {
           <span className="luck-pop-t">{t('luck.choose')}</span>
           <button className="luck-opt" onClick={() => navigate('/aviator')}>✈️ Aviator</button>
           <button className="luck-opt" onClick={() => navigate('/gates')}>🏛️ Gates of</button>
+          <button className="luck-opt" onClick={() => navigate('/mines')}>💣 Mines</button>
+          <button className="luck-opt" onClick={() => navigate('/dice')}>🎲 Dice</button>
+          <button className="luck-opt" onClick={() => navigate('/plinko')}>🔻 Plinko</button>
         </div>
       )}
 
