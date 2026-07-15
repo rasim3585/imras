@@ -124,7 +124,7 @@ body {
   .topbar-inner { padding: 0 var(--s3); }
   .topbar-right { gap: 6px; }
   .top-auth { gap: var(--s2); }
-  .wordmark { font-size: 17px !important; }
+  .brand { font-size: 17px !important; }
 }
 
 /* numeric data reads as data */
@@ -251,8 +251,16 @@ a:hover { color: var(--win); }
 
 /* --- Brand -------------------------------------------------------------- */
 
-.brand { display: inline-block; white-space: nowrap; line-height: 1; }
-.brand-ball { height: 0.96em; width: 0.96em; vertical-align: -0.192em; margin-right: 0.05em; }
+.brand { display: inline-flex; align-items: center; gap: 0.34em; white-space: nowrap; line-height: 1; }
+.brand-ball { height: 1.7em; width: 1.7em; flex: none; }
+/* stacked wordmark: "I'm Ras" + descriptor */
+.wordmark-stack { display: inline-flex; flex-direction: column; justify-content: center; line-height: 1; }
+.wm-name { font-family: 'Montserrat', system-ui, sans-serif; font-weight: 800; letter-spacing: -0.01em; line-height: 1; }
+.wm-im { color: #16261c; }
+.wm-ras { color: #12a150; }
+:root[data-theme="dark"] .wm-im { color: #eef2ee; }
+.wm-tag { margin-top: 0.14em; font-size: 0.34em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); }
+/* eski wordmark sınıfları (yer kalırsa) */
 .wordmark { font-family: 'Montserrat', system-ui, sans-serif; font-weight: 800; letter-spacing: -0.01em; line-height: 1; }
 .wm-pick { color: #12a150; }
 .wm-play { color: #16261c; }
@@ -2288,3 +2296,7 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .hero-chip { font-size: 0.82rem; font-weight: 700; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); white-space: nowrap; }
 .hero-chip.yes { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); background: color-mix(in srgb, var(--accent) 10%, transparent); }
 .hero-chip.no { color: #d9534f; border-color: color-mix(in srgb, #d9534f 40%, var(--line)); background: color-mix(in srgb, #d9534f 8%, transparent); }
+
+/* Auth hero'da stacked wordmark ortalı dursun */
+.auth-card .wordmark-stack { align-items: center; }
+.auth-card .wm-name, .auth-card .wm-tag { text-align: center; }

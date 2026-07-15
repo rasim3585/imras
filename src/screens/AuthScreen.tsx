@@ -59,8 +59,7 @@ export default function AuthScreen() {
       <div className="auth-card card">
         <div className="auth-hero" style={{ flexDirection: 'column', gap: 'var(--s3)' }}>
           <LogoMarkLarge size={72} />
-          <Wordmark size={22} />
-          <p className="auth-tagline">{t('brand.ras')}</p>
+          <Wordmark size={30} />
         </div>
 
         {!isSupabaseConfigured && (

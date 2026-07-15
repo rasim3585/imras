@@ -21,20 +21,23 @@ function Ball(props: { className?: string; style?: React.CSSProperties }) {
 export function LogoMark({ size = 30 }: { size?: number }) { return <Ball style={{ width: size, height: size, display: 'block' }} />; }
 export function LogoMarkLarge({ size = 76 }: { size?: number }) { return <Ball style={{ width: size, height: size, display: 'block' }} />; }
 
+// Wordmark: "I'm Ras" (Ras = green highlight) with a small "Risk Awareness
+// System" descriptor beneath. Brand line is English-only.
 export function Wordmark({ size = 26 }: { size?: number }) {
   return (
-    <span className="wordmark" style={{ fontSize: size }}>
-      <span className="wm-pick">pick</span><span className="wm-play">play</span>
+    <span className="wordmark-stack" style={{ fontSize: size }}>
+      <span className="wm-name"><span className="wm-im">I&apos;m </span><span className="wm-ras">Ras</span></span>
+      <span className="wm-tag">Risk Awareness System</span>
     </span>
   );
 }
 
-/** Default brand lockup for the top bar: ball + wordmark, height-aligned. */
+/** Default brand lockup for the top bar: ball + stacked wordmark. */
 export function Brand({ size = 26 }: { size?: number }) {
   return (
     <span className="brand" style={{ fontSize: size }}>
       <Ball className="brand-ball" />
-      <span className="wordmark"><span className="wm-pick">pick</span><span className="wm-play">play</span></span>
+      <Wordmark size={size} />
     </span>
   );
 }
