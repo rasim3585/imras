@@ -110,7 +110,12 @@ export function SelfGapCard({ refreshKey }: { refreshKey: number }) {
   const match = said === d.style;
   return (
     <div className="az-block">
-      <h3 className="az-h">🎭 {t('gap.title')}</h3>
+      <div className="az-h-row">
+        <h3 className="az-h">🎭 {t('gap.title')}</h3>
+        {/* RAS Score — markanın ürün içi metriği (ölçülen 0-100 risk skoru).
+            Marka tek dil: İngilizce etiket her dilde aynı kalır. */}
+        <span className="ras-score tnum" title="Risk Awareness Score">RAS Score · {d.score}/100</span>
+      </div>
       <div className="az-gap-gauge">
         <div className="az-gap-track">
           <div className="az-gap-zone z1" /><div className="az-gap-zone z2" /><div className="az-gap-zone z3" />
