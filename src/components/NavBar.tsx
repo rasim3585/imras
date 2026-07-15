@@ -105,11 +105,14 @@ function BalanceChip({ balance }: { balance: number }) {
     return () => { cancelAnimationFrame(raf); window.clearTimeout(clr); };
   }, [balance]);
 
+  // büyük bakiyeler dar ekranda topbar'ı sıkıştırmasın: 1M+ → 1.2M, 10K+ → 12.3K
+  const compact = (n: number) => n >= 1_000_000 ? `${(n / 1_000_000).toFixed(n < 10_000_000 ? 1 : 0)}M`
+    : n >= 100_000 ? `${Math.round(n / 1000)}K` : n.toLocaleString();
   return (
-    <span className={`gold-chip ${gain != null ? 'is-gain' : ''}`} title="Virtual coins">
+    <span className={`gold-chip ${gain != null ? 'is-gain' : ''}`} title={display.toLocaleString()}>
       <CoinIcon size={15} />
-      <span className="tnum">{display.toLocaleString()}</span>
-      {gain != null && <span className="gold-gain tnum">+{gain.toLocaleString()}</span>}
+      <span className="tnum">{compact(display)}</span>
+      {gain != null && <span className="gold-gain tnum">+{compact(gain)}</span>}
     </span>
   );
 }

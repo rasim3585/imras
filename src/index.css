@@ -2251,3 +2251,24 @@ svg.crest { background: none !important; border-radius: 0 !important; }
   background: var(--surface-2); color: var(--text); font-weight: 700; font-size: 0.9rem; cursor: pointer; }
 .pr-qlink:hover { border-color: var(--accent); color: var(--accent); }
 @media (min-width: 900px) { .pr-quicklinks { display: none; } }  /* masaüstünde sidebar'da zaten var */
+
+/* ============ MOBİL — kalan cila (0715 audit düşük öncelik) =============== */
+/* Gates köşe bayrakları sahayı taşmasın (kozmetik) */
+.go-flag-left { left: -2px; }
+.go-flag-right { right: -2px; }
+
+/* gold-chip çok büyük bakiyede topbar'ı sıkıştırmasın (artık kısaltılıyor ama güvence) */
+.gold-chip { max-width: 42vw; }
+.gold-chip .tnum { overflow: hidden; text-overflow: ellipsis; }
+
+@media (max-width: 560px) {
+  /* kupon hızlı-stake + +N genişlet butonları 38-40px */
+  .cpn-quick .btn { min-height: 38px; }
+  .ll-plus { min-width: 40px; }
+  /* anket chip'leri (profil + analiz) dokunulabilir */
+  .az-chip { min-height: 40px; }
+  /* oyuncu adı / rozet fontları biraz büyüsün */
+  .ll-pl { font-size: 0.7rem; }
+  /* Gates bet kutusu + kredi taşmasın */
+  .go-credit b { font-size: 0.95rem; }
+}
