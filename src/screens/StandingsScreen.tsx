@@ -45,12 +45,13 @@ export default function StandingsScreen() {
 
   const header = () => {
     switch (sport) {
+      // 0716 mobil: PUAN kolonu Form'dan ÖNCE — dar ekranda puan görünür kalır, Form scroll'da
       case 'football':
-        return <tr><th>#</th><th className="std-team-h">{t('std.col.team')}</th><th>{t('std.c.p')}</th><th>{t('std.c.w')}</th><th>{t('std.c.d')}</th><th>{t('std.c.l')}</th><th>{t('std.col.gd')}</th><th>{t('std.col.form')}</th><th>{t('std.col.pts')}</th></tr>;
+        return <tr><th>#</th><th className="std-team-h">{t('std.col.team')}</th><th>{t('std.c.p')}</th><th>{t('std.c.w')}</th><th>{t('std.c.d')}</th><th>{t('std.c.l')}</th><th>{t('std.col.gd')}</th><th>{t('std.col.pts')}</th><th>{t('std.col.form')}</th></tr>;
       case 'basketball':
-        return <tr><th>#</th><th className="std-team-h">{t('std.col.team')}</th><th>{t('std.c.p')}</th><th>W</th><th>L</th><th>±</th><th>{t('std.col.form')}</th><th>PCT</th></tr>;
+        return <tr><th>#</th><th className="std-team-h">{t('std.col.team')}</th><th>{t('std.c.p')}</th><th>W</th><th>L</th><th>±</th><th>PCT</th><th>{t('std.col.form')}</th></tr>;
       case 'volleyball':
-        return <tr><th>#</th><th className="std-team-h">{t('std.col.team')}</th><th>{t('std.c.p')}</th><th>{t('std.c.w')}</th><th>{t('std.c.l')}</th><th>{t('std.col.sets')}</th><th>{t('std.col.form')}</th><th>{t('std.col.pts')}</th></tr>;
+        return <tr><th>#</th><th className="std-team-h">{t('std.col.team')}</th><th>{t('std.c.p')}</th><th>{t('std.c.w')}</th><th>{t('std.c.l')}</th><th>{t('std.col.sets')}</th><th>{t('std.col.pts')}</th><th>{t('std.col.form')}</th></tr>;
       case 'tennis':
         return <tr><th>#</th><th className="std-team-h">{t('std.col.player')}</th><th>{t('std.c.p')}</th><th>W</th><th>L</th><th>{t('std.col.winpct')}</th><th>{t('std.col.form')}</th></tr>;
     }
@@ -59,11 +60,11 @@ export default function StandingsScreen() {
   const cells = (r: StandingsRow) => {
     switch (sport) {
       case 'football':
-        return <><td className="tnum">{r.played}</td><td className="tnum">{r.won}</td><td className="tnum">{r.drawn}</td><td className="tnum">{r.lost}</td><td className="tnum">{r.gd > 0 ? `+${r.gd}` : r.gd}</td><td><FormDots form={r.form} /></td><td className="tnum std-pts">{r.points}</td></>;
+        return <><td className="tnum">{r.played}</td><td className="tnum">{r.won}</td><td className="tnum">{r.drawn}</td><td className="tnum">{r.lost}</td><td className="tnum">{r.gd > 0 ? `+${r.gd}` : r.gd}</td><td className="tnum std-pts">{r.points}</td><td><FormDots form={r.form} /></td></>;
       case 'basketball':
-        return <><td className="tnum">{r.played}</td><td className="tnum">{r.won}</td><td className="tnum">{r.lost}</td><td className="tnum">{r.gd > 0 ? `+${r.gd}` : r.gd}</td><td><FormDots form={r.form} /></td><td className="tnum std-pts">{pct(r)}</td></>;
+        return <><td className="tnum">{r.played}</td><td className="tnum">{r.won}</td><td className="tnum">{r.lost}</td><td className="tnum">{r.gd > 0 ? `+${r.gd}` : r.gd}</td><td className="tnum std-pts">{pct(r)}</td><td><FormDots form={r.form} /></td></>;
       case 'volleyball':
-        return <><td className="tnum">{r.played}</td><td className="tnum">{r.won}</td><td className="tnum">{r.lost}</td><td className="tnum">{r.gf}:{r.ga}</td><td><FormDots form={r.form} /></td><td className="tnum std-pts">{r.points}</td></>;
+        return <><td className="tnum">{r.played}</td><td className="tnum">{r.won}</td><td className="tnum">{r.lost}</td><td className="tnum">{r.gf}:{r.ga}</td><td className="tnum std-pts">{r.points}</td><td><FormDots form={r.form} /></td></>;
       case 'tennis':
         return <><td className="tnum">{r.played}</td><td className="tnum">{r.won}</td><td className="tnum">{r.lost}</td><td className="tnum std-pts">{pct(r)}</td><td><FormDots form={r.form} /></td></>;
     }

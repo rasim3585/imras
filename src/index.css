@@ -2300,3 +2300,44 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 /* Auth hero'da stacked wordmark ortalı dursun */
 .auth-card .wordmark-stack { align-items: center; }
 .auth-card .wm-name, .auth-card .wm-tag { text-align: center; }
+
+/* ================================================================
+   0716 MOBİL DÜZELTME PAKETİ (Rasim ekran görüntüleri + Nesine referansı)
+   Dosyanın SONUNDA: cascade'i kesin kazanır.
+   ================================================================ */
+
+/* --- 1) BÜLTEN: Nesine tarzı 2 KATMAN (≤560px) ---------------------------
+   Üst satır: dakika + takımlar + skor + LIVE (tam genişlik, okunur)
+   Alt satır: yalnız birincil oranlar (1 X 2 / 1 2) + sağda +N
+   NOT: önceki `.ll-odd{display:flex}` kuralı .ll-sec'in display:none'ını
+   eziyordu (6 oran taşıp sarıyordu) — yüksek özgüllük + sıra ile düzeltildi. */
+@media (max-width: 560px) {
+  .ll-cols { display: none; }                       /* başlık satırı mobilde gereksiz */
+  .ll-row { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px 10px; }
+  .ll-row .ll-info { flex: 1 1 100%; min-width: 0; }
+  .ll-row .ll-time { min-width: 34px; text-align: left; }
+  .ll-row .ll-teamline { white-space: normal; }      /* isimler okunur, gerekirse sarar */
+  .ll-row .ll-name { font-size: 0.84rem; white-space: nowrap; }
+  .ll-row .ll-odd { flex: 1 1 0; min-width: 0; min-height: 42px;
+    display: flex; align-items: center; justify-content: center; font-size: 0.92rem; }
+  .ll-row .ll-odd.ll-sec { display: none; }          /* ikincil oranlar + içinde */
+  .ll-row .ll-plus { flex: 0 0 48px; min-height: 42px; order: 99; }
+}
+
+/* --- 2) SPORT-BAR: 8 sekme en fazla 2-3 satır (≤560px) -------------------- */
+@media (max-width: 560px) {
+  .sport-bar { gap: 5px; }
+  .sport-tab { padding: 6px 9px; font-size: 0.76rem; gap: 4px; min-height: 36px; }
+  .sport-tab svg { width: 15px; height: 15px; }
+  .sport-ic { font-size: 13px; }
+  .sport-cnt { font-size: 0.6rem; padding: 1px 5px; }
+}
+
+/* --- 3) AVIATOR: sahne mobilde tam genişlik + görünür yükseklik -----------
+   Kök neden: satır 1999'daki `.av-main{1fr 300px}` 720px media query'sinden
+   SONRA geldiği için mobilde kazanıyordu → uçuş sahnesi şerit gibi kalıyordu. */
+@media (max-width: 720px) {
+  .av-main { grid-template-columns: 1fr; }
+  .av-stage { min-height: 300px; }
+  .av-players { max-height: 220px; overflow-y: auto; }
+}
