@@ -2272,3 +2272,6 @@ svg.crest { background: none !important; border-radius: 0 !important; }
   /* Gates bet kutusu + kredi taşmasın */
   .go-credit b { font-size: 0.95rem; }
 }
+
+/* imras marka çizgisi (auth hero altı) — marka tek dil: İngilizce */
+.auth-tagline { margin: 0; font-size: 0.82rem; color: var(--text-2); text-align: center; font-weight: 600; letter-spacing: 0.01em; }
