@@ -178,6 +178,11 @@ export default function FeedScreen() {
         <div className="landing-hero card">
           <h2>{t('landing.title')}</h2>
           <p>{t('landing.sub')}</p>
+          <div className="hero-chips">
+            <span className="hero-chip yes">✓ {t('landing.chip.thrill')}</span>
+            <span className="hero-chip yes">✓ {t('landing.chip.know')}</span>
+            <span className="hero-chip no">✕ {t('landing.chip.nomoney')}</span>
+          </div>
           <div className="row" style={{ gap: 'var(--s2)' }}>
             <Link to="/login" className="btn btn-primary">{t('feed.signup')}</Link>
             <Link to="/login" className="btn btn-ghost">{t('feed.login')}</Link>

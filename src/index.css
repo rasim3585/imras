@@ -2282,3 +2282,9 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .ras-score { font-size: 0.74rem; font-weight: 800; letter-spacing: 0.03em; padding: 4px 10px;
   border-radius: 999px; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
   background: color-mix(in srgb, var(--accent) 10%, transparent); white-space: nowrap; }
+
+/* Landing hero — üçlü değer chip'i (Thrill / Know yourself / No money) */
+.hero-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+.hero-chip { font-size: 0.82rem; font-weight: 700; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); white-space: nowrap; }
+.hero-chip.yes { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.hero-chip.no { color: #d9534f; border-color: color-mix(in srgb, #d9534f 40%, var(--line)); background: color-mix(in srgb, #d9534f 8%, transparent); }
