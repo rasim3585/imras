@@ -1,11 +1,13 @@
 import { useState, type FormEvent } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../auth/AuthContext';
+import { useI18n } from '../i18n/LanguageContext';
 
 // Onboarding step: the signup trigger gave the user a provisional handle;
 // here they claim a real one via the set_username RPC (validated server-side).
 export default function UsernameScreen() {
   const { refreshProfile, signOut } = useAuth();
+  const { t } = useI18n();
   const [username, setUsername] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +21,7 @@ export default function UsernameScreen() {
       if (error) throw error;
       await refreshProfile();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not set username');
+      setError(err instanceof Error ? err.message : t('user.err'));
       setBusy(false);
     }
   }
@@ -28,13 +30,13 @@ export default function UsernameScreen() {
     <div className="center-screen">
       <div className="auth-card card">
         <div style={{ marginBottom: 'var(--s5)' }}>
-          <h1 style={{ marginBottom: 6 }}>Choose your handle</h1>
-          <p className="page-sub">This is how your calls are tracked. 3–20 characters.</p>
+          <h1 style={{ marginBottom: 6 }}>{t('user.title')}</h1>
+          <p className="page-sub">{t('user.sub')}</p>
         </div>
 
         <form onSubmit={submit}>
           <div className="field">
-            <label htmlFor="username">Username</label>
+            <label htmlFor="username">{t('user.label')}</label>
             <input
               id="username"
               className="input"
@@ -50,12 +52,12 @@ export default function UsernameScreen() {
           {error && <div className="banner banner-error">{error}</div>}
 
           <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
-            {busy ? '…' : 'Continue'}
+            {busy ? '…' : t('user.continue')}
           </button>
         </form>
 
         <button className="btn btn-ghost btn-block" style={{ marginTop: 'var(--s2)' }} onClick={signOut}>
-          Sign out
+          {t('user.signout')}
         </button>
       </div>
     </div>

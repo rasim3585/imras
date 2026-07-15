@@ -49,7 +49,10 @@ export class SupabaseMatchProvider implements MatchProvider {
   async getBulletin(): Promise<BulletinMatch[]> {
     // one RPC returns real BSD fixtures + virtual matches, already priced for the
     // current minute/score. Closed markets are omitted server-side.
-    const { data, error } = await supabase.rpc('get_bulletin');
+    // 0715: limit 60 -> 120; sanal mac sayilari dusuruldugu icin dogal toplam
+    // ~40 — hep "tam 60" gorunmesi inandiriciligi bozuyordu, artik tavana
+    // carpma pratikte imkansiz.
+    const { data, error } = await supabase.rpc('get_bulletin', { p_limit: 120 });
     if (error) throw new Error(error.message);
     return ((data ?? []) as BulletinMatch[]).map((m) => ({
       ...m,

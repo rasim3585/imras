@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { LogoMarkLarge, Wordmark } from '../components/Brand';
+import { useI18n } from '../i18n/LanguageContext';
 
 type Mode = 'signin' | 'signup';
 
 export default function AuthScreen() {
+  const { t } = useI18n();
   const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,7 +25,7 @@ export default function AuthScreen() {
         if (error) throw error;
         // If email confirmation is on, there's no session yet.
         if (!data.session) {
-          setNotice('Check your email to confirm, then sign in.');
+          setNotice(t('auth.confirm'));
           setMode('signin');
         }
       } else {
@@ -32,7 +34,7 @@ export default function AuthScreen() {
       }
       // On success, AuthProvider's listener takes over and the app re-routes.
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setError(err instanceof Error ? err.message : t('auth.err'));
     } finally {
       setBusy(false);
     }
@@ -73,20 +75,20 @@ export default function AuthScreen() {
             onClick={() => setMode('signin')}
             type="button"
           >
-            Sign in
+            {t('auth.signin')}
           </button>
           <button
             className={`segmented-item ${mode === 'signup' ? 'active' : ''}`}
             onClick={() => setMode('signup')}
             type="button"
           >
-            Create account
+            {t('auth.signup')}
           </button>
         </div>
 
         <form onSubmit={handleEmail}>
           <div className="field">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">{t('auth.email')}</label>
             <input
               id="email"
               className="input"
@@ -98,7 +100,7 @@ export default function AuthScreen() {
             />
           </div>
           <div className="field">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{t('auth.password')}</label>
             <input
               id="password"
               className="input"
@@ -115,11 +117,11 @@ export default function AuthScreen() {
           {notice && <div className="banner">{notice}</div>}
 
           <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
-            {busy ? '…' : mode === 'signup' ? 'Create account' : 'Sign in'}
+            {busy ? '…' : mode === 'signup' ? t('auth.signup') : t('auth.signin')}
           </button>
         </form>
 
-        <div className="divider">or</div>
+        <div className="divider">{t('auth.or')}</div>
 
         <button
           className="btn btn-block"
@@ -127,11 +129,11 @@ export default function AuthScreen() {
           onClick={handleGoogle}
           disabled={busy}
         >
-          Continue with Google
+          {t('auth.google')}
         </button>
 
         <p className="auth-legal">
-          No money, no wagering — accuracy is the only score.
+          {t('auth.legal')}
         </p>
       </div>
     </div>

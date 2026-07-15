@@ -1,0 +1,10 @@
+-- 0142: es zamanli e-mac sayilari dusuruldu (cok mac/oran kafa karistiriyordu).
+-- Eski: 4 sporda da tur basina 3 mac + 5 tur ileri doldurma -> spor basina ~24
+-- gorunur mac, bulten hep 60 tavaninda (inandiriciligi bozuyordu).
+-- Yeni: (2 ucusta tur + F gelecek) x (tur basina R):
+--   futbol R=2,F=2 -> 6-8 | basket R=2,F=1 -> 5-6 | tenis/voleybol R=1,F=2 -> 3-4
+-- Uygulama: canli govde uzerinde pg_get_functiondef + replace + execute
+-- (self-verifying DO blogu; replace kacarsa exception). Fazla stok temizligi
+-- (DML): 53 kuponsuz gelecek mac silindi. Denge olcumu (30 dk sonra):
+-- e-futbol 8 (4 canli), basket 6 (4), tenis 4 (2), voleybol 4 (2) — hedefte.
+-- FE: get_bulletin cagrisi p_limit 120 (dogal toplam ~55-65, tavan gorunmez).

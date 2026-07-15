@@ -349,7 +349,7 @@ a:hover { color: var(--win); }
 .ll-country { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: var(--surface-2); color: var(--text); font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; border-top: 1px solid var(--card-line); }
 .ll-cgrp:first-child .ll-country { border-top: none; }
 .ll-country-n { font-size: 0.62rem; font-weight: 700; color: var(--text-mut); background: var(--surface); border-radius: 5px; padding: 1px 7px; letter-spacing: 0; }
-.ll-cols, .ll-row { display: grid; grid-template-columns: 1fr repeat(6, 46px) 32px; gap: 5px; align-items: center; }
+.ll-cols, .ll-row { display: grid; grid-template-columns: 1fr repeat(6, 46px) 32px; gap: 8px; align-items: center; }
 .ll-cols { padding: 6px 14px; background: var(--surface-2); font-size: 0.62rem; font-weight: 700; color: var(--text-mut); }
 .ll-cols > span { text-align: center; }
 .ll-cols .lead { text-align: left; }
@@ -402,7 +402,7 @@ a:hover { color: var(--win); }
 .ll-expand { padding: var(--s3) 12px var(--s4); background: var(--surface-2); border-top: 1px solid var(--line); }
 
 @media (max-width: 560px) {
-  .ll-cols, .ll-row { grid-template-columns: 1fr repeat(3, 44px) 32px; }
+  .ll-cols, .ll-row { grid-template-columns: 1fr repeat(3, 44px) 32px; gap: 6px; }
   .ll-sec, .ll-c-sec { display: none; }
 }
 
