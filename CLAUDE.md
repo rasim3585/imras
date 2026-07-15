@@ -169,7 +169,13 @@ kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40
 ---
 
 ## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0142'den** devam, sıfır dolgulu 4 hane. (**0140 güvenlik**:
+Yeni migration'lar **0143'ten** devam, sıfır dolgulu 4 hane. (**0142 e-maç
+yoğunluğu**: seeder'lar tur başına 3+5 tur ileri → spor başına ~24 maç
+üretiyordu; yeni denge futbol 6-8, basket 5-6, tenis/voleybol 3-4 (ölçüldü:
+8/6/4/4). FE bülten limiti 120 ("hep 60" görünümü bitti), oran kutuları gap
+8px, sekme 'e-football'. **i18n**: 8 dil %100 tam (531/531) — 6 ikincil dile
+396'şar anahtar paralel ajan çevirisi (placeholder script-doğrulamalı),
+Auth/Username ekranları yerelleşti.) (**0140 güvenlik**:
 slot_config RLS açığı kapatıldı (anon her şeyi yazabiliyordu!), tüm `_` önekli
 fonksiyonlar + aviator_fire_crash anon/auth'a kapatıldı (PostgREST /rpc tüm
 public fonksiyonları açar — YENİ `_` FONKSİYONDA EXECUTE VERME), legacy
