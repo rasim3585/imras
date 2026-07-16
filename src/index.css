@@ -2365,3 +2365,10 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .jsc-card .jsc-big.pos { color: #12a150; } .jsc-card .jsc-big.neg { color: #e5484d; }
 .jsc-card .jsc-line { font-size: .82rem; color: var(--muted); }
 .jsc-card .jsc-week { font-size: .74rem; margin-top: 4px; }
+
+/* ==== 0716e: mobil topbar — "Log in" kırılması + gereksiz home butonu ==== */
+.top-link { white-space: nowrap; }
+@media (max-width: 560px) {
+  .home-btn { display: none; }           /* alt bardaki Matches zaten ev */
+  .topbar-inner { gap: 8px; }
+}

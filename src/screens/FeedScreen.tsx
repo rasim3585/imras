@@ -125,17 +125,13 @@ export default function FeedScreen() {
   }, []);
 
   useEffect(() => {
-    // slower loop advances the virtual world (finish/settle/seed); fast loop just
-    // refreshes prices + scores.
-    const advance = async () => {
-      await matchProvider.finalizeDueMatches().catch(() => 0);
-      await matchProvider.settleDueCoupons().catch(() => 0);
-      await matchProvider.ensureMatches().catch(() => undefined);
-    };
-    void advance().then(poll);
-    const world = setInterval(() => void advance().then(poll), 20000);
+    // Dünya ilerletme (seed/finalize/settle) TAMAMEN sunucuda: pg_cron _tick
+    // 30sn'de bir yapıyor. Eski "ziyaretçi ilerletir" çağrıları 0140'ta anon'a
+    // kapandı ve her ziyaretçide 3x401 üretiyordu — kaldırıldı (kalıcı çözüm).
+    // FE yalnız okur: 5sn'de bir bülten tazele.
+    void poll();
     const fast = setInterval(() => void poll(), 5000);
-    return () => { clearInterval(world); clearInterval(fast); };
+    return () => clearInterval(fast);
   }, [poll]);
 
   const notFinished = matches.filter((m) => m.status !== 'finished');
