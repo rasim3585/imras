@@ -2357,3 +2357,11 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .cpn-teamhist.neg { color: #e5484d; }
 .ai-maturity { margin-top: 6px; padding: 6px 9px; border-radius: 8px; font-size: .74rem;
   background: rgba(240, 180, 41, .12); color: #b07d10; line-height: 1.35; }
+
+/* ==== 0716d: hakem hafızası — yüzleşme çipi + karne kartı ==== */
+.jv-chip { background: rgba(124, 92, 255, .12); color: #7c5cff; font-weight: 800; }
+.jv-chip.jv-warn { background: rgba(229, 72, 77, .12); color: #e5484d; }
+.jsc-card .jsc-big { font-size: 1.25rem; font-weight: 800; margin: 4px 0 2px; }
+.jsc-card .jsc-big.pos { color: #12a150; } .jsc-card .jsc-big.neg { color: #e5484d; }
+.jsc-card .jsc-line { font-size: .82rem; color: var(--muted); }
+.jsc-card .jsc-week { font-size: .74rem; margin-top: 4px; }

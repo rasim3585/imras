@@ -86,14 +86,41 @@ export async function fetchCouponReview(selections: unknown[], stake: number): P
   return (data ?? null) as CouponReview | null;
 }
 
-export async function fetchCouponJudge(review: CouponReview, lang = 'en'): Promise<string | null> {
+export async function fetchCouponJudge(review: CouponReview, lang = 'en'): Promise<{ text: string | null; reason?: string }> {
   try {
     const { data, error } = await supabase.functions.invoke('coupon-judge', { body: { review, lang } });
-    if (error) return null;
-    return ((data as { text?: string | null })?.text ?? null);
+    if (error) return { text: null };
+    const d = data as { text?: string | null; reason?: string };
+    return { text: d?.text ?? null, reason: d?.reason };
   } catch {
-    return null;
+    return { text: null };
   }
+}
+
+// Hakem hafızası (0149): kararname defteri + karne + yüzleşme.
+export async function logJudgeVerdict(review: CouponReview, text: string | null): Promise<void> {
+  try { await supabase.rpc('log_judge_verdict', { p_review: review, p_text: text }); } catch { /* defter yazımı UX'i bozmaz */ }
+}
+
+export interface JudgeScorecard {
+  ready: boolean;
+  verdicts?: number; played?: number; warned?: number; warned_played?: number;
+  warned_won?: number; warned_lost?: number;
+  gold_lost_after_warning?: number; gold_saved_if_heeded?: number;
+  week?: { verdicts: number; warned_played: number; cost: number };
+}
+export async function fetchJudgeScorecard(): Promise<JudgeScorecard | null> {
+  const { data, error } = await supabase.rpc('judge_scorecard');
+  if (error) return null;
+  return (data ?? null) as JudgeScorecard | null;
+}
+
+export type JudgeConfrontation = { prob_pct: number | null; ev_gold: number | null; warned: boolean };
+export async function fetchJudgeConfrontations(couponIds: string[]): Promise<Record<string, JudgeConfrontation>> {
+  if (couponIds.length === 0) return {};
+  const { data, error } = await supabase.rpc('judge_confrontations', { p_coupon_ids: couponIds });
+  if (error) return {};
+  return (data ?? {}) as Record<string, JudgeConfrontation>;
 }
 
 export async function fetchMatchPreview(matchId: string, lang = 'en'): Promise<string | null> {

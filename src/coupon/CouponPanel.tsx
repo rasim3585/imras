@@ -6,7 +6,7 @@ import { matchProvider } from '../lib/matchProvider';
 import { formatOdds } from '../lib/format';
 import { logEvent } from '../lib/behaviorLog';
 import { useI18n } from '../i18n/LanguageContext';
-import { fetchCouponReview, fetchCouponJudge, type CouponReview, type CouponLegReview } from '../lib/mirror';
+import { fetchCouponReview, fetchCouponJudge, logJudgeVerdict, type CouponReview, type CouponLegReview } from '../lib/mirror';
 
 const QUICK = [100, 250, 500];
 
@@ -31,6 +31,7 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
   const [judgeText, setJudgeText] = useState<string | null>(null);
   const [judging, setJudging] = useState(false);
   const [judgeErr, setJudgeErr] = useState(false);
+  const [judgeLimited, setJudgeLimited] = useState(false);
 
   // kupon değişince eski kararname geçersiz — SEÇİM SETİNE göre sıfırla
   // (aynı maçta pick değiştirmek count'u değiştirmez; selKey değişir)
@@ -51,7 +52,7 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
   }, [selKey, stake, session, count]);
 
   async function askJudge() {
-    setJudging(true); setJudgeText(null); setJudgeErr(false);
+    setJudging(true); setJudgeText(null); setJudgeErr(false); setJudgeLimited(false);
     try {
       const r = review?.ready ? review : await fetchCouponReview(selections as unknown as unknown[], stake);
       if (!r?.ready) { setJudgeErr(true); return; }
@@ -59,9 +60,14 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
       logEvent('coupon', 'coupon_ai_reviewed', {
         legs: r.legs, total_odds: r.total_odds, ev_pct: r.ev_pct, stake,
       });
-      const text = await fetchCouponJudge(r, lang);
-      setJudgeText(text);
-      if (!text) setJudgeErr(true);
+      const res = await fetchCouponJudge(r, lang);
+      setJudgeText(res.text);
+      if (!res.text) {
+        if (res.reason === 'limit') setJudgeLimited(true); else setJudgeErr(true);
+        return;
+      }
+      // hakem hafızası: kararname deftere (para yoluna dokunmaz, sessiz)
+      void logJudgeVerdict(r, res.text);
     } finally { setJudging(false); }
   }
 
@@ -187,8 +193,8 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
                   <p className="ai-text">{judgeText}</p>
                 ) : (
                   <button className="btn btn-ghost btn-block btn-sm ai-btn" style={{ marginTop: 'var(--s2)' }}
-                    disabled={judging} onClick={askJudge}>
-                    {judging ? '…' : judgeErr ? t('aij.err') : <>✦ {t('aij.ask')}</>}
+                    disabled={judging || judgeLimited} onClick={askJudge}>
+                    {judging ? '…' : judgeLimited ? t('aij.limit') : judgeErr ? t('aij.err') : <>✦ {t('aij.ask')}</>}
                   </button>
                 )}
               </div>

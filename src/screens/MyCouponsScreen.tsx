@@ -6,6 +6,7 @@ import { useCart } from '../coupon/CartContext';
 import type { Coupon, CouponLeg, LiveState } from '../lib/types';
 import { formatOdds } from '../lib/format';
 import { legLiveStatus, type LegLive } from '../lib/legStatus';
+import { fetchJudgeConfrontations, type JudgeConfrontation } from '../lib/mirror';
 import { useI18n } from '../i18n/LanguageContext';
 
 type ResultTab = 'ongoing' | 'won' | 'lost';
@@ -109,6 +110,15 @@ export default function MyCouponsScreen() {
     const b: Record<ResultTab, Coupon[]> = { ongoing: [], won: [], lost: [] };
     for (const c of coupons) b[bucketOf(c)].push(c);
     return b;
+  }, [coupons]);
+
+  // Yüzleşme (0149): settle olmuş kuponlara bağlı hakem kararnameleri —
+  // "hakem %9 demişti" çipi. Salt-okuma, tek seferlik.
+  const [verdicts, setVerdicts] = useState<Record<string, JudgeConfrontation>>({});
+  useEffect(() => {
+    const ids = coupons.filter((c) => c.status !== 'pending').map((c) => c.id).slice(0, 120);
+    if (ids.length === 0) return;
+    fetchJudgeConfrontations(ids).then(setVerdicts).catch(() => {});
   }, [coupons]);
 
   const ongoing = buckets.ongoing;
@@ -234,7 +244,14 @@ export default function MyCouponsScreen() {
             <div key={c.id} className={`card coupon-card cc-${c.status}`}>
               <div className="coupon-card-head">
                 <span className="tag">{c.legs.length === 1 ? t('mc.single') : t('mc.fold', { n: c.legs.length })}</span>
-                <StatusChip c={c} t={t} />
+                <span className="row" style={{ gap: 6 }}>
+                  {c.status !== 'pending' && verdicts[c.id]?.prob_pct != null && (
+                    <span className={`chip jv-chip ${verdicts[c.id].warned ? 'jv-warn' : ''}`}>
+                      ✦ {t('mc.judgesaid', { p: Math.round(Number(verdicts[c.id].prob_pct)) })}
+                    </span>
+                  )}
+                  <StatusChip c={c} t={t} />
+                </span>
               </div>
 
               <div className="coupon-legs">

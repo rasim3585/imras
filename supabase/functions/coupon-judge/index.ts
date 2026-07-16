@@ -32,6 +32,8 @@ Rules:
 - behavior_now.chase=true or loss_streak>=3 or bets_last_hour>=5 → name the state (chasing / tilt / rushed) with its number, once, without moralising.
 - maturity.level='new' (few coupons): be humble and say it — your mirror of them is still forming from only {coupons} coupons, so this verdict is mostly coupon math; invite them to keep playing inside IMRAS so the behavioural mirror can sharpen. Do NOT fabricate behavioural claims.
 - maturity.level='forming': one light caveat that the mirror is still young, then judge normally.
+- judge_context is YOUR OWN record with this user. If warned_played_30d > 0, you may hold it up plainly once: e.g. "Son 30 günde uyardığım kuponlardan {warned_played_30d} tanesini yine oynadın — bedeli {gold_lost_after_warning_30d} altın." Only with the given numbers.
+- cross_games shows the user's LAST HOUR in other IMRAS games (Aviator, luck games). If it shows meaningful losses right before this coupon (negative net with plays > 0), name the platform-wide tilt: they are carrying losses from another game into this coupon. One sentence, with the number.
 - Never forbid or command ("don't play"); state what the numbers say and let them decide. One sharp closing observation is welcome.
 - Say "gold", not "money". Plain text, no markdown, no emoji, no headings.
 - IMPORTANT: Write your ENTIRE message in ${langName}.`;
@@ -49,6 +51,30 @@ Deno.serve(async (req: Request) => {
   const review = body?.review;
   const lang = (typeof body?.lang === "string" && LANGS[body.lang]) ? body.lang : "en";
   if (!review || review.ready !== true) return json({ text: null, reason: "empty" });
+
+  // Sonnet kota: 20 kararname/gün (judge_quota_take, service_role ile).
+  // Kota altyapısı yoksa (fn/env eksik) yargıç yine çalışır — açık-arıza değil.
+  try {
+    const auth = req.headers.get("authorization") ?? "";
+    const token = auth.replace(/^Bearer\s+/i, "");
+    const payload = token.split(".")[1];
+    const uid = payload
+      ? (JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")))?.sub ?? null)
+      : null;
+    const sr = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const supaUrl = Deno.env.get("SUPABASE_URL");
+    if (uid && sr && supaUrl) {
+      const q = await fetch(`${supaUrl}/rest/v1/rpc/judge_quota_take`, {
+        method: "POST",
+        headers: { apikey: sr, Authorization: `Bearer ${sr}`, "content-type": "application/json" },
+        body: JSON.stringify({ p_user: uid }),
+      });
+      if (q.ok) {
+        const left = await q.json();
+        if (typeof left === "number" && left < 0) return json({ text: null, reason: "limit" });
+      }
+    }
+  } catch { /* kota hatası yargıcı düşürmez */ }
 
   try {
     const r = await fetch("https://api.anthropic.com/v1/messages", {

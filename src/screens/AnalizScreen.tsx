@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import {
   fetchOverview, fetchCouponMirror, fetchSlotMirror, fetchBenchmark, fetchPlayerCard, fetchCoach, fetchRealityCheck, fetchChatMirror,
+  fetchJudgeScorecard,
   type OverviewProfile, type CouponProfile, type SlotProfile, type MirrorFlag,
   type BenchmarkProfile, type BenchmarkAxis, type PlayerCard, type RealityCheck, type ChatProfile,
+  type JudgeScorecard,
 } from '../lib/mirror';
 import { flagContent } from '../analiz/flagText';
 import BettingAiChat from '../analiz/BettingAiChat';
@@ -208,6 +210,35 @@ function ChatMirrorBlock() {
   );
 }
 
+// Hakem Karnesi (0149): kararname defterinin karşı-olgusal özeti — hakem kaç
+// kez uyardı, uyarıya rağmen kaç kupon oynandı, bedeli ne oldu, uysaydın ne
+// olurdu. Kararname yoksa kart hiç görünmez. İlke: 1 metrik + 1 cümle.
+function JudgeScorecardBlock() {
+  const { t } = useI18n();
+  const [d, setD] = useState<JudgeScorecard | null>(null);
+  useEffect(() => { fetchJudgeScorecard().then(setD).catch(() => {}); }, []);
+  if (!d?.ready || !d.verdicts) return null;
+  const saved = d.gold_saved_if_heeded ?? 0;
+  return (
+    <div className="az-block jsc-card">
+      <h3 className="az-h">✦ {t('jsc.title')}</h3>
+      <div className={`jsc-big tnum ${saved > 0 ? 'neg' : 'pos'}`}>
+        {t('jsc.saved', { g: (saved > 0 ? '+' : '') + saved.toLocaleString() })}
+      </div>
+      <div className="jsc-line">
+        {t('jsc.line', {
+          v: d.verdicts ?? 0,
+          wp: d.warned_played ?? 0,
+          cost: (d.gold_lost_after_warning ?? 0).toLocaleString(),
+        })}
+      </div>
+      {(d.week?.verdicts ?? 0) > 0 && (
+        <div className="jsc-week dim">{t('jsc.week', { v: d.week!.verdicts, c: d.week!.cost.toLocaleString() })}</div>
+      )}
+    </div>
+  );
+}
+
 function GenelTab() {
   const { t } = useI18n();
   const d = useMirror<OverviewProfile>(fetchOverview, 'genel');
@@ -222,6 +253,7 @@ function GenelTab() {
       <PlayerCardBlock />
       <CoachBlock />
       <BettingAiChat />
+      <JudgeScorecardBlock />
 
       <div className="az-stats3">
         <Stat k={t('analiz.stat.totalPlays')}>{d.plays.toLocaleString()}</Stat>
