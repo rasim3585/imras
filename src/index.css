@@ -2342,3 +2342,12 @@ svg.crest { background: none !important; border-radius: 0 !important; }
   .av-stage { min-height: 300px; }
   .av-players { max-height: 220px; overflow-y: auto; }
 }
+
+/* ==== 0716b: sepet canlı oran tazeleme — kapanan bacak + oran değişim işareti ==== */
+.cpn-leg-closed .cpn-leg-match, .cpn-leg-closed .cpn-leg-pick,
+.cleg-closed .cleg-teams, .cleg-closed .cleg-pick { text-decoration: line-through; opacity: .55; }
+.cpn-leg-closed .cpn-closed-chip, .cleg-closed .cpn-closed-chip { text-decoration: none; opacity: 1; }
+.cpn-closed-chip { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px;
+  background: rgba(229, 72, 77, .12); color: #e5484d; font-size: .66rem; font-weight: 800;
+  letter-spacing: .04em; text-transform: uppercase; vertical-align: middle; }
+.fl-up { color: #12a150; } .fl-down { color: #e5484d; }

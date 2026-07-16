@@ -205,9 +205,12 @@ export default function MyCouponsScreen() {
                   </div>
                   <div className="coupon-legs">
                     {d.selections.map((s) => (
-                      <div key={s.match_id} className="cleg">
+                      <div key={s.match_id} className={`cleg ${s.closed ? 'cleg-closed' : ''}`}>
                         <div className="cleg-l"><span className="cleg-teams">{s.home_team} v {s.away_team}</span></div>
-                        <div className="cleg-pick tnum"><span className="muted">{s.market_name}:</span> {s.option_label} <b>{formatOdds(s.odds)}</b></div>
+                        <div className="cleg-pick tnum">
+                          <span className="muted">{s.market_name}:</span> {s.option_label} <b>{formatOdds(s.odds)}</b>
+                          {s.closed && <span className="cpn-closed-chip">{t('cpn.closedchip')}</span>}
+                        </div>
                       </div>
                     ))}
                   </div>

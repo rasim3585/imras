@@ -8,7 +8,8 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import type { CartSelection } from '../lib/types';
+import type { BulletinMatch, CartSelection } from '../lib/types';
+import { matchProvider } from '../lib/matchProvider';
 import { logEvent } from '../lib/behaviorLog';
 
 const STORAGE_KEY = 'pickplay.cart.v3';   // v3: kind-aware, option_id nullable
@@ -27,6 +28,8 @@ interface CartState {
   selections: CartSelection[];
   count: number;
   totalOdds: number;
+  /** Canlı tazelemede son ~6sn içinde oranı değişen bacaklar (match_id → yön). */
+  flash: Record<string, 'up' | 'down'>;
   isPicked: (matchId: string, marketType: string, outcomeKey: string) => boolean;
   /** Toggle a leg: add it, replace the match's pick, or remove it (one per match). */
   select: (leg: CartSelection) => void;
@@ -64,6 +67,7 @@ function loadSaved(): SavedDraft[] {
 export function CartProvider({ children }: { children: ReactNode }) {
   const [selections, setSelections] = useState<CartSelection[]>(load);
   const [saved, setSaved] = useState<SavedDraft[]>(loadSaved);
+  const [flash, setFlash] = useState<Record<string, 'up' | 'down'>>({});
 
   // latest selections for behaviour logging (read outside state updaters so we
   // never double-log under StrictMode's double-invoked reducers).
@@ -79,6 +83,75 @@ export function CartProvider({ children }: { children: ReactNode }) {
     try { localStorage.setItem(SAVED_KEY, JSON.stringify(saved)); }
     catch { /* ignore */ }
   }, [saved]);
+
+  // --- CANLI ORAN TAZELEME -------------------------------------------------
+  // Sepet + kayıtlı taslaklar tıklama anındaki oranı donduruyordu; sunucu ise
+  // bahsi HER ZAMAN güncel orandan keser (place_coupon_v2 taze hesaplar) →
+  // gösterilen ≠ kesilen olabiliyordu. Sepette/taslakta bacak varken bülteni
+  // periyodik çekip oranları eşitliyoruz; bültenden düşen (biten/kapanan)
+  // bacak `closed` işaretlenir — panel oynatmayı engeller.
+  const reconcile = useCallback((bulletin: BulletinMatch[]) => {
+    const byId = new Map(bulletin.map((m) => [m.id, m]));
+    const freshOdds = (s: CartSelection): number | null => {
+      const m = byId.get(s.match_id);
+      if (!m) return null;
+      const mk = m.markets.find((k) => k.market_type === s.market_type);
+      const o = mk?.options.find((x) => x.outcome_key === s.outcome_key);
+      return o ? o.odds : null;
+    };
+    const patch = (s: CartSelection): CartSelection => {
+      const odds = freshOdds(s);
+      if (odds == null) return s.closed ? s : { ...s, closed: true };
+      if (s.closed || Math.abs(odds - s.odds) >= 0.01) return { ...s, odds, closed: false };
+      return s;
+    };
+    const flashNext: Record<string, 'up' | 'down'> = {};
+    setSelections((prev) => {
+      let dirty = false;
+      const next = prev.map((s) => {
+        const p = patch(s);
+        if (p !== s) {
+          dirty = true;
+          if (!p.closed && Math.abs(p.odds - s.odds) >= 0.01) flashNext[s.match_id] = p.odds > s.odds ? 'up' : 'down';
+        }
+        return p;
+      });
+      return dirty ? next : prev;
+    });
+    setSaved((prev) => {
+      let dirty = false;
+      const next = prev.map((d) => {
+        let dDirty = false;
+        const sels = d.selections.map((s) => { const p = patch(s); if (p !== s) dDirty = true; return p; });
+        if (!dDirty) return d;
+        dirty = true;
+        return { ...d, selections: sels };
+      });
+      return dirty ? next : prev;
+    });
+    if (Object.keys(flashNext).length > 0) {
+      setFlash((f) => ({ ...f, ...flashNext }));
+      window.setTimeout(() => setFlash((f) => {
+        const n = { ...f };
+        for (const k of Object.keys(flashNext)) delete n[k];
+        return n;
+      }), 6000);
+    }
+  }, []);
+
+  const hasLegs = selections.length > 0 || saved.length > 0;
+  useEffect(() => {
+    if (!hasLegs) return;
+    let alive = true;
+    const tick = () => {
+      matchProvider.getBulletin()
+        .then((b) => { if (alive && b.length > 0) reconcile(b); })
+        .catch(() => { /* ağ hatasında eldeki oran kalır, kapatma İŞARETLEME */ });
+    };
+    tick();
+    const iv = window.setInterval(tick, 12000);
+    return () => { alive = false; window.clearInterval(iv); };
+  }, [hasLegs, reconcile]);
 
   const saveDraft = useCallback(() => {
     if (selections.length === 0) return;
@@ -147,6 +220,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     selections,
     count: selections.length,
     totalOdds,
+    flash,
     isPicked,
     select,
     remove,

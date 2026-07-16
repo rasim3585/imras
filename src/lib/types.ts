@@ -276,6 +276,8 @@ export interface CartSelection {
   market_name: string;
   option_label: string;
   odds: number;
+  /** Canlı tazelemede market/maç bültenden düştüyse — oynanamaz, kullanıcı kaldırmalı. */
+  closed?: boolean;
 }
 
 /** A coupon leg, flattened from the option/market/match graph for the UI. */

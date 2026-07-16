@@ -13,7 +13,7 @@ const QUICK = [100, 250, 500];
 // The slip itself: selections + stake + "Place now". Shared by the desktop dock
 // panel and the mobile bottom sheet — bet without leaving the bulletin.
 export default function CouponPanel({ onClose }: { onClose?: () => void }) {
-  const { selections, count, totalOdds, remove, clear, saveDraft } = useCart();
+  const { selections, count, totalOdds, remove, clear, saveDraft, flash } = useCart();
   const { profile, session, refreshProfile } = useAuth();
   const { t, lang } = useI18n();
   const navigate = useNavigate();
@@ -55,6 +55,7 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
 
   const potential = Math.round(stake * totalOdds);
   const stakeValid = stake > 0 && stake <= balance;
+  const hasClosed = selections.some((s) => s.closed);
 
   // When this slip was opened — lets us measure hesitation (open → play), a core
   // pre-decision risk signal: impulsive vs. deliberated stakes read very differently.
@@ -103,15 +104,22 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
       ) : (
         <>
           <div className="cpn-legs">
-            {selections.map((s) => (
-              <div key={s.match_id} className="cpn-leg">
-                <div className="cpn-leg-main">
-                  <div className="cpn-leg-match">{s.home_team} - {s.away_team}</div>
-                  <div className="cpn-leg-pick"><span className="muted">{s.market_name}:</span> {s.option_label} <b className="tnum">{formatOdds(s.odds)}</b></div>
+            {selections.map((s) => {
+              const fl = flash[s.match_id];
+              return (
+                <div key={s.match_id} className={`cpn-leg ${s.closed ? 'cpn-leg-closed' : ''}`}>
+                  <div className="cpn-leg-main">
+                    <div className="cpn-leg-match">{s.home_team} - {s.away_team}</div>
+                    <div className="cpn-leg-pick">
+                      <span className="muted">{s.market_name}:</span> {s.option_label}{' '}
+                      <b className={`tnum ${fl ? `fl-${fl}` : ''}`}>{formatOdds(s.odds)}{fl === 'up' ? ' ▲' : fl === 'down' ? ' ▼' : ''}</b>
+                      {s.closed && <span className="cpn-closed-chip">{t('cpn.closedchip')}</span>}
+                    </div>
+                  </div>
+                  <button className="cpn-rm" onClick={() => remove(s.match_id)} aria-label="Remove">✕</button>
                 </div>
-                <button className="cpn-rm" onClick={() => remove(s.match_id)} aria-label="Remove">✕</button>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="cpn-foot">
@@ -156,9 +164,10 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
             )}
             {session && <div className="cpn-bal dim tnum">{t('cpn.balance')}: {balance} <span className="coin" aria-hidden="true" /></div>}
             {error && <div className="banner banner-error" style={{ marginTop: 'var(--s2)' }}>{error}</div>}
+            {hasClosed && <div className="banner banner-error" style={{ marginTop: 'var(--s2)' }}>{t('cpn.closedhint')}</div>}
 
             {session ? (
-              <button className="btn btn-primary btn-block" style={{ marginTop: 'var(--s2)' }} disabled={busy || !stakeValid} onClick={place}>
+              <button className="btn btn-primary btn-block" style={{ marginTop: 'var(--s2)' }} disabled={busy || !stakeValid || hasClosed} onClick={place}>
                 {busy ? '…' : <>{t('cpn.playnow')} · {stake} <span className="coin coin-light" aria-hidden="true" /></>}
               </button>
             ) : (
