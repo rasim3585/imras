@@ -79,26 +79,43 @@ Deno.serve(async (req: Request) => {
   } catch { /* kota hatası yargıcı düşürmez */ }
 
   try {
-    const r = await fetch("https://api.anthropic.com/v1/messages", {
+    // Sonnet 5'te adaptive thinking VARSAYILAN AÇIK ve düşünme tokenları
+    // max_tokens'a DAHİL — 640'lık tavanın tamamını düşünme yiyip metin hiç
+    // başlamıyordu (canlıda ölçüldü: content'te text bloğu yok → no_text).
+    // Kararname deterministik sayıları cümleye döker; düşünmeye gerek yok →
+    // kapat. Emniyet: parametre reddedilirse (400 + 'thinking') bir kez
+    // thinking'siz gövdeyle yeniden dene.
+    const mkBody = (thinkingOff: boolean) => JSON.stringify({
+      model: "claude-sonnet-5",
+      max_tokens: 640,
+      ...(thinkingOff ? { thinking: { type: "disabled" } } : {}),
+      system: SYSTEM(LANGS[lang]),
+      messages: [{
+        role: "user",
+        content: "Coupon fact sheet (JSON, all numbers deterministic). Write the verdict:\n\n" + JSON.stringify(review),
+      }],
+    });
+    const call = (body: string) => fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-5",
-        max_tokens: 640,
-        system: SYSTEM(LANGS[lang]),
-        messages: [{
-          role: "user",
-          content: "Coupon fact sheet (JSON, all numbers deterministic). Write the verdict:\n\n" + JSON.stringify(review),
-        }],
-      }),
+      body,
     });
+    let r = await call(mkBody(true));
+    if (r.status === 400) {
+      const t = await r.text();
+      if (/thinking/i.test(t)) r = await call(mkBody(false));
+      else return json({ text: null, reason: "api_error", detail: t.slice(0, 200) });
+    }
     if (!r.ok) { const t = await r.text(); return json({ text: null, reason: "api_error", detail: t.slice(0, 200) }); }
     const data = await r.json();
-    // Sonnet 5 cevabın başına düşünme bloğu koyabilir — İLK bloğu değil,
-    // TEXT tipindeki blokları oku (content[0].text varsayımı boş döndürüyordu)
+    // TEXT tipindeki blokları oku (content[0].text varsayımı düşünme bloğunda kırılır)
     const blocks: { type?: string; text?: string }[] = Array.isArray(data?.content) ? data.content : [];
     const text = blocks.filter((b) => b?.type === "text" && b.text).map((b) => b.text).join("\n").trim();
-    if (!text) return json({ text: null, reason: "no_text" });
+    if (!text) {
+      // bir daha kör kalmayalım: durma nedeni + blok tipleri teşhise düşsün
+      const diag = JSON.stringify({ stop: data?.stop_reason, types: blocks.map((b) => b?.type) });
+      return json({ text: null, reason: "no_text", detail: diag.slice(0, 200) });
+    }
     return json({ text });
   } catch (e) {
     return json({ text: null, reason: "exception", detail: String(e).slice(0, 200) });
