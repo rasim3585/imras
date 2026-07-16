@@ -57,3 +57,44 @@ Chrome açık + uzantı + supabase.com oturumu (yol B). Rasim'e soruldu.
 - NOT: ce1fbf70 hesabı Rasim'in KENDİ hesabı çıktı (10K test kuponu onda);
   hesabına oturum üretme yolu bilinçli KAPATILDI (çizgi: kimlik doğrulama).
 - Bülten 703ms, settle zinciri sağlıklı (Miami 2-0, Lexington 1-4 settle OK).
+
+## GECE VARDİYASI 2. YARI (03:00-06:30 UTC) — "launch cilası" mandası
+Rasim tam yetki verdi ("onay sorma, muhteşem bir şey çıkart"). 5 ajanlık keşif
+ordusu (546K token) + solo uygulama. Biten işler (hepsi commit+push, Vercel'de):
+
+**Gates of Goal — GoO hizalaması:**
+- Sembol seti v3: 5 fasetli mücevher + altın Kupa/Krampon/Eldiven/Düdük +
+  ışın taçlı Altın Top scatter. Web-doğrulamalı GoO spec'iyle ödeme tablosu
+  BİREBİR çıktı (9 sembol 3 eşik tam eşleşme — rapor: scratchpad/rapor-1.md).
+- Banner eşikleri GoO bandına (25x/100x/250x/1000x); callout tutarları sunucu
+  adım kazancına ölçekleniyor; FS ×0 rozeti gizli; "Gates of" → "Gates of Goal".
+**2D canlı maç:** 22 oyuncu noktası (diziliş+topa çekim+salınım), görünmez
+winprob barı fix (kapsam-dışı token), 0-0 bar fix, skorbord dizilim fix.
+**Kupon dürüstlüğü:** pending kuponlar 200 limitinden muaf (kaybolamazdı ama
+kayboluyordu!); kazanç çipleri NET (+brüt değil); Plinko 0.2x kovada "+20"
+yalanı bitti ("−80"); /coupon sayfası CouponPanel kabuğu (kopya slip mantığı +
+kapalı-bacak körlüğü silindi); NavBar yanlış-vaat rozeti kaldırıldı.
+**Analiz:** "Diğer" sekmesi gerçek oldu (Mines/Dice/Plinko kartları);
+ParallelCard Aviator'a taşındı (yanlış atıf); karne boş-durum teaser'ı;
+AI sohbet sessionStorage; mirror fetch 30sn memo (4 mükerrer RPC bitti).
+**Profesyonellik:** OG paylaşım kartı (og-card.png) + og/twitter meta;
+sayfa başına sekme başlığı; anon 401 spam'i kalıcı fix (advance() kaldırıldı);
+LiveMatch Infinity% fix; behaviorLog moat sigortası (geri-kuyruk + uyarı);
+ölü src/providers/ silindi; lb.sub.day + pr.biggestwin etiketleri dürüst (8 dil).
+
+## SABAH KUYRUĞU (Rasim + SQL/edge erişimi gerektirir)
+1. **Edge redeploy**: coupon-judge → repo dosyasıyla (640 token + 'sen' hitabı).
+2. **Tap-test**: oran tıkla → sayılar & takım çipi (ADIM 2 kanıtı) → yargıç →
+   oyna → settle çipi + Analiz karnesi.
+3. **DB sağlığı**: bülten gece 543ms→3-8sn'ye yavaşladı + aralıklı timeout
+   (83 gerçek fikstür + muhtemel CPU-kredi tükenmesi). Supabase dashboard →
+   Reports → CPU/IO bak; Nano/Micro ise compute upgrade DÜŞÜN (launch şartı).
+   Ayrıca anon statement_timeout artışı (8s?) + bülten kickoff penceresi
+   daraltma (ör. 36h) SQL adayları.
+4. **GoO motor farkları** (bilinçli karar iste): Buy 80x→100x?, scatter ödemesi
+   4/5/6=3x/5x/100x?, FS retrigger 3+ = +5?, max-win anında kesme?, FS "yeni
+   orb yoksa çarpan uygulanmaz" nüansı — hepsi SQL/simülasyon turu ister.
+5. coupon_review won-tanımı hizalama (cashed_out kârlıysa "won" — profil vs
+   kuponlarım çelişkisi), Gates buy_cost'u slot_config'ten okuma, dice/mines
+   yuvarlama sırası teyidi, match-preview'a gerçek-maç dalı, mirror_luck RPC,
+   betting-ai remaining alanı. (Detay: scratchpad/rapor-*.md — 5 keşif raporu.)
