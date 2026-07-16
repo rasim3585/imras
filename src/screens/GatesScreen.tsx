@@ -423,7 +423,7 @@ export default function GatesScreen() {
               {bonus && (
                 <div className="go-fs">
                   <div className="go-fs-head">{t('go.freespins')} <span className="tnum">{fs.i}/{fs.n}</span></div>
-                  <div className="go-fs-mult tnum">×{fs.mult}</div>
+                  {fs.mult > 0 && <div className="go-fs-mult tnum">×{fs.mult}</div>}
                   {fs.win > 0 && <div className="go-fs-win tnum">+{fs.win.toLocaleString()}</div>}
                 </div>
               )}
