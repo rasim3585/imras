@@ -121,7 +121,12 @@ function build(matchId: string, setIdx: number, sport: CourtSport): Rally[] {
       if (winner === 'home') gh++; else ga++;
       const lead = Math.abs(gh - ga);
       if ((gh >= target || ga >= target) && lead >= 2) done = true;
-      if (gh >= capPts || ga >= capPts) done = true;
+      if (gh >= capPts || ga >= capPts) {
+        // voleybolda set 1 farkla BİTEMEZ (27-26 imkânsız skor; sunucu hep 2
+        // farkla üretir) — tavana 1 farkla gelindiyse kapanışı çift sayı yap
+        if (Math.abs(gh - ga) < 2) { if (winner === 'home') gh++; else ga++; }
+        done = true;
+      }
       server = winner;                                    // sayıyı alan servis atar
     } else {
       if (winner === 'home') ph++; else pa++;
@@ -147,7 +152,11 @@ function build(matchId: string, setIdx: number, sport: CourtSport): Rally[] {
   const lastR = rallies[rallies.length - 1];
   if (lastR) {
     const units = lastR.gamesH + lastR.gamesA;   // vb: sayılar · tenis: oyunlar
-    const budget = units * (vb ? 2.0 : 13);
+    // MUTLAK TAVAN (denetim): birim-çarpanı sim'in KENDİ set uzunluğuyla
+    // orantılı olduğundan sunucunun kısa penceresini aşabiliyordu (vb 27-25
+    // sim × 2.0 > sunucu 45 sayı penceresi; tenis 13×13=169 > ~150sn min
+    // pencere). Tavan min pencerenin altında: merdiven HEP sunucudan önce biter.
+    const budget = Math.min(units * (vb ? 1.8 : 13), vb ? 100 : 150);
     const natural = lastR.holdEnd + GAP;
     if (natural > budget && budget > 10) {
       const k = budget / natural;
@@ -157,6 +166,8 @@ function build(matchId: string, setIdx: number, sport: CourtSport): Rally[] {
       }
     }
   }
+  // bellek tavanı: uzun oturumda gezinen her maç×set kalıcı birikmesin
+  if (cache.size > 40) { const first = cache.keys().next().value; if (first) cache.delete(first); }
   cache.set(`${matchId}:${setIdx}:${sport}:v2`, rallies);
   return rallies;
 }
@@ -172,6 +183,35 @@ export function setClockSec(matchId: string, setIdx: number): number {
   let a = anchors.get(k);
   if (a === undefined) { a = Date.now(); anchors.set(k, a); }
   return (Date.now() - a) / 1000;
+}
+
+// Sunucunun period alanındaki set-içi sayı ("Set 2 · 14-9" → 23) — saat
+// tohumlamada kullanılır; parse edilemezse 0.
+export function periodPoints(period: string | null): number {
+  const m = /·\s*(\d+)\s*-\s*(\d+)/.exec(period ?? '');
+  return m ? Number(m[1]) + Number(m[2]) : 0;
+}
+
+// Sete ORTADAN katılan izleyici için saat tohumu: çapa YOKKEN sunucunun açtığı
+// sayı kadar ralliyi geçmiş sayarak saati geri-tarihler — merdiven 0-0'dan
+// değil sunucunun bulunduğu yerden akar, set sunucudan önce biter garantisi
+// korunur. İdempotent: çapa varsa dokunmaz.
+export function seedSetClock(matchId: string, setIdx: number, sport: CourtSport, srvPts: number): void {
+  const k = `${matchId}:${setIdx}`;
+  if (anchors.has(k) || srvPts <= 0) return;
+  const rl = sim(matchId, setIdx, sport);
+  const r = rl[Math.min(srvPts, rl.length) - 1];
+  if (r) anchors.set(k, Date.now() - r.holdEnd * 1000);
+}
+
+// Skor AZALIŞI (sunucu düzeltmesi): eski yüksek setlerin çapası/cache'i
+// silinir — sunucu aynı set numarasına yeniden gelirse saat sıfırdan başlar.
+export function resetSetsFrom(matchId: string, fromIdx: number): void {
+  for (let i = fromIdx; i < fromIdx + 8; i++) {
+    anchors.delete(`${matchId}:${i}`);
+    cache.delete(`${matchId}:${i}:tennis:v2`);
+    cache.delete(`${matchId}:${i}:volleyball:v2`);
+  }
 }
 
 export interface TennisFlow { x: number; y: number; server: Side; dead: boolean }

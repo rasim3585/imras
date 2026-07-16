@@ -20,51 +20,77 @@ export default function MiniWatch({ matchId, sport }: { matchId: string; sport: 
   const [pulse, setPulse] = useState<GoalPulse | null>(null);
   const anchor = useRef<{ sim: number; at: number; rate: number } | null>(null);
   const evCount = useRef(0);
+  // İLK canlı poll taban çizgisidir: eski goller "yeni gol" sanılıp sahte
+  // kutlama patlatamaz (denetim B2 — büyük ekranın baselineGoals dengi).
+  const evSeeded = useRef(false);
   const pulseId = useRef(0);
+  // çapa rafinesi: sunucu dakika sınırını yeni geçtiyse bir kez ileri-yönlü düzelt
+  const lastSrvMin = useRef(-1);
+  const refined = useRef(false);
   // sim saat ölçeği: futbol 0..5400, basket 0..2880 (maç dakikası × 60)
   const simTotal = sport === 'basketball' ? 2880 : 5400;
+  const simTotalRef = useRef(simTotal);
+  simTotalRef.current = simTotal;
 
-  const clock = () => {
+  // SAAT KİMLİĞİ SABİT (denetim B1 — kritik): her render'da yeni fonksiyon
+  // üretmek, CourtTV/PitchTV rAF effect'lerini her poll'de yeniden kurup
+  // sayı kuyruğunu/gol dramasını SİLİYORDU (mini tabela donuyordu).
+  const clock = useRef(() => {
     const a = anchor.current;
-    return a ? Math.max(0, Math.min(simTotal, a.sim + ((Date.now() - a.at) / 1000) * a.rate)) : 0;
-  };
+    const tot = simTotalRef.current;
+    return a ? Math.max(0, Math.min(tot, a.sim + ((Date.now() - a.at) / 1000) * a.rate)) : 0;
+  }).current;
 
   useEffect(() => {
     let alive = true;
     anchor.current = null;
     evCount.current = 0;
+    evSeeded.current = false;
+    lastSrvMin.current = -1;
+    refined.current = false;
     setSt(null); setPulse(null);
+    let inFlight = false;
     const poll = async () => {
+      if (inFlight) return;               // istekler üst üste binmesin
+      inFlight = true;
       try {
         const [s] = await matchProvider.getLiveStates([matchId]);
         if (!alive || !s) return;
         setSt(s);
         // monotonik sim saati (useLiveMatch ile aynı şema): bir kez çapa,
-        // yalnız büyük sapmada düzelt — poll başına testere dişi yok
+        // büyük sapmada VEYA dakika sınırı geçişinde (bir kez, ileri yönlü)
+        // düzelt — poll başına testere dişi yok, iki görünüm arası sapma ≤~1sn
         if (s.phase === 'live') {
           const now = Date.now();
-          const rate = simTotal / s.duration_secs;
+          const durS = s.duration_secs > 0 ? s.duration_secs : 480;   // NaN koruması
+          const rate = simTotalRef.current / durS;
           const serverSim = s.minute * 60;
           const a = anchor.current;
           const cur = a ? a.sim + ((now - a.at) / 1000) * a.rate : -1;
-          if (!a || Math.abs(serverSim - cur) > 90) anchor.current = { sim: serverSim, at: now, rate };
+          const boundary = lastSrvMin.current >= 0 && s.minute > lastSrvMin.current;
+          if (!a || Math.abs(serverSim - cur) > 90
+              || (boundary && !refined.current && serverSim - cur > 10)) {
+            if (a && boundary) refined.current = true;
+            anchor.current = { sim: serverSim, at: now, rate };
+          }
+          lastSrvMin.current = s.minute;
         }
-        // gol darbesi (futbol): yeni sunucu golü → PitchTV'nin kendi gol
-        // draması (ağ sahnesi/penaltı) büyük ekrandakiyle birebir çalışsın
+        // gol darbesi (futbol): yalnız TABAN sonrası gelen GERÇEKTEN yeni gol
         if (sport === 'football') {
           const evs = s.events ?? [];
-          if (evs.length > evCount.current) {
+          if (evSeeded.current && evs.length > evCount.current && s.phase === 'live') {
             const g = evs[evs.length - 1];
             setPulse({ id: ++pulseId.current, team: g.team, penalty: isPenaltyGoal(matchId, g.minute) });
           }
           evCount.current = evs.length;
+          evSeeded.current = true;
         }
-      } catch { /* transient */ }
+      } catch { /* transient */ } finally { inFlight = false; }
     };
     void poll();
     const id = setInterval(poll, 2500);
     return () => { alive = false; clearInterval(id); };
-  }, [matchId, sport, simTotal]);
+  }, [matchId, sport]);
 
   // futbol akışı: /live ekranıyla AYNI sim satırları + sunucu golleri
   const evs = useMemo(() => {
@@ -78,7 +104,10 @@ export default function MiniWatch({ matchId, sport }: { matchId: string; sport: 
     return [...goals, ...atmo].sort((a1, b1) => b1.m - a1.m).slice(0, 4);
   }, [matchId, sport, st?.home_team, st?.minute, st?.events?.length, st?.phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!st) return null;
+  // Bayat state koruması (denetim: gecikmeli anchor sızıntısı): matchId yeni,
+  // st hâlâ eski maçın snapshot'ıysa TV'lere HİÇBİR ŞEY gitmez — bir commit'lik
+  // pencerede bile eski skor/çapa yeni maça yazılamaz.
+  if (!st || st.match_id !== matchId) return null;
   const phase = st.phase === 'live' ? 'live' : st.phase === 'finished' ? 'finished' : 'upcoming';
   const watchTo = sport === 'football' ? `/live/${matchId}` : `/court/${matchId}`;
 
@@ -90,19 +119,22 @@ export default function MiniWatch({ matchId, sport }: { matchId: string; sport: 
           <PitchTV
             home={st.home_team} away={st.away_team}
             hs={phase === 'upcoming' ? 0 : st.home_score} as={phase === 'upcoming' ? 0 : st.away_score}
-            minute={st.minute} phase={phase} redHome={st.red_home} redAway={st.red_away}
+            minute={phase === 'live' ? Math.floor(clock() / 60) : st.minute}
+            phase={phase} redHome={st.red_home} redAway={st.red_away}
             matchId={matchId} dur={st.duration_secs} getClock={clock} goalPulse={pulse}
             homePlayer={playerName(matchId + 'h')} awayPlayer={playerName(matchId + 'a')}
           />
         ) : sport === 'basketball' ? (
           <CourtTV
-            home={st.home_team} away={st.away_team} hs={st.home_score} as={st.away_score}
+            home={st.home_team} away={st.away_team}
+            hs={phase === 'upcoming' ? 0 : st.home_score} as={phase === 'upcoming' ? 0 : st.away_score}
             period={st.period ?? null} minute={st.minute} phase={phase}
             matchId={matchId} dur={st.duration_secs} getClock={clock}
           />
         ) : (
           <TennisTV
-            home={st.home_team} away={st.away_team} hs={st.home_score} as={st.away_score}
+            home={st.home_team} away={st.away_team}
+            hs={phase === 'upcoming' ? 0 : st.home_score} as={phase === 'upcoming' ? 0 : st.away_score}
             period={st.period ?? null} phase={phase} matchId={matchId} sport={sport}
           />
         )}

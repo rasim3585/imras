@@ -117,6 +117,13 @@ export default function LiveMatchScreen() {
   const [flash, setFlash] = useState<{ team: 'home' | 'away'; penalty: boolean } | null>(null);
   const [goalPulse, setGoalPulse] = useState<GoalPulse | null>(null);
   const pulseId = useRef(0);
+  // skor kaynağı disiplini (denetim B5/B8/B9): ref üzerinden karşılaştır
+  // (interval closure'da state bayat), azalışta gerçeğe kilitlen, penaltıda
+  // tabela 2sn topu bekler, flash timer'ı takipli
+  const scoreRef = useRef({ h: 0, a: 0 });
+  const scoreTimer = useRef<number | null>(null);
+  const flashTimer = useRef<number | null>(null);
+  const applyScore = (h: number, a: number) => { scoreRef.current = { h, a }; setScore({ h, a }); };
 
   const stateRef = useRef<LiveState | null>(null);
   const minuteRef = useRef(0);
@@ -141,9 +148,12 @@ export default function LiveMatchScreen() {
     feedRef.current = [];
     baselineGoals.current = 0;
     setFeed([]);
+    scoreRef.current = { h: 0, a: 0 };
     setScore({ h: 0, a: 0 });
     setGoalPulse(null);
     setFlash(null);
+    if (scoreTimer.current) { clearTimeout(scoreTimer.current); scoreTimer.current = null; }
+    if (flashTimer.current) { clearTimeout(flashTimer.current); flashTimer.current = null; }
   }, [matchId]);
   const atmo = useMemo(() => (state ? simLines(matchId!, state.home_team, state.away_team, state.duration_secs) : []), [matchId, state?.home_team, state?.duration_secs]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -182,9 +192,16 @@ export default function LiveMatchScreen() {
         lines.forEach((l) => enqueued.current.add(l.key));
         feedRef.current = [...lines].reverse().slice(0, 60);
         setFeed(feedRef.current);
-        setScore({ h: st.home_score, a: st.away_score });
+        applyScore(st.home_score, st.away_score);
         seeded.current = true;
         return;
+      }
+
+      // sunucu skoru AZALDIYSA (düzeltme/void): bekleyen gol dramaları iptal,
+      // tabela gerçeğe kilitlenir — bacak bayrağı da yanlış skordan kurtulur
+      if (seeded.current && (st.home_score < scoreRef.current.h || st.away_score < scoreRef.current.a)) {
+        queue.current = queue.current.filter((l) => !l.isGoal && l.kind !== 'buildup' && l.kind !== 'shot');
+        applyScore(st.home_score, st.away_score);
       }
 
       const lines = revealedLines(matchId, st, clockSec, atmo, baselineGoals.current);
@@ -211,7 +228,7 @@ export default function LiveMatchScreen() {
         const rest = queue.current.splice(0);
         feedRef.current = [...rest.reverse(), ...feedRef.current].slice(0, 60);
         setFeed(feedRef.current);
-        setScore({ h: st.home_score, a: st.away_score });
+        applyScore(st.home_score, st.away_score);
         return;
       }
 
@@ -220,10 +237,21 @@ export default function LiveMatchScreen() {
         feedRef.current = [next, ...feedRef.current].slice(0, 60);
         setFeed(feedRef.current);
         if (next.isGoal) {
-          if (next.scoreH != null) setScore({ h: next.scoreH, a: next.scoreA! });
+          if (next.scoreH != null) {
+            // PENALTIDA tabela topu bekler: PitchTV top 2sn noktada durur, sonra
+            // ağa girer — skor da o anda değişir (basketle aynı ilke)
+            if (next.penalty) {
+              const h = next.scoreH, a = next.scoreA!;
+              if (scoreTimer.current) clearTimeout(scoreTimer.current);
+              scoreTimer.current = window.setTimeout(() => applyScore(h, a), 2000);
+            } else {
+              applyScore(next.scoreH, next.scoreA!);
+            }
+          }
           setFlash({ team: next.team!, penalty: !!next.penalty });
           setGoalPulse({ id: ++pulseId.current, team: next.team!, penalty: !!next.penalty });
-          window.setTimeout(() => setFlash(null), 1200);
+          if (flashTimer.current) clearTimeout(flashTimer.current);
+          flashTimer.current = window.setTimeout(() => setFlash(null), 1200);
         }
       }
     }, 380);

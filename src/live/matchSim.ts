@@ -121,6 +121,8 @@ function build(matchId: string, dur: number): Sim {
     t += 0.7;
   }
   const s = { passes, events, holdSec };
+  // bellek tavanı: uzun oturumda gezinen her maç kalıcı birikmesin
+  if (cache.size > 40) { const first = cache.keys().next().value; if (first) cache.delete(first); }
   cache.set(`${matchId}:${dur}`, s);
   return s;
 }

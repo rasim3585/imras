@@ -46,6 +46,7 @@ export default function CourtTV({
   const queue = useRef<Make[]>([]);
   const active = useRef<(Make & { stage: 'spot' | 'fly' | 'hold'; stageT: number }) | null>(null);
   const sm = useRef<[number, number]>([160, 100]);   // eased ball pos (court coords)
+  const simFor = useRef(matchId);
 
   // sunucu farkını kuyruğa çevir (drama loop'ta oynar)
   useEffect(() => {
@@ -53,14 +54,16 @@ export default function CourtTV({
     // draması yeni maça sızamaz — her şey yeni maçın gerçeğine sıfırlanır.
     if (prev.current.matchId !== matchId) {
       prev.current = { matchId, hs, as };
-      ready.current = hs > 0 || as > 0;
+      ready.current = live || hs > 0 || as > 0;
       queue.current = []; active.current = null;
       setShown({ hs, as }); setPops([]); setFlash(null);
       return;
     }
     const dH = hs - prev.current.hs, dA = as - prev.current.as;
     prev.current = { matchId, hs, as };
-    if (!ready.current) { if (hs > 0 || as > 0) { ready.current = true; setShown({ hs, as }); } return; }
+    // ready = İLK CANLI snapshot (0-0 dahil): canlı 0-0'dan izleyen kullanıcı
+    // ilk basketin dramasını da görür; ortadan katılan taban çizgisiyle senkron
+    if (!ready.current) { if (live || hs > 0 || as > 0) { ready.current = true; setShown({ hs, as }); } return; }
     if (!live) { setShown({ hs, as }); return; }
     // sunucu skoru AZALDIYSA (düzeltme/void): drama iptal, gerçeğe kilitlen —
     // aksi halde gösterilen skor sonsuza dek sapardı
@@ -91,13 +94,15 @@ export default function CourtTV({
       const m = queue.current.shift()!;
       setShown((s) => (m.side === 'home' ? { ...s, hs: s.hs + m.pts } : { ...s, as: s.as + m.pts }));
     }
-  }, [hs, as, live]);
+  }, [matchId, hs, as, live]);
 
   // animation loop: ball + badge + possession side from the SAME sim clock;
   // make koreografisi varışa bağlı — pop yalnız top potadayken.
   useEffect(() => {
     if (!live) return;
-    queue.current = []; active.current = null;   // stale make drama must not leak between matches
+    // kuyruk yalniz MAC degisiminde silinir — effect baska sebeple yeniden
+    // kurulursa (or. getClock kimligi) oynayan drama ve bekleyen sayilar yasar
+    if (simFor.current !== matchId) { queue.current = []; active.current = null; simFor.current = matchId; }
     let raf = 0;
     const HOOP = (sideK: Side) => (sideK === 'home' ? { x: 300, y: 100 } : { x: 20, y: 100 });
     const step = () => {
@@ -138,7 +143,7 @@ export default function CourtTV({
         tx = b.x; ty = b.y;
       }
       const amb = active.current ? null : activeCourtEvent(matchId, clock, dur);
-      const bMove = active.current ? true : courtBallAt(matchId, clock, dur).moving;
+      const bMove = active.current ? active.current.stage !== 'hold' : courtBallAt(matchId, clock, dur).moving;
       const s = sm.current; s[0] += (tx - s[0]) * 0.22; s[1] += (ty - s[1]) * 0.22;
       if (ballRef.current) {
         ballRef.current.style.left = `${(s[0] / 320) * 100}%`;
@@ -208,7 +213,8 @@ export default function CourtTV({
           <span className="pev-t">{PLAY_LABEL[badge.type]}</span>
         </div>
       )}
-      {pops.map((p) => <div key={p.id} className={`court-pop ${p.side}`}>+{p.pts}</div>)}
+      {/* ardışık poplar üst üste binmesin: her aktif pop 8% yukarı kayar */}
+      {pops.map((p, i) => <div key={p.id} className={`court-pop ${p.side}`} style={{ top: `${30 - i * 8}%` }}>+{p.pts}</div>)}
       {pops.some((p) => p.pts >= 3) && <Confetti />}
 
       <div className="court-top">

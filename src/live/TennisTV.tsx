@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { rallyFlowAt, rallyState, setClockSec, type Side } from './tennisSim';
+import { rallyFlowAt, rallyState, setClockSec, seedSetClock, periodPoints, resetSetsFrom, type Side } from './tennisSim';
 import { Confetti } from './PitchTV';
 
 // Tennis / volleyball 2D live view. Ball, serve dot and the games/points ladder
@@ -27,6 +27,8 @@ export default function TennisTV({
   const [shown, setShown] = useState({ hs, as });
   const prev = useRef({ matchId, hs, as });
   const pendingFlash = useRef<{ side: Side; at: number } | null>(null);
+  const wasLive = useRef(false);                 // finished geçişinde son set kutlaması için
+  const flashTimer = useRef<number | null>(null); // art arda setlerde ilk timer yenisini söndürmesin
   const ready = useRef(false);          // arm after first real score (no spurious flash on load)
   const subKey = useRef('');
   const sm = useRef<[number, number]>([160, 100]);   // eased ball pos (oyuncu YOK — sadece top)
@@ -36,17 +38,39 @@ export default function TennisTV({
     // maç değişimi: eski maçın seti/flaşı yeni maça sızamaz
     if (prev.current.matchId !== matchId) {
       prev.current = { matchId, hs, as };
-      ready.current = hs > 0 || as > 0;
+      ready.current = live || hs > 0 || as > 0;
       pendingFlash.current = null;
+      wasLive.current = live;
       setShown({ hs, as }); setFlash(null);
       return;
     }
     const dH = hs - prev.current.hs, dA = as - prev.current.as;
     prev.current = { matchId, hs, as };
-    if (!ready.current) { if (hs > 0 || as > 0) { ready.current = true; setShown({ hs, as }); } return; }
-    if (!live) { setShown({ hs, as }); return; }
-    // azalış (düzeltme): kutlamasız gerçeğe kilitlen
-    if (dH < 0 || dA < 0) { pendingFlash.current = null; setShown({ hs, as }); return; }
+    // ready = İLK CANLI snapshot (0-0 dahil): 0-0'dan izleyen kullanıcı İLK set
+    // kutlamasını da görür (eski skor-kapısı ilk seti sessizce yutuyordu)
+    if (!ready.current) { if (live || hs > 0 || as > 0) { ready.current = true; setShown({ hs, as }); } return; }
+    if (!live) {
+      // maçı bitiren SON set: finished snapshot'ıyla gelir — şampiyonluk sayısı
+      // kutlamasız geçmesin (rAF durduğu için pendingFlash yolu çalışmaz)
+      if (wasLive.current && ready.current && (dH > 0 || dA > 0)) {
+        setFlash(dH >= dA ? 'home' : 'away');
+        if (flashTimer.current) clearTimeout(flashTimer.current);
+        flashTimer.current = window.setTimeout(() => setFlash(null), 1100);
+      }
+      wasLive.current = false;
+      pendingFlash.current = null;
+      setShown({ hs, as });
+      return;
+    }
+    wasLive.current = true;
+    // azalış (düzeltme): kutlamasız gerçeğe kilitlen + eski setlerin saat/cache
+    // artıkları temizlensin (sunucu aynı set numarasına dönerse saat sıfırdan)
+    if (dH < 0 || dA < 0) {
+      pendingFlash.current = null;
+      resetSetsFrom(matchId, hs + as);
+      setShown({ hs, as });
+      return;
+    }
     if (dH <= 0 && dA <= 0) return;
     pendingFlash.current = { side: dH >= dA ? 'home' : 'away', at: Date.now() };
   }, [matchId, hs, as, live]);
@@ -56,6 +80,9 @@ export default function TennisTV({
     if (!live) return;
     let raf = 0;
     const setIdx = hs + as;
+    // sete ORTADAN katılım: sunucunun set-içi sayısına göre saat tohumla —
+    // merdiven 0-0'dan değil gerçekten bulunulan yerden akar (idempotent)
+    seedSetClock(matchId, setIdx, sport, periodPoints(period));
     const step = () => {
       const t = setClockSec(matchId, setIdx);
       const flow = rallyFlowAt(matchId, setIdx, sport, t);
@@ -64,19 +91,24 @@ export default function TennisTV({
       setServer((v) => (v === flow.server ? v : flow.server));
       const st = rallyState(matchId, setIdx, sport, t);
       const k = `${st.games[0]}-${st.games[1]}:${st.point}`;
-      if (k !== subKey.current) { subKey.current = k; setSub({ games: st.games, point: st.point }); }
+      // set bittiyse "(0 - 0)" yanılgısı basma — set arası puan boş
+      if (k !== subKey.current) { subKey.current = k; setSub({ games: st.games, point: st.setOver ? '' : st.point }); }
       // bekleyen set kutlaması: top ölü (sayı bitti) ya da 3sn tavan → şimdi yanar
       const pf = pendingFlash.current;
       if (pf && (flow.dead || Date.now() - pf.at > 3000)) {
         pendingFlash.current = null;
         setShown({ hs, as });
         setFlash(pf.side);
-        window.setTimeout(() => setFlash(null), 1100);
+        if (flashTimer.current) clearTimeout(flashTimer.current);
+        flashTimer.current = window.setTimeout(() => setFlash(null), 1100);
       }
       raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      if (flashTimer.current) { clearTimeout(flashTimer.current); flashTimer.current = null; }
+    };
   }, [matchId, live, sport, hs, as]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // full-time: ball rests on the net line centre

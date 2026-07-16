@@ -1057,15 +1057,6 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .corner.tl { left: -9px; top: -9px; } .corner.tr { right: -9px; top: -9px; }
 .corner.bl { left: -9px; bottom: -9px; } .corner.br { right: -9px; bottom: -9px; }
 
-.pitch-player { position: absolute; width: 16px; transform: translate(-50%, -50%); transition: left 0.4s linear, top 0.4s linear; z-index: 2; }
-.pp-body { display: block; width: 13px; height: 13px; border-radius: 50%; margin: 0 auto; border: 1.5px solid rgba(0, 0, 0, 0.25); }
-.pp-feet { display: flex; justify-content: center; gap: 3px; margin-top: 1px; }
-.pp-feet i { width: 2px; height: 4px; background: rgba(0, 0, 0, 0.55); border-radius: 1px; animation: pp-run 0.5s ease-in-out infinite alternate; }
-.pp-feet i:last-child { animation-delay: 0.25s; }
-@keyframes pp-run { from { transform: translateY(0); } to { transform: translateY(-2px); } }
-.pitch-ref .pp-body { background: #0a0a0a; border-color: #333; }
-.sent-off { opacity: 0.3; filter: grayscale(0.6); }
-.sent-off .pp-body { box-shadow: 0 0 0 2px #e24b4a; }
 
 .pitch-ball {
   position: absolute; width: 13px; height: 13px; border-radius: 50%; background: #fff;
@@ -1080,11 +1071,6 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .pitch-trail { position: absolute; width: 26px; height: 26px; border-radius: 50%; transform: translate(-50%, -50%);
   background: radial-gradient(circle, rgba(255,255,255,0.7), transparent 70%); z-index: 4; pointer-events: none; will-change: left, top; }
 /* player dots — the whole block slides toward the ball each frame */
-.pitch-players { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
-.pplayer { position: absolute; width: 11px; height: 11px; border-radius: 50%; transform: translate(-50%, -50%);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.5); border: 1.5px solid rgba(255,255,255,0.85); will-change: left, top; }
-.pplayer.home { background: #3f7fd6; } .pplayer.away { background: #e08a3a; }
-.pplayer.gk { border-color: #ffe27a; box-shadow: 0 0 6px rgba(255,226,122,0.6); }
 
 /* attack direction: short Nesine-style nudge just past midfield — a small
    arrow that drifts a few px and fades, not a half-pitch banner */
@@ -1102,10 +1088,6 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .pgoal { position: absolute; top: 44%; height: 12%; width: 2.5%; background: rgba(255, 255, 255, 0.5); }
 .pgoal.l { left: 0; } .pgoal.r { right: 0; }
 
-/* light model: ambient dots, momentum, red-card line, event overlay */
-.dot { position: absolute; width: 11px; height: 11px; border-radius: 50%; transform: translate(-50%, -50%);
-  border: 1.5px solid rgba(0, 0, 0, 0.25); z-index: 3; animation: dot-float 3.2s ease-in-out infinite; }
-@keyframes dot-float { 0%, 100% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, -62%); } }
 .sb-sub { display: flex; justify-content: center; align-items: center; gap: var(--s3); padding: 4px 0 8px; }
 .sb-red { font-size: 0.72rem; font-weight: 600; color: #e24b4a; }
 .sb-cards { display: inline-flex; gap: 6px; font-size: 0.72rem; font-weight: 700; min-width: 54px; }
@@ -2375,7 +2357,7 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 
 /* ==== 0716f: 2D saha oyuncu noktaları ==== */
 .pitch-player { position: absolute; width: 8px; height: 8px; border-radius: 50%;
-  transform: translate(-50%, -50%); pointer-events: none;
+  transform: translate(-50%, -50%); pointer-events: none; z-index: 2;
   box-shadow: 0 1px 2px rgba(0,0,0,.45); }
 .pitch-player.ph { background: #17c06b; border: 1.5px solid #eafff3; }
 .pitch-player.pa { background: #4a7fb5; border: 1.5px solid #e8f1fb; }
@@ -2395,3 +2377,6 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .sb2-clock .dot { display: inline-block; width: 6px; height: 6px; flex: 0 0 auto; }
 .mtv-embed .sb2-clock .dot { display: none; }  /* dar gömmede nabız noktası gereksiz */
 .mtv-embed .sb2-sound { display: none; }        /* mini panelde ses düğmesi de gizli */
+
+/* ==== 0716j: 2D denetim — FT soluklaştırma (is-fin ölü sınıftı) ==== */
+.court-tv.is-fin .court-svg, .court-tv.is-fin .court-ball { filter: saturate(0.55) brightness(0.85); }

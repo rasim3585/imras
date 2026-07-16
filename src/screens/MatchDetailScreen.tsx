@@ -130,7 +130,7 @@ export default function MatchDetailScreen() {
       <div className="scoreboard card">
         <div className="sb-top">
           {isLive
-            ? <><span className="live-badge">LIVE</span><span className="minute-red tnum">{match.sport === 'basketball' ? bballClock(live!.minute, live!.period) : (match.sport === 'tennis' || match.sport === 'volleyball') ? (live!.period ?? 'LIVE') : `${live!.minute}'`}</span></>
+            ? <><span className="live-badge">LIVE</span><span className="minute-red tnum">{match.sport === 'basketball' ? bballClock(live!.minute, live!.period) : (match.sport === 'tennis' || match.sport === 'volleyball') ? (live!.period ?? 'LIVE').split('·')[0].trim() : `${live!.minute}'`}</span></>
             : isFinished
               ? <span className="tag">{t('md.fulltime')}</span>
               : <span className="soon-timer tnum">{formatKickoff(match.starts_at, t)}</span>}

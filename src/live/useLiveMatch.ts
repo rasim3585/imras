@@ -18,6 +18,10 @@ export function useLiveMatch(matchId: string | undefined) {
   // same real clock), so a single anchor stays in sync with no drift; we only
   // hard-correct on a big desync (join lag / tab was asleep).
   const animAnchor = useRef<{ sim: number; at: number; rate: number } | null>(null);
+  // çıpa rafinesi: sunucu dakika sınırını yeni geçtiyse serverSim o an ±poll
+  // hassasiyetindedir — BİR KEZ ileri-yönlü düzelt (kalıcı ≤59sn sapma biter)
+  const lastSrvMin = useRef(-1);
+  const refined = useRef(false);
 
   // Continuous simulation clock in seconds (0..5400) — smooth & monotonic, so the
   // pitch can animate the ball every frame and hold events without stutter.
@@ -38,6 +42,8 @@ export function useLiveMatch(matchId: string | undefined) {
     setMinute(0);
     anchor.current = null;
     animAnchor.current = null;
+    lastSrvMin.current = -1;
+    refined.current = false;
 
     // POLL KORUMASI: önceki istek dönmeden yenisi ATILMAZ. DB yavaşladığında
     // 2sn'lik interval istekleri üst üste bindirip yükü katlıyordu (sarmal
@@ -51,18 +57,23 @@ export function useLiveMatch(matchId: string | undefined) {
         if (!alive || !s) return;
         setState(s);
         const now = Date.now();
-        anchor.current = { minute: s.minute, startsIn: s.starts_in, at: now, dur: s.duration_secs };
+        const durS = s.duration_secs > 0 ? s.duration_secs : 480;   // NaN koruması (0/undefined dur)
+        anchor.current = { minute: s.minute, startsIn: s.starts_in, at: now, dur: durS };
         // Set the animation clock once (only while LIVE — during the countdown it
         // must not tick); afterwards only nudge on a big desync so the ball stays
         // smooth (no per-poll sawtooth).
         if (s.phase === 'live') {
-          const rate = 5400 / s.duration_secs;
+          const rate = 5400 / durS;
           const serverSim = s.minute * 60;
           const aa = animAnchor.current;
           const cur = aa ? aa.sim + ((now - aa.at) / 1000) * aa.rate : -1;
-          if (!aa || Math.abs(serverSim - cur) > 90) {
+          const boundary = lastSrvMin.current >= 0 && s.minute > lastSrvMin.current;
+          if (!aa || Math.abs(serverSim - cur) > 90
+              || (boundary && !refined.current && serverSim - cur > 10)) {
+            if (aa && boundary) refined.current = true;
             animAnchor.current = { sim: serverSim, at: now, rate };
           }
+          lastSrvMin.current = s.minute;
         } else if (s.phase === 'upcoming') {
           animAnchor.current = null;
         }
@@ -80,7 +91,11 @@ export function useLiveMatch(matchId: string | undefined) {
       const a = anchor.current;
       if (!a) return;
       const elapsed = (Date.now() - a.at) / 1000;
-      setMinute(Math.min(90, Math.max(0, a.minute + (elapsed / a.dur) * 90)));
+      // CANLIDA dakika = topla/istatistikle AYNI monoton saat: eski ayrı-çapa
+      // şeması poll'de dakikayı GERİ düşürebiliyordu (12'→11') ve saha
+      // saatiyle ±1dk çelişiyordu (denetim B3)
+      if (animAnchor.current) setMinute(Math.min(90, Math.max(0, getClock() / 60)));
+      else setMinute(Math.min(90, Math.max(0, a.minute + (elapsed / a.dur) * 90)));
       setCountdown(Math.max(0, Math.ceil(a.startsIn - elapsed)));
     }, 300);
 

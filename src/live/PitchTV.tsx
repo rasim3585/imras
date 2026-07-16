@@ -12,6 +12,15 @@ import { ballAt, activeEvent, type Side, type SimEvType } from './matchSim';
 // and interrupt with their own overlay. Home attacks RIGHT.
 // ---------------------------------------------------------------------------
 
+// 4-3-3 çapaları (x% y%, çekim): GK + 4 + 3 + 3; deplasman aynalanır (x→100-x).
+// Modül sabiti: her render'da yeniden alloc edilmez (oxlint exhaustive-deps fix).
+const FORM: [number, number, number][] = [
+  [7, 50, 0.04],
+  [20, 18, 0.14], [17, 38, 0.14], [17, 62, 0.14], [20, 82, 0.14],
+  [36, 28, 0.24], [34, 50, 0.24], [36, 72, 0.24],
+  [56, 22, 0.34], [58, 50, 0.34], [56, 78, 0.34],
+];
+
 const HOME_ARROW = '#4aa3e2';
 const AWAY_ARROW = '#e2a04a';
 
@@ -67,10 +76,11 @@ export default function PitchTV({
   const playersRef = useRef<(HTMLDivElement | null)[]>([]);
   const playerPos = useRef<[number, number][] | null>(null);
   const [side, setSide] = useState<Side | 'mid'>('mid');
-  const [badge, setBadge] = useState<{ type: SimEvType; side: Side } | null>(null);
+  const [badge, setBadge] = useState<{ type: SimEvType; side: Side; k: string } | null>(null);
   const [momentum, setMomentum] = useState('Kick-off');
   const [overlay, setOverlay] = useState<{ kind: 'goal' | 'card'; text: string; sub: string } | null>(null);
   const [flash, setFlash] = useState<'goal' | null>(null);
+  const [scorer, setScorer] = useState<Side | null>(null);   // file kabarması golcünün kalesinde
   const [sound, setSound] = useState(false);
 
   const prevPhase = useRef(phase);
@@ -110,9 +120,11 @@ export default function PitchTV({
     holdUntil.current = now + (goalPulse.penalty ? 4800 : 3600);
     cheer();
     setFlash('goal');
-    setOverlay({ kind: 'goal', text: goalPulse.penalty ? 'PENALTY!' : 'GOAL!', sub: `${goalPulse.team === 'home' ? home : away} ${hs}-${as}` });
+    setScorer(goalPulse.team);
+    // penaltıda alt yazı SKORSUZ: vuruş sonucu 2sn sonra topla birlikte gelir
+    setOverlay({ kind: 'goal', text: goalPulse.penalty ? 'PENALTY!' : 'GOAL!', sub: goalPulse.penalty ? (goalPulse.team === 'home' ? home : away) : `${goalPulse.team === 'home' ? home : away} ${hs}-${as}` });
     if (ovTimer.current) clearTimeout(ovTimer.current);
-    ovTimer.current = window.setTimeout(() => { setOverlay(null); setFlash(null); }, goalPulse.penalty ? 3200 : 2100);
+    ovTimer.current = window.setTimeout(() => { setOverlay(null); setFlash(null); setScorer(null); }, goalPulse.penalty ? 3200 : 2100);
   }, [goalPulse?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // server RED card → overlay
@@ -122,7 +134,7 @@ export default function PitchTV({
     if (!grew || phase !== 'live') return;
     setOverlay({ kind: 'card', text: 'RED CARD', sub: grew === 'home' ? home : away });
     if (ovTimer.current) clearTimeout(ovTimer.current);
-    ovTimer.current = window.setTimeout(() => setOverlay(null), 1900);
+    ovTimer.current = window.setTimeout(() => { setOverlay(null); setFlash(null); setScorer(null); }, 1900);
   }, [redHome, redAway]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // animation loop: ball + arrow + badge + label ALL come from matchSim on the
@@ -130,18 +142,7 @@ export default function PitchTV({
   // inside [sec, sec+holdSec]), ballAt returns that spot AND the badge lights —
   // they are one and the same moment, held for ≈2 real seconds. Goals hold the
   // ball at the net/penalty spot then centre (server-driven, separate).
-  // 4-3-3 çapaları (x% y%): GK + 4 + 3 + 3. Deplasman aynalanır (x → 100-x).
-  // Hat çekim katsayısı: kaleci neredeyse sabit, forvet topa en çok kayar.
-  const FORM: [number, number, number][] = [
-    [7, 50, 0.04],
-    [20, 18, 0.14], [17, 38, 0.14], [17, 62, 0.14], [20, 82, 0.14],
-    [36, 28, 0.24], [34, 50, 0.24], [36, 72, 0.24],
-    [56, 22, 0.34], [58, 50, 0.34], [56, 78, 0.34],
-  ];
-
   useEffect(() => {
-    // stale goal drama must not leak into another match
-    goalSeq.current = []; holdUntil.current = 0;
     if (phase === 'upcoming') { if (ballRef.current) { ballRef.current.style.left = '50%'; ballRef.current.style.top = '50%'; } smooth.current = [50, 50]; return; }
     let raf = 0;
     const teamName = (s: Side) => (s === 'home' ? home : away);
@@ -204,7 +205,7 @@ export default function PitchTV({
       setSide((v) => (v === sideNow ? v : sideNow));
       if (label !== labelRef.current) { labelRef.current = label; setMomentum(label); }
       const bk = bnow ? `${bnow.type}:${bnow.side}:${ev?.key}` : '';
-      if (bk !== badgeKeyRef.current) { badgeKeyRef.current = bk; setBadge(bnow); }
+      if (bk !== badgeKeyRef.current) { badgeKeyRef.current = bk; setBadge(bnow ? { ...bnow, k: bk } : null); }
 
       raf = requestAnimationFrame(step);
     };
@@ -213,6 +214,15 @@ export default function PitchTV({
   }, [matchId, dur, phase, finished, getClock, home, away]);
 
   useEffect(() => () => { if (ovTimer.current) clearTimeout(ovTimer.current); }, []);
+
+  // Maç değişimi: gol draması + overlay + flaş YENİ maça sızamaz. (Drama reset'i
+  // eskiden rAF effect'indeydi — getClock kimliği değişince kutlama ortasında
+  // dramayı siliyordu; artık yalnız matchId'ye bağlı.)
+  useEffect(() => {
+    goalSeq.current = []; holdUntil.current = 0;
+    setOverlay(null); setFlash(null); setBadge(null); setScorer(null);
+    if (ovTimer.current) { clearTimeout(ovTimer.current); ovTimer.current = null; }
+  }, [matchId]);
 
   return (
     <div className="pitch-tv">
@@ -255,22 +265,29 @@ export default function PitchTV({
           <div className="pl arc arc-l" /><div className="pl arc arc-r" />
           <div className="pl corner tl" /><div className="pl corner tr" />
           <div className="pl corner bl" /><div className="pl corner br" />
-          <div className={`pgoal l ${flash === 'goal' && side === 'away' ? 'net-bulge' : ''}`} />
-          <div className={`pgoal r ${flash === 'goal' && side === 'home' ? 'net-bulge' : ''}`} />
+          {/* file kabarması SCORER'a bağlı — side gol anında 'mid' olduğundan
+              eski koşul 1 kare bile yanmıyordu (denetim B3) */}
+          <div className={`pgoal l ${flash === 'goal' && scorer === 'away' ? 'net-bulge' : ''}`} />
+          <div className={`pgoal r ${flash === 'goal' && scorer === 'home' ? 'net-bulge' : ''}`} />
 
           {phase === 'live' && (side === 'home' || side === 'mid') && <div className="arrow home" style={{ ['--ac' as string]: HOME_ARROW }} />}
           {phase === 'live' && (side === 'away' || side === 'mid') && <div className="arrow away" style={{ ['--ac' as string]: AWAY_ARROW }} />}
 
-          {Array.from({ length: 22 }, (_, i) => (
-            <div key={i} ref={(el) => { playersRef.current[i] = el; }}
-              className={`pitch-player ${i < 11 ? 'ph' : 'pa'} ${i % 11 === 0 ? 'gk' : ''}`}
-              style={{ left: i < 11 ? `${FORM[i % 11][0]}%` : `${100 - FORM[i % 11][0]}%`, top: `${FORM[i % 11][1]}%` }} />
-          ))}
-          <div ref={trailRef} className="pitch-trail" />
+          {Array.from({ length: 22 }, (_, i) => {
+            // kırmızı kart: takım sahada EKSİK oynar (forvetten kırpılır; GK idx0 güvende)
+            const reds = i < 11 ? redHome : redAway;
+            if (i % 11 >= 11 - Math.min(3, reds)) return null;
+            return (
+              <div key={i} ref={(el) => { playersRef.current[i] = el; }}
+                className={`pitch-player ${i < 11 ? 'ph' : 'pa'} ${i % 11 === 0 ? 'gk' : ''}`}
+                style={{ left: i < 11 ? `${FORM[i % 11][0]}%` : `${100 - FORM[i % 11][0]}%`, top: `${FORM[i % 11][1]}%` }} />
+            );
+          })}
+          <div ref={trailRef} className="pitch-trail" style={{ left: '50%', top: '50%', opacity: 0 }} />
           <div ref={ballRef} className="pitch-ball" style={{ left: '50%', top: '50%' }}><span className="pent" /></div>
 
           {badge && (
-            <div className={`pev pev-${badge.type} ${badge.side}`} key={`${badge.type}${badge.side}`}>
+            <div className={`pev pev-${badge.type} ${badge.side}`} key={badge.k}>
               <span className="pev-i">{EV_ICON[badge.type]}</span>
               <span className="pev-t">{EV_LABEL[badge.type]}</span>
             </div>

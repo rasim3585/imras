@@ -111,7 +111,9 @@ export default function MatchRow({ m, hideLeague }: { m: BulletinMatch; hideLeag
   const infoInner = (
     <>
       <span className={`ll-time tnum ${isLive ? 'live' : startingSoon ? 'soon' : ''}`}>
-        {isLive ? (isBB ? bballClock(m.minute, m.period) : (isTN || isVB) ? (m.period ?? 'LIVE') : `${m.minute ?? 0}'`)
+        {/* tenis/voley: yalnız "Set N" — sunucunun set-içi sayısı izleme
+            merdiveniyle yarışıp çelişki yaratıyordu (tek hikâye ilkesi) */}
+        {isLive ? (isBB ? bballClock(m.minute, m.period) : (isTN || isVB) ? (m.period ?? 'LIVE').split('·')[0].trim() : `${m.minute ?? 0}'`)
           : startingSoon ? (minsToStart <= 0 ? t('feed.startnow') : t('feed.startsin', { n: minsToStart }))
           : formatKickoff(m.starts_at, t)}
       </span>

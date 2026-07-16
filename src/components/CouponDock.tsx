@@ -1,5 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+
+// Masaüstü/mobil AYRIMI JS'te: eski hali iki MiniWatch'ı aynı anda mount
+// ediyordu (CSS biri gizli) → çift poll + görünmez rAF + çift gol sesi.
+function useDesktop(): boolean {
+  const [d, setD] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches);
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const on = (e: MediaQueryListEvent) => setD(e.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  return d;
+}
 import { useCart } from '../coupon/CartContext';
 import CouponPanel from '../coupon/CouponPanel';
 import MiniWatch, { type MiniSport } from '../coupon/MiniWatch';
@@ -14,6 +27,7 @@ export default function CouponDock() {
   const { pathname } = useLocation();
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
+  const desktop = useDesktop();
   // 0715: kupon paneli yalnız bahis akışında görünür (bülten, maç detay, canlı
   // izleme). Gates/Aviator/AI Analiz/Profil gibi sayfalarda gereksizdi.
   const betting = pathname === '/'
@@ -30,20 +44,22 @@ export default function CouponDock() {
 
   return (
     <>
-      {/* desktop: always-reserved right column */}
-      <aside className="coupon-dock">
-        {count > 0 ? (
-          <div className="dock-stack">
-            <CouponPanel />
-            {lastVirtual && <MiniWatch matchId={lastVirtual.match_id} sport={sportOf(lastVirtual.market_type)} />}
-          </div>
-        ) : (
-          <div className="dock-empty"><p className="dim">{t('dock.empty')}</p></div>
-        )}
-      </aside>
+      {/* desktop: always-reserved right column — yalnız masaüstünde MOUNT olur */}
+      {desktop && (
+        <aside className="coupon-dock">
+          {count > 0 ? (
+            <div className="dock-stack">
+              <CouponPanel />
+              {lastVirtual && <MiniWatch matchId={lastVirtual.match_id} sport={sportOf(lastVirtual.market_type)} />}
+            </div>
+          ) : (
+            <div className="dock-empty"><p className="dim">{t('dock.empty')}</p></div>
+          )}
+        </aside>
+      )}
 
       {/* mobile: bottom bar + sheet (only with picks) */}
-      {count > 0 && (
+      {!desktop && count > 0 && (
         <>
           <div className="coupon-bar">
             <div className="coupon-bar-inner">

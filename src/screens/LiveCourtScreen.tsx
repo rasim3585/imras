@@ -7,7 +7,7 @@ import TennisTV from '../live/TennisTV';
 import MatchChat from '../live/ChatPanel';
 import FormStrip from '../live/FormStrip';
 import { courtStats, courtFeed, BB_TOTAL, type PlayType } from '../live/courtSim';
-import { tennisFeed, setClockSec, type TPlay, type CourtSport } from '../live/tennisSim';
+import { tennisFeed, setClockSec, seedSetClock, periodPoints, type TPlay, type CourtSport } from '../live/tennisSim';
 import { supabase } from '../lib/supabase';
 import type { LiveState, Match } from '../lib/types';
 
@@ -18,10 +18,13 @@ const TPLAY_ICON: Record<TPlay, string> = { ace: '🎾', winner: '🔥', error: 
 // Tennis / volleyball point feed below the court — the SAME rally list and the
 // SAME set clock as the ball animation (a feed line lands the moment the ball
 // lies dead on that point).
-function TennisPlays({ matchId, setIdx, sport, home, away }: { matchId: string; setIdx: number; sport: CourtSport; home: string; away: string }) {
+function TennisPlays({ matchId, setIdx, sport, home, away, period }: { matchId: string; setIdx: number; sport: CourtSport; home: string; away: string; period: string | null }) {
   const { t } = useI18n();
   const [, force] = useState(0);
   useEffect(() => { const id = setInterval(() => force((n) => n + 1), 1200); return () => clearInterval(id); }, []);
+  // sete ortadan katılım: TennisPlays çoğu kez saati İLK yaratan taraf —
+  // TennisTV ile aynı tohumlama (idempotent) burada da şart
+  seedSetClock(matchId, setIdx, sport, periodPoints(period));
   const feed = tennisFeed(matchId, setIdx, sport, setClockSec(matchId, setIdx)).slice(-10).reverse();
   return (
     <>
@@ -134,7 +137,10 @@ export default function LiveCourtScreen() {
     matchProvider.getMatch(matchId)
       .then((m) => { if (alive) setMatch(m); })
       .catch((e) => { if (alive) setError(e instanceof Error ? e.message : t('md.err.load')); });
+    let inFlight = false;   // poll koruması: yavaş DB'de istekler üst üste binmesin
     const poll = async () => {
+      if (inFlight) return;
+      inFlight = true;
       try {
         const [s] = await matchProvider.getLiveStates([matchId]);
         if (!alive || !s) return;
@@ -149,7 +155,7 @@ export default function LiveCourtScreen() {
         } else if (s.phase === 'upcoming') {
           bbAnchor.current = null;
         }
-      } catch { /* transient */ }
+      } catch { /* transient */ } finally { inFlight = false; }
     };
     void poll();
     const id = setInterval(poll, 1400);   // basket skoru ince aralikli guncellensin (basketler tek tek gelsin)
@@ -163,18 +169,22 @@ export default function LiveCourtScreen() {
       <button className="btn btn-block" onClick={() => navigate(-1)}>{t('md.back')}</button>
     </div>
   );
-  if (!match) return <div className="settle"><div className="spinner" /><p className="settle-note">{t('live.connecting')}</p></div>;
+  if (!match || match.id !== matchId) return <div className="settle"><div className="spinner" /><p className="settle-note">{t('live.connecting')}</p></div>;
 
-  const phase = live?.phase === 'live' ? 'live' : live?.phase === 'finished' ? 'finished' : 'upcoming';
-  const hs = live?.home_score ?? 0;
-  const as = live?.away_score ?? 0;
-  const dur = live?.duration_secs ?? 480;
+  // BAYAT STATE KORUMASI: rota değişiminin tek commit'lik penceresinde eski
+  // maçın live snapshot'ı yeni matchId ile TV'lere gidip modül-seviyesi saat
+  // çıpalarını zehirleyemez (gecikmeli patlayan anchor sızıntısı — denetim B1)
+  const lv = live && live.match_id === matchId ? live : null;
+  const phase = lv?.phase === 'live' ? 'live' : lv?.phase === 'finished' ? 'finished' : 'upcoming';
+  const hs = lv?.home_score ?? 0;
+  const as = lv?.away_score ?? 0;
+  const dur = lv?.duration_secs ?? 480;
 
   // kazanma olasılığı — canlıda CANLI oranlardan (statik market satırları
   // canlıda repriselenmiyor; bar oran butonlarıyla çelişiyordu)
   const rm = match.markets.find((mk) => mk.market_type.endsWith('moneyline') || mk.market_type === 'match_result');
   const oddByLabel = (l: string) => rm?.options.find((o) => o.label === l)?.odds ?? null;
-  const lo = phase === 'live' ? live?.live_odds : null;
+  const lo = phase === 'live' ? lv?.live_odds : null;
   const hO = (lo ? (lo.ml_home ?? lo.home) : null) ?? oddByLabel('1');
   const aO = (lo ? (lo.ml_away ?? lo.away) : null) ?? oddByLabel('2');
   const ph = hO ? 1 / hO : 0; const pa = aO ? 1 / aO : 0;
@@ -186,10 +196,10 @@ export default function LiveCourtScreen() {
 
       {match.sport === 'tennis' || match.sport === 'volleyball' ? (
         <TennisTV home={match.home_team} away={match.away_team} hs={hs} as={as}
-          period={live?.period ?? null} phase={phase} matchId={matchId!} sport={match.sport} />
+          period={lv?.period ?? null} phase={phase} matchId={matchId!} sport={match.sport} />
       ) : (
         <CourtTV home={match.home_team} away={match.away_team} hs={hs} as={as}
-          period={live?.period ?? null} minute={live?.minute ?? 0} phase={phase} matchId={matchId!}
+          period={lv?.period ?? null} minute={lv?.minute ?? 0} phase={phase} matchId={matchId!}
           dur={dur} getClock={getBBClock} />
       )}
 
@@ -198,7 +208,7 @@ export default function LiveCourtScreen() {
           dur={dur} getClock={phase === 'finished' ? () => BB_TOTAL : getBBClock} />
       )}
       {phase === 'live' && matchId && (match.sport === 'tennis' || match.sport === 'volleyball') && (
-        <TennisPlays matchId={matchId} setIdx={hs + as} sport={match.sport} home={match.home_team} away={match.away_team} />
+        <TennisPlays matchId={matchId} setIdx={hs + as} sport={match.sport} home={match.home_team} away={match.away_team} period={lv?.period ?? null} />
       )}
 
       {(ph > 0 || pa > 0) && phase !== 'finished' && (
