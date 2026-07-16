@@ -9,9 +9,15 @@ import { useI18n } from '../i18n/LanguageContext';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
+const CHAT_KEY = 'imras.bai.v1';
+function loadChat(): Msg[] {
+  // sekme gezinmesi sohbeti silmesin — sessionStorage (oturum kapanınca gider)
+  try { return JSON.parse(sessionStorage.getItem(CHAT_KEY) ?? '[]') as Msg[]; } catch { return []; }
+}
+
 export default function BettingAiChat() {
   const { t, lang } = useI18n();
-  const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [msgs, setMsgs] = useState<Msg[]>(loadChat);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
@@ -32,7 +38,9 @@ export default function BettingAiChat() {
       const d = data as { text?: string | null; reason?: string } | null;
       if (error || !d) { setNote(t('bai.err')); return; }
       if (d.text) {
-        setMsgs([...next, { role: 'assistant', content: d.text }]);
+        const full: Msg[] = [...next, { role: 'assistant', content: d.text }];
+        setMsgs(full);
+        try { sessionStorage.setItem(CHAT_KEY, JSON.stringify(full.slice(-20))); } catch { /* dolu/kapalı */ }
         requestAnimationFrame(() => listRef.current?.scrollTo({ top: 99999, behavior: 'smooth' }));
       } else if (d.reason === 'no_key') {
         setHidden(true);            // anahtar kapalı → kart tamamen gizlenir

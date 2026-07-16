@@ -206,13 +206,14 @@ export function TiltCard() {
   );
 }
 
+// ParallelCard (zaten export'lu) artık Aviator sekmesinde render edilir —
+// verisi Aviator-only (son 300 bahis); Genel'de "tüm oyunum" sanılıyordu.
 export default function MirrorPlus() {
   const [rk, setRk] = useState(0);
   return (
     <>
       <SurveyCard onSaved={() => setRk((k) => k + 1)} />
       <SelfGapCard refreshKey={rk} />
-      <ParallelCard />
       <TiltCard />
     </>
   );

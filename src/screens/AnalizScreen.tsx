@@ -8,7 +8,7 @@ import {
 } from '../lib/mirror';
 import { flagContent } from '../analiz/flagText';
 import BettingAiChat from '../analiz/BettingAiChat';
-import MirrorPlus from '../analiz/MirrorPlus';
+import MirrorPlus, { ParallelCard } from '../analiz/MirrorPlus';
 import AviatorMirror from '../aviator/AviatorMirror';
 import { CoinIcon } from '../components/icons';
 import { useI18n } from '../i18n/LanguageContext';
@@ -217,6 +217,10 @@ function JudgeScorecardBlock() {
   const { t } = useI18n();
   const [d, setD] = useState<JudgeScorecard | null>(null);
   useEffect(() => { fetchJudgeScorecard().then(setD).catch(() => {}); }, []);
+  // hiç kararname yoksa kart kaybolmak yerine tek satırlık keşif teaser'ı verir
+  if (d && (!d.ready || !d.verdicts)) {
+    return <div className="az-block jsc-card"><h3 className="az-h">✦ {t('jsc.title')}</h3><p className="az-sub">{t('jsc.teaser')}</p></div>;
+  }
   if (!d?.ready || !d.verdicts) return null;
   const saved = d.gold_saved_if_heeded ?? 0;
   return (
@@ -234,6 +238,46 @@ function JudgeScorecardBlock() {
       </div>
       {(d.week?.verdicts ?? 0) > 0 && (
         <div className="jsc-week dim">{t('jsc.week', { v: d.week!.verdicts, c: d.week!.cost.toLocaleString() })}</div>
+      )}
+    </div>
+  );
+}
+
+// "Diğer" sekmesi artık boş vaat değil: Mines/Dice/Plinko 0146'dan beri
+// mirror_overview ürün listesinde — burada kendi kartlarıyla görünürler.
+const LUCK_KEYS = new Set(['dice', 'mines', 'plinko']);
+function OtherTab() {
+  const { t } = useI18n();
+  const d = useMirror<OverviewProfile>(fetchOverview, 'other');
+  if (!d) return <div className="az-body"><p className="az-sub">{t('analiz.loading')}</p></div>;
+  const prods = d.ready ? d.products.filter((p) => LUCK_KEYS.has(p.key) && p.plays > 0) : [];
+  if (prods.length === 0) {
+    return <div className="az-body"><p className="az-sub">{t('analiz.other.none')}</p></div>;
+  }
+  const maxStake = Math.max(...prods.map((p) => p.staked), 1);
+  const luckFlags = d.ready ? d.flags.filter((f) => f.code.includes('luck')) : [];
+  return (
+    <div className="az-body">
+      <div className="az-block">
+        <h3 className="az-h">{t('analiz.other.title')}</h3>
+        <div className="az-prods">
+          {prods.map((p) => (
+            <div key={p.key} className="az-prod">
+              <div className="az-prod-top">
+                <span className="az-prod-name">{t('product.' + p.key)}</span>
+                <span className={`az-prod-net ${p.net >= 0 ? 'pos' : 'neg'}`}>{gold(p.net)}</span>
+              </div>
+              <div className="az-bar"><div className="az-bar-fill" style={{ width: `${Math.round((p.staked / maxStake) * 100)}%` }} /></div>
+              <div className="az-prod-sub">{t('analiz.prod.sub', { plays: p.plays.toLocaleString(), share: pct(p.stake_share) })}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {luckFlags.length > 0 && (
+        <div className="az-block">
+          <h3 className="az-h">{t('analiz.section.mirrorSays')}</h3>
+          <FlagList flags={luckFlags} />
+        </div>
       )}
     </div>
   );
@@ -364,11 +408,9 @@ export default function AnalizScreen() {
 
       {tab === 'genel' && <GenelTab />}
       {tab === 'coupon' && <CouponTab />}
-      {tab === 'aviator' && <div className="az-body"><AviatorMirror /></div>}
+      {tab === 'aviator' && <div className="az-body"><AviatorMirror /><ParallelCard /></div>}
       {tab === 'slot' && <SlotTab />}
-      {tab === 'other' && (
-        <div className="az-body"><p className="az-sub">{t('analiz.other')}</p></div>
-      )}
+      {tab === 'other' && <OtherTab />}
     </div>
   );
 }

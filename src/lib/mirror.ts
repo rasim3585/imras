@@ -26,7 +26,8 @@ export type SlotProfile =
     };
 
 export interface OverviewProduct {
-  key: 'aviator' | 'slot' | 'coupon'; label: string;
+  // 0146: dice/mines/plinko da ürün listesinde — tip bayattı, genişletildi
+  key: 'aviator' | 'slot' | 'coupon' | 'dice' | 'mines' | 'plinko'; label: string;
   plays: number; staked: number; net: number; stake_share: number;
 }
 export type OverviewProfile =
@@ -151,7 +152,7 @@ export type PlayerCard =
       ready: true; archetype: string; emoji: string;
       traits: CardTrait[]; total_net: number; total_plays: number;
     };
-export async function fetchPlayerCard(): Promise<PlayerCard> {
+async function _fetchPlayerCard(): Promise<PlayerCard> {
   const { data, error } = await supabase.rpc('mirror_card');
   if (error) throw new Error(error.message);
   return (data ?? { ready: false }) as PlayerCard;
@@ -166,7 +167,7 @@ export type BenchmarkProfile =
   | { ready: false }
   | { ready: true; population: number; axes: BenchmarkAxis[] };
 
-export async function fetchBenchmark(): Promise<BenchmarkProfile> {
+async function _fetchBenchmark(): Promise<BenchmarkProfile> {
   const { data, error } = await supabase.rpc('mirror_benchmark');
   if (error) throw new Error(error.message);
   return (data ?? { ready: false }) as BenchmarkProfile;
@@ -176,13 +177,13 @@ export async function fetchBenchmark(): Promise<BenchmarkProfile> {
 export type ChatProfile =
   | { ready: false; rounds?: number; need?: number }
   | { ready: true; comments: number; tilt_rate: number; avg_len: number; flags: MirrorFlag[] };
-export async function fetchChatMirror(): Promise<ChatProfile> {
+async function _fetchChatMirror(): Promise<ChatProfile> {
   const { data, error } = await supabase.rpc('mirror_chat');
   if (error) throw new Error(error.message);
   return (data ?? { ready: false }) as ChatProfile;
 }
 
-export async function fetchOverview(): Promise<OverviewProfile> {
+async function _fetchOverview(): Promise<OverviewProfile> {
   const { data, error } = await supabase.rpc('mirror_overview');
   if (error) throw new Error(error.message);
   return (data ?? { ready: false }) as OverviewProfile;
@@ -255,3 +256,19 @@ export async function fetchSelfGap(): Promise<SelfGapProfile> {
   if (error) throw new Error(error.message);
   return data as SelfGapProfile;
 }
+
+// 30sn promise-memo: Genel sekmesi kartları + CoachBlock aynı mirror RPC'lerini
+// mükerrer çekiyordu (açılışta 4 gereksiz istek) — aynı promise paylaşılır.
+const _memo = new Map<string, { at: number; p: Promise<unknown> }>();
+function memo30<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const hit = _memo.get(key);
+  if (hit && Date.now() - hit.at < 30_000) return hit.p as Promise<T>;
+  const pr = fn().catch((e) => { _memo.delete(key); throw e; });
+  _memo.set(key, { at: Date.now(), p: pr });
+  return pr;
+}
+
+export const fetchPlayerCard = () => memo30('pcard', _fetchPlayerCard);
+export const fetchBenchmark  = () => memo30('bench', _fetchBenchmark);
+export const fetchChatMirror = () => memo30('chatm', _fetchChatMirror);
+export const fetchOverview   = () => memo30('ovw',   _fetchOverview);
