@@ -174,7 +174,31 @@ kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40
 ---
 
 ## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0150'den** devam, sıfır dolgulu 4 hane. (**0148-0149 AI
+Yeni migration'lar **0150'den** devam, sıfır dolgulu 4 hane. (**2026-07-16
+GECE LAUNCH CİLASI (FE-only, 18 commit)**: 5-ajanlık keşif ordusu (raporlar
+scratchpad/rapor-0..4.md) + uygulama. GATES: sembol seti v3 — 5 fasetli
+mücevher + altın Kupa(50x)/Krampon(25x)/Eldiven(15x)/Düdük(12x) + Altın Top
+scatter; web-doğrulamalı GoO spec'iyle ödeme tablosu BİREBİR çıktı; banner
+25x/100x/250x/1000x; callout tutarları sunucu adım kazancına ölçekli; motor
+farkları (Buy 80x↔100x, scatter ödemesi 4/5/6=3x/5x/100x, FS retrigger +5,
+max-win kesme, FS orb nüansı) SQL turu bekliyor — DEVIR sabah kuyruğu. 2D:
+22 oyuncu noktası (çapa+topa çekim+salınım, PitchTV rAF); winprob barı
+görünmezdi (--av-mid yalnız Aviator kapsamındaydı — sayfa-dışı token KULLANMA
+dersi); 0-0 satırlar boş bar. KUPON DÜRÜSTLÜĞÜ: pending kuponlar limit muaf
+(200'ün gerisine düşen bekleyen kupon KAYBOLUYORDU); kazanç çipleri NET
+(brüt +150 değil +50; Plinko 0.2x kovada '+20' yalanı '−80' oldu); /coupon =
+CouponPanel kabuğu (kopya slip + kapalı-bacak körlüğü silindi); NavBar sepet
+rozeti kalktı (yanlış vaat). ANALİZ: Diğer sekmesi gerçek (Mines/Dice/Plinko
+kartları, OverviewProduct tipi genişledi); ParallelCard→Aviator sekmesi (veri
+Aviator-only); karne boş-durum teaser'ı; AI sohbet sessionStorage; mirror
+fetch 30sn memo (4 mükerrer RPC bitti). PRO: OG kartı (public/og-card.png)
++ og/twitter meta; rota başına document.title; anon 401 spam fix (FE advance()
+kaldırıldı — dünya ilerletme yalnız cron); behaviorLog geri-kuyruk sigortası;
+ölü src/providers/ silindi; lb.sub.day/pr.biggestwin etiketleri dürüst.
+UYARI: gece bülten 83 fikstürle 3-8sn + aralıklı timeout görüldü — muhtemel
+compute CPU-kredi tükenmesi; launch öncesi Dashboard>Reports>CPU kontrol +
+gerekirse Small'a upgrade. Edge deploy'lar git'ten OTOMATİK DEĞİL — dashboard
+elle ya da MCP; coupon-judge son sürümü 640 token + 'sen' hitabı.) (**0148-0149 AI
 Kupon Hakemi v2 — ÜRÜNÜN KALBİ (Rasim tezi: maç analizi yapan çok, kullanıcının
 KENDİ davranışını bilen yargıç yalnız bizde)**: coupon_review artık
 _coupon_judge_extras ile zengin — per_leg takım geçmişi (bets/won/net; ölçüldü:
