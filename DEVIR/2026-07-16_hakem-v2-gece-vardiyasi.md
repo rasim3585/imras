@@ -43,3 +43,17 @@ Chrome açık + uzantı + supabase.com oturumu (yol B). Rasim'e soruldu.
 - USA maçları bitince settle_real_fixture zinciri çalışmalı — sabah kontrol:
   kuponlar settle oldu mu, bülten temiz mi.
 - Uyku geri açma: `powercfg /change standby-timeout-ac 30`.
+
+## GECE GÜNCELLEMESİ (01:5x UTC)
+- Rasim 4 adımı uyguladı: judge_verdicts + tüm 0149 fonksiyonları CANLI
+  (doğrulandı), edge coupon-judge v2 DEPLOY EDİLDİ ve test edildi.
+- Canlı yargıç testi (zengin örnek, tr): yeni beyin ÇALIŞIYOR — Marseille
+  11/3/-1840 takım geçmişi, Aviator -1200 çapraz tilt, kovalama deseni,
+  benzer-kupon karnesi hepsi metinde. İKİ PÜRÜZ: 420 token Türkçede yarıda
+  kesti + "siz" dedi → repo'da düzeltildi (640 + 'sen' kuralı, commit 254a5d6).
+  SABAH: coupon-judge'ı repo dosyasıyla BİR KEZ redeploy et.
+- coupon_review birleştirmesi (ADIM 2) büyük olasılıkla uygulandı ama JWT'siz
+  doğrulanamıyor — sabah tap-testinde bacak altı takım çipi görünüyorsa tamam.
+- NOT: ce1fbf70 hesabı Rasim'in KENDİ hesabı çıktı (10K test kuponu onda);
+  hesabına oturum üretme yolu bilinçli KAPATILDI (çizgi: kimlik doğrulama).
+- Bülten 703ms, settle zinciri sağlıklı (Miami 2-0, Lexington 1-4 settle OK).
