@@ -14,7 +14,7 @@ type SportKey = 'live' | 'all' | 'football' | 'efootball' | 'basketball' | 'tenn
 const SPORTS: { key: SportKey | 'luck'; tkey: string; icon: string; soon?: boolean }[] = [
   { key: 'live', tkey: 'feed.tab.live', icon: '⚡' },
   { key: 'all', tkey: 'feed.tab.all', icon: '📋' },
-  { key: 'football', tkey: 'feed.tab.football', icon: '⚽' },
+  { key: 'football', tkey: 'feed.tab.football', icon: 'ball' },
   { key: 'efootball', tkey: 'feed.tab.efootball', icon: '' },
   { key: 'basketball', tkey: 'feed.tab.basketball', icon: '🏀' },
   { key: 'tennis', tkey: 'feed.tab.tennis', icon: '🎾' },
@@ -198,7 +198,7 @@ export default function FeedScreen() {
               className={`sport-tab ${sport === s.key ? 'active' : ''} ${s.soon ? 'soon' : ''} ${s.key === 'luck' && luckOpen ? 'active' : ''}`}
               onClick={() => { if (s.key === 'luck') { setLuckOpen((o) => !o); } else { setLuckOpen(false); setSport(s.key as SportKey); } }}
             >
-              {s.key === 'efootball' ? <EFootballIcon size={19} /> : s.key === 'basketball' ? <EBasketballIcon size={19} /> : s.key === 'tennis' ? <ETennisIcon size={19} /> : s.key === 'volley' ? <EVolleyballIcon size={19} /> : <span className="sport-ic">{s.icon}</span>}
+              {s.key === 'efootball' ? <EFootballIcon size={19} /> : s.key === 'basketball' ? <EBasketballIcon size={19} /> : s.key === 'tennis' ? <ETennisIcon size={19} /> : s.key === 'volley' ? <EVolleyballIcon size={19} /> : s.icon === 'ball' ? <BallIcon size={18} /> : <span className="sport-ic">{s.icon}</span>}
               {t(s.tkey)}
               {s.soon ? <span className="soon-badge">{t('feed.soon')}</span> : cnt != null ? <span className="sport-cnt">{cnt}</span> : null}
             </button>

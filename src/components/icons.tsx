@@ -9,13 +9,14 @@ export function MarketsIcon() {
   );
 }
 
+// Gerçek futbol ikonu = MARKA topu (beyaz top + yeşil beşgen). Eski nötr çizgi
+// top gerçek maç kimliğini taşımıyordu — gerçek maç her yerde bu topla anılır.
 export function BallIcon({ size }: { size?: number } = {}) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
-         strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7.3l3.4 2.5-1.3 4h-4.2l-1.3-4z" />
-      <path d="M12 7.3V4M15.4 9.8l2.9-1M14.1 13.8l1.8 2.7M9.9 13.8l-1.8 2.7M8.6 9.8l-2.9-1" />
+    <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="32" cy="32" r="27" fill="#ffffff" stroke="#111311" strokeWidth="5" />
+      <polygon points="32,17.5 46.7,28.2 41.1,45.5 22.9,45.5 17.3,28.2"
+        fill="#12a150" stroke="#111311" strokeWidth="1.5" strokeLinejoin="round" />
     </svg>
   );
 }
