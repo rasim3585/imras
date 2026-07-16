@@ -31,7 +31,7 @@ export default function CourtTV({
   // (Aviator "kullanıcının gördüğü değer" felsefesi). Sunucu her zaman önde
   // olabilir; fark make kuyruğunda bekler.
   const [shown, setShown] = useState({ hs, as });
-  const prev = useRef({ hs, as });
+  const prev = useRef({ matchId, hs, as });
   const ready = useRef(false);          // arm only after the first real score loads (no spurious +124 pop)
   const popId = useRef(0);
   const shownBadge = useRef('');
@@ -49,10 +49,26 @@ export default function CourtTV({
 
   // sunucu farkını kuyruğa çevir (drama loop'ta oynar)
   useEffect(() => {
+    // MAÇ DEĞİŞTİ (mini izleme başka seçime geçebilir): eski maçın skoru/
+    // draması yeni maça sızamaz — her şey yeni maçın gerçeğine sıfırlanır.
+    if (prev.current.matchId !== matchId) {
+      prev.current = { matchId, hs, as };
+      ready.current = hs > 0 || as > 0;
+      queue.current = []; active.current = null;
+      setShown({ hs, as }); setPops([]); setFlash(null);
+      return;
+    }
     const dH = hs - prev.current.hs, dA = as - prev.current.as;
-    prev.current = { hs, as };
+    prev.current = { matchId, hs, as };
     if (!ready.current) { if (hs > 0 || as > 0) { ready.current = true; setShown({ hs, as }); } return; }
     if (!live) { setShown({ hs, as }); return; }
+    // sunucu skoru AZALDIYSA (düzeltme/void): drama iptal, gerçeğe kilitlen —
+    // aksi halde gösterilen skor sonsuza dek sapardı
+    if (dH < 0 || dA < 0) {
+      queue.current = []; active.current = null;
+      setShown({ hs, as });
+      return;
+    }
     const push = (sideK: Side, pts: number) => {
       const hoopX = sideK === 'home' ? 300 : 20;
       const dir = sideK === 'home' ? 1 : -1;

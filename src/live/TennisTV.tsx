@@ -25,7 +25,7 @@ export default function TennisTV({
   // GÖSTERİLEN set skoru: sunucu seti bitirdiğinde flaş+tabela, top ÖLÜNCE
   // birlikte yanar (ralli ortasında set kutlaması olmaz — basketle aynı ilke).
   const [shown, setShown] = useState({ hs, as });
-  const prev = useRef({ hs, as });
+  const prev = useRef({ matchId, hs, as });
   const pendingFlash = useRef<{ side: Side; at: number } | null>(null);
   const ready = useRef(false);          // arm after first real score (no spurious flash on load)
   const subKey = useRef('');
@@ -33,13 +33,23 @@ export default function TennisTV({
 
   // server won a set → beklet: top ölünce flaş + tabela (rAF loop ateşler)
   useEffect(() => {
+    // maç değişimi: eski maçın seti/flaşı yeni maça sızamaz
+    if (prev.current.matchId !== matchId) {
+      prev.current = { matchId, hs, as };
+      ready.current = hs > 0 || as > 0;
+      pendingFlash.current = null;
+      setShown({ hs, as }); setFlash(null);
+      return;
+    }
     const dH = hs - prev.current.hs, dA = as - prev.current.as;
-    prev.current = { hs, as };
+    prev.current = { matchId, hs, as };
     if (!ready.current) { if (hs > 0 || as > 0) { ready.current = true; setShown({ hs, as }); } return; }
     if (!live) { setShown({ hs, as }); return; }
+    // azalış (düzeltme): kutlamasız gerçeğe kilitlen
+    if (dH < 0 || dA < 0) { pendingFlash.current = null; setShown({ hs, as }); return; }
     if (dH <= 0 && dA <= 0) return;
     pendingFlash.current = { side: dH >= dA ? 'home' : 'away', at: Date.now() };
-  }, [hs, as, live]);
+  }, [matchId, hs, as, live]);
 
   // rally loop: ball + serve + sub-score — one clock, one rally list
   useEffect(() => {
