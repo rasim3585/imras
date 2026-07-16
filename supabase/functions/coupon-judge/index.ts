@@ -94,8 +94,12 @@ Deno.serve(async (req: Request) => {
     });
     if (!r.ok) { const t = await r.text(); return json({ text: null, reason: "api_error", detail: t.slice(0, 200) }); }
     const data = await r.json();
-    const text = (data?.content?.[0]?.text ?? "").trim();
-    return json({ text: text || null });
+    // Sonnet 5 cevabın başına düşünme bloğu koyabilir — İLK bloğu değil,
+    // TEXT tipindeki blokları oku (content[0].text varsayımı boş döndürüyordu)
+    const blocks: { type?: string; text?: string }[] = Array.isArray(data?.content) ? data.content : [];
+    const text = blocks.filter((b) => b?.type === "text" && b.text).map((b) => b.text).join("\n").trim();
+    if (!text) return json({ text: null, reason: "no_text" });
+    return json({ text });
   } catch (e) {
     return json({ text: null, reason: "exception", detail: String(e).slice(0, 200) });
   }
