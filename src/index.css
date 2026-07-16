@@ -465,7 +465,7 @@ a:hover { color: var(--win); }
 .sb2-team.away .sb2-info { align-items: flex-end; }
 .sb2-name { font-size: 0.9rem; font-weight: 600; color: #eaf4ee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sb2-pl { font-size: 0.66rem; color: #9fb4a8; }
-.sb2-center { text-align: center; min-width: 64px; }
+.sb2-center { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 72px; }
 .sb2-score { display: block; font-family: var(--mono); font-size: 1.7rem; font-weight: 800; color: #fff; line-height: 1; letter-spacing: 1px; }
 .sb2-clock { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; background: #e24b4a; color: #fff; font-size: 0.66rem; font-weight: 700; padding: 2px 8px; border-radius: 5px; font-family: var(--mono); }
 .sb2-clock .dot { background: #fff; }
@@ -591,7 +591,7 @@ a:hover { color: var(--win); }
 .mkt-cat { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-2); padding: 8px 2px 0; }
 .mkt-cat:not(:first-child) { margin-top: var(--s2); }
 .mkt-cat-i { border: none; background: none; color: var(--text-mut); font-size: 0.9rem; line-height: 1; cursor: pointer; padding: 0 2px; }
-.mkt-cat-i:hover { color: var(--av-mid); }
+.mkt-cat-i:hover { color: #12a150; }
 .mkt-cat-info { font-size: 0.76rem; color: var(--text-mut); line-height: 1.45; background: var(--surface-2); border: 1px solid var(--card-line); border-radius: 8px; padding: 8px 10px; margin: 6px 2px 0; }
 
 /* Faz 3c: virtual-league stats panel (standings + form + H2H) on match detail */
@@ -1845,7 +1845,7 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .winprob { margin-top: var(--s3); border: 1px solid var(--card-line); border-radius: 12px; background: var(--surface); padding: 11px 13px; }
 .winprob-head .k { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-mut); }
 .winprob-bar { display: flex; height: 9px; border-radius: 999px; overflow: hidden; margin: 7px 0 5px; background: var(--surface-2); }
-.winprob-h { background: var(--av-mid); }
+.winprob-h { background: #12a150; }  /* av-mid Aviator kapsamindaydi -> diger sayfalarda gorunmezdi (kalici fix) */
 .winprob-a { background: #4a7fb5; }
 .winprob-labels { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-mut); }
 .winprob-labels b { color: var(--text); font-variant-numeric: tabular-nums; }

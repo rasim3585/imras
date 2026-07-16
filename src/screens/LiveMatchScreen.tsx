@@ -38,13 +38,15 @@ function StatsPanel({ matchId, clockSec, reds, home, away, dur }: {
   ];
   const Bar = ({ label, l, r }: { label: string; l: number; r: number }) => {
     const tot = l + r;
-    const lp = tot === 0 ? 50 : Math.round((100 * l) / tot);
+    // 0-0 satırda bar BOŞ kalır — yarı dolu çizmek veri varmış yanılsaması veriyordu
+    const lp = tot === 0 ? 0 : Math.round((100 * l) / tot);
+    const rp = tot === 0 ? 0 : 100 - lp;
     return (
       <div className="lst-row">
         <span className="lst-l tnum">{l}</span>
         <div className="lst-mid">
           <span className="lst-k">{label}</span>
-          <div className="lst-bar"><div className="lst-h" style={{ width: `${lp}%` }} /><div className="lst-a" style={{ width: `${100 - lp}%` }} /></div>
+          <div className="lst-bar"><div className="lst-h" style={{ width: `${lp}%` }} /><div className="lst-a" style={{ width: `${rp}%` }} /></div>
         </div>
         <span className="lst-r tnum">{r}</span>
       </div>
