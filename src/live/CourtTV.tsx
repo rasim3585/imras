@@ -27,70 +27,112 @@ export default function CourtTV({
   const [flash, setFlash] = useState<Side | null>(null);
   const [pops, setPops] = useState<{ id: number; side: Side; pts: number }[]>([]);
   const [badge, setBadge] = useState<{ type: PlayType; side: Side } | null>(null);
+  // GÖSTERİLEN skor: sunucu skoru DEĞİL — tabela, top potaya varınca artar
+  // (Aviator "kullanıcının gördüğü değer" felsefesi). Sunucu her zaman önde
+  // olabilir; fark make kuyruğunda bekler.
+  const [shown, setShown] = useState({ hs, as });
   const prev = useRef({ hs, as });
   const ready = useRef(false);          // arm only after the first real score loads (no spurious +124 pop)
   const popId = useRef(0);
   const shownBadge = useRef('');
-  // server make → timed sequence: ball at the CORRECT range for the points
-  // (1 = free-throw line, 2 = inside the arc, 3 = beyond the arc), then into
-  // the hoop where it holds — all legible, ≥2s total
-  const makeSeq = useRef<{ until: number; x: number; y: number }[]>([]);
-  const makeSide = useRef<Side>('home');
+  // SAYI KUYRUĞU + varışa-bağlı koreografi durum makinesi (v2):
+  //   spot  → top sayının menziline gider (1=faul çizgisi, 2=içeride, 3=çember dışı)
+  //   fly   → potaya uçar; POTAYA FİİLEN VARINCA (mesafe<10) pop+flaş+tabela AYNI karede
+  //   hold  → potada ~650ms okunur bekleme, sonra sıradaki sayı
+  // Duvar saati tetiği YOK — pop, top neredeyse orada patlar; kuyruk sayesinde
+  // ardışık sayılar üst üste yazılmaz. Kuyruk taşarsa (arka plan sekmesi dönüşü)
+  // eski sayılar dramasız tabelaya işlenir, son 2'si oynatılır.
+  interface Make { side: Side; pts: number; spot: { x: number; y: number } }
+  const queue = useRef<Make[]>([]);
+  const active = useRef<(Make & { stage: 'spot' | 'fly' | 'hold'; stageT: number }) | null>(null);
   const sm = useRef<[number, number]>([160, 100]);   // eased ball pos (court coords)
 
-  // server basket → scorer flash + +pts pop + shot-from-range drama
+  // sunucu farkını kuyruğa çevir (drama loop'ta oynar)
   useEffect(() => {
     const dH = hs - prev.current.hs, dA = as - prev.current.as;
     prev.current = { hs, as };
-    if (!ready.current) { if (hs > 0 || as > 0) ready.current = true; return; }   // skip the initial data load
-    if (dH <= 0 && dA <= 0) return;
-    // her artan takim icin ayri pop (ikisi de attiysa ikisi de gorunur, biri kacmaz)
-    const fresh: { id: number; side: Side; pts: number }[] = [];
-    if (dH > 0) fresh.push({ id: ++popId.current, side: 'home', pts: Math.min(6, dH) });
-    if (dA > 0) fresh.push({ id: ++popId.current, side: 'away', pts: Math.min(6, dA) });
-    const scorer: Side = dH >= dA ? 'home' : 'away';
-    const pts = Math.max(dH, dA);
-    const hoopX = scorer === 'home' ? 300 : 20;
-    const dir = scorer === 'home' ? 1 : -1;
-    const now = Date.now();
-    const sy = 100 + (Math.random() * 44 - 22);
-    const spot = pts === 1 ? { x: hoopX - dir * BB_FT, y: 100 }              // free throw: on the line
-      : pts >= 3 ? { x: hoopX - dir * (BB_R3 + 9), y: sy }                    // three: beyond the arc
-      : { x: hoopX - dir * (18 + Math.random() * 16), y: sy };                // two: inside it
-    makeSeq.current = [{ until: now + 900, ...spot }, { until: now + 2300, x: hoopX, y: 100 }];
-    makeSide.current = scorer;
-    const ids = fresh.map((f) => f.id);
-    // 0715: +2/+3 pop ve pota flaşı TOP POTAYA VARINCA yanar (spot fazı ~900ms)
-    // — basketten ÖNCE değil; animasyonla skor artık senkron
-    const t0 = setTimeout(() => { setFlash(scorer); setPops((p) => [...p, ...fresh]); }, 880);
-    const tf = setTimeout(() => setFlash(null), 2100);
-    const tp = setTimeout(() => setPops((p) => p.filter((x) => !ids.includes(x.id))), 3300);
-    return () => { clearTimeout(t0); clearTimeout(tf); clearTimeout(tp); };
-  }, [hs, as]);
+    if (!ready.current) { if (hs > 0 || as > 0) { ready.current = true; setShown({ hs, as }); } return; }
+    if (!live) { setShown({ hs, as }); return; }
+    const push = (sideK: Side, pts: number) => {
+      const hoopX = sideK === 'home' ? 300 : 20;
+      const dir = sideK === 'home' ? 1 : -1;
+      const sy = 100 + (Math.random() * 44 - 22);
+      const spot = pts === 1 ? { x: hoopX - dir * BB_FT, y: 100 }
+        : pts >= 3 ? { x: hoopX - dir * (BB_R3 + 9), y: sy }
+        : { x: hoopX - dir * (18 + Math.random() * 16), y: sy };
+      queue.current.push({ side: sideK, pts, spot });
+    };
+    // artışları gerçekçi sayı paketlerine böl (ör. +5 → 3+2): her paket ayrı drama
+    const split = (d: number): number[] => {
+      const out: number[] = [];
+      while (d > 0) { const p = d >= 3 ? 3 : d; out.push(p); d -= p; }
+      return out;
+    };
+    if (dH > 0) split(dH).forEach((p) => push('home', p));
+    if (dA > 0) split(dA).forEach((p) => push('away', p));
+    // taşma: 3'ten fazla bekleyen varsa eskileri dramasız tabelaya işle
+    while (queue.current.length > 3) {
+      const m = queue.current.shift()!;
+      setShown((s) => (m.side === 'home' ? { ...s, hs: s.hs + m.pts } : { ...s, as: s.as + m.pts }));
+    }
+  }, [hs, as, live]);
 
-  // animation loop: ball + badge + possession side from the SAME sim clock
+  // animation loop: ball + badge + possession side from the SAME sim clock;
+  // make koreografisi varışa bağlı — pop yalnız top potadayken.
   useEffect(() => {
     if (!live) return;
-    makeSeq.current = [];              // stale make drama must not leak between matches
+    queue.current = []; active.current = null;   // stale make drama must not leak between matches
     let raf = 0;
+    const HOOP = (sideK: Side) => (sideK === 'home' ? { x: 300, y: 100 } : { x: 20, y: 100 });
     const step = () => {
       const clock = getClock();
-      const seq = makeSeq.current;
-      while (seq.length && Date.now() >= seq[0].until) seq.shift();
-      const mh = seq.length ? seq[0] : null;
-      const ev = mh ? null : activeCourtEvent(matchId, clock, dur);
-      const b = courtBallAt(matchId, clock, dur);
-      const tx = mh ? mh.x : b.x, ty = mh ? mh.y : b.y;
-      const s = sm.current; s[0] += (tx - s[0]) * 0.2; s[1] += (ty - s[1]) * 0.2;
+      // sıradaki sayıyı sahneye al
+      if (!active.current && queue.current.length > 0) {
+        const m = queue.current.shift()!;
+        active.current = { ...m, stage: 'spot', stageT: Date.now() };
+      }
+      const act = active.current;
+      let tx: number, ty: number;
+      if (act) {
+        const s = sm.current;
+        if (act.stage === 'spot') {
+          tx = act.spot.x; ty = act.spot.y;
+          const near = Math.hypot(s[0] - tx, s[1] - ty) < 9;
+          if (near || Date.now() - act.stageT > 1100) { act.stage = 'fly'; act.stageT = Date.now(); }
+        } else if (act.stage === 'fly') {
+          const h = HOOP(act.side); tx = h.x; ty = h.y;
+          const near = Math.hypot(s[0] - tx, s[1] - ty) < 10;
+          if (near || Date.now() - act.stageT > 1600) {
+            // SAYI ANI — top potada: pop + flaş + tabela AYNI karede
+            const id = ++popId.current;
+            const m = act;
+            setFlash(m.side);
+            setPops((p) => [...p, { id, side: m.side, pts: m.pts }]);
+            setShown((sc) => (m.side === 'home' ? { ...sc, hs: sc.hs + m.pts } : { ...sc, as: sc.as + m.pts }));
+            window.setTimeout(() => setFlash(null), 1300);
+            window.setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 2400);
+            act.stage = 'hold'; act.stageT = Date.now();
+          }
+        } else {
+          const h = HOOP(act.side); tx = h.x; ty = h.y;
+          if (Date.now() - act.stageT > 650) active.current = null;
+        }
+      } else {
+        const b = courtBallAt(matchId, clock, dur);
+        tx = b.x; ty = b.y;
+      }
+      const amb = active.current ? null : activeCourtEvent(matchId, clock, dur);
+      const bMove = active.current ? true : courtBallAt(matchId, clock, dur).moving;
+      const s = sm.current; s[0] += (tx - s[0]) * 0.22; s[1] += (ty - s[1]) * 0.22;
       if (ballRef.current) {
         ballRef.current.style.left = `${(s[0] / 320) * 100}%`;
         ballRef.current.style.top = `${(s[1] / 200) * 100}%`;
-        ballRef.current.classList.toggle('shooting', !!mh || b.moving);
+        ballRef.current.classList.toggle('shooting', bMove);
       }
-      const sideNow: Side = mh ? makeSide.current : b.side;
+      const sideNow: Side = active.current ? active.current.side : courtBallAt(matchId, clock, dur).side;
       setSide((v) => (v === sideNow ? v : sideNow));
-      const bk = mh ? '' : ev ? ev.key : '';
-      if (bk !== shownBadge.current) { shownBadge.current = bk; setBadge(ev && !mh ? { type: ev.type, side: ev.side } : null); }
+      const bk = active.current ? '' : amb ? amb.key : '';
+      if (bk !== shownBadge.current) { shownBadge.current = bk; setBadge(amb && !active.current ? { type: amb.type, side: amb.side } : null); }
       raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
@@ -159,7 +201,11 @@ export default function CourtTV({
       </div>
       <div className="court-score">
         <span className={`court-name ${flash === 'home' ? 'lit' : ''}`}>{home}</span>
-        <span className={`court-nums tnum ${flash ? 'score-shake' : ''}`}>{hs} <span className="court-colon">:</span> {as}</span>
+        {/* tabela GÖSTERİLEN skoru basar — top potaya varmadan zıplamaz;
+            bitmiş/canlı-dışı durumda sunucu skoru birebir */}
+        <span className={`court-nums tnum ${flash ? 'score-shake' : ''}`}>
+          {live ? shown.hs : hs} <span className="court-colon">:</span> {live ? shown.as : as}
+        </span>
         <span className={`court-name ${flash === 'away' ? 'lit' : ''}`}>{away}</span>
       </div>
     </div>
