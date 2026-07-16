@@ -367,3 +367,60 @@ gizler**. GEREKLİ: Supabase secret `ANTHROPIC_API_KEY` (Rasim ekleyince aktif).
 İlke: sayılar HEP deterministik, LLM yalnız cümleye döker, uydurmaz. **Para yoluna
 analiz mutasyonu ASLA eklenmez** — ayna yalnız OKUR. Sıra: park (4-spor QA, Gates
 görsel), sonra daha çok yakalama/hedef-takip nudge.
+
+---
+
+## 7. YOL HARİTASI (2026-07-16 — launch'a ve sonrasına, önem sırasıyla)
+
+*Bu bölüm tek doğru kaynak: "ne kaldı?" sorusunun cevabı. Bir madde bitince
+buradan sil/işaretle. T0 bitmeden launch YOK.*
+
+### T0 — LAUNCH BLOKERI (hepsi Rasim'in elinde, kod işi bitti)
+1. **Pro + Small upgrade**: Settings→Billing→Pro (~$25/ay), sonra
+   Settings→Compute and Disk→Small (kısa restart). Neden: Nano'nun günlük
+   30dk IO burst bütçesi — 3 üretim çöküşünün kök nedeni; launch trafiği
+   ilk saatte bitirir. **Hemen ardından** SQL-KUYRUK **A** (cron geri-alma:
+   pickplay_live 1sn, pickplay_tick 30sn).
+2. **Auth URL ayarı**: Authentication→URL Configuration→Site URL
+   `https://www.imras.ai` + Redirect listesine `https://www.imras.ai/reset`.
+   Şifre sıfırlamanın tek kod-dışı bağımlılığı.
+3. **Tap-test (7 adım)**: oran tıkla→otomatik sayılar+takım çipi → yargıç →
+   oyna → settle çipi → Hakem Karnesi → Profil "kazanan" = Kuponlarım kontrolü.
+
+### T1 — LAUNCH HAFTASI (Claude, kod; launch'ı beklemez ama bloklamaz)
+4. **FE bülten poll backoff**: 5sn poll'a hata-durumunda üstel geri çekilme +
+   jitter (0147 kazasının FE ayağı; eşzamanlı yığılma sarmalını FE de kessin).
+5. **Gerçek maç pazar adları i18n**: MARKET_NAMES/OUTCOME_LABELS
+   (supabaseMatchProvider) İngilizce — provider key döndürsün, FE çevirsin
+   ("Match Result / Over 2.5" 8 dilde).
+6. **client_error runbook**: her sabah
+   `select event_type, payload, created_at from behavior_events where event_type='client_error' order by id desc limit 50;`
+   (RootErrorBoundary + global yakalayıcı = bedava Sentry-lite; ilk hafta günlük bak).
+
+### T2 — LAUNCH SONRASI KALİTE (Claude)
+7. Argsız `toLocaleString()` süpürmesi (~35 çağrı → fmtNum): ar-SA tarayıcıda
+   Doğu Arap rakamı karışması.
+8. RTL kalan fiziksel CSS süpürmesi (kritikler yapıldı; kalan ~30 düşük etki)
+   + Arapça webfont (Montserrat Latin-only, sistem fontuna düşüyor).
+9. `dice_roll` chance clamp canlı testi (FE slider 2-95; RPC sınırı ölçülmedi).
+
+### T3 — ÜRÜN DERİNLİĞİ (Claude + kısa SQL oturumları; SQL-KUYRUK D)
+10. **match-preview'a gerçek maç dalı** — ana bahis yüzeyi (gerçek maçlar)
+    şu an AI önizlemesiz; ürünün kalbi oradan da konuşmalı.
+11. **mirror_luck RPC**: Mines derinlik / Dice beyan-edilmiş risk iştahı /
+    Plinko risk dağılımı → Analiz "Diğer" sekmesi gerçek aynaya dönsün.
+12. betting-ai cevabına `remaining` (günlük hak sayacı FE'de görünsün).
+13. mirror_coupon derinleştirme: oran-bandı histogramı, canlı/maç-öncesi
+    ayrımı, takım tuzakları aynada.
+14. Ayna genişleme: daha çok yakalama + hedef-takip nudge (Faz 2 — oyun
+    bağımsız tasarım ilkesi korunur).
+
+### PARK — bilinçli erteleme (tetikleyen: Rasim kararı / veri birikimi)
+- **GoO motor birebirliği**: farklar belgeli (SQL-KUYRUK); değişiklik = para
+  motoru = önce 500K spin sim. Tetik: Rasim "yap" derse.
+- **Aylık Nesine kalibrasyon turu** (model-tabanlı adil olasılık dahil):
+  longshot dondurma bulgusu n=1'di; ağustos ortası 3+ nokta ölç.
+- **Gates görsel/gameplay hissi** (Rasim: "oturmadı, dönülecek").
+- **4 sanal spor toplu görsel QA** (Rasim yapacak).
+- **BSD canlı momentum / $3 WebSocket kararı** (eski bekleyen; gerçek maç
+  canlı verisi derinleşsin istenirse).
