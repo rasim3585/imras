@@ -22,21 +22,24 @@ export default function TennisTV({
   const [server, setServer] = useState<Side>('home');
   const [flash, setFlash] = useState<Side | null>(null);
   const [sub, setSub] = useState<{ games: [number, number]; point: string } | null>(null);
+  // GÖSTERİLEN set skoru: sunucu seti bitirdiğinde flaş+tabela, top ÖLÜNCE
+  // birlikte yanar (ralli ortasında set kutlaması olmaz — basketle aynı ilke).
+  const [shown, setShown] = useState({ hs, as });
   const prev = useRef({ hs, as });
+  const pendingFlash = useRef<{ side: Side; at: number } | null>(null);
   const ready = useRef(false);          // arm after first real score (no spurious flash on load)
   const subKey = useRef('');
   const sm = useRef<[number, number]>([160, 100]);   // eased ball pos (oyuncu YOK — sadece top)
 
-  // server won a set → flash (the set clock resets itself via setIdx)
+  // server won a set → beklet: top ölünce flaş + tabela (rAF loop ateşler)
   useEffect(() => {
     const dH = hs - prev.current.hs, dA = as - prev.current.as;
     prev.current = { hs, as };
-    if (!ready.current) { if (hs > 0 || as > 0) ready.current = true; return; }
+    if (!ready.current) { if (hs > 0 || as > 0) { ready.current = true; setShown({ hs, as }); } return; }
+    if (!live) { setShown({ hs, as }); return; }
     if (dH <= 0 && dA <= 0) return;
-    setFlash(dH >= dA ? 'home' : 'away');
-    const t = setTimeout(() => setFlash(null), 1100);
-    return () => clearTimeout(t);
-  }, [hs, as]);
+    pendingFlash.current = { side: dH >= dA ? 'home' : 'away', at: Date.now() };
+  }, [hs, as, live]);
 
   // rally loop: ball + serve + sub-score — one clock, one rally list
   useEffect(() => {
@@ -52,6 +55,14 @@ export default function TennisTV({
       const st = rallyState(matchId, setIdx, sport, t);
       const k = `${st.games[0]}-${st.games[1]}:${st.point}`;
       if (k !== subKey.current) { subKey.current = k; setSub({ games: st.games, point: st.point }); }
+      // bekleyen set kutlaması: top ölü (sayı bitti) ya da 3sn tavan → şimdi yanar
+      const pf = pendingFlash.current;
+      if (pf && (flow.dead || Date.now() - pf.at > 3000)) {
+        pendingFlash.current = null;
+        setShown({ hs, as });
+        setFlash(pf.side);
+        window.setTimeout(() => setFlash(null), 1100);
+      }
       raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
@@ -118,7 +129,9 @@ export default function TennisTV({
       </div>
       <div className="court-score">
         <span className={`court-name ${flash === 'home' ? 'lit' : ''}`}>{server === 'home' && live ? '● ' : ''}{home}</span>
-        <span className={`court-nums tnum ${flash ? 'score-shake' : ''}`}>{hs} <span className="court-colon">:</span> {as}</span>
+        <span className={`court-nums tnum ${flash ? 'score-shake' : ''}`}>
+          {live ? shown.hs : hs} <span className="court-colon">:</span> {live ? shown.as : as}
+        </span>
         <span className={`court-name ${flash === 'away' ? 'lit' : ''}`}>{away}{server === 'away' && live ? ' ●' : ''}</span>
       </div>
       {live && <div className="tn-setslabel">Sets</div>}
