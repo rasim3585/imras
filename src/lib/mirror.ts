@@ -53,6 +53,13 @@ export async function fetchCoach(summary: unknown, lang = 'en'): Promise<string 
 // İlke aynı: SAYILAR deterministik (coupon_review RPC / vmatch_stats), LLM
 // yalnız cümleye döker. Key yoksa text null — deterministik kart yine çalışır.
 
+export interface CouponLegReview {
+  match_id: string; match: string; kind: string; market: string; pick: string; odds: number;
+  is_live?: boolean;
+  /** Kullanıcının bu bacaktaki takım(lar)la KENDİ geçmişi — ürünün kalbi. */
+  team_history?: { team: string; bets: number; won: number; net: number } | null;
+}
+
 export interface CouponReview {
   ready: boolean; reason?: string;
   legs?: number; stake?: number; total_odds?: number; combined_prob_pct?: number;
@@ -63,6 +70,14 @@ export interface CouponReview {
     similar_played: number; similar_won: number; similar_net: number;
   };
   mirror_flags?: MirrorFlag[];
+  // v2 (0148): bacak-başına + anlık davranış + takım tuzağı + olgunluk — hepsi deterministik
+  per_leg?: CouponLegReview[];
+  behavior_now?: {
+    balance: number; stake_pct_balance: number | null; chase: boolean;
+    last_result: string | null; bets_last_hour: number; loss_streak: number;
+  };
+  loyalty_traps?: { team: string; bets: number; won: number; net: number }[];
+  maturity?: { coupons: number; days_active: number; level: 'new' | 'forming' | 'ready' };
 }
 
 export async function fetchCouponReview(selections: unknown[], stake: number): Promise<CouponReview | null> {

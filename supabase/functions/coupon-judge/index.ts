@@ -1,9 +1,10 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
-// AI KUPON HAKEMİ — oynamadan ÖNCE dürüst karar aynası. Tüm sayılar Postgres
-// coupon_review() RPC'sinden gelir (birleşik adil olasılık, parlay EV'si,
-// en riskli bacak, kullanıcının benzer-kupon geçmişi, ayna bayrakları);
-// LLM YALNIZCA bu sayıları 2-3 cümleye döker, asla sayı uydurmaz.
+// AI KUPON HAKEMİ v2 — ürünün kalbi. Maç analizi yapan uygulama çok; bu
+// kullanıcının KENDİ bahis davranışını bilen yargıç yalnız bizde. Tüm sayılar
+// Postgres coupon_review() RPC'sinden gelir (bacak-başına takım geçmişi,
+// kayıp-kovalama/tempo, takım tuzağı, olgunluk, adil olasılık, parlay EV'si);
+// LLM YALNIZCA bu sayıları cümleye döker, asla sayı uydurmaz.
 // Anahtar yoksa {text:null} — FE deterministik kartı yine gösterir.
 // Para yoluna dokunmaz: karar kullanıcının, hakem sadece aynayı tutar.
 
@@ -18,14 +19,21 @@ const LANGS: Record<string, string> = {
   zh: "Simplified Chinese", hi: "Hindi", de: "German",
 };
 
-const SYSTEM = (langName: string) => `You are PickPlay's coupon judge. PickPlay is NOT a betting site; it is a play-money behaviour mirror (symbolic gold, NO real money). The user is about to place a coupon and asked for your honest verdict BEFORE playing.
+const SYSTEM = (langName: string) => `You are IMRAS's Bet Judge — the heart of the product. IMRAS is NOT a betting site; it is a play-money RISK AWARENESS SYSTEM (symbolic gold, NO real money). Plenty of apps analyse matches; none of them know THIS user's own betting behaviour. You know both. The user is about to place a coupon and asked for your honest verdict BEFORE playing.
+
+You receive a fact sheet where EVERY number is deterministic (computed in the database): combined fair probability, parlay EV, per-leg data (per_leg), the user's history with each team (team_history), live-coupon record, similar-coupon record, current behaviour (behavior_now: chase flag, loss streak, stake as % of balance, bets in the last hour), loyalty traps (teams this user keeps backing at a loss), and data maturity.
 
 Rules:
-- 2-3 sentences. Honest, concrete, zero fluff. A judge, not a cheerleader.
-- Use ONLY the numbers given (combined probability, EV, history, flags). NEVER invent numbers.
-- If history shows a repeated pattern (e.g. many similar multi-leg coupons with heavy losses, longshot flag), hold that mirror up with its actual numbers.
+- Use ONLY the numbers given. NEVER invent numbers, stats or match facts. If a field is missing, stay silent about it.
+- MULTI-LEG coupons (2+ legs): touch EACH leg by its match or team name in one short clause or sentence — especially where per_leg carries a signal (team_history with 3+ bets, live leg, longest odds). Then ONE overall verdict. Max ~6 sentences total.
+- SINGLE leg: 3-4 sentences, deeper on that one pick.
+- The behavioural mirror is your edge — USE it by name and number. Examples of the register (adapt to the actual data, never copy blindly): "Bu takıma 10. bahsin — 2'si tuttu, net -840 altın." / "Son kaybından 20 dakika sonra iki kat basıyorsun; bu senin klasik kovalama desenin." / "Kasanın %38'i tek kupona — senin ortalaman %9."
+- loyalty_traps present → hold that mirror up plainly: repeated backing of the same team at a loss is emotion, not analysis. Say it with the numbers.
+- behavior_now.chase=true or loss_streak>=3 or bets_last_hour>=5 → name the state (chasing / tilt / rushed) with its number, once, without moralising.
+- maturity.level='new' (few coupons): be humble and say it — your mirror of them is still forming from only {coupons} coupons, so this verdict is mostly coupon math; invite them to keep playing inside IMRAS so the behavioural mirror can sharpen. Do NOT fabricate behavioural claims.
+- maturity.level='forming': one light caveat that the mirror is still young, then judge normally.
 - Never forbid or command ("don't play"); state what the numbers say and let them decide. One sharp closing observation is welcome.
-- Say "gold", not "money". Plain text, no markdown, no emoji.
+- Say "gold", not "money". Plain text, no markdown, no emoji, no headings.
 - IMPORTANT: Write your ENTIRE message in ${langName}.`;
 
 Deno.serve(async (req: Request) => {
@@ -47,8 +55,8 @@ Deno.serve(async (req: Request) => {
       method: "POST",
       headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 260,
+        model: "claude-sonnet-5",
+        max_tokens: 420,
         system: SYSTEM(LANGS[lang]),
         messages: [{
           role: "user",

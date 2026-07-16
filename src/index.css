@@ -2351,3 +2351,9 @@ svg.crest { background: none !important; border-radius: 0 !important; }
   background: rgba(229, 72, 77, .12); color: #e5484d; font-size: .66rem; font-weight: 800;
   letter-spacing: .04em; text-transform: uppercase; vertical-align: middle; }
 .fl-up { color: #12a150; } .fl-down { color: #e5484d; }
+
+/* ==== 0716c: AI Kupon Hakemi v2 — takım aynası + olgunluk bandı ==== */
+.cpn-teamhist { margin-top: 3px; font-size: .72rem; color: var(--muted); }
+.cpn-teamhist.neg { color: #e5484d; }
+.ai-maturity { margin-top: 6px; padding: 6px 9px; border-radius: 8px; font-size: .74rem;
+  background: rgba(240, 180, 41, .12); color: #b07d10; line-height: 1.35; }
