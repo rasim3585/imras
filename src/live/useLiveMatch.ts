@@ -39,7 +39,13 @@ export function useLiveMatch(matchId: string | undefined) {
     anchor.current = null;
     animAnchor.current = null;
 
+    // POLL KORUMASI: önceki istek dönmeden yenisi ATILMAZ. DB yavaşladığında
+    // 2sn'lik interval istekleri üst üste bindirip yükü katlıyordu (sarmal
+    // yakıtı) — artık en fazla 1 uçuşta istek; gecikince sıradaki tur atlanır.
+    let inFlight = false;
     const fetchOnce = async () => {
+      if (inFlight) return;
+      inFlight = true;
       try {
         const [s] = await matchProvider.getLiveStates([matchId]);
         if (!alive || !s) return;
@@ -63,6 +69,8 @@ export function useLiveMatch(matchId: string | undefined) {
         if (s.phase === 'finished') clearInterval(poll);
       } catch (e) {
         if (alive) setError(e instanceof Error ? e.message : 'Live feed unavailable');
+      } finally {
+        inFlight = false;
       }
     };
 
