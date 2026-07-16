@@ -1,197 +1,167 @@
 import type { ReactNode } from 'react';
 
-// Glossy, dimensional sports symbols for Gates of Goal — original vector art
-// (gradients + specular highlight + per-symbol glow + colored aura), rendered
-// DIRECTLY on the pitch grid (no tile). Cell value: 1..9 = symbol (9 = golden
-// boot), 10 = scatter (goal), negative = multiplier orb, 0 = empty.
+// Gates of Goal — sembol seti v3 (0716 gece yeniden çizimi).
+// Düzen Gates of Olympus ile BİREBİR: 5 düşük fasetli mücevher + 4 yüksek
+// altın futbol öğesi + scatter. Ödeme kademesi (12+ kovası) sunucu 0127
+// haritasıyla aynı; sanat o kademeye eşlendi:
+//   v1 mavi gem 2x · v2 yeşil 4x · v3 sarı 5x · v4 mor 8x · v5 kırmızı 10x
+//   v6 Altın Düdük 12x (kadeh rolü) · v7 Kaleci Eldiveni 15x (yüzük rolü)
+//   v9 Altın Krampon 25x (kum saati rolü) · v8 KUPA 50x (taç rolü)
+//   v10 scatter = Altın Top · negatif = çarpan orbu (GoO renk kademesi).
+// Eski karışık spor topları (tenis/beyzbol/voleybol/basket) emekli — futbol
+// oyununda beyzbol topu tema tutarlılığını bozuyordu ve küçük hücrede
+// okunmuyordu. Mücevherler her boyutta anında okunur (GoO'nun da tercihi).
 
 interface SymDef { glow: string; body: ReactNode; }
 
-const Shine = ({ cx = 38, cy = 30, rx = 14, ry = 8, o = 0.5 }: { cx?: number; cy?: number; rx?: number; ry?: number; o?: number }) => (
-  <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="#ffffff" opacity={o} transform={`rotate(-28 ${cx} ${cy})`} />
+/* ---------- fasetli mücevher (statik gradyan id'leri — hücreler paylaşır) ---------- */
+function gemBody(id: string, base: string, light: string, dark: string): ReactNode {
+  return (
+    <>
+      <defs>
+        <linearGradient id={`${id}g`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor={light} /><stop offset="1" stopColor={dark} />
+        </linearGradient>
+        <radialGradient id={`${id}c`} cx="0.5" cy="0.42" r="0.6">
+          <stop offset="0" stopColor={light} /><stop offset="1" stopColor={base} />
+        </radialGradient>
+      </defs>
+      <polygon points="50,4 82,17 96,50 82,83 50,96 18,83 4,50 18,17"
+        fill={`url(#${id}g)`} stroke="#141a2e" strokeWidth="4" strokeLinejoin="round" />
+      <polygon points="50,18 74,28 79,50 74,72 50,82 26,72 21,50 26,28"
+        fill={`url(#${id}c)`} stroke={dark} strokeWidth="1.6" strokeLinejoin="round" opacity="0.96" />
+      <g stroke={dark} strokeWidth="1.2" opacity="0.6">
+        <line x1="50" y1="4" x2="50" y2="18" /><line x1="82" y1="17" x2="74" y2="28" />
+        <line x1="96" y1="50" x2="79" y2="50" /><line x1="82" y1="83" x2="74" y2="72" />
+        <line x1="50" y1="96" x2="50" y2="82" /><line x1="18" y1="83" x2="26" y2="72" />
+        <line x1="4" y1="50" x2="21" y2="50" /><line x1="18" y1="17" x2="26" y2="28" />
+      </g>
+      <polygon points="34,26 52,22 44,38" fill="#ffffff" opacity="0.8" />
+      <circle cx="63" cy="60" r="4" fill="#ffffff" opacity="0.35" />
+    </>
+  );
+}
+
+/* ---------- altın gradyan tanımları (öğe başına statik id) ---------- */
+const INK = '#3a2a08';
+function goldDefs(id: string): ReactNode {
+  return (
+    <defs>
+      <linearGradient id={`${id}au`} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor="#ffe9a3" /><stop offset="0.45" stopColor="#f4c542" />
+        <stop offset="0.75" stopColor="#d99a1b" /><stop offset="1" stopColor="#b0740c" />
+      </linearGradient>
+      <linearGradient id={`${id}au2`} x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stopColor="#fff6d8" /><stop offset="1" stopColor="#e0a825" />
+      </linearGradient>
+    </defs>
+  );
+}
+
+const trophyBody: ReactNode = (
+  <>
+    {goldDefs('sTr')}
+    <path d="M22 26 H12 q-4 0 -3.4 4.4 Q11 52 32 57" fill="none" stroke="url(#sTrau)" strokeWidth="7" strokeLinecap="round" />
+    <path d="M78 26 H88 q4 0 3.4 4.4 Q89 52 68 57" fill="none" stroke="url(#sTrau)" strokeWidth="7" strokeLinecap="round" />
+    <path d="M24 18 h52 v16 a26 26 0 0 1 -52 0 z" fill="url(#sTrau)" stroke={INK} strokeWidth="3.4" />
+    <rect x="24" y="14" width="52" height="9" rx="4" fill="url(#sTrau2)" stroke={INK} strokeWidth="3" />
+    <path d="M45 60 h10 l3 12 h-16 z" fill="url(#sTrau)" stroke={INK} strokeWidth="3" />
+    <rect x="32" y="72" width="36" height="8" rx="3" fill="url(#sTrau2)" stroke={INK} strokeWidth="3" />
+    <rect x="27" y="80" width="46" height="10" rx="4" fill="url(#sTrau)" stroke={INK} strokeWidth="3.2" />
+    <path d="M50 30 l3.2 6.6 7.2 1 -5.2 5.1 1.2 7.2 -6.4 -3.4 -6.4 3.4 1.2 -7.2 -5.2 -5.1 7.2 -1 z"
+      fill="#fff6d8" stroke="#c07d08" strokeWidth="1.4" />
+    <ellipse cx="35" cy="24" rx="6" ry="2.6" fill="#ffffff" opacity="0.75" transform="rotate(-18 35 24)" />
+  </>
 );
 
+const bootBody: ReactNode = (
+  <>
+    {goldDefs('sBt')}
+    <path d="M30 18 q13 22 34 32 q16 7 22 16 q4 6 -2 8 l-58 0 q-6 0 -6 -7 l0 -44 q0 -8 10 -5 z"
+      fill="url(#sBtau)" stroke={INK} strokeWidth="3.4" strokeLinejoin="round" />
+    <path d="M22 22 q6 -4 9 -1 q3 5 8 11 l-17 8 z" fill="url(#sBtau2)" stroke={INK} strokeWidth="2.4" />
+    <g stroke={INK} strokeWidth="2.6" strokeLinecap="round">
+      <line x1="41" y1="34" x2="52" y2="28" /><line x1="46" y1="41" x2="58" y2="34" />
+      <line x1="51" y1="48" x2="63" y2="41" />
+    </g>
+    <path d="M20 74 l64 0 q7 0 4 -6 -2 -3 -6 -4 l-62 0 z" fill="#8a5c0d" stroke={INK} strokeWidth="3" />
+    <g fill="url(#sBtau2)" stroke={INK} strokeWidth="2.2">
+      <rect x="24" y="76" width="7" height="10" rx="2.6" /><rect x="40" y="76" width="7" height="10" rx="2.6" />
+      <rect x="56" y="76" width="7" height="10" rx="2.6" /><rect x="72" y="76" width="7" height="10" rx="2.6" />
+    </g>
+    <ellipse cx="63" cy="52" rx="7" ry="3" fill="#ffffff" opacity="0.55" transform="rotate(24 63 52)" />
+  </>
+);
+
+const gloveBody: ReactNode = (
+  <>
+    {goldDefs('sGl')}
+    <g fill="url(#sGlau)" stroke={INK} strokeWidth="3">
+      <rect x="26" y="12" width="12" height="34" rx="6" />
+      <rect x="40" y="7" width="12" height="39" rx="6" />
+      <rect x="54" y="10" width="12" height="36" rx="6" />
+      <rect x="68" y="17" width="11" height="29" rx="5.5" />
+    </g>
+    <path d="M24 42 h56 q4 0 4 5 v14 q0 16 -18 20 h-24 q-18 -3 -18 -20 v-14 q0 -5 4 -5 z"
+      fill="url(#sGlau)" stroke={INK} strokeWidth="3.4" />
+    <path d="M22 46 q-12 4 -12 16 q0 10 9 12 q5 1 6 -5 l1 -18 z" fill="url(#sGlau2)" stroke={INK} strokeWidth="3" />
+    <rect x="30" y="80" width="44" height="12" rx="5" fill="url(#sGlau2)" stroke={INK} strokeWidth="3" />
+    <line x1="36" y1="86" x2="68" y2="86" stroke={INK} strokeWidth="2.4" strokeLinecap="round" />
+    <path d="M32 52 q18 10 40 0" fill="none" stroke={INK} strokeWidth="2" opacity="0.5" />
+    <ellipse cx="44" cy="16" rx="3.4" ry="6" fill="#ffffff" opacity="0.6" />
+  </>
+);
+
+const whistleBody: ReactNode = (
+  <>
+    {goldDefs('sWh')}
+    <circle cx="76" cy="18" r="7" fill="none" stroke="url(#sWhau2)" strokeWidth="4.4" />
+    <rect x="52" y="20" width="34" height="13" rx="6" fill="url(#sWhau)" stroke={INK} strokeWidth="3.2" transform="rotate(14 52 20)" />
+    <path d="M14 46 a26 26 0 1 0 52 6 l16 -18 q3 -4 -2 -7 l-30 -8 q-22 -4 -36 27 z"
+      fill="url(#sWhau)" stroke={INK} strokeWidth="3.4" strokeLinejoin="round" />
+    <circle cx="42" cy="58" r="9" fill="#3a2a08" opacity="0.85" />
+    <circle cx="42" cy="58" r="9" fill="none" stroke={INK} strokeWidth="2.6" />
+    <ellipse cx="30" cy="42" rx="7" ry="3" fill="#ffffff" opacity="0.65" transform="rotate(-24 30 42)" />
+    <circle cx="58" cy="70" r="2.6" fill="#ffffff" opacity="0.4" />
+  </>
+);
+
+// v sırası ÖDEME sırası değil — sunucu değer haritası korunur:
+// 1..5 gem'ler (artan), 6 düdük, 7 eldiven, 8 KUPA (50x tepe), 9 krampon (25x).
 const SYMBOLS: SymDef[] = [
-  // 1 — red card ------------------------------------------------------------ low
-  { glow: 'rgba(239,68,68,0.85)', body: <>
-    <defs>
-      <linearGradient id="rcard" x1="0" y1="0" x2="0.5" y2="1">
-        <stop offset="0" stopColor="#f87171" /><stop offset="0.5" stopColor="#ef4444" /><stop offset="1" stopColor="#b91c1c" />
-      </linearGradient>
-    </defs>
-    <g transform="rotate(-9 50 50)">
-      <rect x="30" y="16" width="40" height="62" rx="6" fill="url(#rcard)" stroke="#7f1010" strokeWidth="2.5" />
-      <rect x="35" y="21" width="13" height="30" rx="4" fill="#ffffff" opacity="0.28" />
-    </g>
-  </> },
-
-  // 2 — tennis ball (gold) -------------------------------------------------- low
-  { glow: 'rgba(230,200,60,0.9)', body: <>
-    <defs>
-      <radialGradient id="tennis" cx="0.38" cy="0.32" r="0.85">
-        <stop offset="0" stopColor="#f7e94e" /><stop offset="0.55" stopColor="#e0bc10" /><stop offset="1" stopColor="#8a6d08" />
-      </radialGradient>
-    </defs>
-    <circle cx="50" cy="50" r="38" fill="url(#tennis)" stroke="#6e5709" strokeWidth="2" />
-    <path d="M16 30 Q46 50 16 70" fill="none" stroke="#fffdf0" strokeWidth="4" />
-    <path d="M84 30 Q54 50 84 70" fill="none" stroke="#fffdf0" strokeWidth="4" />
-    <Shine cx={38} cy={34} rx={13} ry={8} o={0.55} />
-  </> },
-
-  // 3 — baseball ------------------------------------------------------------ low
-  { glow: 'rgba(255,255,255,0.7)', body: <>
-    <defs>
-      <radialGradient id="bsb" cx="0.38" cy="0.32" r="0.85">
-        <stop offset="0" stopColor="#ffffff" /><stop offset="0.66" stopColor="#ece5d6" /><stop offset="1" stopColor="#b0a488" />
-      </radialGradient>
-    </defs>
-    <circle cx="50" cy="50" r="38" fill="url(#bsb)" stroke="#8f8570" strokeWidth="2" />
-    <path d="M26 18 Q40 50 26 82" fill="none" stroke="#e0102e" strokeWidth="2.8" />
-    <path d="M74 18 Q60 50 74 82" fill="none" stroke="#e0102e" strokeWidth="2.8" />
-    <g stroke="#e0102e" strokeWidth="1.8" strokeLinecap="round">
-      <path d="M22 30l7 3M22 42l8 2M22 54l8 2M22 66l7 3" />
-      <path d="M78 30l-7 3M78 42l-8 2M78 54l-8 2M78 66l-7 3" />
-    </g>
-    <Shine cx={38} cy={34} rx={12} ry={7} o={0.55} />
-  </> },
-
-  // 4 — volleyball (gerçekçi: panel şeritleri + küresel gölge) --------------- mid
-  { glow: 'rgba(120,170,255,0.8)', body: <>
-    <defs>
-      <radialGradient id="vb" cx="0.36" cy="0.3" r="0.9">
-        <stop offset="0" stopColor="#ffffff" /><stop offset="0.45" stopColor="#f2f6fb" />
-        <stop offset="0.78" stopColor="#d3deee" /><stop offset="1" stopColor="#8fa3c0" />
-      </radialGradient>
-    </defs>
-    <circle cx="50" cy="50" r="38" fill="url(#vb)" stroke="#5f7292" strokeWidth="1.6" />
-    {/* üç panel bölgesi — Mikasa tarzı akışkan şeritler */}
-    <g fill="none" strokeLinecap="round">
-      <g stroke="#1666e0" strokeWidth="2.6" opacity="0.9">
-        <path d="M50 12 Q40 38 21 60" /><path d="M50 12 Q47 44 39 85" />
-        <path d="M50 12 Q62 36 84 50" /><path d="M50 12 Q57 46 71 83" />
-        <path d="M21 60 Q52 56 84 50" /><path d="M39 85 Q55 68 71 83" />
-      </g>
-      {/* şerit içi ince eşlik çizgileri: derinlik */}
-      <g stroke="#8fb4ec" strokeWidth="1.1" opacity="0.75">
-        <path d="M46 14 Q37 39 20 56" /><path d="M54 14 Q64 37 83 46" />
-        <path d="M24 64 Q52 60 83 54" /><path d="M43 84 Q56 70 68 81" />
-      </g>
-    </g>
-    <ellipse cx="56" cy="66" rx="26" ry="16" fill="#31415c" opacity="0.14" />
-    <Shine cx={37} cy={30} rx={13} ry={8} o={0.65} />
-  </> },
-
-  // 5 — football (gerçekçi: kavisli dikişler + sarılan panolar + AO) --------- mid
-  { glow: 'rgba(255,255,255,0.8)', body: <>
-    <defs>
-      <radialGradient id="ball" cx="0.36" cy="0.28" r="0.92">
-        <stop offset="0" stopColor="#ffffff" /><stop offset="0.5" stopColor="#eef2f5" />
-        <stop offset="0.8" stopColor="#cdd7de" /><stop offset="1" stopColor="#93a3af" />
-      </radialGradient>
-    </defs>
-    <circle cx="50" cy="50" r="38" fill="url(#ball)" stroke="#4c565f" strokeWidth="1.5" />
-    {/* kavisli dikişler: düz çizgi değil, küre üstünde eğri */}
-    <g stroke="#3f4750" strokeWidth="1.7" fill="none" strokeLinecap="round">
-      <path d="M50 35 Q50.5 31 50 27.7" /><path d="M62.4 44 Q65.6 40.6 68 37.8" />
-      <path d="M57.6 58.5 Q58.6 62.6 58.6 66.8" /><path d="M42.4 58.5 Q41.4 62.6 41.4 66.8" />
-      <path d="M37.6 44 Q34.4 40.6 32 37.8" />
-    </g>
-    <g fill="#171d24">
-      <polygon points="50,35 62.4,44 57.6,58.5 42.4,58.5 37.6,44" />
-      {/* kenar panoları hafif eğimli — küreye sarılıyor hissi */}
-      <path d="M50 15 l6.7 4.8 -2.6 7.9 -8.2 0 -2.6 -7.9 z" />
-      <path d="M81.4 37.8 q-1 4.2 -2.6 7.9 l-8.2 0 -2.6 -7.9 6.7 -4.8 z" />
-      <path d="M69.4 74.7 l-8.2 0 -2.6 -7.9 6.7 -4.8 6.7 4.8 q-1.1 4.2 -2.6 7.9 z" />
-      <path d="M30.6 74.7 l8.2 0 2.6 -7.9 -6.7 -4.8 -6.7 4.8 q1.1 4.2 2.6 7.9 z" />
-      <path d="M18.6 37.8 q1 4.2 2.6 7.9 l8.2 0 2.6 -7.9 -6.7 -4.8 z" />
-    </g>
-    <ellipse cx="57" cy="66" rx="26" ry="16" fill="#20262e" opacity="0.16" />
-    <Shine cx={36} cy={29} rx={12} ry={7.5} o={0.7} />
-  </> },
-
-  // 6 — basketball ---------------------------------------------------------- mid
-  { glow: 'rgba(245,140,50,0.85)', body: <>
-    <defs>
-      <radialGradient id="bball" cx="0.38" cy="0.32" r="0.85">
-        <stop offset="0" stopColor="#ffbf7a" /><stop offset="0.55" stopColor="#f0872f" /><stop offset="1" stopColor="#b8551a" />
-      </radialGradient>
-    </defs>
-    <circle cx="50" cy="50" r="38" fill="url(#bball)" stroke="#7a3d12" strokeWidth="1.5" />
-    <path d="M50 12v76M12 50h76" stroke="#3a1c08" strokeWidth="2.6" />
-    <path d="M22 20 Q42 50 22 80M78 20 Q58 50 78 80" fill="none" stroke="#3a1c08" strokeWidth="2.6" />
-    <Shine cx={37} cy={33} rx={12} ry={7} o={0.5} />
-  </> },
-
-  // 7 — american football (gerçekçi deri: radyal derinlik + dikiş detayı) ---- high
-  { glow: 'rgba(210,150,60,0.9)', body: <>
-    <defs>
-      <radialGradient id="afball" cx="0.36" cy="0.3" r="0.95">
-        <stop offset="0" stopColor="#e8a94f" /><stop offset="0.45" stopColor="#b5762a" />
-        <stop offset="0.8" stopColor="#8a521a" /><stop offset="1" stopColor="#5c340e" />
-      </radialGradient>
-    </defs>
-    <g transform="rotate(-22 50 50)">
-      <ellipse cx="50" cy="50" rx="40" ry="24" fill="url(#afball)" stroke="#3c2109" strokeWidth="1.8" />
-      {/* deri boyuna dikişleri: hacim veren eğriler */}
-      <path d="M14 50 Q50 34 86 50" fill="none" stroke="#4a2a0e" strokeWidth="1.1" opacity="0.7" />
-      <path d="M14 50 Q50 66 86 50" fill="none" stroke="#4a2a0e" strokeWidth="1.1" opacity="0.55" />
-      {/* uç bantları */}
-      <path d="M19 44.5 q-2.4 5.5 0 11M81 44.5 q2.4 5.5 0 11" stroke="#fff3d6" strokeWidth="3.4" fill="none" strokeLinecap="round" />
-      {/* bağcık: şerit + çapraz ilmekler */}
-      <path d="M36 50h28" stroke="#fff3d6" strokeWidth="3" strokeLinecap="round" />
-      <path d="M40 45.5v9M45 44.8v10.4M50 44.5v11M55 44.8v10.4M60 45.5v9" stroke="#fff3d6" strokeWidth="2.3" strokeLinecap="round" />
-      <ellipse cx="58" cy="60" rx="26" ry="9" fill="#2c1a08" opacity="0.22" />
-      <Shine cx={38} cy={39} rx={15} ry={5.5} o={0.5} />
-    </g>
-  </> },
-
-  // 8 — golden trophy ------------------------------------------------------- top
-  { glow: 'rgba(255,214,74,1)', body: <>
-    <defs>
-      <linearGradient id="trophy" x1="0" y1="0" x2="0.3" y2="1">
-        <stop offset="0" stopColor="#fff6d6" /><stop offset="0.4" stopColor="#ffd24a" /><stop offset="1" stopColor="#b8801e" />
-      </linearGradient>
-    </defs>
-    <path d="M32 16h36v14a18 18 0 0 1-36 0z" fill="url(#trophy)" stroke="#6b4610" strokeWidth="2.5" strokeLinejoin="round" />
-    <path d="M32 20h-9a9 9 0 0 0 9 10M68 20h9a9 9 0 0 1-9 10" fill="none" stroke="url(#trophy)" strokeWidth="4" />
-    <path d="M45 46h10v10h7v8H38v-8h7z" fill="url(#trophy)" stroke="#6b4610" strokeWidth="2.5" strokeLinejoin="round" />
-    <rect x="34" y="70" width="32" height="9" rx="2" fill="url(#trophy)" stroke="#6b4610" strokeWidth="2.5" />
-    <path d="M42 20c0 8 3 14 8 16" stroke="#fff6d6" strokeWidth="3" fill="none" strokeLinecap="round" opacity="0.85" />
-  </> },
-
-  // 9 — golden boot (altın krampon) ------------------------------------------ high
-  { glow: 'rgba(255,196,66,0.95)', body: <>
-    <defs>
-      <linearGradient id="boot" x1="0" y1="0" x2="0.4" y2="1">
-        <stop offset="0" stopColor="#ffe9a8" /><stop offset="0.45" stopColor="#f4b73a" /><stop offset="1" stopColor="#9a6414" />
-      </linearGradient>
-    </defs>
-    <path d="M24 62 L28 32 Q29 26 35 27 L46 30 Q50 31 52 35 L58 47 Q66 57 78 59 L84 61 Q88 62 88 66 L88 69 L24 69 Z"
-      fill="url(#boot)" stroke="#6b4610" strokeWidth="2.5" strokeLinejoin="round" />
-    <path d="M36 34 L46 38 M34 40 L44 44 M32 46 L42 50" stroke="#fff6d6" strokeWidth="2.4" strokeLinecap="round" />
-    <path d="M22 69 h68 v5 a3 3 0 0 1 -3 3 H25 a3 3 0 0 1 -3 -3 Z" fill="#3a2a12" stroke="#241a0c" strokeWidth="1.8" />
-    <path d="M30 78v4M42 78v4M54 78v4M66 78v4M78 78v4" stroke="#3a2a12" strokeWidth="4.6" strokeLinecap="round" />
-    <Shine cx={40} cy={38} rx={10} ry={5} o={0.5} />
-  </> },
+  { glow: 'rgba(80,150,255,0.85)',  body: gemBody('sB', '#2f7fe8', '#9cd0ff', '#1a4fa8') },   // 1 mavi
+  { glow: 'rgba(60,220,130,0.85)',  body: gemBody('sG', '#1fb85c', '#8df0b4', '#0e7a3c') },   // 2 yeşil
+  { glow: 'rgba(250,200,60,0.9)',   body: gemBody('sY', '#f0b429', '#ffe58a', '#c07d08') },   // 3 sarı
+  { glow: 'rgba(170,110,255,0.9)',  body: gemBody('sP', '#8c56e8', '#d0b0ff', '#5c2eb0') },   // 4 mor
+  { glow: 'rgba(240,90,85,0.9)',    body: gemBody('sR', '#e2504a', '#ffa39c', '#a82823') },   // 5 kırmızı
+  { glow: 'rgba(255,205,80,0.95)',  body: whistleBody },                                       // 6 düdük 12x
+  { glow: 'rgba(255,205,80,0.95)',  body: gloveBody },                                         // 7 eldiven 15x
+  { glow: 'rgba(255,214,74,1)',     body: trophyBody },                                        // 8 KUPA 50x
+  { glow: 'rgba(255,196,66,0.95)',  body: bootBody },                                          // 9 krampon 25x
 ];
 
-// Scatter (value 9): a football GOAL stamped "SCATTER".
+// Scatter — Altın Top (Ballon d'Or havası): ışın tacı + pentagon deseni.
 function ScatterBall() {
   return (
     <div className="slot-scatter">
       <svg viewBox="0 0 100 100" aria-hidden="true">
         <defs>
-          <radialGradient id="scGlow" cx="0.5" cy="0.4" r="0.65">
-            <stop offset="0" stopColor="#fff6d6" /><stop offset="0.55" stopColor="#ffd24a" /><stop offset="1" stopColor="#b8801e" />
+          <radialGradient id="scAu" cx="0.38" cy="0.32" r="0.75">
+            <stop offset="0" stopColor="#fff3c4" /><stop offset="0.55" stopColor="#f4c542" />
+            <stop offset="1" stopColor="#b0740c" />
           </radialGradient>
         </defs>
-        <circle cx="50" cy="46" r="34" fill="url(#scGlow)" opacity="0.28" />
-        <g stroke="#ffffff" strokeWidth="1.4" opacity="0.7">
-          <path d="M24 30h52M24 42h52M24 54h52M32 22v46M44 22v46M56 22v46M68 22v46" />
+        <g fill="#ffd95e" opacity="0.9">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <polygon key={i} points="50,2 54,14 46,14" transform={`rotate(${i * 45} 50 50)`} />
+          ))}
         </g>
-        <path d="M20 66V22h60v44" fill="none" stroke="#ffffff" strokeWidth="5.5" strokeLinejoin="round" strokeLinecap="round" />
-        <circle cx="50" cy="52" r="9" fill="#fff" stroke="#6b4610" strokeWidth="1.5" />
-        <polygon points="50,46 55,50 53,56 47,56 45,50" fill="#1c2430" />
+        <circle cx="50" cy="50" r="34" fill="url(#scAu)" stroke={INK} strokeWidth="3.6" />
+        <g fill="#8a5c0d" stroke={INK} strokeWidth="1.6" strokeLinejoin="round" opacity="0.9">
+          <polygon points="50,32 61,40 57,53 43,53 39,40" />
+          <path d="M50 32 L50 20 M61 40 L73 36 M57 53 L64 65 M43 53 L36 65 M39 40 L27 36" fill="none" strokeWidth="2.2" />
+        </g>
+        <ellipse cx="38" cy="34" rx="9" ry="4.4" fill="#ffffff" opacity="0.7" transform="rotate(-26 38 34)" />
       </svg>
       <span className="slot-scatter-x">SCATTER</span>
     </div>
