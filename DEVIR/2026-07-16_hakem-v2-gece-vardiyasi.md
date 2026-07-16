@@ -98,3 +98,25 @@ LiveMatch Infinity% fix; behaviorLog moat sigortası (geri-kuyruk + uyarı);
    kuponlarım çelişkisi), Gates buy_cost'u slot_config'ten okuma, dice/mines
    yuvarlama sırası teyidi, match-preview'a gerçek-maç dalı, mirror_luck RPC,
    betting-ai remaining alanı. (Detay: scratchpad/rapor-*.md — 5 keşif raporu.)
+
+## 2D DÜŞMAN DENETİMİ TURU (öğlen) — commit 3b5856b
+5 ajanlık denetim ordusu (537K token) 4 sporu + saat omurgasını satır satır
+taradı: ~30 doğrulanmış bulgu, TAMAMI uygulandı. Öne çıkanlar:
+- MiniWatch saat kimliği her render'da değişiyordu → CourtTV kuyruğu her
+  poll'de siliniyordu → mini basket tabelası TÜM MAÇ donuk kalıyordu (launch
+  bloker); PitchTV gol draması da mini'de hiç oynamıyordu. İkisi de kökten fix.
+- "Sallanan beyaz nokta"nın GERÇEK kökü: index.css'te eski modelden kalma
+  global `.dot { position:absolute; animation:dot-float }` — tüm rozet
+  noktalarını zehirliyordu. Blok silindi (önceki 0716h/i yamaları semptomdu).
+- Sete ortadan katılım: sim saati 0'dan başlıyordu → seedSetClock sunucu
+  period sayısına tohumluyor; bülten/detay yalnız "Set N" gösterir.
+- Penaltıda tabela artık 2sn topu bekliyor; ilk basket/set kutlaması 0-0
+  izleyicisinde de yanıyor; voleybolda 27-26 imkânsız skoru bitti.
+Kanıt scriptleri hazır (court-sync-proof.cjs) — DB nefes alınca koşulacak.
+
+## SABAH SQL KUYRUĞUNA EK (2D denetimden)
+6. `_vb_state`: `revealed := least(round(t*total_pts)::int, total_pts-1)` —
+   maç sonunda 1-2sn'lik hayalet "Set 6 · 0-0" fix'i (tenis _tn_state'te aynı
+   kalıp varsa oraya da).
+7. `_vb_state` dönüşüne `pace` alanı (dur/total_pts) + get_live_state geçişi —
+   FE sim temposunu iki yönde ölçekleyebilsin (kısa maçta 60sn ölü top biter).
