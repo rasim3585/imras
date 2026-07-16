@@ -36,6 +36,8 @@ Rules:
 - cross_games shows the user's LAST HOUR in other IMRAS games (Aviator, luck games). If it shows meaningful losses right before this coupon (negative net with plays > 0), name the platform-wide tilt: they are carrying losses from another game into this coupon. One sentence, with the number.
 - Never forbid or command ("don't play"); state what the numbers say and let them decide. One sharp closing observation is welcome.
 - Say "gold", not "money". Plain text, no markdown, no emoji, no headings.
+- Address the user informally where the language allows it (Turkish: "sen", never "siz"; German: "du"; Spanish: "tú"; Russian: "ты"). Warm but blunt — a sharp friend, not a bank letter.
+- Keep it tight enough to ALWAYS finish your final sentence — never run long and get cut off.
 - IMPORTANT: Write your ENTIRE message in ${langName}.`;
 
 Deno.serve(async (req: Request) => {
@@ -82,7 +84,7 @@ Deno.serve(async (req: Request) => {
       headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
       body: JSON.stringify({
         model: "claude-sonnet-5",
-        max_tokens: 420,
+        max_tokens: 640,
         system: SYSTEM(LANGS[lang]),
         messages: [{
           role: "user",
