@@ -334,13 +334,17 @@ export default function LiveMatchScreen() {
         <>
           <div className="section-head"><h3>{t('live.matchresult')}</h3></div>
           <div className="market live-odds-row">
-            {(['home', 'draw', 'away'] as OutKey[]).map((k) => (
-              <div key={k} className={`outcome ${myLeg?.outcome_key === k ? 'sel' : ''}`}>
-                <span className="outcome-name">{k === 'home' ? '1' : k === 'draw' ? 'X' : '2'}</span>
-                <span className="outcome-odds">{formatOdds(odds[k] ?? 0)}</span>
-                <span className="outcome-prob">{impliedProb(odds[k] ?? 0, oddsArr)}%</span>
-              </div>
-            ))}
+            {(['home', 'draw', 'away'] as OutKey[]).map((k) => {
+              const o = odds[k];
+              return (
+                <div key={k} className={`outcome ${myLeg?.outcome_key === k ? 'sel' : ''} ${!o ? 'closed' : ''}`}>
+                  <span className="outcome-name">{k === 'home' ? '1' : k === 'draw' ? 'X' : '2'}</span>
+                  {/* kapalı sonuç "0.00 / Infinity%" basmasın — market kapalı hücresi */}
+                  <span className="outcome-odds">{o ? formatOdds(o) : '–'}</span>
+                  <span className="outcome-prob">{o ? `${impliedProb(o, oddsArr)}%` : ''}</span>
+                </div>
+              );
+            })}
           </div>
         </>
       )}

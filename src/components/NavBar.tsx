@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { useCart } from '../coupon/CartContext';
 import { useI18n } from '../i18n/LanguageContext';
 import { useSound } from '../settings/SoundContext';
 import { LANGS, type Lang } from '../i18n/dict';
@@ -119,17 +118,13 @@ function BalanceChip({ balance }: { balance: number }) {
 
 export default function NavBar() {
   const { profile } = useAuth();
-  const { count } = useCart();
   const { t } = useI18n();
   const [gamesOpen, setGamesOpen] = useState(false);
 
-  // icon + an active-selection count badge on the Coupons item
-  const navIcon = (icon: ReactNode, to: string) => (
-    <span className="nav-ic">
-      {icon}
-      {to === '/coupons' && count > 0 && <span className="nav-badge tnum">{count}</span>}
-    </span>
-  );
+  // Rozet bilinçli KALDIRILDI: sepet sayısını "Kuponlarım"a iliştirmek yanlış
+  // vaatti (tıklayınca o sayıyla eşleşen hiçbir şey görünmüyordu). Sepet zaten
+  // CouponDock'ta kendi sayacıyla görünür — tek doğru kaynak o.
+  const navIcon = (icon: ReactNode) => <span className="nav-ic">{icon}</span>;
 
   return (
     <>
@@ -155,7 +150,7 @@ export default function NavBar() {
       <nav className="sidebar">
         {NAV.map(({ to, end, key, Icon }) => (
           <NavLink key={to} to={to} end={end} className="side-item">
-            {navIcon(<Icon />, to)}
+            {navIcon(<Icon />)}
             {t(key)}
           </NavLink>
         ))}
@@ -164,13 +159,13 @@ export default function NavBar() {
       {/* mobile bottom bar — 5 primary tabs; "Oyunlar" opens a games sheet */}
       <nav className="tabbar">
         <div className="tabbar-inner">
-          <NavLink to="/" end className="tab">{navIcon(<MarketsIcon />, '/')}{t('nav.matches')}</NavLink>
+          <NavLink to="/" end className="tab">{navIcon(<MarketsIcon />)}{t('nav.matches')}</NavLink>
           <button className={`tab ${gamesOpen ? 'active' : ''}`} onClick={() => setGamesOpen((o) => !o)}>
-            {navIcon(<GatesIcon />, '/games')}{t('nav.games')}
+            {navIcon(<GatesIcon />)}{t('nav.games')}
           </button>
           {TAB.slice(1).map(({ to, end, key, Icon }) => (
             <NavLink key={to} to={to} end={end} className="tab" onClick={() => setGamesOpen(false)}>
-              {navIcon(<Icon />, to)}
+              {navIcon(<Icon />)}
               {t(key)}
             </NavLink>
           ))}

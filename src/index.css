@@ -2372,3 +2372,11 @@ svg.crest { background: none !important; border-radius: 0 !important; }
   .home-btn { display: none; }           /* alt bardaki Matches zaten ev */
   .topbar-inner { gap: 8px; }
 }
+
+/* ==== 0716f: 2D saha oyuncu noktaları ==== */
+.pitch-player { position: absolute; width: 8px; height: 8px; border-radius: 50%;
+  transform: translate(-50%, -50%); pointer-events: none;
+  box-shadow: 0 1px 2px rgba(0,0,0,.45); }
+.pitch-player.ph { background: #17c06b; border: 1.5px solid #eafff3; }
+.pitch-player.pa { background: #4a7fb5; border: 1.5px solid #e8f1fb; }
+.pitch-player.gk { filter: saturate(0.55) brightness(1.15); }

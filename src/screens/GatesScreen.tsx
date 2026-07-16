@@ -61,12 +61,22 @@ function cleanErr(m: string, t: TFn): string {
 }
 
 // Split a winning step into its per-symbol groups (each symbol pays separately).
-function winGroups(grid: number[], cells: number[], bet: number): WinGroup[] {
+// Tutarlar SUNUCUNUN adım kazancına (stepWin) ölçeklenir — FE PAY tablosu yalnız
+// ORAN anahtarıdır; sunucu paytable'ı değişirse callout'lar sapamaz.
+function winGroups(grid: number[], cells: number[], bet: number, stepWin: number): WinGroup[] {
   const byV: Record<number, number[]> = {};
   for (const c of cells) { const v = grid[c]; if (v >= 1 && v <= 9) (byV[v] ??= []).push(c); }
-  return Object.keys(byV)
+  const raw = Object.keys(byV)
     .map((k) => { const v = Number(k); const cs = byV[v]; return { v, cells: cs, count: cs.length, amount: symbolPay(v, cs.length, bet) }; })
-    .filter((g) => g.count >= 8)     // a symbol only wins at 8+ — never flag fewer
+    .filter((g) => g.count >= 8);    // a symbol only wins at 8+ — never flag fewer
+  const sum = raw.reduce((a, g) => a + g.amount, 0);
+  if (sum <= 0 || stepWin <= 0) return raw.sort((a, b) => b.amount - a.amount);
+  let acc = 0;
+  return raw.map((g, i) => {
+    const amount = i === raw.length - 1 ? stepWin - acc : Math.round((g.amount / sum) * stepWin);
+    acc += amount;
+    return { ...g, amount };
+  })
     .sort((a, b) => b.amount - a.amount);
 }
 
@@ -153,7 +163,7 @@ export default function GatesScreen() {
         // 1) GRUPLA — fiery frames light up on ALL winning cells together, the
         //    winners pulse as one group (rest of the board stays fully lit)
         setWinPhase('show'); setAllWin(new Set(st.cells));
-        const groups = winGroups(st.grid, st.cells, bt);
+        const groups = winGroups(st.grid, st.cells, bt, st.win);
         setBreakdown(groups);
         await wait(t.frame);
         // 2) ANLAT — walk each symbol group: it glows brighter + its win amount
@@ -183,7 +193,8 @@ export default function GatesScreen() {
   // ekran sarsintisi + konfeti. Esik: stake'in 12 katindan sonra.
   async function runBigWin(amount: number, stakeAmt: number) {
     const r = amount / stakeAmt;
-    const tier = r >= 100 ? 'legend' : r >= 50 ? 'epic' : r >= 25 ? 'mega' : 'big';
+    // GoO gözlem bandı (raporla): BIG ~25x, MEGA ~100x, SENSATIONAL ~250x; 1000x+ efsane
+    const tier = r >= 1000 ? 'legend' : r >= 250 ? 'epic' : r >= 100 ? 'mega' : 'big';
     cheer();
     const dur = turboRef.current ? 900 : 1900;
     const t0 = Date.now();
@@ -266,7 +277,8 @@ export default function GatesScreen() {
     setWinCells(new Set());
     if (res.payout > 0) {
       setLastWin(res.payout);
-      if (res.payout >= res.stake * 12) {
+      // GoO bandı: banner 25x'ten başlar (BIG 25x / MEGA 100x / SENSATIONAL 250x)
+      if (res.payout >= res.stake * 25) {
         await runBigWin(res.payout, res.stake);
       } else {
         setBanner(t('go.won', { n: res.payout.toLocaleString() }));

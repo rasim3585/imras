@@ -18,14 +18,22 @@ const SESSION_ID: string = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-
 let buffer: Ev[] = [];
 let timer: ReturnType<typeof setInterval> | null = null;
 
+let failStreak = 0;
+
 async function flush(): Promise<void> {
   if (buffer.length === 0) return;
   const batch = buffer;
   buffer = [];
   try {
     await supabase.rpc('log_events', { p_events: batch });
+    failStreak = 0;
   } catch {
-    /* swallow — never let logging break the app; dropped events are acceptable */
+    // Moat sigortası: davranış verisi ürünün asıl değeri — başarısız batch bir
+    // kez geri kuyruğa alınır (tavan 200 olay; sınırsız büyüme yok). Oyun yolu
+    // yine etkilenmez; sessiz erozyon 3 ardışık hatada görünür olur.
+    if (buffer.length + batch.length <= 200) buffer = [...batch, ...buffer];
+    failStreak += 1;
+    if (failStreak === 3) console.warn('[imras] davranış logu 3 ardışık batch yazamadı — log_events erişimini kontrol et');
   }
 }
 

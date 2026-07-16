@@ -61,6 +61,11 @@ export default function PitchTV({
 
   const ballRef = useRef<HTMLDivElement | null>(null);
   const trailRef = useRef<HTMLDivElement | null>(null);
+  // 0716: saha artık boş değil — 11+11 oyuncu noktası. Diziliş çapası + topa
+  // hat-bazlı çekim + kişisel salınım; top gibi rAF'ta ref üzerinden sürülür
+  // (render başına state yok, maliyet ~22 style yazımı/frame).
+  const playersRef = useRef<(HTMLDivElement | null)[]>([]);
+  const playerPos = useRef<[number, number][] | null>(null);
   const [side, setSide] = useState<Side | 'mid'>('mid');
   const [badge, setBadge] = useState<{ type: SimEvType; side: Side } | null>(null);
   const [momentum, setMomentum] = useState('Kick-off');
@@ -125,6 +130,15 @@ export default function PitchTV({
   // inside [sec, sec+holdSec]), ballAt returns that spot AND the badge lights —
   // they are one and the same moment, held for ≈2 real seconds. Goals hold the
   // ball at the net/penalty spot then centre (server-driven, separate).
+  // 4-3-3 çapaları (x% y%): GK + 4 + 3 + 3. Deplasman aynalanır (x → 100-x).
+  // Hat çekim katsayısı: kaleci neredeyse sabit, forvet topa en çok kayar.
+  const FORM: [number, number, number][] = [
+    [7, 50, 0.04],
+    [20, 18, 0.14], [17, 38, 0.14], [17, 62, 0.14], [20, 82, 0.14],
+    [36, 28, 0.24], [34, 50, 0.24], [36, 72, 0.24],
+    [56, 22, 0.34], [58, 50, 0.34], [56, 78, 0.34],
+  ];
+
   useEffect(() => {
     // stale goal drama must not leak into another match
     goalSeq.current = []; holdUntil.current = 0;
@@ -167,6 +181,25 @@ export default function PitchTV({
       s[0] += (b.x - s[0]) * 0.35; s[1] += (b.y - s[1]) * 0.35;
       if (ballRef.current) { ballRef.current.style.left = `${s[0]}%`; ballRef.current.style.top = `${s[1]}%`; }
       if (trailRef.current) { trailRef.current.style.left = `${s[0]}%`; trailRef.current.style.top = `${s[1]}%`; trailRef.current.style.opacity = String(b.moving ? 0.5 : 0.2); }
+
+      // oyuncular: çapa + topa hat-bazlı çekim + kişisel salınım; toptan yavaş
+      // ease (0.06) → doğal gecikme hissi
+      const now = Date.now();
+      if (!playerPos.current) playerPos.current = Array.from({ length: 22 }, (_, i) => {
+        const f = FORM[i % 11]; const hx = i < 11 ? f[0] : 100 - f[0];
+        return [hx, f[1]] as [number, number];
+      });
+      for (let i = 0; i < 22; i++) {
+        const el = playersRef.current[i]; if (!el) continue;
+        const f = FORM[i % 11];
+        const ax = i < 11 ? f[0] : 100 - f[0];
+        const pull = f[2];
+        const tx = ax + (s[0] - ax) * pull + Math.sin(now / 900 + i * 1.7) * 1.6;
+        const ty = f[1] + (s[1] - f[1]) * (pull * 0.8) + Math.cos(now / 800 + i * 2.3) * 1.8;
+        const pp = playerPos.current[i];
+        pp[0] += (tx - pp[0]) * 0.06; pp[1] += (ty - pp[1]) * 0.06;
+        el.style.left = `${pp[0]}%`; el.style.top = `${pp[1]}%`;
+      }
 
       setSide((v) => (v === sideNow ? v : sideNow));
       if (label !== labelRef.current) { labelRef.current = label; setMomentum(label); }
@@ -228,6 +261,11 @@ export default function PitchTV({
           {phase === 'live' && (side === 'home' || side === 'mid') && <div className="arrow home" style={{ ['--ac' as string]: HOME_ARROW }} />}
           {phase === 'live' && (side === 'away' || side === 'mid') && <div className="arrow away" style={{ ['--ac' as string]: AWAY_ARROW }} />}
 
+          {Array.from({ length: 22 }, (_, i) => (
+            <div key={i} ref={(el) => { playersRef.current[i] = el; }}
+              className={`pitch-player ${i < 11 ? 'ph' : 'pa'} ${i % 11 === 0 ? 'gk' : ''}`}
+              style={{ left: i < 11 ? `${FORM[i % 11][0]}%` : `${100 - FORM[i % 11][0]}%`, top: `${FORM[i % 11][1]}%` }} />
+          ))}
           <div ref={trailRef} className="pitch-trail" />
           <div ref={ballRef} className="pitch-ball" style={{ left: '50%', top: '50%' }}><span className="pent" /></div>
 
