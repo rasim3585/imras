@@ -23,6 +23,7 @@ export default function ProfileScreen() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [exact, setExact] = useState<{ played: number; settled: number; won: number; biggest: number } | null>(null);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +37,7 @@ export default function ProfileScreen() {
     (async () => {
       try {
         setCoupons(await matchProvider.getMyCoupons());
+        matchProvider.getCouponStats().then(setExact).catch(() => {});
         await loadChallenges();
       } catch (err) {
         setError(err instanceof Error ? err.message : t('pr.err.load'));
@@ -61,14 +63,16 @@ export default function ProfileScreen() {
     for (const c of coupons)
       for (const s of c.legs)
         if (s.status !== 'pending') { legTotal++; if (s.status === 'won') legHit++; }
+    // liste son 200 ile sınırlı — sayıların KESİNİ sunucu sayımından (exact);
+    // isabet oranı orandır, son 200 bacak üzerinden sağlıklı.
     return {
-      played: coupons.length,
-      settled: settled.length,
-      won: won.length,
-      biggest,
+      played: exact?.played ?? coupons.length,
+      settled: exact?.settled ?? settled.length,
+      won: exact?.won ?? won.length,
+      biggest: Math.max(exact?.biggest ?? 0, biggest),
       accuracy: accuracyPct(legHit, legTotal),
     };
-  }, [coupons]);
+  }, [coupons, exact]);
 
   const balance = profile?.gold_balance ?? 0;
   const bonusReady = isBonusAvailable(profile?.last_daily_bonus_at ?? null);

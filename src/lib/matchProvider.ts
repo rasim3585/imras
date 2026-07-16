@@ -50,6 +50,9 @@ export interface MatchProvider {
   /** The user's coupons, newest first, each with its graded selections. */
   getMyCoupons(): Promise<Coupon[]>;
 
+  /** Sunucu tarafı KESİN kupon sayıları (liste 200 ile sınırlı — sayılar değil). */
+  getCouponStats(): Promise<{ played: number; settled: number; won: number; biggest: number }>;
+
   /** A single coupon by id. */
   getCoupon(id: string): Promise<Coupon | null>;
 
