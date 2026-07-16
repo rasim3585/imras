@@ -149,18 +149,17 @@ export class SupabaseMatchProvider implements MatchProvider {
   }
 
   async getCouponStats(): Promise<{ played: number; settled: number; won: number; biggest: number }> {
-    // Sunucu tarafı KESİN sayımlar (RLS: kendi kuponları) — liste kapasitesinden bağımsız.
-    const [p, s, w, b] = await Promise.all([
-      supabase.from('coupons').select('id', { count: 'exact', head: true }),
-      supabase.from('coupons').select('id', { count: 'exact', head: true }).in('status', ['won', 'lost', 'cashed_out']),
-      supabase.from('coupons').select('id', { count: 'exact', head: true }).eq('status', 'won'),
-      supabase.from('coupons').select('potential_win').eq('status', 'won').order('potential_win', { ascending: false }).limit(1),
-    ]);
+    // Tek kaynak: coupon_stats() RPC — "kazanan" tanımı sunucuda (status='won'
+    // VEYA kârlı cashout, Kuponlarım bucketOf ile birebir). Eski 4-sorgu
+    // sayımı Profil'de farklı "won" gösteriyordu (kârlı cashout'u saymıyordu).
+    const { data, error } = await supabase.rpc('coupon_stats');
+    if (error) throw new Error(error.message);
+    const d = (data ?? {}) as { played?: number; settled?: number; won?: number; biggest?: number };
     return {
-      played: p.count ?? 0,
-      settled: s.count ?? 0,
-      won: w.count ?? 0,
-      biggest: Number((b.data?.[0] as { potential_win?: number } | undefined)?.potential_win ?? 0),
+      played: d.played ?? 0,
+      settled: d.settled ?? 0,
+      won: d.won ?? 0,
+      biggest: Number(d.biggest ?? 0),
     };
   }
 
