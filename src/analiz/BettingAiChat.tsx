@@ -1,6 +1,19 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { fetchOverview } from '../lib/mirror';
 import { useI18n } from '../i18n/LanguageContext';
+
+// Kişisel başlatıcılar: sohbet, kullanıcının GERÇEK zaafından başlasın —
+// ayna bayrağı → hazır soru çipi (fetchOverview 30sn memo'lu, ekstra RPC yok).
+const FLAG_CHIP: Record<string, string> = {
+  chasing_losses: 'bai.f.chase',
+  loss_tilt: 'bai.f.chase',
+  longshot_addict: 'bai.f.longshot',
+  win_illusion: 'bai.f.illusion',
+  chat_tilt: 'bai.f.tilt',
+  worst_is_favorite: 'bai.f.worst',
+  concentration: 'bai.f.conc',
+};
 
 // "Bahis AI'ınla Konuş" — kullanıcının KENDİ ayna verisiyle çok turlu koç
 // sohbeti. Sunucu (betting-ai edge fn) deterministik mirror_* paketini kendisi
@@ -24,7 +37,16 @@ export default function BettingAiChat() {
   const [hidden, setHidden] = useState(false);
   const listRef = useRef<HTMLDivElement | null>(null);
 
-  const starters = [t('bai.q1'), t('bai.q2'), t('bai.q3')];
+  const [flagKeys, setFlagKeys] = useState<string[]>([]);
+  useEffect(() => {
+    fetchOverview().then((d) => {
+      if (!d.ready) return;
+      const ks = d.flags.map((f) => FLAG_CHIP[f.code]).filter((k): k is string => !!k);
+      setFlagKeys([...new Set(ks)].slice(0, 2));
+    }).catch(() => {});
+  }, []);
+  // ilk 2 çip kişisel (bayraklardan), gerisi genel — toplam 3
+  const starters = [...flagKeys.map((k) => t(k)), t('bai.q1'), t('bai.q2'), t('bai.q3')].slice(0, 3);
 
   async function send(text: string) {
     const q = text.trim();
