@@ -35,7 +35,20 @@ revoke execute on function public.coupon_stats() from public, anon;
 ```
 (Uygulandıktan sonra Claude FE'yi bu RPC'ye geçirir — getCouponStats emekli.)
 
-## C) ▮ GÖVDE ÇEKİMİ — voleybol/tenis hayalet set + tempo alanı + GoO motor farkları
+## B2) AUTH DENETİMİ — set_username "player_xxxxxxxx" tuzağı (0150, hazır dosya)
+Repo'daki `supabase/migrations/0150_set_username_provisional_guard.sql` içeriğini
+aynen yapıştır (tek sorgu). Ne yapar: kullanıcının kendine "player_deadbeef"
+tarzı geçici-desenli ad seçip UsernameScreen'de sonsuz kilitlenmesini engeller.
+
+## B3) MINES KURTARMA — mines_active() (FE HAZIR, RPC bekliyor)
+FE canlıda şunu çağırıyor (yoksa sessizce es geçiyor): kullanıcının AKTİF Mines
+oyunu varsa `{game_id, bet, mines, mult, revealed:[hücreler]}` döndürmeli.
+Gövdeler canlıda olduğundan ÖNCE aşağıdaki C çekiminden mines fonksiyonları
+gelsin, ben şemaya birebir `mines_active()` + "aktif oyun varken mines_start
+reddi" migration'ını yazayım. (Neden kritik: bahis sunucuda düşmüşken sayfa
+yenileyen kullanıcı oyununa dönemiyor — para/güven yüzeyi.)
+
+## C) ▮ GÖVDE ÇEKİMİ — voleybol/tenis hayalet set + tempo alanı + GoO motor farkları + MINES
 Aşağıdaki TEK sorgunun çıktısını Claude'a yapıştır; üç yamayı gövdelerden üretecek:
 1. `_vb_state`: `revealed := least(round(t*total_pts)::int, total_pts-1)` —
    maç sonu 1-2sn'lik hayalet "Set 6 · 0-0" fix'i (+ `_tn_state`'te aynı kalıp varsa).
@@ -50,8 +63,10 @@ select proname,
        encode(convert_to(pg_get_functiondef(oid),'UTF8'),'base64') as govde
 from pg_proc
 where pronamespace = 'public'::regnamespace
-  and proname in ('_vb_state','_tn_state','get_live_state','_slot_play','_slot_round');
+  and proname in ('_vb_state','_tn_state','get_live_state','_slot_play','_slot_round',
+                  'mines_start','mines_reveal','mines_cashout');
 ```
+(mines_* gövdeleri B3'teki mines_active() + start-reddi migration'ı için.)
 
 ## D) SONRAKİ SEANS (edge+SQL özellikleri — ayrı iş)
 - match-preview'a GERÇEK maç dalı (ana bahis yüzeyi AI'sız kalmasın)

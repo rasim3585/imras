@@ -174,7 +174,37 @@ kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40
 ---
 
 ## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0150'den** devam, sıfır dolgulu 4 hane. (**2026-07-16
+Yeni migration'lar **0151'den** devam, sıfır dolgulu 4 hane. (**0150 + KÖR NOKTA
+DENETİMİ (2026-07-16, 4-ajanlık ordu: auth/RTL/şans/hata-dayanıklılık)**: İKİ
+LAUNCH BLOKER kapatıldı — (1) şifre sıfırlama akışı HİÇ YOKTU: AuthScreen
+'forgot' modu + resetPasswordForEmail + /reset rotası (ResetScreen, updateUser);
+(2) ErrorBoundary/global yakalayıcı yoktu (tek render hatası = kalıcı beyaz
+ekran): RootErrorBoundary (provider'ların DIŞINDA, kendi 8-dilli mini sözlüğü)
++ window error/unhandledrejection → logEvent('app','client_error') =
+behavior_events bedava Sentry-lite (launch haftası `event_type='client_error'`
+tara). SİSTEMİK: src/lib/errors.ts humanizeError/mapAuthError — ham PostgREST/
+Supabase/ağ mesajı kullanıcıya ASLA basılmaz (offline/busy/funds/generic ×8 dil);
+CouponPanel para yolu + Feed + auth + username + 3 şans oyunu buna geçti. AUTH:
+signUp identities boş = 'zaten kayıtlı' (sahte doğrulama çıkmazı bitti),
+emailRedirectTo, AuthContext onAuthStateChange'te await YOK (dokümante deadlock
+— setTimeout ile ertele), loadProfile hatada profili EZMEZ + 2 retry,
+getSession .finally, profileReady kapısı (girişte feed flaşı bitti), RequireAuth
+from-state (deep-link login sonrası geri döner), UsernameScreen finally kilidi.
+0150: set_username player_XXXXXXXX deseni reddi (sonsuz UsernameScreen tuzağı).
+ŞANS: Mines mount'ta minesActive() resume + catch'te resync (RPC SQL-KUYRUK'ta,
+FE toleranslı), tüm catch'lerde refreshProfile (bakiye chip yalanı bitti), Dice
+uçuşta yön kilidi + bayat marker temizliği, MAX floor. RTL: index.html erken-dir
+script'i (LTR flaşı yok — canlıda doğrulandı), durum şeritleri/hizalar logical
+properties (border-inline-start vb., saha/kort geometrisi FİZİKSEL bırakıldı),
+.tnum unicode-bidi isolate + ltr, av-fair-pop RTL kuralı, fmtNum(app-dili,
+Arapçada Latin rakam politikası) — tr-TR hardcode'ları söküldü. i18n: 6 ikincil
+dilde eksik 11 anahtar + landing.chip ar + SharedCouponScreen (viral kapı!)
+KOMPLE + CouponBar/MatchCard/LeagueDetail/placeholder — 8 dil × 674 anahtar,
+scripts/check-i18n.cjs build zincirinde (parite bozuksa build KIRILIR). Hata-vs-
+boş ayrımı: SharedCoupon/Team/Standings 'error'+retry, Analiz useMirror failed+
+retry (sonsuz 'Yükleniyor' bitti), Aviator ilk yükleme 5sn retry (sonsuz
+Connecting bitti). BİLİNÇLİ EN: PitchTV/MiniWatch yayıncı jargonu (Shot/Corner/
+Key attacks) uluslararası spor dili — ÇEVİRME, bug değil.) (**2026-07-16
 GECE LAUNCH CİLASI (FE-only, 18 commit)**: 5-ajanlık keşif ordusu (raporlar
 scratchpad/rapor-0..4.md) + uygulama. GATES: sembol seti v3 — 5 fasetli
 mücevher + altın Kupa(50x)/Krampon(25x)/Eldiven(15x)/Düdük(12x) + Altın Top

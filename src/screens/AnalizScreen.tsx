@@ -12,6 +12,7 @@ import MirrorPlus, { ParallelCard } from '../analiz/MirrorPlus';
 import AviatorMirror from '../aviator/AviatorMirror';
 import { CoinIcon } from '../components/icons';
 import { useI18n } from '../i18n/LanguageContext';
+import { fmtNum } from '../lib/format';
 
 // DAVRANIŞ AYNASI — Analiz merkezi. Alt başlıklar: Genel (çapraz-ürün), Maç
 // bahisleri, Aviator, Gates of Goal, Diğer. Her biri kullanıcının KENDİ verisinden
@@ -27,7 +28,7 @@ const TABS: { key: Tab; tkey: string }[] = [
 ];
 
 const pct = (x: number) => `%${Math.round(x * 100)}`;
-const gold = (n: number) => `${n > 0 ? '+' : ''}${n.toLocaleString('tr-TR')}`;
+const gold = (n: number) => `${n > 0 ? '+' : ''}${fmtNum(n)}`;
 
 function FlagList({ flags }: { flags: MirrorFlag[] }) {
   const { t } = useI18n();
@@ -56,15 +57,27 @@ function Stat({ k, children, cls }: { k: string; children: React.ReactNode; cls?
   return <div className="az-stat"><span className="k">{k}</span><b className={cls}>{children}</b></div>;
 }
 
-function useMirror<T>(fn: () => Promise<T>, dep: unknown): T | null {
+// Hata ile "yükleniyor" ayrımı: başarısız çağrı sonsuz "Yükleniyor" değil,
+// tek dokunuşla tekrar denenebilir bir durum üretir.
+function useMirror<T>(fn: () => Promise<T>, dep: unknown): { d: T | null; failed: boolean; retry: () => void } {
   const [data, setData] = useState<T | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [tick, setTick] = useState(0);
   useEffect(() => {
-    let alive = true; setData(null);
-    fn().then((d) => { if (alive) setData(d); }).catch(() => { if (alive) setData(null); });
+    let alive = true; setData(null); setFailed(false);
+    fn().then((d) => { if (alive) setData(d); }).catch(() => { if (alive) setFailed(true); });
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dep]);
-  return data;
+  }, [dep, tick]);
+  return { d: data, failed, retry: () => setTick((x) => x + 1) };
+}
+
+function MirrorWait({ failed, retry, boxed }: { failed: boolean; retry: () => void; boxed?: boolean }) {
+  const { t } = useI18n();
+  const inner = failed
+    ? <button className="az-sub az-retry" onClick={retry}>{t('analiz.err')}</button>
+    : <p className="az-sub">{t('analiz.loading')}</p>;
+  return boxed ? <div className="az-body">{inner}</div> : inner;
 }
 
 // "vs diğer oyuncular": her eksende sen vs ortalama + yüzdelik dilim rozeti.
@@ -80,7 +93,7 @@ function axisNote(a: BenchmarkAxis, t: TFn): { text: string; good: boolean | nul
 }
 function BenchmarkBlock() {
   const { t } = useI18n();
-  const d = useMirror<BenchmarkProfile>(fetchBenchmark, 'bench');
+  const { d } = useMirror<BenchmarkProfile>(fetchBenchmark, 'bench');
   if (!d || !d.ready) return null;
   return (
     <div className="az-block">
@@ -151,7 +164,7 @@ function CoachBlock() {
 // Kimlik kartı: çapraz-ürün desenden arketip + imza özellikler.
 function PlayerCardBlock() {
   const { t } = useI18n();
-  const c = useMirror<PlayerCard>(fetchPlayerCard, 'card');
+  const { d: c } = useMirror<PlayerCard>(fetchPlayerCard, 'card');
   if (!c || !c.ready) return null;
   const netCls = c.total_net >= 0 ? 'pos' : 'neg';
   return (
@@ -200,7 +213,7 @@ function HouseEdgeBlock() {
 // Sohbet mizacı: maç yorumlarından tilt/öfke deseni (sohbet → duygu → karar).
 function ChatMirrorBlock() {
   const { t } = useI18n();
-  const d = useMirror<ChatProfile>(fetchChatMirror, 'chat');
+  const { d } = useMirror<ChatProfile>(fetchChatMirror, 'chat');
   if (!d || !d.ready || d.flags.length === 0) return null;
   return (
     <div className="az-block">
@@ -248,8 +261,8 @@ function JudgeScorecardBlock() {
 const LUCK_KEYS = new Set(['dice', 'mines', 'plinko']);
 function OtherTab() {
   const { t } = useI18n();
-  const d = useMirror<OverviewProfile>(fetchOverview, 'other');
-  if (!d) return <div className="az-body"><p className="az-sub">{t('analiz.loading')}</p></div>;
+  const { d, failed, retry } = useMirror<OverviewProfile>(fetchOverview, 'other');
+  if (!d) return <MirrorWait failed={failed} retry={retry} boxed />;
   const prods = d.ready ? d.products.filter((p) => LUCK_KEYS.has(p.key) && p.plays > 0) : [];
   if (prods.length === 0) {
     return <div className="az-body"><p className="az-sub">{t('analiz.other.none')}</p></div>;
@@ -285,8 +298,8 @@ function OtherTab() {
 
 function GenelTab() {
   const { t } = useI18n();
-  const d = useMirror<OverviewProfile>(fetchOverview, 'genel');
-  if (!d) return <p className="az-sub">{t('analiz.loading')}</p>;
+  const { d, failed, retry } = useMirror<OverviewProfile>(fetchOverview, 'genel');
+  if (!d) return <MirrorWait failed={failed} retry={retry} />;
   if (!d.ready) return <p className="az-sub">{t('analiz.overview.notready', { have: d.plays ?? 0, need: d.need ?? 20 })}</p>;
   const netCls = d.net >= 0 ? 'pos' : 'neg';
   const maxStake = Math.max(...d.products.map((p) => p.staked), 1);
@@ -335,8 +348,8 @@ function GenelTab() {
 
 function CouponTab() {
   const { t } = useI18n();
-  const d = useMirror<CouponProfile>(fetchCouponMirror, 'coupon');
-  if (!d) return <p className="az-sub">{t('analiz.loading')}</p>;
+  const { d, failed, retry } = useMirror<CouponProfile>(fetchCouponMirror, 'coupon');
+  if (!d) return <MirrorWait failed={failed} retry={retry} />;
   if (!d.ready) return <p className="az-sub">{t('analiz.coupon.notready', { have: d.rounds ?? 0, need: d.need ?? 15 })}</p>;
   return (
     <div className="az-body">
@@ -353,8 +366,8 @@ function CouponTab() {
 
 function SlotTab() {
   const { t } = useI18n();
-  const d = useMirror<SlotProfile>(fetchSlotMirror, 'slot');
-  if (!d) return <p className="az-sub">{t('analiz.loading')}</p>;
+  const { d, failed, retry } = useMirror<SlotProfile>(fetchSlotMirror, 'slot');
+  if (!d) return <MirrorWait failed={failed} retry={retry} />;
   if (!d.ready) return <p className="az-sub">{t('analiz.slot.notready', { have: d.rounds ?? 0, need: d.need ?? 15 })}</p>;
   return (
     <div className="az-body">
@@ -372,7 +385,7 @@ function SlotTab() {
 // Gerçeklik kontrolü: kullanıcıyı LEHİNE uyaran ayıraçlar (ürünün asıl amacı).
 function RealityCheckBanner() {
   const { t } = useI18n();
-  const d = useMirror<RealityCheck>(fetchRealityCheck, 'rc');
+  const { d } = useMirror<RealityCheck>(fetchRealityCheck, 'rc');
   if (!d || !d.ready || d.alerts.length === 0) return null;
   return (
     <div className="az-rc">

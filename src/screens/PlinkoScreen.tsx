@@ -5,6 +5,7 @@ import { useI18n } from '../i18n/LanguageContext';
 import { CoinIcon } from '../components/icons';
 import { Confetti } from '../live/PitchTV';
 import { plinkoDrop, plinkoMult, PLINKO_TABLES, type PlinkoResult } from '../lib/luck';
+import { humanizeError } from '../lib/errors';
 
 // kova çarpanını kompakt yaz: 1000+ → 1k, 10+ tam sayı, altı 1 ondalık (mobil okunurluk)
 const fmtMult = (m: number) => (m >= 1000 ? `${Math.round(m / 100) / 10}k` : m >= 10 ? Math.round(m).toString() : m.toFixed(1));
@@ -99,9 +100,13 @@ export default function PlinkoScreen() {
     setBusy(true); setErr(null);
     try {
       const r = await plinkoDrop(bet, risk);
+      // Bakiyeyi hemen tazele: animasyon ortasında sayfadan çıkılırsa
+      // (cleanup rAF'ı iptal eder) chip bayat kalmasın.
+      void refreshProfile();
       animate(r.path, r.bucket, r);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : t('luck.err'));
+      setErr(humanizeError(e, t));
+      void refreshProfile();
     } finally { setBusy(false); }
   }
 
@@ -150,7 +155,7 @@ export default function PlinkoScreen() {
           onChange={(e) => setBet(Math.max(0, Math.floor(Number(e.target.value) || 0)))} disabled={busy || dropping} />
         <div className="luck-quick">
           {QUICK.map((q) => <button key={q} className="btn btn-sm" disabled={busy || dropping} onClick={() => setBet(q)}>{q}</button>)}
-          <button className="btn btn-sm" disabled={busy || dropping || bal <= 0} onClick={() => setBet(bal)}>MAX</button>
+          <button className="btn btn-sm" disabled={busy || dropping || bal <= 0} onClick={() => setBet(Math.floor(bal))}>MAX</button>
         </div>
       </div>
 

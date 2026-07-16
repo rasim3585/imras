@@ -76,7 +76,7 @@ function Leagues() {
       ) : (
         <div className="coupon-list" style={{ marginTop: 'var(--s3)' }}>
           {leagues.map((l) => (
-            <button key={l.id} className="card coupon-card trow-btn" style={{ textAlign: 'left' }} onClick={() => navigate(`/league/${l.id}`)}>
+            <button key={l.id} className="card coupon-card trow-btn" onClick={() => navigate(`/league/${l.id}`)}>
               <div className="spread">
                 <div className="stack" style={{ gap: 2 }}>
                   <span style={{ fontWeight: 600 }}>{l.name}{l.is_owner ? <span className="chip chip-accent" style={{ marginLeft: 8 }}>{t('so.owner')}</span> : null}</span>

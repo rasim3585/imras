@@ -29,15 +29,17 @@ export default function StandingsScreen() {
   const [sport, setSport] = useState<Sport>('football');
   const [rows, setRows] = useState<StandingsRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);   // ağ hatası ≠ "lig yok"
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    let alive = true; setLoading(true);
+    let alive = true; setLoading(true); setFailed(false);
     matchProvider.getStandings(sport)
       .then((r) => { if (alive) setRows(r); })
-      .catch(() => { if (alive) setRows([]); })
+      .catch(() => { if (alive) { setRows([]); setFailed(true); } })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [sport]);
+  }, [sport, tick]);
 
   const bucket = (r: StandingsRow) => r.league || (sport === 'football' ? t('std.simleague') : t('std.league'));
   const leagues = [...new Set(rows.map(bucket))];
@@ -82,6 +84,11 @@ export default function StandingsScreen() {
 
       {loading ? (
         <div className="center-pad"><div className="spinner" /></div>
+      ) : failed ? (
+        <div className="empty">
+          <p>{t('err.offline')}</p>
+          <button className="btn btn-primary" onClick={() => setTick((x) => x + 1)}>{t('common.retry')}</button>
+        </div>
       ) : rows.length === 0 ? (
         <div className="empty"><p>{t('std.none')}</p></div>
       ) : leagues.map((lg) => (

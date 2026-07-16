@@ -55,6 +55,19 @@ export async function minesCashout(gameId: number): Promise<MinesState> {
   if (error) throw new Error(error.message);
   return data as MinesState;
 }
+// Aktif Mines oyununu geri getir (sayfa yenileme / geri tuşu kurtarması).
+// undefined = RPC yok ya da erişilemedi (sessizce geç), null = aktif oyun yok.
+// Sunucu tarafı mines_active() SQL-KUYRUK'ta — RPC canlıya alınana dek bu
+// çağrı zararsız şekilde undefined döner.
+export interface MinesActiveGame {
+  game_id: number; bet: number; mines: number; mult: number; revealed: number[];
+}
+export async function minesActive(): Promise<MinesActiveGame | null | undefined> {
+  const { data, error } = await supabase.rpc('mines_active');
+  if (error) return undefined;
+  return (data ?? null) as MinesActiveGame | null;
+}
+
 // fair çarpan (sunucu _mines_mult ile birebir) — sıradaki kutunun değerini önden göster
 export function minesMult(mines: number, k: number): number {
   let m = 1;

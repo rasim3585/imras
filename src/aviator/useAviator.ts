@@ -134,16 +134,23 @@ export function useAviator(): AviatorState {
 
   useEffect(() => {
     let alive = true;
-    (async () => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    // Offline'da realtime de ölüdür — "realtime nasılsa yakalar" varsayımı
+    // sonsuz "Connecting" bırakıyordu. İlk yükleme başarısızsa 5sn'de bir
+    // yeniden dene (başarınca durur; realtime oradan devralır).
+    const load = async () => {
       try {
         const [r, c, h] = await Promise.all([fetchCurrentRound(), fetchConfig(), fetchHistory()]);
         if (!alive) return;
         if (c) setConfig(c);
         setHistory(h);
         if (r) applyRound(r);
-      } catch { /* realtime will catch us up */ }
-    })();
-    return () => { alive = false; };
+      } catch {
+        if (alive) timer = setTimeout(load, 5000);
+      }
+    };
+    void load();
+    return () => { alive = false; if (timer) clearTimeout(timer); };
   }, [applyRound]);
 
   useEffect(() => {

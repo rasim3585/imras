@@ -26,6 +26,15 @@ export function formatKickoff(iso: string, t?: (key: string, vars?: Record<strin
   return d.toLocaleDateString(undefined, { weekday: 'short' }) + ' ' + time;
 }
 
+/** Sayıyı UYGULAMA dilinde biçimle (tarayıcı dilinde değil). Arapçada Latin
+ *  rakam politikası (launch-güvenli): ar-SA tarayıcıda Doğu Arap rakamlarına
+ *  düşmez, oranlar/altın her yerde aynı rakam sistemiyle okunur.
+ *  <html lang> LanguageContext tarafından güncel tutulur. */
+export function fmtNum(n: number, opts?: Intl.NumberFormatOptions): string {
+  const l = typeof document !== 'undefined' ? (document.documentElement.lang || 'en') : 'en';
+  return n.toLocaleString(l === 'ar' ? 'ar-u-nu-latn' : l, opts);
+}
+
 /** Accuracy as a whole percentage; 0 when there are no predictions yet. */
 export function accuracyPct(correct: number, total: number): number {
   return total === 0 ? 0 : Math.round((correct / total) * 100);

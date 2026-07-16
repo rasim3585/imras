@@ -4,11 +4,12 @@ import {
   type Survey, type ParallelProfile, type TiltProfile, type SelfGapProfile,
 } from '../lib/mirror';
 import { useI18n } from '../i18n/LanguageContext';
+import { fmtNum } from '../lib/format';
 
 // AYNA+ — üç "wow" kartı. İlke: her kart = 1 metrik + 1 grafik + 1 cümle.
 // Sayılar tamamen deterministik (backend RPC); grafikler el yapımı SVG.
 
-const gold = (n: number) => `${n > 0 ? '+' : ''}${n.toLocaleString('tr-TR')}`;
+const gold = (n: number) => `${n > 0 ? '+' : ''}${fmtNum(n)}`;
 
 function useData<T>(fn: () => Promise<T>): T | null {
   const [d, setD] = useState<T | null>(null);

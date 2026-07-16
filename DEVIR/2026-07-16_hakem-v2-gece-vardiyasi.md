@@ -134,3 +134,42 @@ court-sync-proof: 150sn'de 30 sayı izlendi — pop'un doğduğu karede top-pota
 mesafesi 3-5 birim (320'lik sahada), tabela 30/30 AYNI karede. Futbol (22
 oyuncu, 59'), tenis (Set 2 · 1-0 (0-30)), voleybol (Set 3 · 3-3) canlı
 ekranları hatasız. 4 spor görevi KAPANDI.
+
+## KÖR NOKTA DENETİMİ + UYGULAMASI (gece 2. dalga — 4 ajanlık ordu)
+Denetlenen (hiç bakılmamış) alanlar: auth ön kapısı, Arapça RTL runtime, şans
+oyunları düşman senaryoları, hata/boş/offline dayanıklılığı. Raporlar:
+scratchpad/kor-r0..r3.md. UYGULANDI (build+tarayıcı doğrulamalı):
+
+**İki launch bloker kapatıldı:**
+1. Şifre sıfırlama akışı HİÇ YOKTU → AuthScreen 'forgot' modu + /reset rotası
+   (ResetScreen). Şifresini unutan e-posta kullanıcısı kalıcı kilitleniyordu.
+   Tarayıcıda doğrulandı: forgot formu, /reset geçersiz-link durumu.
+2. ErrorBoundary yoktu → RootErrorBoundary + window error/unhandledrejection →
+   logEvent('app','client_error'). Launch haftası tarama:
+   `select * from log_events where event_type='client_error'`.
+
+**Sistemik:** src/lib/errors.ts (humanizeError/mapAuthError) — ham İngilizce
+hata sızıntısı bitti; para yolu (CouponPanel) dahil. i18n 8×674 anahtar,
+scripts/check-i18n.cjs artık build zincirinde (npm run build kırar).
+
+**Auth sertleştirme:** identities-boş kayıt = 'zaten kayıtlı' (sahte doğrulama
+çıkmazı), onAuthStateChange deadlock erteleme, loadProfile retry+koruma,
+profileReady kapısı, RequireAuth from-state, UsernameScreen kilit fix.
+**0150 hazır** (repo dosyası): set_username player_XXXXXXXX reddi — SABAH
+YAPIŞTIRILACAK (SQL-KUYRUK B2).
+
+**Şans:** Mines resume FE hazır (minesActive() RPC'si SQL-KUYRUK B3 — mines_*
+gövde çekimi C'ye eklendi), tüm catch'ler refreshProfile, Dice yön kilidi.
+**RTL:** erken-dir script (canlıda doğrulandı: ilk boyama dir=rtl + Arapça
+chipler), logical properties (şeritler/hizalar; saha geometrisi fiziksel),
+.tnum bidi, fmtNum Latin-rakam politikası.
+**Hata-vs-boş:** SharedCoupon (tam i18n — viral kapı!), Team/Standings/Analiz
+retry'lı hata durumu, Aviator offline 5sn retry.
+
+**Bilinçli karar:** PitchTV/MiniWatch yayıncı jargonu (Shot/Corner/Key attacks)
+uluslararası spor dili — ÇEVİRİLMEDİ, CLAUDE.md'ye not düşüldü.
+
+**Kalan (denetimden, düşük):** MARKET_NAMES/OUTCOME_LABELS i18n (gerçek maç
+bacak adları), argsız toLocaleString sweep (~35 çağrı, ar-SA tarayıcı Doğu Arap
+rakamları), Arapça webfont, dice_roll RPC chance clamp canlı testi (C çekimi
+sonrası bakılır).

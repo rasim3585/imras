@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthContext';
 import { matchProvider } from '../lib/matchProvider';
 import { formatOdds } from '../lib/format';
 import { logEvent } from '../lib/behaviorLog';
+import { humanizeError } from '../lib/errors';
 import { useI18n } from '../i18n/LanguageContext';
 import { fetchCouponReview, fetchCouponJudge, logJudgeVerdict, type CouponReview, type CouponLegReview } from '../lib/mirror';
 
@@ -103,8 +104,10 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
     } catch (err) {
       const raw = err instanceof Error ? err.message : '';
       logEvent('coupon', 'coupon_place_failed', { ...decision, reason: raw.slice(0, 80) }, meta);
+      // Para yolu: bilinen tokenlar eşlenir, gerisi ASLA ham basılmaz
+      // (statement timeout SQL mesajı kullanıcıya sızıyordu) — humanizeError.
       setError(raw.includes('market_closed') ? t('cpn.err.closed')
-        : raw.includes('Not enough gold') ? t('cpn.err.funds') : raw || t('cpn.err.generic'));
+        : raw.includes('Not enough gold') ? t('cpn.err.funds') : humanizeError(err, t));
     } finally { setBusy(false); }
   }
 

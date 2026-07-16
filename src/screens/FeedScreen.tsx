@@ -6,6 +6,7 @@ import { useAuth } from '../auth/AuthContext';
 import { useI18n } from '../i18n/LanguageContext';
 import { countryFlag } from '../lib/countryFlag';
 import { matchProvider } from '../lib/matchProvider';
+import { humanizeError } from '../lib/errors';
 import type { BulletinMatch } from '../lib/types';
 
 const LIVE = new Set(['inprogress', 'live', 'penalties']);
@@ -118,10 +119,13 @@ export default function FeedScreen() {
       setMatches(ms);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('feed.loaderr'));
+      // Ham "Failed to fetch" yerine kullanıcının dilinde kısa teşhis;
+      // 5sn'lik poll zaten otomatik retry.
+      setError(humanizeError(err, t));
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

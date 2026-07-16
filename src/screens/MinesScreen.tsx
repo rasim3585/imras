@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useI18n } from '../i18n/LanguageContext';
 import { CoinIcon } from '../components/icons';
 import { Confetti } from '../live/PitchTV';
-import { minesStart, minesReveal, minesCashout, minesMult, type MinesState } from '../lib/luck';
+import { humanizeError } from '../lib/errors';
+import { minesStart, minesReveal, minesCashout, minesActive, minesMult, type MinesState } from '../lib/luck';
 
 // Mines — "bir kutu daha mı, çek mi" gerilimi. 5×5, M mayın; her güvenli açış
 // çarpanı yükseltir, mayın kaybeder, çekince öder. Sunucu-otoriter (mayınlar
@@ -25,6 +26,9 @@ export default function MinesScreen() {
   const [done, setDone] = useState<{ won: boolean; payout: number } | null>(null);
   const [blast, setBlast] = useState(false);       // patlama sarsıntısı
   const [bump, setBump] = useState(false);         // çarpan yükselince zıplama
+  const [note, setNote] = useState<string | null>(null); // bilgi (resume/senkron)
+  const bumpT = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const blastT = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const bal = profile?.gold_balance ?? 0;
   const active = game?.status === 'active';
@@ -32,16 +36,55 @@ export default function MinesScreen() {
   const curMult = active ? (k > 0 ? minesMult(mines, k) : 1) : 1;
   const nextMult = active ? minesMult(mines, k + 1) : minesMult(mines, 1);
 
+  useEffect(() => () => {
+    if (bumpT.current) clearTimeout(bumpT.current);
+    if (blastT.current) clearTimeout(blastT.current);
+  }, []);
+
+  // Para tuzağı kurtarması: sayfa yenile / geri tuşu sonrası aktif oyun (bahis
+  // sunucuda düşmüş durumda) UI'da kaybolmasın — sunucudan geri yükle.
+  useEffect(() => {
+    if (!session) return;
+    let alive = true;
+    void minesActive().then((a) => {
+      if (!alive || !a) return;   // undefined (RPC yok) ya da null (aktif oyun yok)
+      setBet(a.bet); setMines(a.mines);
+      setCells(Array.from({ length: 25 }, (_, i) => (a.revealed.includes(i) ? 'safe' : 'hidden')));
+      setGame({ game_id: a.game_id, status: 'active', bet: a.bet, mines: a.mines, mult: a.mult });
+      setNote(t('luck.resumed'));
+    });
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session]);
+
+  // RPC timeout'unda FE ile sunucu çatallanabilir (mayına basılmış ama yanıt
+  // kaybolmuş olabilir) — sunucudan gerçeği çekip UI'ı hizala.
+  async function resync() {
+    const a = await minesActive();
+    if (a === undefined) return;                    // RPC yok/erişilemedi: dokunma
+    if (!a) {
+      // sunucuda aktif oyun kalmamış (patladı ya da bitti) → kilidi aç
+      setGame(null);
+      setCells(Array(25).fill('hidden'));
+      setNote(t('luck.sync'));
+      void refreshProfile();
+      return;
+    }
+    setCells(Array.from({ length: 25 }, (_, i) => (a.revealed.includes(i) ? 'safe' : 'hidden')));
+    setGame({ game_id: a.game_id, status: 'active', bet: a.bet, mines: a.mines, mult: a.mult });
+  }
+
   async function start() {
     if (busy || bet < 1 || bet > bal) return;
-    setBusy(true); setErr(null); setDone(null);
+    setBusy(true); setErr(null); setNote(null); setDone(null);
     setCells(Array(25).fill('hidden'));
     try {
       const g = await minesStart(bet, mines);
       setGame(g);
       await refreshProfile();
     } catch (e) {
-      setErr(e instanceof Error ? e.message : t('luck.err'));
+      setErr(humanizeError(e, t));
+      void refreshProfile();
     } finally { setBusy(false); }
   }
 
@@ -51,19 +94,32 @@ export default function MinesScreen() {
     try {
       const r = await minesReveal(game!.game_id, i);
       if (r.safe) {
-        setCells((c) => c.map((x, idx) => (idx === i ? 'safe' : x)));
-        setBump(true); setTimeout(() => setBump(false), 320);
-        if (r.status === 'cashed') endGame(r, true);          // tüm güvenliler açıldı → oto cashout
-        else setGame((g) => ({ ...g!, mult: r.mult ?? g!.mult }));
+        if (r.status === 'cashed') {
+          // tüm güvenliler açıldı → oto cashout; manuel cashout'taki gibi
+          // mayınları da göster (görsel tutarlılık)
+          const mc = r.mine_cells ?? [];
+          setCells((c) => c.map((x, idx) => (idx === i ? 'safe' : mc.includes(idx) && x === 'hidden' ? 'reveal-mine' : x)));
+          endGame(r, true);
+        } else {
+          setCells((c) => c.map((x, idx) => (idx === i ? 'safe' : x)));
+          setGame((g) => ({ ...g!, mult: r.mult ?? g!.mult }));
+        }
+        setBump(true);
+        if (bumpT.current) clearTimeout(bumpT.current);
+        bumpT.current = setTimeout(() => setBump(false), 320);
       } else {
         // patladı: mayınları göster + sarsıntı
         const mc = r.mine_cells ?? [];
         setCells((c) => c.map((x, idx) => (idx === i ? 'boom' : mc.includes(idx) ? 'reveal-mine' : x)));
-        setBlast(true); setTimeout(() => setBlast(false), 460);
+        setBlast(true);
+        if (blastT.current) clearTimeout(blastT.current);
+        blastT.current = setTimeout(() => setBlast(false), 460);
         endGame(r, false);
       }
     } catch (e) {
-      setErr(e instanceof Error ? e.message : t('luck.err'));
+      setErr(humanizeError(e, t));
+      void refreshProfile();
+      void resync();
     } finally { setBusy(false); }
   }
 
@@ -76,7 +132,9 @@ export default function MinesScreen() {
       setCells((c) => c.map((x, idx) => (mc.includes(idx) && x === 'hidden' ? 'reveal-mine' : x)));
       endGame(r, true);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : t('luck.err'));
+      setErr(humanizeError(e, t));
+      void refreshProfile();
+      void resync();
     } finally { setBusy(false); }
   }
 
@@ -115,6 +173,7 @@ export default function MinesScreen() {
       </div>
 
       {err && <div className="banner banner-error">{err}</div>}
+      {note && !err && <div className="banner">{note}</div>}
       {done && (
         <div className={`luck-result ${done.won ? 'w' : 'l'}`}>
           {done.won && <span className="luck-coins" aria-hidden>{Array.from({ length: 7 }, (_, i) => <i key={i} style={{ left: `${12 + i * 12}%`, animationDelay: `${i * 0.05}s` }} />)}</span>}
@@ -134,7 +193,7 @@ export default function MinesScreen() {
               onChange={(e) => setBet(Math.max(0, Math.floor(Number(e.target.value) || 0)))} disabled={busy} />
             <div className="luck-quick">
               {QUICK.map((q) => <button key={q} className="btn btn-sm" disabled={busy} onClick={() => setBet(q)}>{q}</button>)}
-              <button className="btn btn-sm" disabled={busy || bal <= 0} onClick={() => setBet(bal)}>MAX</button>
+              <button className="btn btn-sm" disabled={busy || bal <= 0} onClick={() => setBet(Math.floor(bal))}>MAX</button>
             </div>
           </div>
           {session ? (

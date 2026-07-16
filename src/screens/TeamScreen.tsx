@@ -39,18 +39,26 @@ function MatchRow({ m, teamName }: { m: TeamPageMatch; teamName: string }) {
 export default function TeamScreen() {
   const { teamId } = useParams();
   const { t } = useI18n();
-  const [page, setPage] = useState<TeamPage | null | 'none'>(null);
+  const [page, setPage] = useState<TeamPage | null | 'none' | 'error'>(null);
+  const [tick, setTick] = useState(0);   // retry tetiği
 
   useEffect(() => {
     let alive = true;
     setPage(null);   // takım değişince eski sayfa görünmesin (geri/ileri gezinme)
     matchProvider.getTeamPage(Number(teamId))
       .then((p) => { if (alive) setPage(p ?? 'none'); })
-      .catch(() => { if (alive) setPage('none'); });
+      // ağ hatası ≠ takım yok — yanlış teşhis koyma, retry sun
+      .catch(() => { if (alive) setPage('error'); });
     return () => { alive = false; };
-  }, [teamId]);
+  }, [teamId, tick]);
 
   if (page === null) return <div className="center-pad"><div className="spinner" /></div>;
+  if (page === 'error') return (
+    <div className="empty">
+      <p>{t('err.offline')}</p>
+      <button className="btn btn-primary" onClick={() => setTick((x) => x + 1)}>{t('common.retry')}</button>
+    </div>
+  );
   if (page === 'none') return <div className="empty"><p>{t('team.notfound')}</p></div>;
 
   const s = page.standing;

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../auth/AuthContext';
 import { useI18n } from '../i18n/LanguageContext';
+import { mapAuthError } from '../lib/errors';
 
 // Onboarding step: the signup trigger gave the user a provisional handle;
 // here they claim a real one via the set_username RPC (validated server-side).
@@ -21,7 +22,11 @@ export default function UsernameScreen() {
       if (error) throw error;
       await refreshProfile();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('user.err'));
+      setError(mapAuthError(err, t));
+    } finally {
+      // Başarıda da kilidi aç: RPC "geçti" ama isim hâlâ provisional desenli
+      // olabilir (ör. player_xxxxxxxx yazan kullanıcı) — ekran tekrar gelir,
+      // buton "…"de kilitli kalmasın.
       setBusy(false);
     }
   }
@@ -42,7 +47,7 @@ export default function UsernameScreen() {
               className="input"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="e.g. sharp_call_07"
+              placeholder={t('user.ph')}
               pattern="[A-Za-z0-9_]{3,20}"
               autoFocus
               required

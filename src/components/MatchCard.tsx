@@ -4,6 +4,7 @@ import type { Match, LiveState } from '../lib/types';
 import { formatKickoff } from '../lib/format';
 import MarketSection from './MarketSection';
 import TeamCrest from './TeamCrest';
+import { useI18n } from '../i18n/LanguageContext';
 
 function TeamBadge({ name }: { name: string }) {
   return <TeamCrest name={name} size={30} className="team-badge" />;
@@ -11,6 +12,7 @@ function TeamBadge({ name }: { name: string }) {
 
 export default function MatchCard({ match, live, primaryType = 'match_result' }: { match: Match; live?: LiveState; primaryType?: string }) {
   const [expanded, setExpanded] = useState(false);
+  const { t } = useI18n();
   const isLive = live?.phase === 'live';
 
   const markets = [...match.markets].sort((a, b) => {
@@ -26,9 +28,9 @@ export default function MatchCard({ match, live, primaryType = 'match_result' }:
       <div className="contract-head">
         {isLive
           ? <span className="row" style={{ gap: 8 }}><span className="live-badge">LIVE</span><span className="minute-red tnum">{live!.minute}&apos;</span></span>
-          : <span className="tag">{match.sport === 'football' ? 'Football' : match.sport}</span>}
+          : <span className="tag">{match.sport === 'football' ? t('feed.sport.football') : match.sport}</span>}
         {isLive
-          ? <Link className="watch-link" to={`/live/${match.id}`}>Watch &rsaquo;</Link>
+          ? <Link className="watch-link" to={`/live/${match.id}`}>{t('md.watchlive')} &rsaquo;</Link>
           : <span className="contract-time tnum">{formatKickoff(match.starts_at)}</span>}
       </div>
 
@@ -47,11 +49,11 @@ export default function MatchCard({ match, live, primaryType = 'match_result' }:
 
       {moreCount > 0 && (
         <Link to={`/match/${match.id}`} className="more-markets" style={{ display: 'block', textAlign: 'center' }}>
-          + {moreCount} more markets
+          {t('mcard.more', { n: moreCount })}
         </Link>
       )}
       {expanded && markets.length > 1 && (
-        <button type="button" className="more-markets" onClick={() => setExpanded(false)}>Show less</button>
+        <button type="button" className="more-markets" onClick={() => setExpanded(false)}>{t('mcard.less')}</button>
       )}
     </div>
   );

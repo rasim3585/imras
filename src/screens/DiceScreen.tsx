@@ -5,6 +5,7 @@ import { useI18n } from '../i18n/LanguageContext';
 import { CoinIcon } from '../components/icons';
 import { Confetti } from '../live/PitchTV';
 import { diceRoll, type DiceResult } from '../lib/luck';
+import { humanizeError } from '../lib/errors';
 
 // Zar yüzü: 0..99.99 sonucu iki fiziksel zara böl (onlar/birler basamağı, 1-6
 // aralığına eşle) — kullanıcı gerçek zar görsün. Büyük değer ayrıca üstte yazılı.
@@ -66,7 +67,10 @@ export default function DiceScreen() {
       setRes(r);
       await refreshProfile();
     } catch (e) {
-      setErr(e instanceof Error ? e.message : t('luck.err'));
+      // Yanıt kaybolduysa bahis sunucuda işlenmiş olabilir — bakiye chip'i
+      // yalan söylemesin.
+      setErr(humanizeError(e, t));
+      void refreshProfile();
     } finally { setBusy(false); setRolling(false); }
   }
 
@@ -105,14 +109,16 @@ export default function DiceScreen() {
         <div className="luck-stat"><span className="k">{t('dice.payout')}</span><b className="tnum">{Math.floor(bet * mult)}</b></div>
       </div>
 
+      {/* atış uçarken yön değişmesin (sonuç görseli sunucuyla çelişir);
+          yön/şans değişince eski marker temizlensin (yanlış bölgede kalıyordu) */}
       <div className="dice-dir">
-        <button className={`seg ${dir === 'under' ? 'on' : ''}`} onClick={() => setDir('under')}>{t('dice.under')} &lt; {chance}</button>
-        <button className={`seg ${dir === 'over' ? 'on' : ''}`} onClick={() => setDir('over')}>{t('dice.over')} &gt; {100 - chance}</button>
+        <button className={`seg ${dir === 'under' ? 'on' : ''}`} disabled={busy} onClick={() => { setDir('under'); setRes(null); }}>{t('dice.under')} &lt; {chance}</button>
+        <button className={`seg ${dir === 'over' ? 'on' : ''}`} disabled={busy} onClick={() => { setDir('over'); setRes(null); }}>{t('dice.over')} &gt; {100 - chance}</button>
       </div>
 
       <label className="dice-slider-l">{t('dice.slider')}
         <input type="range" min={2} max={95} value={chance} className="dice-slider"
-          onChange={(e) => setChance(Number(e.target.value))} disabled={busy} />
+          onChange={(e) => { setChance(Number(e.target.value)); setRes(null); }} disabled={busy} />
       </label>
 
       <div className="luck-bet">
@@ -120,7 +126,7 @@ export default function DiceScreen() {
           onChange={(e) => setBet(Math.max(0, Math.floor(Number(e.target.value) || 0)))} disabled={busy} />
         <div className="luck-quick">
           {QUICK.map((q) => <button key={q} className="btn btn-sm" disabled={busy} onClick={() => setBet(q)}>{q}</button>)}
-          <button className="btn btn-sm" disabled={busy || bal <= 0} onClick={() => setBet(bal)}>MAX</button>
+          <button className="btn btn-sm" disabled={busy || bal <= 0} onClick={() => setBet(Math.floor(bal))}>MAX</button>
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import { useAuth } from './auth/AuthContext';
 import { logEvent } from './lib/behaviorLog';
 import SharedCouponScreen from './screens/SharedCouponScreen';
 import AuthScreen from './screens/AuthScreen';
+import ResetScreen from './screens/ResetScreen';
 import UsernameScreen from './screens/UsernameScreen';
 import FeedScreen from './screens/FeedScreen';
 import MatchDetailScreen from './screens/MatchDetailScreen';
@@ -31,11 +32,22 @@ import CouponDock from './components/CouponDock';
 // auth context re-renders (that remount restarted screens like the settle reveal).
 function RequireAuth({ children }: { children: ReactNode }) {
   const { session } = useAuth();
-  return session ? <>{children}</> : <Navigate to="/login" replace />;
+  const loc = useLocation();
+  return session
+    ? <>{children}</>
+    : <Navigate to="/login" replace state={{ from: loc.pathname + loc.search }} />;
+}
+
+// /login: oturum açılınca geldiği derin linke geri dön (yoksa ana sayfa).
+function LoginRoute() {
+  const { session } = useAuth();
+  const loc = useLocation();
+  const from = (loc.state as { from?: string } | null)?.from;
+  return session ? <Navigate to={from ?? '/'} replace /> : <AuthScreen />;
 }
 
 function App() {
-  const { loading, session, needsUsername } = useAuth();
+  const { loading, session, needsUsername, profileReady } = useAuth();
   const loc = useLocation();
 
   // Oturum başlangıcı — davranış moat'ının zaman çerçevesi (ne zaman, ne sıklıkta
@@ -66,7 +78,9 @@ function App() {
     );
   }
 
-  if (loading) {
+  // Oturum var ama ilk profil sorgusu bitmediyse de bekle: yeni kullanıcı
+  // bir an feed görüp UsernameScreen'e zıplamasın (giriş sonrası flaş).
+  if (loading || (session && !profileReady)) {
     return <div className="center-screen"><div className="spinner" /></div>;
   }
 
@@ -90,7 +104,8 @@ function App() {
           <Route path="/standings" element={<StandingsScreen />} />
           <Route path="/team/:teamId" element={<TeamScreen />} />
           <Route path="/coupon" element={<CouponScreen />} />
-          <Route path="/login" element={session ? <Navigate to="/" replace /> : <AuthScreen />} />
+          <Route path="/login" element={<LoginRoute />} />
+          <Route path="/reset" element={<ResetScreen />} />
           <Route path="/coupons" element={<RequireAuth><MyCouponsScreen /></RequireAuth>} />
           <Route path="/settle/:couponId" element={<RequireAuth><SettleScreen /></RequireAuth>} />
           {/* 0716: rota İngilizce — /analiz eski linkler için yönlendirme */}

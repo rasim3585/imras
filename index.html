@@ -2,6 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!-- Kayıtlı Arapça kullanıcıda ilk boyama LTR flaşı yapmasın: dil/yön
+         React mount'unu beklemeden localStorage'dan uygulanır. -->
+    <script>
+      try {
+        var l = localStorage.getItem('pickplay.lang');
+        if (l) { document.documentElement.lang = l; if (l === 'ar') document.documentElement.dir = 'rtl'; }
+      } catch (e) { /* ignore */ }
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f2f6f4" />
