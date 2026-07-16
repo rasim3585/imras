@@ -100,7 +100,10 @@ export default function MatchRow({ m, hideLeague }: { m: BulletinMatch; hideLeag
     );
   };
 
-  const moreCount = Math.max(0, m.markets.length - 1);
+  // +N rozeti = panel açılınca görünen OYNANABİLİR ALAN sayısı (tüm marketlerin
+  // seçenek toplamı). Eskiden markets.length-1 idi: ana satır 3 marketten hücre
+  // gösterdiği ve panel HEPSİNİ listelediği için sayı hiçbir şeye denk gelmiyordu.
+  const moreCount = m.markets.reduce((n, mk) => n + mk.options.length, 0);
   // "Başlıyor" geri sayımı (Nesine "X dk. kaldı" esinli): yakın maçlarda kalkışa
   // dakika. Feed 5sn'de bir yeniden çizdiği için ayrı timer'a gerek yok.
   const minsToStart = !isLive ? Math.round((Date.parse(m.starts_at) - Date.now()) / 60000) : Infinity;
@@ -144,7 +147,9 @@ export default function MatchRow({ m, hideLeague }: { m: BulletinMatch; hideLeag
           : <div className="ll-info">{infoInner}</div>}
 
         {cellCfg.map((c, i) => <Cell key={i} market={c.market} k={c.k} sec={c.sec} />)}
-        <button type="button" className={`ll-plus ${open ? 'open' : ''}`} onClick={() => setOpen((v) => !v)}>{open ? '−' : `+${moreCount}`}</button>
+        {moreCount > 0 && (
+          <button type="button" className={`ll-plus ${open ? 'open' : ''}`} onClick={() => setOpen((v) => !v)}>{open ? '−' : `+${moreCount}`}</button>
+        )}
       </div>
 
       {open && (
