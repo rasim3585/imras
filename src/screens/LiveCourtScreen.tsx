@@ -7,7 +7,7 @@ import TennisTV from '../live/TennisTV';
 import MatchChat from '../live/ChatPanel';
 import FormStrip from '../live/FormStrip';
 import { courtStats, courtFeed, BB_TOTAL, type PlayType } from '../live/courtSim';
-import { tennisFeed, setClockSec, seedSetClock, periodPoints, type TPlay, type CourtSport } from '../live/tennisSim';
+import { tennisFeed, setClockSec, seedSetClock, periodPoints, setPace, type TPlay, type CourtSport } from '../live/tennisSim';
 import { supabase } from '../lib/supabase';
 import type { LiveState, Match } from '../lib/types';
 
@@ -144,6 +144,8 @@ export default function LiveCourtScreen() {
       try {
         const [s] = await matchProvider.getLiveStates([matchId]);
         if (!alive || !s) return;
+        // sunucu temposu sim'in ilk kullanımından ÖNCE kayda girer (0152 pace)
+        setPace(matchId, s.pace);
         setLive(s);
         if (s.phase === 'live') {
           const now = Date.now();

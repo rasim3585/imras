@@ -6,6 +6,7 @@ import { isPenaltyGoal } from '../live/liveModel';
 import PitchTV, { type GoalPulse } from '../live/PitchTV';
 import CourtTV from '../live/CourtTV';
 import TennisTV from '../live/TennisTV';
+import { setPace } from '../live/tennisSim';
 import { playerName } from '../lib/playerNames';
 import type { LiveState } from '../lib/types';
 
@@ -56,6 +57,8 @@ export default function MiniWatch({ matchId, sport }: { matchId: string; sport: 
       try {
         const [s] = await matchProvider.getLiveStates([matchId]);
         if (!alive || !s) return;
+        // sunucu temposu sim'in ilk kullanımından ÖNCE kayda girer (0152 pace)
+        setPace(matchId, s.pace);
         setSt(s);
         // monotonik sim saati (useLiveMatch ile aynı şema): bir kez çapa,
         // büyük sapmada VEYA dakika sınırı geçişinde (bir kez, ileri yönlü)

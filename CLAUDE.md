@@ -174,7 +174,17 @@ kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40
 ---
 
 ## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0151'den** devam, sıfır dolgulu 4 hane. (**0150 + KÖR NOKTA
+Yeni migration'lar **0153'ten** devam, sıfır dolgulu 4 hane. (**0151-0152 SQL
+SABAH OTURUMU (2026-07-16, hepsi canlıda doğrulandı)**: coupon_stats() RPC
+(kazanan=won∨kârlı-cashout tek tanım; FE getCouponStats RPC'ye geçti),
+0150 uygulandı, 0151 mines_active() (Mines kurtarma aktif; mines_start zaten
+'aktif oyun var' ile ikinci oyunu reddediyormuş — gövdeden kanıtlandı),
+0152 _vb_state/_tn_state hayalet "Set 6·0-0" fix (revealed son seti tam
+tüketmez) + pace alanı (sn/birim; tenis 36.92, vb 3.31 ölçüldü) +
+get_live_state passthrough; FE tennisSim setPace + bütçe pace-ölçeği
+(480sn'de f=1 → sıfır regresyon). GoO motor farkları PARK kararı: yüzey
+birebir, RTP ölçülü; değişiklik=para motoru=önce 500K sim — launch sonrası.
+KALAN ZORUNLU: Pro+Small sonrası cron geri-alma (SQL-KUYRUK A).) (**0150 + KÖR NOKTA
 DENETİMİ (2026-07-16, 4-ajanlık ordu: auth/RTL/şans/hata-dayanıklılık)**: İKİ
 LAUNCH BLOKER kapatıldı — (1) şifre sıfırlama akışı HİÇ YOKTU: AuthScreen
 'forgot' modu + resetPasswordForEmail + /reset rotası (ResetScreen, updateUser);

@@ -63,6 +63,9 @@ export interface LiveState {
   phase: LivePhase;
   minute: number;
   period?: string | null; // basketball live: "Q1".."Q4" (football: absent)
+  /** 0152: sunucu temposu — saniye/birim (voleybol: sayı, tenis: game).
+   *  Yalnız raket sporlarında canlıda dolu; sim bütçesini maç süresine ölçekler. */
+  pace?: number | null;
   starts_in: number;      // seconds until kickoff (0 once started)
   duration_secs: number;  // virtual match length in wall-clock seconds
   home_score: number;

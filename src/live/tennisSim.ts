@@ -38,6 +38,20 @@ function seeded(str: string) {
 
 const cache = new Map<string, Rally[]>();
 
+// Sunucu temposu (0152 pace alanı): saniye/birim (vb sayı, tenis game).
+// Bütçe sabitleri 480sn maç varsayımıyla yazılmıştı; pace bunları maç süresine
+// ölçekler — 480sn'de çarpan ≈1 (birebir eski, kanıtlı davranış), kısa/uzun
+// maçta ölü top / yetişememe biter. Kayıt sim'in İLK kullanımından önce
+// yapılmalı (bileşenler canlı snapshot'ı işlerken çağırır; ready kapısı zaten
+// ilk canlı snapshot'ı bekliyor).
+const paces = new Map<string, number>();
+export function setPace(matchId: string, pace: number | null | undefined): void {
+  if (typeof pace === 'number' && Number.isFinite(pace) && pace > 0 && !paces.has(matchId)) {
+    if (paces.size > 60) { const k = paces.keys().next().value; if (k) paces.delete(k); }
+    paces.set(matchId, pace);
+  }
+}
+
 function build(matchId: string, setIdx: number, sport: CourtSport): Rally[] {
   const rng = seeded(`${matchId}:set${setIdx}:${sport}:v2`);
   const vb = sport === 'volleyball';
@@ -156,7 +170,10 @@ function build(matchId: string, setIdx: number, sport: CourtSport): Rally[] {
     // orantılı olduğundan sunucunun kısa penceresini aşabiliyordu (vb 27-25
     // sim × 2.0 > sunucu 45 sayı penceresi; tenis 13×13=169 > ~150sn min
     // pencere). Tavan min pencerenin altında: merdiven HEP sunucudan önce biter.
-    const budget = Math.min(units * (vb ? 1.8 : 13), vb ? 100 : 150);
+    // 0152 pace ölçeği: referans 480sn maç (vb ≈3.31 sn/sayı, tenis ≈36.9
+    // sn/game — canlıda ölçüldü). f=1'de formül birebir eski hali.
+    const f = (paces.get(matchId) ?? (vb ? 3.31 : 36.9)) / (vb ? 3.31 : 36.9);
+    const budget = Math.min(units * (vb ? 1.8 : 13) * f, (vb ? 100 : 150) * f);
     const natural = lastR.holdEnd + GAP;
     if (natural > budget && budget > 10) {
       const k = budget / natural;
