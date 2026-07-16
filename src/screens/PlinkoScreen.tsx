@@ -141,7 +141,7 @@ export default function PlinkoScreen() {
       {landed && (
         <div className={`luck-result ${landed.payout > bet ? 'w' : landed.payout > 0 ? 'p' : 'l'}`}>
           {landed.payout > bet && <span className="luck-coins" aria-hidden>{Array.from({ length: 7 }, (_, i) => <i key={i} style={{ left: `${12 + i * 12}%`, animationDelay: `${i * 0.05}s` }} />)}</span>}
-          {landed.mult}× · {landed.payout > 0 ? `+${landed.payout}` : `−${bet}`} <CoinIcon size={14} />
+          {landed.mult}× · {landed.payout - bet >= 0 ? `+${landed.payout - bet}` : `−${bet - landed.payout}`} <CoinIcon size={14} />
         </div>
       )}
 

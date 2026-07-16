@@ -133,16 +133,19 @@ export class SupabaseMatchProvider implements MatchProvider {
   }
 
   async getMyCoupons(): Promise<Coupon[]> {
-    // Açık limit: limitsiz sorgu PostgREST'in sessiz 1000 tavanına çarpıyordu —
-    // hem şişkin yük hem "oynanan" sayısının 1000'de takılması. Liste = son 200;
-    // kesin sayılar getCouponStats()'tan gelir.
-    const { data, error } = await supabase
-      .from('coupons')
-      .select(COUPON_SELECT)
-      .order('created_at', { ascending: false })
-      .limit(200);
-    if (error) throw new Error(error.message);
-    return (data ?? []).map(flattenCoupon);
+    // PENDING her zaman TAM gelir (para bağlı — 200 kaydın gerisine düşüp
+    // "Devam eden"den kaybolamaz, cashout görünür kalır); settled son 200
+    // (PostgREST'in sessiz 1000 tavanı + şişkin yük fix'i). Kesin sayılar
+    // getCouponStats()'tan.
+    const [p, s] = await Promise.all([
+      supabase.from('coupons').select(COUPON_SELECT)
+        .eq('status', 'pending').order('created_at', { ascending: false }),
+      supabase.from('coupons').select(COUPON_SELECT)
+        .neq('status', 'pending').order('created_at', { ascending: false }).limit(200),
+    ]);
+    if (p.error) throw new Error(p.error.message);
+    if (s.error) throw new Error(s.error.message);
+    return [...(p.data ?? []), ...(s.data ?? [])].map(flattenCoupon);
   }
 
   async getCouponStats(): Promise<{ played: number; settled: number; won: number; biggest: number }> {

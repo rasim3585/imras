@@ -188,7 +188,7 @@ function Feed() {
               <div className="coupon-card-head">
                 <span className="tag">{c.username} · {c.legs.length === 1 ? t('mc.single') : t('mc.fold', { n: c.legs.length })}</span>
                 <span className={`chip ${c.status === 'won' ? 'chip-pos' : c.status === 'lost' ? 'chip-neg' : ''}`}>
-                  {c.status === 'won' ? t('pr.won', { p: c.potential_win }) : c.status === 'lost' ? t('mc.st.lost') : c.status === 'cashed_out' ? t('mc.st.cashedout') : t('mc.st.open')}
+                  {c.status === 'won' ? t('pr.won', { p: c.potential_win - c.stake }) : c.status === 'lost' ? t('mc.st.lost') : c.status === 'cashed_out' ? t('mc.st.cashedout') : t('mc.st.open')}
                 </span>
               </div>
               <div className="coupon-legs">

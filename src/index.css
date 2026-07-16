@@ -2380,3 +2380,7 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 .pitch-player.ph { background: #17c06b; border: 1.5px solid #eafff3; }
 .pitch-player.pa { background: #4a7fb5; border: 1.5px solid #e8f1fb; }
 .pitch-player.gk { filter: saturate(0.55) brightness(1.15); }
+
+/* ==== 0716g: /coupon tam sayfa fiş kabuğu ==== */
+.coupon-page { max-width: 480px; margin: 0 auto; padding-top: 12px; }
+.coupon-page .cpn { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }

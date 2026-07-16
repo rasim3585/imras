@@ -22,9 +22,14 @@ function bucketOf(c: Coupon): ResultTab {
 }
 
 function StatusChip({ c, t }: { c: Coupon; t: TFn }) {
-  if (c.status === 'won') return <span className="chip chip-pos tnum">{t('mc.st.won')} +{c.potential_win}</span>;
+  // NET göster (ödeme değil): liderlik/rakip ekranları net konuşuyor — "+150"
+  // brütü "kazanç" gibi okunuyordu (stake 100 @1.5 → gerçek +50).
+  if (c.status === 'won') return <span className="chip chip-pos tnum">{t('mc.st.won')} +{c.potential_win - c.stake}</span>;
   if (c.status === 'lost') return <span className="chip chip-neg">{t('mc.st.lost')}</span>;
-  if (c.status === 'cashed_out') return <span className="chip chip-accent tnum">{t('mc.st.cashedout')} +{c.cashout_amount}</span>;
+  if (c.status === 'cashed_out') {
+    const net = (c.cashout_amount ?? 0) - c.stake;
+    return <span className="chip chip-accent tnum">{t('mc.st.cashedout')} {net >= 0 ? `+${net}` : net}</span>;
+  }
   return <span className="chip">{t('mc.st.open')}</span>;
 }
 

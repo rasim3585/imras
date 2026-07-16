@@ -206,7 +206,7 @@ export default function ProfileScreen() {
               </div>
               <div className="trow-right">
                 {c.status === 'won' ? (
-                  <span className="chip chip-pos tnum">+{c.potential_win}</span>
+                  <span className="chip chip-pos tnum">+{c.potential_win - c.stake}</span>
                 ) : c.status === 'lost' ? (
                   <span className="chip chip-neg">{t('mc.st.lost')}</span>
                 ) : c.status === 'cashed_out' ? (
