@@ -29,6 +29,10 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
   // LLM yalnız cümleye döker. İnceleme artık OTOMATİK gelir (LLM maliyeti yok);
   // yargıç metni butonla çağrılır ve eldeki incelemeyi kullanır.
   const [review, setReview] = useState<CouponReview | null>(null);
+  // Kart ASLA sessizce yok olmaz (2026-07-16 regresyon dersi): inceleme
+  // gecikse/aksasa da kart + yargıç butonu durur; durum ayrı izlenir.
+  const [reviewState, setReviewState] = useState<'loading' | 'ok' | 'fail'>('loading');
+  const [reviewTick, setReviewTick] = useState(0);   // dokun-tekrar-dene
   const [judgeText, setJudgeText] = useState<string | null>(null);
   const [judging, setJudging] = useState(false);
   const [judgeErr, setJudgeErr] = useState(false);
@@ -37,20 +41,25 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
   // kupon değişince eski kararname geçersiz — SEÇİM SETİNE göre sıfırla
   // (aynı maçta pick değiştirmek count'u değiştirmez; selKey değişir)
   const selKey = selections.map((s) => `${s.match_id}:${s.market_type}:${s.outcome_key}`).join('|');
-  useEffect(() => { setJudgeText(null); setJudgeErr(false); }, [selKey, stake]);
+  useEffect(() => { setJudgeText(null); setJudgeErr(false); setJudgeLimited(false); }, [selKey, stake]);
 
   // deterministik inceleme: seçim/miktar oturunca 1.2sn sonra kendiliğinden
   useEffect(() => {
-    if (!session || count === 0) { setReview(null); return; }
+    if (!session || count === 0) { setReview(null); setReviewState('loading'); return; }
     let alive = true;
+    setReviewState('loading');
     const tm = window.setTimeout(() => {
       fetchCouponReview(selections as unknown as unknown[], stake)
-        .then((r) => { if (alive) setReview(r); })
-        .catch(() => { if (alive) setReview(null); });
+        .then((r) => {
+          if (!alive) return;
+          setReview(r);
+          setReviewState(r?.ready ? 'ok' : 'fail');
+        })
+        .catch(() => { if (alive) { setReview(null); setReviewState('fail'); } });
     }, 1200);
     return () => { alive = false; window.clearTimeout(tm); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selKey, stake, session, count]);
+  }, [selKey, stake, session, count, reviewTick]);
 
   async function askJudge() {
     setJudging(true); setJudgeText(null); setJudgeErr(false); setJudgeLimited(false);
@@ -168,28 +177,41 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
             </div>
             <div className="cpn-row cpn-win"><span>{t('cpn.potential')}</span><b className="tnum">{potential} <span className="coin" aria-hidden="true" /></b></div>
 
-            {session && review?.ready && (
+            {/* ÜRÜNÜN KALBİ hiçbir koşulda sessizce kaybolmaz: inceleme
+                gecikirse "hesaplanıyor", aksarsa dokun-tekrar-dene; yargıç
+                butonu HEP durur (askJudge incelemeyi kendisi de çekebilir). */}
+            {session && count > 0 && (
               <div className="ai-card">
                 <div className="ai-card-h">✦ {t('aij.title')}</div>
-                <div className="ai-nums">
-                  <span className="ai-num"><b className="tnum">%{review.combined_prob_pct}</b> {t('aij.prob')}</span>
-                  <span className="ai-num ai-neg"><b className="tnum">{review.ev_gold}</b> {t('aij.ev')}</span>
-                  {review.riskiest && (
-                    <span className="ai-num">{t('aij.risk')}: <b>{review.riskiest.label} @{Number(review.riskiest.odds).toFixed(2)}</b></span>
-                  )}
-                </div>
-                {review.maturity && review.maturity.level !== 'ready' && (
-                  <div className="ai-maturity">
-                    {t(review.maturity.level === 'new' ? 'aij.maturity.new' : 'aij.maturity.forming',
-                      { n: review.maturity.coupons })}
-                  </div>
-                )}
-                {review.history && review.history.similar_played >= 5 && (
-                  <div className="ai-hist">
-                    {t('aij.hist')
-                      .replace('{n}', String(review.history.similar_played))
-                      .replace('{w}', String(review.history.similar_won))
-                      .replace('{net}', String(review.history.similar_net))}
+                {review?.ready && reviewState === 'ok' ? (
+                  <>
+                    <div className="ai-nums">
+                      <span className="ai-num"><b className="tnum">%{review.combined_prob_pct}</b> {t('aij.prob')}</span>
+                      <span className="ai-num ai-neg"><b className="tnum">{review.ev_gold}</b> {t('aij.ev')}</span>
+                      {review.riskiest && (
+                        <span className="ai-num">{t('aij.risk')}: <b>{review.riskiest.label} @{Number(review.riskiest.odds).toFixed(2)}</b></span>
+                      )}
+                    </div>
+                    {review.maturity && review.maturity.level !== 'ready' && (
+                      <div className="ai-maturity">
+                        {t(review.maturity.level === 'new' ? 'aij.maturity.new' : 'aij.maturity.forming',
+                          { n: review.maturity.coupons })}
+                      </div>
+                    )}
+                    {review.history && review.history.similar_played >= 5 && (
+                      <div className="ai-hist">
+                        {t('aij.hist')
+                          .replace('{n}', String(review.history.similar_played))
+                          .replace('{w}', String(review.history.similar_won))
+                          .replace('{net}', String(review.history.similar_net))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="ai-nums">
+                    {reviewState === 'fail'
+                      ? <button className="ai-num az-retry" onClick={() => setReviewTick((x) => x + 1)}>{t('analiz.err')}</button>
+                      : <span className="ai-num dim">{t('aij.calc')}</span>}
                   </div>
                 )}
                 {judgeText ? (
