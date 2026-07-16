@@ -174,7 +174,26 @@ kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40
 ---
 
 ## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0148'den** devam, sıfır dolgulu 4 hane. (**0147 gerçek maç
+Yeni migration'lar **0150'den** devam, sıfır dolgulu 4 hane. (**0148-0149 AI
+Kupon Hakemi v2 — ÜRÜNÜN KALBİ (Rasim tezi: maç analizi yapan çok, kullanıcının
+KENDİ davranışını bilen yargıç yalnız bizde)**: coupon_review artık
+_coupon_judge_extras ile zengin — per_leg takım geçmişi (bets/won/net; ölçüldü:
+Marseille 1156/546/-6246), behavior_now (chase/loss_streak/kasa%/saatlik tempo),
+loyalty_traps (≥5 bahis + negatif net), maturity (new<5/forming<20/ready),
+judge_context (30 günde dinlenmeyen uyarılar + bedeli), cross_games (son 1 saat
+Aviator+şans net'i = platform-genel tilt). judge_verdicts defteri +
+log_judge_verdict (FE kararname sonrası) + judge_scorecard karnesi ("uyarılara
+uysaydın +X" karşı-olgusal; _judge_scorecard(uid) test edilebilir iç fn) +
+judge_confrontations (My Coupons settle çipi "Hakem %9 demişti"). Kupon-kararname
+bağlama TAMAMEN okuma-tarafı lateral (15dk + ~aynı oran) — para yoluna sıfır
+dokunuş. Edge coupon-judge: model Sonnet (claude-sonnet-5), bacak-başına yorum
+zorunluluğu, kota 20/gün (judge_quota_take + ai_chat_usage.judge_msgs, yalnız
+service_role). "Uyarıldı" tanımı deterministik: prob<%20 ∨ chase ∨ trap>0.
+Model-tabanlı adil olasılık BİLİNÇLİ ertelendi → aylık Nesine kalibrasyon turu.
+FE: deterministik inceleme otomatik (1.2sn debounce), olgunluk bandı, bacak altı
+takım aynası çipi, Analiz>Genel "Hakem Karnesi" kartı; i18n 8 dil. Ayrıca sepet
+canlı oran tazeleme (12sn, kapanan bacak "Kapandı"+oynatma kilidi) ve bülten +N
+rozeti = panel alan sayısı fix'i aynı gece.) (**0147 gerçek maç
 oran önbelleği**: ÜRETİM KAZASI fix'i — USA maçları canlıya düşünce (2026-07-16
 23:12 UTC) get_bulletin herkese timeout verdi. Ölçümle kanıt: gerçek kol her
 istekte her lambda'lı fikstür için Poisson ızgarası hesaplıyordu (sakin ~460ms,

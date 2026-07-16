@@ -1,0 +1,45 @@
+# Devir — 2026-07-16 gecesi: AI Kupon Hakemi v2 + gece vardiyası durumu
+
+## Bağlam
+Rasim'in tezi netleşti: **hakem ürünün kalbi** — maç analizi yapan uygulama
+çok, kullanıcının KENDİ bahis davranışını bilen yargıç yalnız bizde. "Hepsi
+uygulansın" onayı verdi (6 öneriden 5'i; model-tabanlı adil olasılık aylık
+Nesine kalibrasyon turuna bilinçli ertelendi). Sonra uyudu; gece vardiyasını
+Claude devraldı (bilgisayar uykusu kapatıldı: `powercfg standby-timeout-ac 0`).
+
+## Biten kod (commit'ler: ea12b2c, 8a17369; hepsi main'de, FE Vercel'de)
+- **SQL 0148**: `_coupon_judge_extras` — per_leg takım geçmişi, behavior_now,
+  loyalty_traps, maturity. UYGULANDI (Rasim) + gerçek veriyle doğrulandı
+  (Marseille 1156 bahis/546 tutan/-6246 net; Villarreal trap -110.762).
+- **SQL 0149**: judge_verdicts + log_judge_verdict + _judge_scorecard/
+  judge_scorecard + judge_confrontations + extras v2.1 (judge_context +
+  cross_games) + judge_quota_take (20/gün). Dosya repo'da TAM gövdeli.
+- **Edge coupon-judge v2.1**: Sonnet, bacak-başına yorum, hafıza/tilt
+  register'ları, kota kontrolü. Dosya repo'da hazır.
+- **FE**: otomatik deterministik inceleme (1.2sn debounce), olgunluk bandı,
+  bacak altı "⟳ takım: n bahis — w tuttu" çipi, My Coupons "Hakem %9 demişti"
+  yüzleşme çipi, Analiz>Genel Hakem Karnesi kartı, aij.limit; i18n 8 dil tam.
+
+## BEKLEYEN 3 UYGULAMA ADIMI (MCP kopuk + Chrome uzantısı kapalı olduğu için)
+1. `coupon_review` birleştirmesi (chat'te tam SQL: sona
+   `|| public._coupon_judge_extras(v_uid, p_selections, p_stake::int)` eklenmiş
+   create-or-replace) — Rasim'in uyguladığı TEYİT EDİLMEDİ.
+2. 0149 DO bloğu (repo dosyasından kopyala → SQL Editor).
+3. Edge deploy: repo `supabase/functions/coupon-judge/index.ts` → Dashboard →
+   Edge Functions → coupon-judge → değiştir → Deploy.
+Claude'un kendisi uygulayabilmesi için: Supabase MCP reconnect (yol A) YA DA
+Chrome açık + uzantı + supabase.com oturumu (yol B). Rasim'e soruldu.
+
+## Doğrulama planı (adımlar bitince)
+- `_judge_scorecard(uid)` + `_coupon_judge_extras` service_role REST testi
+  (persona: ce1fbf70-662b-447d-8b1e-922c825d0959 — 10K kuponlu bot hesabı).
+- Edge fn testi: service_role bearer ile invoke (verify_jwt geçer, sub yok →
+  kota atlanır) + örnek review JSON → Sonnet metninin bacak-başına + davranış
+  sayılarıyla konuştuğunu gör.
+- Rasim sabah tek elle: oran tıkla → yargıç → oyna → settle çipi + karne.
+
+## Gece sağlık notları
+- 0147 sonrası bülten ~600ms stabil (36 örnek, max 752ms).
+- USA maçları bitince settle_real_fixture zinciri çalışmalı — sabah kontrol:
+  kuponlar settle oldu mu, bülten temiz mi.
+- Uyku geri açma: `powercfg /change standby-timeout-ac 30`.
