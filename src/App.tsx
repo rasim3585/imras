@@ -44,6 +44,19 @@ function App() {
     if (session) logEvent('app', 'session_start');
   }, [session]);
 
+  // Sayfa başına tarayıcı başlığı (profesyonel sekme + tarihçe okunurluğu).
+  useEffect(() => {
+    const base = 'imras — Risk Awareness System';
+    const seg = '/' + (loc.pathname.split('/')[1] || '');
+    const map: Record<string, string> = {
+      '/aviator': 'Aviator', '/gates': 'Gates of Goal', '/mines': 'Mines', '/dice': 'Dice',
+      '/plinko': 'Plinko', '/coupons': 'My Coupons', '/analysis': 'AI Analysis', '/ranks': 'Ranks',
+      '/social': 'Social', '/profile': 'Profile', '/standings': 'League Tables',
+      '/live': 'Live', '/match': 'Match', '/login': 'Sign in',
+    };
+    document.title = map[seg] ? `${map[seg]} · imras` : base;
+  }, [loc.pathname]);
+
   // public shared-coupon link: standalone, no nav, no auth gate
   if (loc.pathname.startsWith('/c/')) {
     return (
