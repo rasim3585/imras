@@ -403,6 +403,9 @@ buradan sil/işaretle. T0 bitmeden launch YOK.*
 8. RTL kalan fiziksel CSS süpürmesi (kritikler yapıldı; kalan ~30 düşük etki)
    + Arapça webfont (Montserrat Latin-only, sistem fontuna düşüyor).
 9. `dice_roll` chance clamp canlı testi (FE slider 2-95; RPC sınırı ölçülmedi).
+9b. Aviator realtime: aviator_bets aboneliği FİLTRESİZ — her istemci herkesin
+   her bahsini alır (O(oyuncu²) mesaj; yük sayımı 2026-07-17). Tur-başına
+   filtreli kanal ya da sunucu-özet broadcast tasarlanmalı.
 
 ### T3 — ÜRÜN DERİNLİĞİ (Claude + kısa SQL oturumları; SQL-KUYRUK D)
 10. **match-preview'a gerçek maç dalı** — ana bahis yüzeyi (gerçek maçlar)
