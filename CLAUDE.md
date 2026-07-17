@@ -376,11 +376,20 @@ görsel), sonra daha çok yakalama/hedef-takip nudge.
 buradan sil/işaretle. T0 bitmeden launch YOK.*
 
 ### T0 — LAUNCH BLOKERI (hepsi Rasim'in elinde, kod işi bitti)
-1. **Pro + Small upgrade**: Settings→Billing→Pro (~$25/ay), sonra
-   Settings→Compute and Disk→Small (kısa restart). Neden: Nano'nun günlük
-   30dk IO burst bütçesi — 3 üretim çöküşünün kök nedeni; launch trafiği
-   ilk saatte bitirir. **Hemen ardından** SQL-KUYRUK **A** (cron geri-alma:
-   pickplay_live 1sn, pickplay_tick 30sn).
+1. ~~Pro + Small upgrade~~ **İPTAL (2026-07-17, Rasim kararı): sistem para
+   kazanmadan para harcamayacak — çözüm bizim mimaride.** Yerine: **UYUYAN
+   DÜNYA** (aşağıda, yeni 1 numara). SQL-KUYRUK A bloğu da İPTAL — cron
+   seyreltmesi (live 2sn / tick 60sn) KALICI.
+1b. **UYUYAN DÜNYA — Nano bütçesine sığdırma (yeni T0, Claude+Rasim SQL
+   oturumu):** Kanıt: 2026-07-17 09:27 UTC çöküşünde sitede kullanıcı yoktu;
+   makineyi yoran 7/24 boşa dönen motorlar (aviator_tick 1sn = günde ~5000
+   ıssız tur + yazma + edge + broadcast; pickplay_live 2sn; pickplay_tick 60sn
+   maç üretimi) + haftalardır biriken tur/maç çöpü (disk). Plan: (a)
+   app_presence tek satır + app_heartbeat RPC (FE dakikalık nabız CANLIDA,
+   RPC yoksa sessiz düşer); cron fonksiyonlarının başına "son 5 dk nabız yoksa
+   çık" kapısı; (b) bahissiz >3 gün aviator_rounds gece temizliği (bahisli
+   turlar = davranış verisi, DOKUNULMAZ); (c) 24 saat sonra Reports RAM/disk
+   ölçümü. Gövde çekimi gerekir (cron.job listesi + tick fonksiyonları).
 2. **Auth URL ayarı**: Authentication→URL Configuration→Site URL
    `https://www.imras.ai` + Redirect listesine `https://www.imras.ai/reset`.
    Şifre sıfırlamanın tek kod-dışı bağımlılığı.

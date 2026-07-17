@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect, type ReactNode } from 'react';
 import { useAuth } from './auth/AuthContext';
 import { logEvent } from './lib/behaviorLog';
+import { supabase } from './lib/supabase';
 import SharedCouponScreen from './screens/SharedCouponScreen';
 import AuthScreen from './screens/AuthScreen';
 import ResetScreen from './screens/ResetScreen';
@@ -55,6 +56,20 @@ function App() {
   useEffect(() => {
     if (session) logEvent('app', 'session_start');
   }, [session]);
+
+  // UYUYAN DÜNYA kalp pili (2026-07-17, Rasim kararı: Nano'ya sığdır):
+  // dakikada bir minicik nabız — cron'lar "izleyen var mı" diye buna bakar,
+  // kimse yokken motorlar (Aviator turları, canlı oranlar, maç üretimi) durur.
+  // RPC henüz canlıda yoksa sessizce düşer (mines_active kalıbı).
+  useEffect(() => {
+    const beat = () => {
+      if (document.visibilityState === 'hidden') return;
+      void supabase.rpc('app_heartbeat').then(() => {}, () => {});
+    };
+    beat();
+    const iv = window.setInterval(beat, 60000);
+    return () => window.clearInterval(iv);
+  }, []);
 
   // Sayfa başına tarayıcı başlığı (profesyonel sekme + tarihçe okunurluğu).
   useEffect(() => {

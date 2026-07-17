@@ -13,7 +13,9 @@
   LiveCourtScreen/MiniWatch besleme) push'landı.
 - Mines gövdeleri (start/reveal/cashout) base64 arşivde: scratchpad/govde/.
 
-## ⏳ A) PRO+SMALL SONRASI — cron'ları eski tempoya döndür (TEK KALAN ZORUNLU)
+## ❌ A) İPTAL (2026-07-17, Rasim kararı: upgrade YOK — Nano bütçesine sığdırıyoruz)
+Cron seyreltmesi (live 2sn / tick 60sn) KALICI. Aşağıdaki eski komutlar YALNIZ
+ileride upgrade kararı çıkarsa geçerli:
 Upgrade: Settings→Billing→Pro, sonra Settings→Compute and Disk→Small
 (kısa restart yapar). Ardından tek tek:
 ```sql
