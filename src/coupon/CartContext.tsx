@@ -140,18 +140,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const hasLegs = selections.length > 0 || saved.length > 0;
+  const hasActive = selections.length > 0;
   useEffect(() => {
     if (!hasLegs) return;
     let alive = true;
+    let inFlight = false;
     const tick = () => {
+      if (inFlight) return;   // yavaş DB'de tam-bülten istekleri üst üste binmesin
+      inFlight = true;
       matchProvider.getBulletin()
         .then((b) => { if (alive && b.length > 0) reconcile(b); })
-        .catch(() => { /* ağ hatasında eldeki oran kalır, kapatma İŞARETLEME */ });
+        .catch(() => { /* ağ hatasında eldeki oran kalır, kapatma İŞARETLEME */ })
+        .finally(() => { inFlight = false; });
     };
     tick();
-    const iv = window.setInterval(() => { if (document.visibilityState !== 'hidden') tick(); }, 12000);   // gizli sekmede dur
+    // DB-yük (sayım bulgusu): aktif seçim varken 12sn (canlı oran hissi);
+    // YALNIZ kayıtlı taslak varken 60sn — localStorage'taki tek taslak,
+    // kullanıcı Aviator'da gezerken bile 12sn'de TAM BÜLTEN çektiriyordu.
+    const iv = window.setInterval(() => { if (document.visibilityState !== 'hidden') tick(); }, hasActive ? 12000 : 60000);
     return () => { alive = false; window.clearInterval(iv); };
-  }, [hasLegs, reconcile]);
+  }, [hasLegs, hasActive, reconcile]);
 
   const saveDraft = useCallback(() => {
     if (selections.length === 0) return;

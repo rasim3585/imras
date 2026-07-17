@@ -97,13 +97,22 @@ export default function MatchDetailScreen() {
       // yerine hata bandı + Geri butonu
       .then((m) => { if (alive) { if (m) setMatch(m); else setError(t('md.err.load')); } })
       .catch((e) => { if (alive) setError(e instanceof Error ? e.message : t('md.err.load')); });
+    // Faz-farkındalı poll (sayım bulgusu: upcoming/finished maçta da aynı
+    // hızda dönüyordu): canlıda 5sn, başlamamışta 15sn, bitmişte DURUR.
+    let phase: string | null = null;
+    let tm: ReturnType<typeof setTimeout>;
     const poll = async () => {
-      try { const [s] = await matchProvider.getLiveStates([matchId]); if (alive && s) setLive(s); }
-      catch { /* transient */ }
+      if (document.visibilityState !== 'hidden') {
+        try {
+          const [s] = await matchProvider.getLiveStates([matchId]);
+          if (alive && s) { setLive(s); phase = s.phase; }
+        } catch { /* transient */ }
+      }
+      if (!alive || phase === 'finished') return;
+      tm = setTimeout(poll, phase === 'live' ? 5000 : 15000);
     };
     void poll();
-    const id = setInterval(() => { if (document.visibilityState !== 'hidden') void poll(); }, 5000);   // DB-yük: 2.5s->5s + gizli sekmede dur
-    return () => { alive = false; clearInterval(id); };
+    return () => { alive = false; clearTimeout(tm); };
   }, [matchId]);
 
   if (error) return <div className="app-shell" style={{ paddingTop: 'var(--s6)' }}><div className="banner banner-error">{error}</div><button className="btn btn-block" onClick={() => navigate(-1)}>{t('md.back')}</button></div>;

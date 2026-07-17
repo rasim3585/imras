@@ -133,16 +133,21 @@ export default function MyCouponsScreen() {
     if (ongoing.length === 0) { setLiveMap({}); return; }
     const ids = [...new Set(ongoing.flatMap((c) => c.legs.map((l) => l.match.id)))];
     let alive = true;
+    let inFlight = false;   // kupon başına N+1 istek — yavaş DB'de üst üste binmesin (sayım bulgusu)
     const poll = async () => {
+      if (inFlight) return;
+      inFlight = true;
       try {
-        const states = await matchProvider.getLiveStates(ids);
-        if (alive) setLiveMap(Object.fromEntries(states.map((s) => [s.match_id, s])));
-      } catch { /* transient */ }
-      const entries = await Promise.all(ongoing.map(async (c) => {
-        try { return [c.id, await matchProvider.getCashoutValue(c.id)] as const; }
-        catch { return [c.id, { value: 0, available: false }] as const; }
-      }));
-      if (alive) setCashouts(Object.fromEntries(entries));
+        try {
+          const states = await matchProvider.getLiveStates(ids);
+          if (alive) setLiveMap(Object.fromEntries(states.map((s) => [s.match_id, s])));
+        } catch { /* transient */ }
+        const entries = await Promise.all(ongoing.map(async (c) => {
+          try { return [c.id, await matchProvider.getCashoutValue(c.id)] as const; }
+          catch { return [c.id, { value: 0, available: false }] as const; }
+        }));
+        if (alive) setCashouts(Object.fromEntries(entries));
+      } finally { inFlight = false; }
     };
     void poll();
     const id = setInterval(() => { if (document.visibilityState !== 'hidden') void poll(); }, 7000);   // DB-yük: 3.5s->7s + gizli sekmede dur
