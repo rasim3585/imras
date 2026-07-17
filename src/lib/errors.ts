@@ -11,8 +11,8 @@ export function humanizeError(err: unknown, t: TFn): string {
   const m = raw(err).toLowerCase();
   if (/failed to fetch|networkerror|network request failed|load failed|fetch failed|err_internet/.test(m))
     return t('err.offline');
-  if (/statement timeout|57014|canceling statement|timeout|upstream/.test(m))
-    return t('err.busy');
+  if (/statement timeout|57014|canceling statement|timeout|upstream|schema cache|pgrst002|503/.test(m))
+    return t('err.busy');   // DB restart/doygunluk (compute resize dahil) = "meşgul, birazdan dene"
   if (/insufficient|yetersiz/.test(m)) return t('err.funds');
   if (m) console.error('[imras]', raw(err));
   return t('err.generic');
