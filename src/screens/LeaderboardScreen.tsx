@@ -31,7 +31,7 @@ export default function LeaderboardScreen() {
       }
     };
     void load();
-    const id = setInterval(load, 12000);
+    const id = setInterval(() => { if (document.visibilityState !== 'hidden') void load(); }, 15000);   // DB-yük: 12s->15s + gizli sekmede dur
     return () => { alive = false; clearInterval(id); };
   }, [scope]);
 

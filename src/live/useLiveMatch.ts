@@ -86,7 +86,7 @@ export function useLiveMatch(matchId: string | undefined) {
     };
 
     void fetchOnce();
-    const poll = setInterval(fetchOnce, 2000);
+    const poll = setInterval(() => { if (document.visibilityState !== 'hidden') void fetchOnce(); }, 4000);   // DB-yük: 2s->4s + gizli sekmede dur
     const tick = setInterval(() => {
       const a = anchor.current;
       if (!a) return;

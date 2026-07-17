@@ -149,7 +149,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         .catch(() => { /* ağ hatasında eldeki oran kalır, kapatma İŞARETLEME */ });
     };
     tick();
-    const iv = window.setInterval(tick, 12000);
+    const iv = window.setInterval(() => { if (document.visibilityState !== 'hidden') tick(); }, 12000);   // gizli sekmede dur
     return () => { alive = false; window.clearInterval(iv); };
   }, [hasLegs, reconcile]);
 

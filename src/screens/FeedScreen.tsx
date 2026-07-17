@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import MatchRow from '../components/MatchRow';
 import { EFootballIcon, EBasketballIcon, ETennisIcon, EVolleyballIcon, BallIcon } from '../components/icons';
@@ -113,14 +113,19 @@ export default function FeedScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // DB-yük disiplini (2026-07-17): hata anında üstel geri çekilme (5→10→20→40→
+  // 60sn; 0147 kazasındaki "herkes 5sn'de yeniden dener" sarmalını FE keser) +
+  // gizli sekmede poll durur (açık unutulan sekmeler DB'yi dövmesin).
+  const failStreak = useRef(0);
   const poll = useCallback(async () => {
+    if (document.visibilityState === 'hidden') return;
     try {
       const ms = await matchProvider.getBulletin();
       setMatches(ms);
       setError(null);
+      failStreak.current = 0;
     } catch (err) {
-      // Ham "Failed to fetch" yerine kullanıcının dilinde kısa teşhis;
-      // 5sn'lik poll zaten otomatik retry.
+      failStreak.current += 1;
       setError(humanizeError(err, t));
     } finally {
       setLoading(false);
@@ -130,12 +135,19 @@ export default function FeedScreen() {
 
   useEffect(() => {
     // Dünya ilerletme (seed/finalize/settle) TAMAMEN sunucuda: pg_cron _tick
-    // 30sn'de bir yapıyor. Eski "ziyaretçi ilerletir" çağrıları 0140'ta anon'a
-    // kapandı ve her ziyaretçide 3x401 üretiyordu — kaldırıldı (kalıcı çözüm).
-    // FE yalnız okur: 5sn'de bir bülten tazele.
-    void poll();
-    const fast = setInterval(() => void poll(), 5000);
-    return () => clearInterval(fast);
+    // yapıyor. FE yalnız okur: 5sn taban, hatada backoff'lu zamanlayıcı zinciri.
+    let alive = true;
+    let tm: ReturnType<typeof setTimeout>;
+    const loop = async () => {
+      await poll();
+      if (!alive) return;
+      const delay = Math.min(5000 * Math.pow(2, failStreak.current), 60000);
+      tm = setTimeout(loop, delay);
+    };
+    void loop();
+    const onVis = () => { if (document.visibilityState === 'visible') { clearTimeout(tm); void loop(); } };
+    document.addEventListener('visibilitychange', onVis);
+    return () => { alive = false; clearTimeout(tm); document.removeEventListener('visibilitychange', onVis); };
   }, [poll]);
 
   const notFinished = matches.filter((m) => m.status !== 'finished');

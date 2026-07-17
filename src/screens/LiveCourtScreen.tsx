@@ -58,7 +58,7 @@ function CourtStats({ matchId, home, away, hs, as, dur, getClock }: {
   useEffect(() => {
     let alive = true;
     const load = () => supabase.rpc('bball_quarters', { p_match_id: matchId }).then(({ data }) => { if (alive && Array.isArray(data)) setQuarters(data as Quarter[]); });
-    load(); const id = setInterval(load, 8000);
+    load(); const id = setInterval(() => { if (document.visibilityState !== 'hidden') void load(); }, 8000);
     return () => { alive = false; clearInterval(id); };
   }, [matchId]);
   const clock = getClock();
@@ -160,7 +160,7 @@ export default function LiveCourtScreen() {
       } catch { /* transient */ } finally { inFlight = false; }
     };
     void poll();
-    const id = setInterval(poll, 1400);   // basket skoru ince aralikli guncellensin (basketler tek tek gelsin)
+    const id = setInterval(() => { if (document.visibilityState !== 'hidden') void poll(); }, 3000);   // DB-yük: 1.4s->3s (sunum kuyruğu basketleri zaten tek tek akıtır) + gizli sekmede dur
     return () => { alive = false; clearInterval(id); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchId]);

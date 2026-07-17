@@ -43,13 +43,19 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
   const selKey = selections.map((s) => `${s.match_id}:${s.market_type}:${s.outcome_key}`).join('|');
   useEffect(() => { setJudgeText(null); setJudgeErr(false); setJudgeLimited(false); }, [selKey, stake]);
 
-  // deterministik inceleme: seçim/miktar oturunca 1.2sn sonra kendiliğinden
+  // deterministik inceleme: SEÇİM SETİ oturunca 1.2sn sonra kendiliğinden.
+  // DB-yük disiplini (2026-07-17): miktar (stake) tetiklemez — coupon_review
+  // kullanıcının TÜM kupon geçmişini tarayan ağır bir sorgu; her miktar
+  // tuşunda yeniden koşuyordu. EV altını FE'de ölçeklenir (ev_pct sabit),
+  // yargıç tıklamada zaten taze inceleme çeker.
+  const stakeRef = useRef(stake);
+  stakeRef.current = stake;
   useEffect(() => {
     if (!session || count === 0) { setReview(null); setReviewState('loading'); return; }
     let alive = true;
     setReviewState('loading');
     const tm = window.setTimeout(() => {
-      fetchCouponReview(selections as unknown as unknown[], stake)
+      fetchCouponReview(selections as unknown as unknown[], stakeRef.current)
         .then((r) => {
           if (!alive) return;
           setReview(r);
@@ -59,14 +65,16 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
     }, 1200);
     return () => { alive = false; window.clearTimeout(tm); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selKey, stake, session, count, reviewTick]);
+  }, [selKey, session, count, reviewTick]);
 
   async function askJudge() {
     setJudging(true); setJudgeText(null); setJudgeErr(false); setJudgeLimited(false);
     try {
-      const r = review?.ready ? review : await fetchCouponReview(selections as unknown as unknown[], stake);
+      // her zaman TAZE inceleme: kararname o anki miktarı/oranları yansıtsın
+      // (kullanıcı-tetikli tek RPC — otomatik yol artık miktarda koşmuyor)
+      const r = await fetchCouponReview(selections as unknown as unknown[], stake);
       if (!r?.ready) { setJudgeErr(true); return; }
-      if (r !== review) setReview(r);
+      setReview(r); setReviewState('ok');
       logEvent('coupon', 'coupon_ai_reviewed', {
         legs: r.legs, total_odds: r.total_odds, ev_pct: r.ev_pct, stake,
       });
@@ -187,7 +195,9 @@ export default function CouponPanel({ onClose }: { onClose?: () => void }) {
                   <>
                     <div className="ai-nums">
                       <span className="ai-num"><b className="tnum">%{review.combined_prob_pct}</b> {t('aij.prob')}</span>
-                      <span className="ai-num ai-neg"><b className="tnum">{review.ev_gold}</b> {t('aij.ev')}</span>
+                      {/* EV altını canlı miktardan ölçeklenir: ev_gold = stake × ev_pct/100
+                          (inceleme miktarda yeniden KOŞMAZ ama sayı asla bayatlamaz) */}
+                      <span className="ai-num ai-neg"><b className="tnum">{Math.round(stake * (review.ev_pct ?? 0) / 100)}</b> {t('aij.ev')}</span>
                       {review.riskiest && (
                         <span className="ai-num">{t('aij.risk')}: <b>{review.riskiest.label} @{Number(review.riskiest.odds).toFixed(2)}</b></span>
                       )}

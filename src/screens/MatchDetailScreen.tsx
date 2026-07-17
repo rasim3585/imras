@@ -102,7 +102,7 @@ export default function MatchDetailScreen() {
       catch { /* transient */ }
     };
     void poll();
-    const id = setInterval(poll, 2500);
+    const id = setInterval(() => { if (document.visibilityState !== 'hidden') void poll(); }, 5000);   // DB-yük: 2.5s->5s + gizli sekmede dur
     return () => { alive = false; clearInterval(id); };
   }, [matchId]);
 

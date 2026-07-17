@@ -52,7 +52,7 @@ export default function MiniWatch({ matchId, sport }: { matchId: string; sport: 
     setSt(null); setPulse(null);
     let inFlight = false;
     const poll = async () => {
-      if (inFlight) return;               // istekler üst üste binmesin
+      if (inFlight || document.visibilityState === 'hidden') return;               // istekler üst üste binmesin
       inFlight = true;
       try {
         const [s] = await matchProvider.getLiveStates([matchId]);
@@ -91,7 +91,7 @@ export default function MiniWatch({ matchId, sport }: { matchId: string; sport: 
       } catch { /* transient */ } finally { inFlight = false; }
     };
     void poll();
-    const id = setInterval(poll, 2500);
+    const id = setInterval(poll, 4000);   // DB-yük: 2.5s->4s; sim zaten yerel saatle akıcı
     return () => { alive = false; clearInterval(id); };
   }, [matchId, sport]);
 

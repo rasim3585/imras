@@ -24,7 +24,7 @@ export default function LeagueDetailScreen() {
       catch (err) { if (alive) setError(err ? humanizeError(err, t) : t('lg.err')); }
     };
     void load();
-    const id = setInterval(load, 12000);
+    const id = setInterval(() => { if (document.visibilityState !== 'hidden') void load(); }, 15000);   // DB-yük + gizli sekmede dur
     return () => { alive = false; clearInterval(id); };
   }, [leagueId]);
 

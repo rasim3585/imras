@@ -145,7 +145,7 @@ export default function MyCouponsScreen() {
       if (alive) setCashouts(Object.fromEntries(entries));
     };
     void poll();
-    const id = setInterval(poll, 3500);
+    const id = setInterval(() => { if (document.visibilityState !== 'hidden') void poll(); }, 7000);   // DB-yük: 3.5s->7s + gizli sekmede dur
     return () => { alive = false; clearInterval(id); };
   }, [ongoing]);
 
