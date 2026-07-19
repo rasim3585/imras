@@ -2215,6 +2215,10 @@ svg.crest { background: none !important; border-radius: 0 !important; }
 /* Kupon bottom-sheet: tüm sheet kaysın (MiniWatch/butonlar kırpılmasın) + safe-area */
 .coupon-sheet { overflow-y: auto; padding-bottom: env(safe-area-inset-bottom, 0px); }
 .coupon-sheet .cpn-legs { overflow: visible; flex: 0 0 auto; }
+/* Flexbox tuzağı fix: sheet doğrudan çocukları (kupon paneli + MiniWatch)
+   içerik ekranı aşınca KÜÇÜLMESİN — yoksa flex, paneli sıkıştırıp en alttaki
+   Oyna/Kaydet butonlarını MiniWatch'ın altında eziyordu. Doğal boyut + kaydırma. */
+.coupon-sheet > * { flex: 0 0 auto; }
 
 /* Dokunma hedefleri + okunurluk (mobil) */
 @media (max-width: 560px) {
