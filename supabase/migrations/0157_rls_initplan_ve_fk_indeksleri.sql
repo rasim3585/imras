@@ -1,0 +1,13 @@
+-- 0157: performans supurmesi (Supabase advisors, 2026-07-19; MCP ile uygulandi).
+-- (1) 17 RLS politikasinda auth.uid() satir-basina degil BIR KEZ degerlendirilir
+--     ((select auth.uid()) kalibi) — davranis birebir ayni, olcekte plan ucuzlar.
+--     Tablolar: behavior_events, coupon_selections, coupons, dice_rolls,
+--     judge_verdicts, mines_games, mirror_coach_cache(x3), plinko_drops,
+--     predictions(x2), profiles(x2), slot_spins, user_challenge_progress,
+--     user_survey.
+-- (2) 6 indekssiz FK'ya kapsayici indeks: league_members(user_id),
+--     leagues(owner_id), market_suspensions(incident_id),
+--     match_comments(user_id), provider_sync_log(fixture_id), rivals(rival_id).
+-- Ayrica pg_stat_statements 07:57 UTC'de sifirlandi (kriz kirliligi temizlendi;
+-- temiz 24 saatlik olcum penceresi acildi).
+-- TAM GOVDE canli DB'de (apply_migration: rls_initplan_and_fk_indexes).
