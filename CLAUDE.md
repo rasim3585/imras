@@ -1,442 +1,264 @@
-# CLAUDE.md — PickPlay Kalıcı Bağlam
+# CLAUDE.md — imras.ai (PickPlay) Kalıcı Bağlam
 
-*Bu dosya repo kökünde durur ve her Claude Code oturumunda otomatik okunur.
-Amaç: her yeni oturumun projeyi sıfırdan değil, tam bağlamla başlaması.
-Türkçe konuş.*
+*Repo kökünde durur, her Claude Code oturumunda otomatik okunur. Amaç: her
+oturum projeyi sıfırdan değil TAM bağlamla açsın. Türkçe konuş.
+Son büyük derleme: 2026-07-19 (kriz sonrası, Rasim talebiyle).*
 
 ---
 
 ## 0. ÇALIŞMA KURALLARI (altın kurallar — ihlal etme)
 
-- **Kullanıcı: Rasim.** Türkçe konuş. Katar'da. Bilgisayar mühendisliği + mobil
-  oyun geçmişi → güçlü ürün sezgisi. Teknik detaya boğma; önce "neden bunu
-  yapıyoruz" (büyük resim) netleşsin.
-- **SQL'i Rasim kendisi çalıştırır** (Supabase SQL Editor). Sen sorguyu
-  yazarsın, o çalıştırıp çıktıyı yapıştırır. **SQL Editor çoklu sorgu
-  çalıştırmıyor → sorguları TEK TEK gönder.**
-- **Tek adım talimat.** "1 bunu yap, bitince 2 bunu yap" şeklinde net sırala.
-- **Ölçmeden migration yazma.** Kök nedeni KANITLA, sonra tek doğru düzeltmeyi
-  yap. Tahminle migration üstüne migration yazıp savrulma yasak (bu daha önce
-  oldu — Aviator senkronu 0074-0078).
-- **Görmediğin/eksik gördüğün fonksiyona dokunma.** Uzun fonksiyon gövdesini
-  base64 ile al:
-  `select encode(convert_to(pg_get_functiondef(oid),'UTF8'),'base64') from pg_proc where proname='...';`
-- **Permanent çözüm, workaround değil.** Yarım bırakılmış ikilik (ör. aynı
-  isimli iki fonksiyon sürümü) temizlenir.
-- **Seçenek sunma — kanıtla, karar ver.** "A mı B mi" diye Rasim'e atma;
-  ölç, doğrusunu göster.
-- **Rasim net semptom verir** (ör. "eğri 8, crash 6"). Sen KENDİN kök nedeni
-  hesapla/bul. Onun gözlemi yeter, işi sen çöz — konsol açtırıp durma (ama
-  gerçekten ölçüm gerekiyorsa tek net sorgu/log ver, o yapıştırsın).
-- **Belge yapıştırınca bazen boş görünebiliyor.** O zaman "düz metin olarak
-  yapıştırır mısın" de.
-- **Eğer bu bir SOHBET oturumuysa (Claude Code değil):** kod tabanına, canlı
-  veritabanına ve dosyalara ERİŞİMİN YOK. Sadece bu dosyada ve kullanıcının
-  yapıştırdığında yazan bilgiyi bilirsin. Bir fonksiyonun/dosyanın/şemanın
-  içini görmen gerekiyorsa körlemesine iş yapma — kullanıcıdan ilgili dosyayı
-  ya da tek bir SQL sorgu çıktısını (base64 ile) iste, sonra ilerle. Tıkır
-  tıkır mühendislik işi (migration, kod düzeltme) Claude Code'da yapılmalı;
-  sohbette strateji/büyük resim/karar konuşulur.
+- **Kullanıcı: Rasim.** Türkçe konuş. Katar'da. Bilgisayar müh. + mobil oyun
+  geçmişi → güçlü ürün sezgisi. Teknik detaya boğma; önce büyük resim.
+- **SQL/DB işleri (2026-07-19'dan beri): Claude MCP ile DOĞRUDAN yapar**
+  (`mcp__supabase__execute_sql` / `apply_migration` çalışıyor; Rasim "orada
+  sen yap" dedi). Her uygulanan değişikliğin repo'da `supabase/migrations/`
+  kaydı tutulur (tam gövde ya da özet + "gövde canlıda" notu).
+  **MCP koparsa** eski düzene dön: sorguyu yaz, Rasim SQL Editor'de TEK TEK
+  çalıştırıp çıktıyı yapıştırır.
+- **Tek adım talimat.** "1 bunu yap, bitince 2" diye net sırala.
+- **Ölçmeden migration yazma.** Kök nedeni KANITLA, tek doğru düzeltmeyi yap.
+  Tahmin üstüne migration savrulması yasak (Aviator 0074-0078 dersi).
+- **Görmediğin fonksiyona dokunma.** Gövdeyi çek:
+  `select pg_get_functiondef(oid) from pg_proc where proname='...'`
+  (uzunsa base64). Kapı/guard eklerken DB-içi ameliyat kalıbı güvenli:
+  `pg_get_functiondef` → regexp ile satır ekle → `execute` (0156 böyle yapıldı).
+- **Permanent çözüm, workaround değil.** (Rasim'in en sık vurguladığı ilke.)
+- **Seçenek sunma — kanıtla, karar ver.** Ama İKİ İSTİSNA Rasim'in kararı:
+  para harcayan her şey ve para motoruna dokunan her şey.
+- **Rasim net semptom verir, kök nedeni SEN bul.** Konsol açtırıp durma;
+  gerçekten gerekirse tek net sorgu/ekran görüntüsü iste.
+- **Para yoluna analiz/ayna mutasyonu ASLA eklenmez** — ayna yalnız OKUR.
+- **PostgREST /rpc tüm public fonksiyonları açar** → yeni `_` önekli
+  fonksiyonda EXECUTE'u public/anon/authenticated'dan REVOKE et (0140).
+- **Supabase default privilege'ları** anon/authenticated/service_role'e AYRI
+  AYRI grant verir → "revoke from public, anon" authenticated'ı KIRMAZ.
+- **RLS dersi:** RLS açık + policy yok = tablo o role tamamen KAPALI
+  (secrets kalıbı 0073). service_role bypass eder — editör testi yanıltır.
+- **Sohbet oturumuysa (Claude Code değil):** kod/DB erişimi YOK; strateji
+  konuş, mühendislik işini Code'a bırak.
 
 ---
 
 ## 1. ÜRÜNÜN ASIL AMACI (en kritik bölüm)
 
-PickPlay bir bahis sitesi DEĞİL — **davranış aynası + koç.**
+imras.ai bir bahis sitesi DEĞİL — **davranış aynası + koç** (RAS = Risk
+Awareness System). Para dönmüyor (sembolik altın). Piyasa boşluğu: bahis
+siteleri kullanıcının zaafını görür ama saklar; analiz siteleri maçı bilir
+ama kullanıcıyı bilmez. **imras ikisini kullanıcı LEHİNE birleştirir:**
 
-Piyasa boşluğu: Bahis siteleri kullanıcının zaafını görür ama saklar (zaaf =
-sitenin kârı). AI analiz siteleri maçı analiz eder ama kullanıcı davranışını
-göremez. **Kimse ikisini birleştirip kullanıcı LEHİNE kullanmıyor.** PickPlay
-bunu yapar:
+> "Bu maçın analizi şu — AMA senin geçmişinden görüyorum ki Marseille'e
+> 11. bahsin, 3'ü tuttu, net -1840. Bu analiz değil, alışkanlık."
 
-> "Bu oyunun analizi şu — AMA senin geçmiş oynayışından görüyorum ki kayıp
-> kovalıyorsun, açgözlü davranıyorsun, sık kazanma yanılsamasına kapılıyorsun.
-> İşte deseninin aynası."
+**Ayna + Yargıç CANLIDA:** /analysis merkezi (5 sekme), AI Kupon Hakemi v2
+(bacak bilinci + takım sadakati + çapraz-oyun tilt + hakem hafızası),
+benchmark, Player Card, Ayna+ kartları, bahis AI sohbeti. Oyunlar (sanal
+4 spor + gerçek futbol + Aviator + Gates + Mines/Dice/Plinko) veri toplama
+aracı + retention; **farklılaştıran ANALİZ.**
 
-Para dönmüyor (sembolik altın, PARA YOK) → kullanıcı zarar görmeden davranışını
-görür. **Asıl değer = DAVRANIŞ ANALİZİ.** Oyunlar sadece veri toplama aracı +
-retention. Ayna henüz KURULMADI (en büyük iş bu, senkron bitince başlanacak).
+**İnandırıcılık ≠ Hassasiyet:** marj %3 mü %6 mı önemsiz; motorun tanıdık
+maçta absürt oran VERMEMESİ ve ödemelerin çalışması = otantik davranış
+verisinin önkoşulu. Bozuk motor = kirli laboratuvar = çöp veri.
 
 ---
 
-## 2. ÜÇ-KOLLU MİMARİ (danışman + Rasim konsensüsü)
+## 2. MİMARİ
 
 ```
-GERÇEK FUTBOL   → maç öncesi + CANLI bahis (0147 önbellek) ─┐
-SANAL FUTBOL    → sadece CANLI bahis (kurgusal maçlar)     ─┼→ DAVRANIŞ MOTORU → Ayna
-AVIATOR (crash) → "ne zaman çekerim" oyunu                 ─┘
+GERÇEK FUTBOL  → maç öncesi + CANLI (0147 markets_cache)  ─┐
+SANAL 4 SPOR   → CANLI bahis (kurgusal, "Takım (Oyuncu)") ─┼→ DAVRANIŞ MOTORU → AYNA
+AVIATOR        → "ne zaman çekerim" (en temiz risk sinyali)─┤   (behavior_events
+ŞANS OYUNLARI  → Mines/Dice/Plinko + Gates (RTP %97/%95.4) ─┘    + ürün tabloları)
 ```
 
-- **Gerçek futbol canlı bahis — KARAR REVİZE (2026-07-16):** Eski karar
-  "canlıyı kaldır"dı (absürt oran nedeniyle). Motor 0130-0136'da Nesine'yle
-  kalibre edilince Rasim kararı çevirdi: **canlı bahis KALIYOR.** Ölçek sorunu
-  (istek başına Poisson hesabı; 3 USA maçı canlıya düşünce DB doygunluğu +
-  bülten timeout — 2026-07-16 gecesi yaşandı, ölçümle kanıtlandı) 0147
-  önbelleğiyle çözüldü: oranlar `real_fixtures.markets_cache`'te hazır durur,
-  BEFORE trigger sync yazınca tazeler, get_bulletin SADECE okur (~600ms).
-  Para yolu (place_coupon_v2, cashout) taze hesaba devam eder (~10-50ms/bacak).
-- **Sanal futbol canlı:** Kurgusal ("Real Madrid (Alexander)"), inandırıcılık
-  sorunu yok, canlı heyecanı güvenle verir. Takım isim kuralı: gerçek takım +
-  parantez içi sanal oyuncu adı → "sanal maç" sinyali.
-- **Aviator:** En basit motor + en zengin/temiz davranış sinyali ("ne zaman
-  çekerim" = risk psikolojisi). İlk kol olarak seçildi.
-
-**Danışman konsensüsü:** Önce TEK kol (Aviator) ile aynayı KANITLA, sonra
-genişle. Oyun retention'ı sağlar, ANALİZ farklılaştırır.
-
-**İnandırıcılık ≠ Hassasiyet (kritik ayrım):** Oran %3 mü %6 mı marj = önemsiz
-(dondurulabilir). Ama motorun İNANDIRICILIĞI (tanıdık maçta absürt oran
-vermemesi, ödemelerin çalışması) = otantik davranış verisinin ÖNKOŞULU. Bozuk
-motor = kirli laboratuvar = çöp veri.
+- Gerçek canlı bahis KALIYOR (Rasim kararı 2026-07-16; motor Nesine'yle
+  kalibre). Ölçek: istek-başına hesap YASAK — oranlar `markets_cache`'te
+  hazır, get_bulletin yalnız okur (~600ms); para yolu taze hesap.
+- **UYUYAN DÜNYA (2026-07-19):** izleyen yokken motorlar durur (aşağıda §4-Ops).
 
 ---
 
 ## 3. TEKNİK ORTAM
 
-- **Proje:** pickplay.ai
-- **Supabase proje ref:** `owhvdjmxdtdaifpzttav` (hesap: kurumrasim@gmail.com)
-- **Backend:** TAMAMEN Postgres (pg_cron + pg_net). Node/Railway worker YOK —
-  bilinçli olarak dış bağımlılıktan kurtulduk (eski worker sessizce ölüp
-  ödemeleri bozuyordu). Bu ilkeyi koru.
-- **Migration'lar:** numaralı SQL dosyaları. **Aviator 0068-0078**, futbol
-  0053-0067. Yeni migration **0079'dan** devam.
-- **Frontend:** Vite + React + TS (`localhost:5173`). Realtime: Supabase
-  broadcast + postgres_changes. Aviator dosyası: `src/aviator/useAviator.ts`.
-
-**RLS dersi:** RLS açık + policy yok = tablo o role KAPALI. service_role
-bypass eder → editör testi dolu, anon (frontend) boş olabilir.
-`set local role anon; ... reset role;` ile test et.
-
----
-
-## 4. DURUM ÖZETİ (nerede olduğumuz)
-
-### Futbol motoru — STABİL, dokunma
-Ödeme zinciri, Poisson oran motoru (10K kupon test, kasa marjı ~%3), lig
-gruplama (bsd_leagues), 9 aktif cron. Kendi kendine dönüyor.
-
-### Aviator — BİTTİ (görsel senkron dahil, 2026-07-12)
-- **Motor (0068-0071):** provably fair crash (`crash_point` SHA-256'dan),
-  `_aviator_current_multiplier = exp(0.35*t)`, k=0.35 kalibre.
-- **Davranış yakalama (0072):** `aviator_bets`'te prev_result, prev_stake,
-  was_auto, caught_by_crash → kayıp kovalama/greed/disiplin yakalanıyor.
-- **Güvenlik (0073):** crash_point + server_seed AYRI `aviator_round_secrets`
-  tablosunda (RLS, policy yok → anon tamamen kapalı). Aktif turda ana tabloda
-  null, crash sonrası kopyalanıyor.
-- **Cashout (0075 + temizlik):** `aviator_cashout(smallint, numeric)` —
-  kullanıcının GÖRDÜĞÜ değeri esas alır, `gördüğü <= crash_point` ise o
-  değerden öder, değilse "cashout_too_late". Anti-hile: `server_mult * 1.02`
-  tavanı. **Eski 1-parametreli sürüm SİLİNDİ**, tek temiz sürüm kaldı.
-- **Adalet mantığı deterministik:** crash zamanı = `flying_at + ln(cp)/0.35`.
-  Para, tick gecikmesinden ve worker'dan bağımsız → saf Postgres.
-
-### ✅ Görsel senkron — ÇÖZÜLDÜ (0079–0081 + edge function)
-**Eski semptom:** eğri gerçek crash'i aşıyordu (crash 6 → eğri 8). **Kök neden:**
-pg_cron 1sn tick jitter'ı crash'i ~0.8s geç tespit ediyordu (formül/backend
-kusursuzdu). **Postgres-only fiziksel olarak imkansızdı** (pg_cron 1sn taban,
-sub-second yok) → ephemeral Supabase Edge Function seçildi.
-
-**Uygulanan mimari (hepsi canlıda, ölçümle doğrulandı):**
-- **0079** `aviator_fire_crash(round_id)`: crash'in TEK idempotent kaynağı
-  (`for update` kilit, `status<>'flying'` ise no-op).
-- **Edge** `aviator-crash-timer` (`verify_jwt=false`): flying'de pg_net ile
-  tetiklenir, `crash_at = flying_at + ln(cp)/0.35`'e kadar uyur, tam o an RPC'yi
-  çağırır. **0080** tick'i bu RPC'ye delege etti + pg_net tetiğini ekledi.
-- Sonuç: freeze gecikmesi **46–104ms** (eskiden 0–1000ms), `ratio≈1.00`. Edge
-  her turda tick'i geçiyor; tick saf fallback (edge ölse para/history garantili).
-- **0081** patlama sonrası 3sn "Auta gitti!" duraklaması (eski ölü kod düzeltmesi):
-  tick artık en son turu alır, crashed ise `crashed_at + 3sn` bekler.
-
-**Bilinen kabul edilen sınır:** cp≈1.0 instacrash'te uçuş 0.1–0.3s; edge
-cold-start o kadar hızlı uyanamaz → o tur ~1sn tick fallback'e düşer (Rasim
-"direkt patlıyor, sorun yok" onayladı). Detay: `DEVIR/2026-07-12_*`.
-
-**Railway'e ASLA dönme.** Eski worker (runner.ts, Railway) kritik işi (para)
-kırılgan-sürekli-ölen sürece bağladığı için gömüldü. Edge function o üç günahı
-işlemiyor (ephemeral + kritik değil + Supabase içi). İlkenin ruhu: "kritik iş
-kırılgana bağlanmasın", "hiç dış şey olmasın" değil.
-
-### Aviator sonrası — ASIL İŞ (henüz başlanmadı)
-Senkron bitince davranış analizi katmanı: `aviator_bets`'ten profil (kayıp
-kovalama, açgözlülük, disiplin, **sık kazanma yanılsaması** — "hep 1.40x çek"
-%70 kazanma ama net -%1.8). Oyun-bağımsız tasarla. Çapraz profil asıl güç:
-"gerçek maçta temkinli ama Aviator'da açgözlüsün."
+- **Barındırma:** Supabase proje ref `owhvdjmxdtdaifpzttav`, artık Rasim'in
+  **PRO organizasyonunda** (hesap: rasimkurum — dashboard'da "imras" projesi;
+  eski kurumrasim hesabından 2026-07-19'da transfer edildi). **Micro compute,
+  8 GB disk, günlük otomatik yedek.** Ek proje maliyeti ~$10/ay (Pro'daki
+  diğer proje pause edilirse kredi devri = net $0 — Rasim'in tasarrufunda).
+- **Backend:** TAMAMEN Postgres (pg_cron + pg_net + vault). Dış worker YOK,
+  Railway'e ASLA dönülmez. Kritik-olmayan hız işleri ephemeral Edge Function
+  olabilir (ilkenin ruhu: "kritik iş kırılgana bağlanmasın").
+- **Veri beslemesi:** BSD (sports.bzzoiro.com, key vault'ta `bsd_api_key`).
+  Fikstür: gece 03:00 gün-gün istek + 5dk'da bir kendini-zincirleyen toplama
+  (0155, tam kapsama). Ligler: 02:00 (2 sayfa). Lambda: solve-lambdas edge'i
+  15dk'da 20 fikstür. Canlı: _tick_live 2sn (uyanıkken).
+- **Cron envanteri:** aviator_tick 1sn · pickplay_live 2sn · pickplay_tick
+  60sn · pickplay_lambda */15 · pickplay_lambda_log · pickplay_fixtures_req
+  03:00 · pickplay_fixtures_collect */5 · pickplay_leagues_req/collect 02:00 ·
+  pickplay_reap */5 · **pickplay_janitor 04:07** (gece bekçisi).
+- **Edge functions** (git'ten OTOMATİK DEPLOY OLMAZ — dashboard'dan elle ya
+  da MCP): aviator-crash-timer, solve-lambdas, coupon-judge (Sonnet 5,
+  thinking disabled, 640 token, "sen" hitabı), mirror-coach, match-preview,
+  betting-ai. `ANTHROPIC_API_KEY` Supabase secret'ta.
+- **Frontend:** Vite+React+TS, Vercel'e GitHub main push'uyla otomatik deploy
+  (repo: rasim3585/imras). Domain: www.imras.ai. 8 dil (en,tr,es,de,ru,ar,zh,
+  hi) × 675 anahtar; `scripts/check-i18n.cjs` build zincirinde (parite
+  bozulursa build KIRILIR). RTL (ar) destekli.
+- **Migration'lar:** sıfır dolgulu 4 hane, yeni migration **0157'den** devam.
+  Kilometre taşları listesi §6'da.
+- **Teşhis kanalları:** MCP get_logs (DB kapalıyken bile çalışır — yönetim
+  düzlemi), service_role REST (.env'de), `behavior_events`'te
+  `event_type='client_error'` (bedava Sentry-lite; RootErrorBoundary + global
+  yakalayıcı besler).
 
 ---
 
-## 5. İŞ BÖLÜMÜ (Claude Code vs sohbet)
+## 4. SİSTEM ENVANTERİ (ne var, durumu ne)
 
-- **Claude Code (burası):** kod tabanının içi — frontend, build/test, SQL,
-  migration, motor mantığı, ölçüm gereken her şey. Bağlam repo'da kalıcı.
-- **Sohbet arayüzü:** strateji, büyük resim, danışman-tarzı düşünme.
-- **Sınır:** aynı anda aynı dosyaya iki taraf dokunmasın.
+### Oyun motorları
+- **Futbol (sanal) motoru:** STABİL. Poisson oran motoru (10K kupon test,
+  marj ~%3), soft-cap 27.68 (0136), skor etkisi + çift yönlü çapa (0130-0132),
+  Nesine kalibrasyonlu. Ödeme zinciri kendi kendine döner.
+- **4 sanal spor:** futbol/basket/tenis/voleybol; spor-doğru istatistik ve
+  lig ekranları (0138); yoğunluk 6-8/5-6/3-4 (0142). Voleybol hayalet-set
+  fix + pace alanı (0152).
+- **Gerçek futbol:** fikstür+lig+lambda+canlı besleme zinciri (§3); canlı
+  oranlar markets_cache'ten; settle/reap otomatik; kupon void yolları var.
+- **Aviator:** BİTTİ. Provably fair, edge-hassas crash (46-104ms), davranış
+  yakalama (prev_result, caught_by_crash...), cashout anti-hile tavanı.
+- **Gates of Goal:** motor v2 (0127), 500K spin simüle, RTP %95.4; sembol
+  seti v3 GoO-paritede. Görsel his "oturmadı" — Rasim dönecek (PARK).
+- **Şans oyunları (0144-146):** Mines (kurtarma dahil — mines_active),
+  Dice, Plinko; hepsi sunucu-otoriter, %97 RTP, liderlik+aynada.
 
----
+### Ayna / AI (ürünün kalbi)
+- **Analiz merkezi /analysis:** Genel/Maç/Aviator/Gates/Diğer sekmeleri,
+  benchmark (vs oyuncular), Player Card arketipi, Ayna+ (anket/karşı-olgusal/
+  tilt/öz-tanı), reality check, sohbet aynası.
+- **AI Kupon Hakemi v2 (0148-149):** coupon_review deterministik sayılar
+  (bacak-başına takım geçmişi, chase/tempo, sadakat tuzağı, olgunluk,
+  çapraz-oyun tilt, hakem hafızası) + coupon-judge edge'i cümleye döker.
+  judge_verdicts defteri, karne, yüzleşme çipleri. Kota 20/gün.
+  Kart+buton ASLA sessizce kaybolmaz (hesaplanıyor/retry durumları).
+- **Bahis AI sohbeti (0143):** kullanıcının kendi sayılarından konuşur,
+  tahmin ASLA. 30 mesaj/gün.
+- **İlke:** sayılar HEP deterministik; LLM yalnız cümleye döker.
 
-## 6. DOSYA/MIGRATION NUMARALANDIRMA
-Yeni migration'lar **0153'ten** devam, sıfır dolgulu 4 hane. (**0151-0152 SQL
-SABAH OTURUMU (2026-07-16, hepsi canlıda doğrulandı)**: coupon_stats() RPC
-(kazanan=won∨kârlı-cashout tek tanım; FE getCouponStats RPC'ye geçti),
-0150 uygulandı, 0151 mines_active() (Mines kurtarma aktif; mines_start zaten
-'aktif oyun var' ile ikinci oyunu reddediyormuş — gövdeden kanıtlandı),
-0152 _vb_state/_tn_state hayalet "Set 6·0-0" fix (revealed son seti tam
-tüketmez) + pace alanı (sn/birim; tenis 36.92, vb 3.31 ölçüldü) +
-get_live_state passthrough; FE tennisSim setPace + bütçe pace-ölçeği
-(480sn'de f=1 → sıfır regresyon). GoO motor farkları PARK kararı: yüzey
-birebir, RTP ölçülü; değişiklik=para motoru=önce 500K sim — launch sonrası.
-KALAN ZORUNLU: Pro+Small sonrası cron geri-alma (SQL-KUYRUK A).) (**0150 + KÖR NOKTA
-DENETİMİ (2026-07-16, 4-ajanlık ordu: auth/RTL/şans/hata-dayanıklılık)**: İKİ
-LAUNCH BLOKER kapatıldı — (1) şifre sıfırlama akışı HİÇ YOKTU: AuthScreen
-'forgot' modu + resetPasswordForEmail + /reset rotası (ResetScreen, updateUser);
-(2) ErrorBoundary/global yakalayıcı yoktu (tek render hatası = kalıcı beyaz
-ekran): RootErrorBoundary (provider'ların DIŞINDA, kendi 8-dilli mini sözlüğü)
-+ window error/unhandledrejection → logEvent('app','client_error') =
-behavior_events bedava Sentry-lite (launch haftası `event_type='client_error'`
-tara). SİSTEMİK: src/lib/errors.ts humanizeError/mapAuthError — ham PostgREST/
-Supabase/ağ mesajı kullanıcıya ASLA basılmaz (offline/busy/funds/generic ×8 dil);
-CouponPanel para yolu + Feed + auth + username + 3 şans oyunu buna geçti. AUTH:
-signUp identities boş = 'zaten kayıtlı' (sahte doğrulama çıkmazı bitti),
-emailRedirectTo, AuthContext onAuthStateChange'te await YOK (dokümante deadlock
-— setTimeout ile ertele), loadProfile hatada profili EZMEZ + 2 retry,
-getSession .finally, profileReady kapısı (girişte feed flaşı bitti), RequireAuth
-from-state (deep-link login sonrası geri döner), UsernameScreen finally kilidi.
-0150: set_username player_XXXXXXXX deseni reddi (sonsuz UsernameScreen tuzağı).
-ŞANS: Mines mount'ta minesActive() resume + catch'te resync (RPC SQL-KUYRUK'ta,
-FE toleranslı), tüm catch'lerde refreshProfile (bakiye chip yalanı bitti), Dice
-uçuşta yön kilidi + bayat marker temizliği, MAX floor. RTL: index.html erken-dir
-script'i (LTR flaşı yok — canlıda doğrulandı), durum şeritleri/hizalar logical
-properties (border-inline-start vb., saha/kort geometrisi FİZİKSEL bırakıldı),
-.tnum unicode-bidi isolate + ltr, av-fair-pop RTL kuralı, fmtNum(app-dili,
-Arapçada Latin rakam politikası) — tr-TR hardcode'ları söküldü. i18n: 6 ikincil
-dilde eksik 11 anahtar + landing.chip ar + SharedCouponScreen (viral kapı!)
-KOMPLE + CouponBar/MatchCard/LeagueDetail/placeholder — 8 dil × 674 anahtar,
-scripts/check-i18n.cjs build zincirinde (parite bozuksa build KIRILIR). Hata-vs-
-boş ayrımı: SharedCoupon/Team/Standings 'error'+retry, Analiz useMirror failed+
-retry (sonsuz 'Yükleniyor' bitti), Aviator ilk yükleme 5sn retry (sonsuz
-Connecting bitti). BİLİNÇLİ EN: PitchTV/MiniWatch yayıncı jargonu (Shot/Corner/
-Key attacks) uluslararası spor dili — ÇEVİRME, bug değil.) (**2026-07-16
-GECE LAUNCH CİLASI (FE-only, 18 commit)**: 5-ajanlık keşif ordusu (raporlar
-scratchpad/rapor-0..4.md) + uygulama. GATES: sembol seti v3 — 5 fasetli
-mücevher + altın Kupa(50x)/Krampon(25x)/Eldiven(15x)/Düdük(12x) + Altın Top
-scatter; web-doğrulamalı GoO spec'iyle ödeme tablosu BİREBİR çıktı; banner
-25x/100x/250x/1000x; callout tutarları sunucu adım kazancına ölçekli; motor
-farkları (Buy 80x↔100x, scatter ödemesi 4/5/6=3x/5x/100x, FS retrigger +5,
-max-win kesme, FS orb nüansı) SQL turu bekliyor — DEVIR sabah kuyruğu. 2D:
-22 oyuncu noktası (çapa+topa çekim+salınım, PitchTV rAF); winprob barı
-görünmezdi (--av-mid yalnız Aviator kapsamındaydı — sayfa-dışı token KULLANMA
-dersi); 0-0 satırlar boş bar. KUPON DÜRÜSTLÜĞÜ: pending kuponlar limit muaf
-(200'ün gerisine düşen bekleyen kupon KAYBOLUYORDU); kazanç çipleri NET
-(brüt +150 değil +50; Plinko 0.2x kovada '+20' yalanı '−80' oldu); /coupon =
-CouponPanel kabuğu (kopya slip + kapalı-bacak körlüğü silindi); NavBar sepet
-rozeti kalktı (yanlış vaat). ANALİZ: Diğer sekmesi gerçek (Mines/Dice/Plinko
-kartları, OverviewProduct tipi genişledi); ParallelCard→Aviator sekmesi (veri
-Aviator-only); karne boş-durum teaser'ı; AI sohbet sessionStorage; mirror
-fetch 30sn memo (4 mükerrer RPC bitti). PRO: OG kartı (public/og-card.png)
-+ og/twitter meta; rota başına document.title; anon 401 spam fix (FE advance()
-kaldırıldı — dünya ilerletme yalnız cron); behaviorLog geri-kuyruk sigortası;
-ölü src/providers/ silindi; lb.sub.day/pr.biggestwin etiketleri dürüst.
-UYARI: gece bülten 83 fikstürle 3-8sn + aralıklı timeout görüldü — muhtemel
-compute CPU-kredi tükenmesi; launch öncesi Dashboard>Reports>CPU kontrol +
-gerekirse Small'a upgrade. Edge deploy'lar git'ten OTOMATİK DEĞİL — dashboard
-elle ya da MCP; coupon-judge son sürümü 640 token + 'sen' hitabı.) (**0148-0149 AI
-Kupon Hakemi v2 — ÜRÜNÜN KALBİ (Rasim tezi: maç analizi yapan çok, kullanıcının
-KENDİ davranışını bilen yargıç yalnız bizde)**: coupon_review artık
-_coupon_judge_extras ile zengin — per_leg takım geçmişi (bets/won/net; ölçüldü:
-Marseille 1156/546/-6246), behavior_now (chase/loss_streak/kasa%/saatlik tempo),
-loyalty_traps (≥5 bahis + negatif net), maturity (new<5/forming<20/ready),
-judge_context (30 günde dinlenmeyen uyarılar + bedeli), cross_games (son 1 saat
-Aviator+şans net'i = platform-genel tilt). judge_verdicts defteri +
-log_judge_verdict (FE kararname sonrası) + judge_scorecard karnesi ("uyarılara
-uysaydın +X" karşı-olgusal; _judge_scorecard(uid) test edilebilir iç fn) +
-judge_confrontations (My Coupons settle çipi "Hakem %9 demişti"). Kupon-kararname
-bağlama TAMAMEN okuma-tarafı lateral (15dk + ~aynı oran) — para yoluna sıfır
-dokunuş. Edge coupon-judge: model Sonnet (claude-sonnet-5), bacak-başına yorum
-zorunluluğu, kota 20/gün (judge_quota_take + ai_chat_usage.judge_msgs, yalnız
-service_role). "Uyarıldı" tanımı deterministik: prob<%20 ∨ chase ∨ trap>0.
-Model-tabanlı adil olasılık BİLİNÇLİ ertelendi → aylık Nesine kalibrasyon turu.
-FE: deterministik inceleme otomatik (1.2sn debounce), olgunluk bandı, bacak altı
-takım aynası çipi, Analiz>Genel "Hakem Karnesi" kartı; i18n 8 dil. Ayrıca sepet
-canlı oran tazeleme (12sn, kapanan bacak "Kapandı"+oynatma kilidi) ve bülten +N
-rozeti = panel alan sayısı fix'i aynı gece.) (**0147 gerçek maç
-oran önbelleği**: ÜRETİM KAZASI fix'i — USA maçları canlıya düşünce (2026-07-16
-23:12 UTC) get_bulletin herkese timeout verdi. Ölçümle kanıt: gerçek kol her
-istekte her lambda'lı fikstür için Poisson ızgarası hesaplıyordu (sakin ~460ms,
-FE 5sn'de bir yoklayınca eşzamanlı yığılma → 24.5sn → anon 8sn limiti → sarmal;
-pg_stat_activity'deki 116sn'lik _tick KURBANdı, neden değil).
-Fix: `real_fixtures.markets_cache` + BEFORE INSERT/UPDATE trigger (durum
-değişince `_real_markets_build` bir kez hesaplar), `_real_fixture_markets`
-artık sadece cache okur (bayat-feed koruması aynen), para yolu taze hesapta.
-Sonuç: anon tam bülten ~600ms, 3 canlı gerçek maç oranlı en üstte. DERS:
-istek-başına hesap = O(kullanıcı) → asla; hesap yazma-anına, okuma düz satır.
-FE'nin 5sn poll'unda timeout backoff'u yok — gelecek sertleştirme adayı.
-Ayrıca aynı gece: marka lockup ortalandı + R/A/S yeşil, yeni favicon,
-/analiz→/analysis.) (**0146 luck
-entegrasyon**: dice/plinko/mines artık get_leaderboard net + mirror_overview
-(ürün listesi/AI paketi/flag) + mirror_reality_check net7 + mirror_card
-(+ 'luck_chaser' arketipi) hepsinde hesaplanıyor; product.* 8 dilde. Görsel
-cila: coin yağmuru + shine, Dice zar dönüşü, Plinko peg-aydınlatma + top hale +
-kova dalgası, Mines büyük canlı çarpan + elmas flip + patlama grid-shake. Lig
-tabloları vteams'e ait — şans oyunları liderlik NET'inde yer alır.) (**0144-0145 Luck
-Games**: 3 yeni şans oyunu — **Mines** (durumlu, 5×5, mayınlar RLS-kapalı
-mines_secrets tablosunda = aviator secrets kalıbı; fair mult 0.97·C(25,k)/
-C(25-M,k); start/reveal/cashout; "bir kutu daha mı" = Aviator kardeşi, ayna
-sinyali), **Dice** (kullanıcı kazanma-şansını=çarpanı seçer, risk iştahı
-beyanı), **Plinko** (16 sıra, 3 risk, tablolar 0.97 RTP'ye ölçekli). Hepsi
-sunucu-otoriter + provably fair + %97 RTP + prev_result yakalamalı; 3 ekran +
-Luck menüsü 5 oyun; i18n 8 dilde 565/565.) (**0143 Bahis AI
-sohbeti**: betting-ai edge fn — kullanıcının deterministik ayna paketi (9
-mirror_* RPC) sistem prompt'unda, haiku yalnız o sayılardan konuşur, tahmin/
-oran ASLA; 30 mesaj/gün (ai_chat_usage); FE AnalizScreen kartı, 8 dil.
-**Nesine Temmuz turu**: beraberlik bandı + MS1-kapama kitapla uyumlu; zayıf
-taraf longshot'unda kitap ~17'de donduruyor biz ~26 — n=1, dokunulmadı;
-gelecek ay 3+ nokta.) (**0142 e-maç
-yoğunluğu**: seeder'lar tur başına 3+5 tur ileri → spor başına ~24 maç
-üretiyordu; yeni denge futbol 6-8, basket 5-6, tenis/voleybol 3-4 (ölçüldü:
-8/6/4/4). FE bülten limiti 120 ("hep 60" görünümü bitti), oran kutuları gap
-8px, sekme 'e-football'. **i18n**: 8 dil %100 tam (531/531) — 6 ikincil dile
-396'şar anahtar paralel ajan çevirisi (placeholder script-doğrulamalı),
-Auth/Username ekranları yerelleşti.) (**0140 güvenlik**:
-slot_config RLS açığı kapatıldı (anon her şeyi yazabiliyordu!), tüm `_` önekli
-fonksiyonlar + aviator_fire_crash anon/auth'a kapatıldı (PostgREST /rpc tüm
-public fonksiyonları açar — YENİ `_` FONKSİYONDA EXECUTE VERME), legacy
-place_coupon vb. DROP, ölü src/cron worker silindi. **0141 denetim**: voleybol
-canlı set handikapı set skoruna koşullu (2-0 önde -1.5: 27.3→2.05), paylaşılan
-kupon bacakları leg_status'tan, _tick_live safe-parse, 620 çapraz-spor çöp maç
-silindi; chase-boost "dip" fix'i Nesine anchorlarını bozduğu ölçülünce GERİ
-ALINDI (7.07/8.05 korundu) — kalibrasyon > teorik zarafet. FE: canlı bahis
-durumu legLiveStatus, winprob barı canlı oranlardan, formatKickoff yerelleşti,
-6 dilde eski marka temizlendi.) (**0136 oran
-soft-cap**: tavan 20→27.68, `_soft_cap` rasyonel kompresör — 20'ye kadar
-birebir, üstü asimptotik; tavanda eşitlenme bitti (0-2'de 85' beraberlik 26.35
-≠ galibiyet 27.60); tek dokunuş `_odds_line`+`_price`+`_make_display_odds`,
-4 spor otomatik miras. **0137 bülten hijyeni**: BSD'den event almadan düşen
-bayat 'notstarted' fikstürler "starting now" hayaleti yaratıyordu —
-get_bulletin'e 3 saat kickoff penceresi + reaper'a cancelled/void dalı (5
-fikstür temizlendi, kuponlar void). **0138 e-spor istatistik**:
-vleague_standings_ex (spor-doğru puan: futbol 3G+1B, basket PCT, voleybol VNL
-3/2/1, tenis ATP-race + form + seri), vteam_page/vteam_h2h/_finished_detail
-(set/çeyrek dizgileri yalnız finished), parsiyel indeksler; FE /team/:id +
-StandingsScreen spor-doğru kolonlar. **0139 AI tabanı**: coupon_review RPC
-(adil olasılık, parlay EV=1.06^-n-1, benzer-kupon karnesi) +
-match_preview_cache; edge fn **coupon-judge** + **match-preview** (haiku,
-mirror-coach kalıbı, key yoksa text:null). İlke korunur: sayılar HEP
-deterministik, LLM yalnız cümleye döker; para yoluna analiz mutasyonu ASLA.)
-(**0134 liderlik
-net birliği**: day/week net artık kupon+aviator+slot toplamı — eskiden yalnız
-kupon olduğundan 0 görünüyordu; **0135**: eski 0-parametreli get_leaderboard()
-düşürüldü, tek sürüm kaldı.) (**0133 Ayna+**:
-user_survey (anket, RLS) + mirror_parallel (kanıtlı karşı-olgusal: gerçek vs
-"hep X'te çek") + mirror_tilt (kayıp-sonrası büyütme şeridi + maliyet) +
-mirror_selfgap (ölçülen risk skoru 0-100 vs öz-tanım). FE: /analiz Genel
-sekmesi üstünde SurveyCard/SelfGapCard/ParallelCard/TiltCard, SVG grafikler.
-İlke: her kart = 1 metrik + 1 grafik + 1 cümle; Nesine sürekli scraping
-YAPILMAZ — aylık manuel kalibrasyon turu, gerekirse lisanslı odds API.) (**0132 skor
-etkisi + çift yönlü çapa**: geriye düşen takımın kalan λ'sı rampalı büyür
-(30'→75', ×1.6/×2.2 tavan), önde olan ×0.85'e iner — Fransa 0-2 İspanya 62'
-beraberliği 16.65'ten 7.07'ye indi (Nesine 7.24!); bariz güçlü geride ise
-%85 ağırlıkla spec eğrisine çapalanır: 0-2'de İY ~7.6-8 → 62' 9.9 → 70' 12 →
-78' 16.5 → 85' 20.) (**0131 oran
-kalibrasyonu — Nesine canlı ölçümleriyle**: futbol geri dönüş tabanı yumuşatıldı
-(bariz güçlü 0-1 geride 82' → 9.41, Nesine 8.84); basket kuyruk genişletildi
-(sd 12.5√rem+1.5; güçlü 8 fark %90'da 5.76, eski 14.96); voleybol canlı ML tam
-Bo5 koşullu olasılık (zayıf 0-2 geride 4.06 saçmalığı → 20 cap); tenis ölçüldü,
-zaten kitap bandında — dokunulmadı.) (0121-0126 sanal
-maç/basket düzeltmeleri; **0127 Gates motor v2**: 9 sembol, scatter=10,
-GoO-haritalı ödemeler, cap 5000x, FS 15, buy 80x — 500K spin simülasyonuyla
-ayarlandı, RTP %95.4 / hit %25.5; **0128-0129 basket serbest atış** (tek sıralı
-dizide +1,+1 çiftleri); **0130 canlı futbol geri dönüş tabanı + genel oran
-tavanı 20** — bariz güçlü takım 0-2 geride: İY ~8.5-9, 55' ~12, 60' ~14,
-70'+ 20 sabit; tavan üstü artık market kapatmaz, 20.00'ye sabitlenir.
-Aviator görsel
-senkron 0079–0081; kalıcı sanal lig + settle 0082–0087; slot 0091; sanal
-basketbol/tenis/voleybol 0092–0106; get_bulletin security-definer fix 0101;
-davranış aynası Faz 0 yakalama 0107 + Faz 1a Aviator teşhis 0108 + Faz 1b trend
-0109 + Decision Replay 0110; sahte veri seed 0111; kupon/slot/genel analitik 0112;
-benchmark 0113; Player Card 0114.) Her önemli oturum sonunda `DEVIR/` klasörüne
-kısa devir notu yaz.
+### Operasyon (2026-07-17/19 krizi sonrası kurulan bağışıklık)
+- **Uyuyan Dünya (0153+0156):** FE dakikalık nabız (görünür sekme) →
+  `app_presence`; son 5dk nabız yoksa `_tick`/`_tick_live`/`_reap` uyur
+  (sıfır yazma/HTTP). `_aviator_tick`: açık tur (betting/flying) varken
+  ASLA uyumaz — para döngüsü tamamlanır, sonra uyur. İlk nabız advisory-lock
+  korumalı tek-çalışan catch-up `_tick` koşturur. CANLI TEST EDİLDİ.
+- **Gece Bekçisi (0154, 04:07):** cron geçmişi >2g, pg_net izleri >1g, tur
+  sırları >7g, ıssız (bahissiz) turlar >3g, eski pazar/seçenek >14g
+  (kuponla anılan ASLA silinmez). İlk süpürme: 28.441 ıssız tur.
+- **Fikstür tam kapsama (0155):** gün-gün pencere + count'a göre kendini
+  zincirleyen sayfalama; beslemeyle birebir doğrulandı (50/50, 11/11, 56/56).
+- **FE yük diyeti (2026-07-17):** tüm poll'larda gizli-sekme durdurması,
+  frekans disiplini (kort 3s, canlı 4s, mini 4s, detay faz-duyarlı, feed
+  backoff'lu), kupon incelemesi yalnız seçim değişince (EV yerelde ölçeklenir).
+  Kullanıcı başına DB trafiği ~%70-80 düştü, UX değişmedi.
+- **Hata dayanıklılığı:** RootErrorBoundary + global yakalayıcı →
+  client_error; humanizeError/mapAuthError (ham mesaj kullanıcıya ASLA);
+  hata-vs-boş ayrımı her kritik ekranda; Aviator/Analiz retry'lı.
+- **Auth:** şifre sıfırlama akışı (forgot + /reset), identities-boş kayıt
+  teşhisi, profil retry+koruma, deep-link dönüşü. Dashboard URL config ✓
+  (Site URL www.imras.ai + joker redirect listesi).
 
-**Davranış aynası (asıl ürün) — çekirdek TAM, canlıda:** Faz 0 (moat yakalama
-`behavior_events`+`log_events`; kupon/Aviator/session_start/match_detail_viewed),
-Faz 1a-b (Aviator teşhis+trend+Decision Replay), **Analiz merkezi "Aynam"**
-(`/analiz`): Genel/Maç/Aviator/Gates/Diğer. Backend: `mirror_aviator/coupon/slot/
-overview/benchmark/card()`. Çapraz içgörüler + benchmark (vs 78 oyuncu) + Player
-Card arketip + deterministik koç önerileri. **Sahte veri (0111): 36 persona.**
-**LLM "ses":** `mirror-coach` EDGE FUNCTION (verify_jwt=true) — deterministik
-özeti alıp kişisel Türkçe koçluk mesajına döker; **key yoksa {text:null}, frontend
-gizler**. GEREKLİ: Supabase secret `ANTHROPIC_API_KEY` (Rasim ekleyince aktif).
-İlke: sayılar HEP deterministik, LLM yalnız cümleye döker, uydurmaz. **Para yoluna
-analiz mutasyonu ASLA eklenmez** — ayna yalnız OKUR. Sıra: park (4-spor QA, Gates
-görsel), sonra daha çok yakalama/hedef-takip nudge.
+### 2D izleme
+- 4 sporda tek tutarlı motor: yerel monoton saat + varışa-bağlı sunum +
+  kuyruk/buffer; kanıt: 30/30 basket pota dibinde, tabela aynı karede.
+  Pace alanıyla sim temposu sunucuya bağlı (480sn'de birebir eski davranış).
 
 ---
 
-## 7. YOL HARİTASI (2026-07-16 — launch'a ve sonrasına, önem sırasıyla)
+## 5. İŞ BÖLÜMÜ
 
-*Bu bölüm tek doğru kaynak: "ne kaldı?" sorusunun cevabı. Bir madde bitince
-buradan sil/işaretle. T0 bitmeden launch YOK.*
+- **Claude Code:** kod + DB (MCP doğrudan) + deploy zinciri + ölçüm gereken
+  her şey. Edge deploy'ları Rasim dashboard'dan yapıştırır (ya da MCP
+  deploy_edge_function bağlıysa Claude).
+- **Rasim:** ürün kararları, para kararları, dashboard-only işler (billing,
+  auth ayarları, support), tap-testler, görsel QA.
+- **Sohbet arayüzü:** strateji/büyük resim. Aynı dosyaya iki taraf dokunmaz.
 
-### T0 — LAUNCH BLOKERI (hepsi Rasim'in elinde, kod işi bitti)
-1. ~~Pro + Small upgrade~~ **İPTAL (2026-07-17, Rasim kararı): sistem para
-   kazanmadan para harcamayacak — çözüm bizim mimaride.** Yerine: **UYUYAN
-   DÜNYA** (aşağıda, yeni 1 numara). SQL-KUYRUK A bloğu da İPTAL — cron
-   seyreltmesi (live 2sn / tick 60sn) KALICI.
-1b. ✅ **UYUYAN DÜNYA — TAMAMLANDI (2026-07-19, MCP ile canlıda + test edildi):**
-   0153 nabız + 0154 gece bekçisi (ilk süpürme 28.441 ıssız tur) + 0155 fikstür
-   tam kapsama (gün-gün + zincirli sayfalama) + 0156 motor kapıları (_tick/
-   _tick_live/_reap uyur; _aviator_tick açık turda ASLA uyumaz; heartbeat
-   uyanışta tek-çalışan catch-up). Eski plan notu: (Claude+Rasim SQL
-   oturumu):** Kanıt: 2026-07-17 09:27 UTC çöküşünde sitede kullanıcı yoktu;
-   makineyi yoran 7/24 boşa dönen motorlar (aviator_tick 1sn = günde ~5000
-   ıssız tur + yazma + edge + broadcast; pickplay_live 2sn; pickplay_tick 60sn
-   maç üretimi) + haftalardır biriken tur/maç çöpü (disk). Plan: (a)
-   app_presence tek satır + app_heartbeat RPC (FE dakikalık nabız CANLIDA,
-   RPC yoksa sessiz düşer); cron fonksiyonlarının başına "son 5 dk nabız yoksa
-   çık" kapısı; (b) bahissiz >3 gün aviator_rounds gece temizliği (bahisli
-   turlar = davranış verisi, DOKUNULMAZ); (c) 24 saat sonra Reports RAM/disk
-   ölçümü. Gövde çekimi gerekir (cron.job listesi + tick fonksiyonları).
-2. **Auth URL ayarı**: Authentication→URL Configuration→Site URL
-   `https://www.imras.ai` + Redirect listesine `https://www.imras.ai/reset`.
-   Şifre sıfırlamanın tek kod-dışı bağımlılığı.
-3. **Tap-test (7 adım)**: oran tıkla→otomatik sayılar+takım çipi → yargıç →
-   oyna → settle çipi → Hakem Karnesi → Profil "kazanan" = Kuponlarım kontrolü.
+---
 
-### T1 — LAUNCH HAFTASI (Claude, kod; launch'ı beklemez ama bloklamaz)
-4. **FE bülten poll backoff**: 5sn poll'a hata-durumunda üstel geri çekilme +
-   jitter (0147 kazasının FE ayağı; eşzamanlı yığılma sarmalını FE de kessin).
-5. **Gerçek maç pazar adları i18n**: MARKET_NAMES/OUTCOME_LABELS
-   (supabaseMatchProvider) İngilizce — provider key döndürsün, FE çevirsin
-   ("Match Result / Over 2.5" 8 dilde).
-6. **client_error runbook**: her sabah
+## 6. KİLOMETRE TAŞLARI (özet; ayrıntı git log + DEVIR/)
+
+0053-0067 futbol · 0068-0078 Aviator motor · 0079-0081 görsel senkron (edge)
+· 0082-0087 kalıcı lig+settle · 0091 slot · 0092-0106 basket/tenis/voleybol
+· 0107-0114 ayna Faz0-1 + analitik + benchmark + Player Card · 0121-0129
+sanal maç düzeltmeleri + Gates v2 + basket serbest atış · 0130-0136 canlı
+oran kalibrasyonu (Nesine) + soft-cap · 0137 bülten hijyeni · 0138 e-spor
+istatistik · 0139 AI tabanı (coupon_review, match_preview_cache) · 0140
+güvenlik süpürmesi (RLS/EXECUTE) · 0141 denetim · 0142 yoğunluk + i18n 8 dil
+· 0143 bahis AI sohbeti · 0144-0146 şans oyunları + entegrasyon · 0147
+markets_cache (istek-başına hesap yasağı) · 0148-0149 Hakem v2 + hafıza ·
+0150 auth/kör-nokta dalgası (şifre sıfırlama, ErrorBoundary, humanizeError,
+RTL, i18n 675) · 0151 mines_active · 0152 hayalet set + pace · 0153-0156
+UYUYAN DÜNYA EKOSİSTEMİ (nabız, bekçi, tam kapsama, motor kapıları).
+
+**Kriz günlükleri:** 2026-07-16 get_bulletin timeout (kök: istek-başına
+Poisson; fix 0147) · 2026-07-17→19 disk-dolu 45 saat kesinti (kök: 1GB disk
+× WAL+birikim; fix: Pro org transfer + 8GB + Micro + 0153-0156 zinciri).
+Detay: DEVIR/ klasörü.
+
+---
+
+## 7. YOL HARİTASI (2026-07-19 günceli — önem sırasıyla)
+
+*Tek doğru kaynak. Bir madde bitince buradan güncelle. T0 bitmeden launch YOK.*
+
+### T0 — LAUNCH ÖNCESİ (kalan tek madde!)
+1. ✅ ~~Altyapı krizi~~ (Pro org + 8GB + Micro + uyuyan dünya, 2026-07-19)
+2. ✅ ~~Auth URL ayarı~~ (2026-07-19, joker listeyle)
+3. **Tap-test (Rasim, ~10 dk):** (a) şifre sıfırlama e2e (forgot→mail→/reset)
+   → (b) oran tıkla → otomatik sayılar+takım çipi → (c) yargıç kararnamesi →
+   (d) kuponu oyna → (e) settle sonrası "Hakem %X demişti" çipi → (f) Analiz
+   > Hakem Karnesi → (g) Profil "kazanan" = Kuponlarım birebir.
+
+### T1 — LAUNCH HAFTASI (Claude)
+4. **Gerçek maç pazar adları i18n:** MARKET_NAMES/OUTCOME_LABELS provider'da
+   İngilizce — provider key döndürsün, FE 8 dilde çevirsin.
+5. **client_error runbook:** ilk hafta her sabah
    `select event_type, payload, created_at from behavior_events where event_type='client_error' order by id desc limit 50;`
-   (RootErrorBoundary + global yakalayıcı = bedava Sentry-lite; ilk hafta günlük bak).
+6. Launch sonrası 24-48. saatte Reports kontrol (Micro'da RAM/IO seyri +
+   uyuyan dünyanın boşta-sıfır kanıtı).
 
-### T2 — LAUNCH SONRASI KALİTE (Claude)
-7. Argsız `toLocaleString()` süpürmesi (~35 çağrı → fmtNum): ar-SA tarayıcıda
-   Doğu Arap rakamı karışması.
-8. RTL kalan fiziksel CSS süpürmesi (kritikler yapıldı; kalan ~30 düşük etki)
-   + Arapça webfont (Montserrat Latin-only, sistem fontuna düşüyor).
-9. `dice_roll` chance clamp canlı testi (FE slider 2-95; RPC sınırı ölçülmedi).
-9b. Aviator realtime: aviator_bets aboneliği FİLTRESİZ — her istemci herkesin
-   her bahsini alır (O(oyuncu²) mesaj; yük sayımı 2026-07-17). Tur-başına
-   filtreli kanal ya da sunucu-özet broadcast tasarlanmalı.
+### T2 — KALİTE (Claude)
+7. Argsız `toLocaleString()` süpürmesi (~35 çağrı → fmtNum; ar-SA tarayıcıda
+   Doğu Arap rakamı riski).
+8. RTL kalan fiziksel CSS (~30 düşük etki) + Arapça webfont.
+9. **Aviator realtime O(oyuncu²):** aviator_bets aboneliği filtresiz — tur
+   filtreli kanal ya da sunucu-özet broadcast tasarla (kalabalıkta şart).
+10. `dice_roll` chance clamp canlı testi (FE 2-95; RPC sınırı ölçülmedi).
+11. Lig kapsaması: leagues sync 2 sayfa (100 lig) — fikstürdeki 0155
+    zincirleme kalıbını leagues'e de uygula (eşleşmeyen lig 'Other' düşer).
 
-### T3 — ÜRÜN DERİNLİĞİ (Claude + kısa SQL oturumları; SQL-KUYRUK D)
-10. **match-preview'a gerçek maç dalı** — ana bahis yüzeyi (gerçek maçlar)
-    şu an AI önizlemesiz; ürünün kalbi oradan da konuşmalı.
-11. **mirror_luck RPC**: Mines derinlik / Dice beyan-edilmiş risk iştahı /
-    Plinko risk dağılımı → Analiz "Diğer" sekmesi gerçek aynaya dönsün.
-12. betting-ai cevabına `remaining` (günlük hak sayacı FE'de görünsün).
-13. mirror_coupon derinleştirme: oran-bandı histogramı, canlı/maç-öncesi
-    ayrımı, takım tuzakları aynada.
-14. Ayna genişleme: daha çok yakalama + hedef-takip nudge (Faz 2 — oyun
-    bağımsız tasarım ilkesi korunur).
+### T3 — ÜRÜN DERİNLİĞİ (Claude + kısa oturumlar)
+12. **match-preview'a gerçek maç dalı** (ana bahis yüzeyi AI önizlemesiz).
+13. **mirror_luck RPC** (Mines derinlik / Dice risk beyanı / Plinko dağılım)
+    → Analiz "Diğer" gerçek aynaya dönsün.
+14. betting-ai cevabına `remaining` (günlük hak FE'de görünsün).
+15. mirror_coupon derinleştirme (oran-bandı histogramı, canlı/öncesi ayrımı).
+16. Ayna Faz 2: hedef-takip nudge + daha çok yakalama (oyun-bağımsız tasarım).
 
-### PARK — bilinçli erteleme (tetikleyen: Rasim kararı / veri birikimi)
-- **GoO motor birebirliği**: farklar belgeli (SQL-KUYRUK); değişiklik = para
-  motoru = önce 500K spin sim. Tetik: Rasim "yap" derse.
-- **Aylık Nesine kalibrasyon turu** (model-tabanlı adil olasılık dahil):
-  longshot dondurma bulgusu n=1'di; ağustos ortası 3+ nokta ölç.
+### PARK — bilinçli erteleme (tetik: Rasim kararı / veri birikimi)
+- **GoO motor birebirliği** (farklar belgeli; değişiklik = para motoru =
+  önce 500K spin sim). Tetik: Rasim "yap" derse.
+- **Aylık Nesine kalibrasyon turu** (longshot bulgusu n=1; ağustos ortası
+  3+ nokta) + model-tabanlı adil olasılık.
 - **Gates görsel/gameplay hissi** (Rasim: "oturmadı, dönülecek").
-- **4 sanal spor toplu görsel QA** (Rasim yapacak).
-- **BSD canlı momentum / $3 WebSocket kararı** (eski bekleyen; gerçek maç
-  canlı verisi derinleşsin istenirse).
+- **4 sanal spor toplu görsel QA** (Rasim).
+- **BSD canlı momentum / $3 WebSocket** (gerçek maç canlı derinliği istenirse).
+- **Pro org'daki diğer projeyi pause etme** (kredi devri, net $0) — Rasim.
+
+### OLABİLİRLER (fikir havuzu — taahhüt değil)
+- Haftalık "ayna özeti" e-postası/bildirimi (davranış raporu).
+- Sosyal karşılaştırma derinliği (lig içi davranış kıyası — "ligindeki en
+  disiplinli oyuncu").
+- Aviator turnuvası / görev sistemi (retention).
+- Çapraz-profil vurgusu landing'de ("maçta temkinli, Aviator'da açgözlü").
+- PWA / mobil sarmalayıcı.
+- Çoklu dil pazarlama sayfaları (ar/hi odaklı pazarlar).
