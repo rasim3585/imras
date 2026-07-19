@@ -1,4 +1,12 @@
-# SQL KUYRUĞU — durum (2026-07-16 sabah oturumu TAMAMLANDI)
+# SQL KUYRUĞU — durum (2026-07-19: MCP ERİŞİMİ GERİ GELDİ — SQL işlerini artık Claude doğrudan yapıyor)
+
+## ✅ 2026-07-19 KURTARMA GÜNÜ (Claude MCP ile doğrudan uyguladı)
+- 45 saatlik disk krizi kapandı: Pro org transferi + 8GB disk + Micro compute.
+- 0153 app_presence + app_heartbeat + _world_awake CANLIDA (FE nabız zaten atıyordu).
+- 0154 gece bekçisi CANLIDA (04:07 UTC): ilk süpürme 28.441 ıssız Aviator turu sildi.
+- Fikstür boru hattı elle dolduruldu (19-21 Temmuz, 161 fikstür; İspanya–Arjantin finali dahil).
+- BULGU: _fixtures_request tek sayfa (limit=50, offset ilerlemiyor) — yoğun günde kapsama açığı; T1 yol haritasına eklendi.
+- KALAN: 0155 uyuyan-dünya kapıları (_aviator_tick/_tick/_tick_live başına _world_awake() koşulu) — gövdeler artık MCP ile okunabiliyor, sıradaki iş.
 
 ## ✅ UYGULANDI + CANLIDA DOĞRULANDI (2026-07-16 sabahı, Rasim yapıştırdı)
 - **B** coupon_stats() + anon revoke → FE geçti (getCouponStats artık RPC;
