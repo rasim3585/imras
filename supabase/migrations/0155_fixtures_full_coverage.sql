@@ -1,0 +1,13 @@
+-- 0155: FIKSTUR TAM KAPSAMA (2026-07-19, MCP ile dogrudan uygulandi).
+-- Rasim: "tek mac icin cozme, o gun ne varsa hepsi gelsin."
+-- Eski _fixtures_request TEK sayfa (limit=50) istiyordu; feed'de count/next
+-- vardi (istek 321: count=117, alinan 50). Yeni tasarim:
+--   (a) istek gun-gun 3 pencere (bugun/yarin/obur gun) acar,
+--   (b) _fixtures_collect sayfa doluysa (offset+50 < count) SIRADAKI sayfayi
+--       kendisi kuyruklar (tavan offset 450),
+--   (c) pickplay_fixtures_collect cron'u '*/5 * * * *' (bos kuyruk = no-op).
+-- Dogrulama: 19=50/50, 20=11/11, 21=56/56 (p0 50 + zincir p1 6).
+-- Ayni oturumda _leagues_request/collect tazelendi: league 79 "Club
+-- Friendlies / World" eslendi -> bultendeki 'Other' basligi duzeldi.
+-- TAM GOVDE canli DB'de (apply_migration: fixtures_full_coverage);
+-- bu dosya repo kaydidir — govde icin: select pg_get_functiondef ...
