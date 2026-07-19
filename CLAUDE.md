@@ -380,7 +380,11 @@ buradan sil/işaretle. T0 bitmeden launch YOK.*
    kazanmadan para harcamayacak — çözüm bizim mimaride.** Yerine: **UYUYAN
    DÜNYA** (aşağıda, yeni 1 numara). SQL-KUYRUK A bloğu da İPTAL — cron
    seyreltmesi (live 2sn / tick 60sn) KALICI.
-1b. **UYUYAN DÜNYA — Nano bütçesine sığdırma (yeni T0, Claude+Rasim SQL
+1b. ✅ **UYUYAN DÜNYA — TAMAMLANDI (2026-07-19, MCP ile canlıda + test edildi):**
+   0153 nabız + 0154 gece bekçisi (ilk süpürme 28.441 ıssız tur) + 0155 fikstür
+   tam kapsama (gün-gün + zincirli sayfalama) + 0156 motor kapıları (_tick/
+   _tick_live/_reap uyur; _aviator_tick açık turda ASLA uyumaz; heartbeat
+   uyanışta tek-çalışan catch-up). Eski plan notu: (Claude+Rasim SQL
    oturumu):** Kanıt: 2026-07-17 09:27 UTC çöküşünde sitede kullanıcı yoktu;
    makineyi yoran 7/24 boşa dönen motorlar (aviator_tick 1sn = günde ~5000
    ıssız tur + yazma + edge + broadcast; pickplay_live 2sn; pickplay_tick 60sn

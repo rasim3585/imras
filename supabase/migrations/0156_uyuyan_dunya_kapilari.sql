@@ -1,0 +1,22 @@
+-- 0156: UYUYAN DUNYA KAPILARI (2026-07-19, MCP ile canliya uygulandi).
+-- Kapilar DB icinde ameliyatla takildi (pg_get_functiondef -> ilk begin'den
+-- sonra guard -> execute); govdeler birebir korundu. Tam govdeler canli DB'de.
+--
+-- KURULUM:
+-- * _tick / _tick_live / _reap_stale_real_fixtures: izleyen yoksa
+--   (son 5 dk nabiz yok) jsonb {asleep:true} donup CIKAR — yazma/HTTP sifir.
+-- * _aviator_tick: izleyen yok VE acik tur (betting/flying) yoksa uyur.
+--   ACIK TUR VARKEN ASLA UYUMAZ — auto-cashout/crash/odeme dongusu tamamlanir,
+--   uyku ancak tur kapaninca baslar (para yolu dokunulmaz ilkesi).
+-- * app_heartbeat v2: nabiz guncellenirken onceki nabiz >5dk eskiyse
+--   pg_try_advisory_lock(921453) ile TEK-calisan catch-up _tick kosar
+--   (uyanan dunyanin birikmis seed/finalize/settle isi aninda toparlanir).
+--
+-- CANLI TEST (07:25 UTC):
+--   uyku simulasyonu -> _tick/_tick_live/_reap {asleep:true};
+--   _aviator_tick acik ucus turunda {action:flying} (istisna dogru);
+--   ilk heartbeat -> uyanik + _tick_live ayni saniye normal dondu.
+--
+-- Ekosistem butunu: 0153 nabiz + 0154 gece bekcisi + 0155 tam kapsama + 0156
+-- kapilar = kimse yokken yazma ~sifir, disk buyumez, kullanici gelince
+-- saniyeler icinde tam canli dunya.
