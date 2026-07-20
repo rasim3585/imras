@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 
 // AI KUPON HAKEMİ v2 — ürünün kalbi. Maç analizi yapan uygulama çok; bu
 // kullanıcının KENDİ bahis davranışını bilen yargıç yalnız bizde. Tüm sayılar
@@ -54,18 +55,30 @@ Deno.serve(async (req: Request) => {
   const lang = (typeof body?.lang === "string" && LANGS[body.lang]) ? body.lang : "en";
   if (!review || review.ready !== true) return json({ text: null, reason: "empty" });
 
+  // Kullanıcı kimliği JWT'den DOĞRULANARAK alınır (imza doğrulaması getUser ile;
+  // betting-ai kalıbı). verify_jwt=true gateway'de imzayı zaten doğrular ama
+  // burada da doğrulamak fail-OPEN'i kapatır: anon anahtar (sub'suz geçerli JWT)
+  // ile KOTASIZ Sonnet çağrısı ARTIK MÜMKÜN DEĞİL. Kimlik yoksa yargıç konuşmaz
+  // (para/maliyet yoluna açık kapı bırakmaz — güvenlik platform bayrağına dayanmaz).
+  const supaUrl = Deno.env.get("SUPABASE_URL");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  let uid: string | null = null;
+  if (supaUrl && anonKey) {
+    try {
+      const userClient = createClient(supaUrl, anonKey, {
+        global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
+      });
+      const { data: u } = await userClient.auth.getUser();
+      uid = u?.user?.id ?? null;
+    } catch { uid = null; }
+  }
+  if (!uid) return json({ text: null, reason: "auth" });
+
   // Sonnet kota: 20 kararname/gün (judge_quota_take, service_role ile).
   // Kota altyapısı yoksa (fn/env eksik) yargıç yine çalışır — açık-arıza değil.
   try {
-    const auth = req.headers.get("authorization") ?? "";
-    const token = auth.replace(/^Bearer\s+/i, "");
-    const payload = token.split(".")[1];
-    const uid = payload
-      ? (JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")))?.sub ?? null)
-      : null;
     const sr = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const supaUrl = Deno.env.get("SUPABASE_URL");
-    if (uid && sr && supaUrl) {
+    if (sr && supaUrl) {
       const q = await fetch(`${supaUrl}/rest/v1/rpc/judge_quota_take`, {
         method: "POST",
         headers: { apikey: sr, Authorization: `Bearer ${sr}`, "content-type": "application/json" },

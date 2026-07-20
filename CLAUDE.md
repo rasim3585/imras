@@ -236,8 +236,12 @@ Detay: DEVIR/ klasörü.
 7. Argsız `toLocaleString()` süpürmesi (~35 çağrı → fmtNum; ar-SA tarayıcıda
    Doğu Arap rakamı riski).
 8. RTL kalan fiziksel CSS (~30 düşük etki) + Arapça webfont.
-9. **Aviator realtime O(oyuncu²):** aviator_bets aboneliği filtresiz — tur
-   filtreli kanal ya da sunucu-özet broadcast tasarla (kalabalıkta şart).
+9. **Aviator realtime O(oyuncu²) + GİZLİLİK (0164 #2 ertelenen):** aviator_bets
+   aboneliği filtresiz VE tablo-geneli okunur (davranış kolonları prev_result/
+   prev_stake/caught_by_crash/was_auto + match_comments user_id↔username join'iyle
+   deanonimize edilebilir). KALICI FIX: canlı tabloyu güvenlik-definer RPC'yle
+   ver (yalnız tur username+stake+cashout), geçmişi own-row'a kısıtla, tur-filtreli
+   kanal. Kolon-grant yaması denenmedi (tablo-grant no-op + realtime payload riski).
 10. `dice_roll` chance clamp canlı testi (FE 2-95; RPC sınırı ölçülmedi).
 11. Lig kapsaması: leagues sync 2 sayfa (100 lig) — fikstürdeki 0155
     zincirleme kalıbını leagues'e de uygula (eşleşmeyen lig 'Other' düşer).
@@ -253,16 +257,22 @@ Detay: DEVIR/ klasörü.
     düşüyor).
 
 ### KALİTE SİSTEMİ (Rasim kararı 2026-07-20: "3'ü de sırayla")
-- ✅ **Katman 1 — otomatik regresyon ağı (0160-0162):** test.money_path (55) +
-  settle_flow (5) + luck_math (7) + aviator_math (6) = **73 test**; cron
-  pickplay_selftest 04:20 → test.log. Para/settle/şans/aviator kırmızı/yeşil
-  bekçili. YENİ para fonksiyonu = önce test ekle.
-- ⏳ **Katman 2 — proaktif yüzey denetimi (Claude, sırayla):**
+- ✅ **Katman 1 — otomatik regresyon ağı (0160-0164):** test.money_path (55) +
+  settle_flow (5) + luck_math (7) + aviator_math (6) + **auth_social (11)** =
+  **84 test**; cron pickplay_selftest 04:20 → test.log. Para/settle/şans/aviator/
+  auth-sosyal kırmızı/yeşil bekçili. YENİ para/güvenlik fonksiyonu = önce test ekle.
+- ✅ **Katman 2 TAMAM — proaktif yüzey denetimi (5 yüzey, 76 doğrulanmış bulgu):**
   ✅ gerçek maç (22 → 0159) · ✅ şans oyunları (14 → 0161: TOCTOU+taşma+index) ·
   ✅ Aviator (14 → 0162: KRİTİK çift-kredi/çift-ödeme) · ✅ ayna/yargıç (12,
-  kritik YOK — 0163 bigint regresyon + hijyen) · ⏳ SIRADA: auth+profil+sosyal. Her denetim → düzelt → yeni test.
-  AÇIK (aviator, düşük): realtime O(oyuncu²) fan-out + anonim oyuncu-view;
-  IMMUTABLE→STABLE; FE optimistic overlay uzlaşımı.
+  kritik YOK — 0163 bigint) · ✅ **auth+profil+sosyal (14, kritik/high YOK →
+  0164 + coupon-judge v7).** BAŞ TEYİT: kullanıcı RLS ile kendi gold_balance'ini
+  ŞİŞİREMEZ (authenticated profiles UPDATE'i yalnız username'de; para bariyeri
+  test'te kilitli). 0164: username RPC'ye zorlandı + case-duyarsız benzersizlik,
+  get_league çok-oyun net, _net_since/claim_*/get_rivals bigint, 12-hex tanıtıcı,
+  oyuncu-RPC en-az-ayrıcalık. coupon-judge fail-open kapatıldı (getUser, anon-key
+  testli). ERTELENEN (medium/low, para yolu etkilenmez): add_rival rıza (Rasim
+  ürün kararı) · aviator_bets davranış-kolonu gizliliği → item 9'a katıldı ·
+  match_comments user_id (FE) · "kazanan" tanım birliği (Profil vs Liderlik/Rakip).
 - ⏳ **Katman 3 — insan tap-test:** DEVIR/QA-TAP-TEST-CHECKLIST.md hazır
   (Rasim + arkadaşlar). Katman 4 (ücretli QA) = launch sonrası trafikle.
 
