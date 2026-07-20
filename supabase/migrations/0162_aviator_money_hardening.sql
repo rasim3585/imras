@@ -1,0 +1,25 @@
+-- 0162 (+b): AVIATOR PARA SERTLEŞTİRME — Katman-2 denetim yüzey 3 (14 bulgu).
+-- Tam gövdeler canlı DB'de.
+--
+-- (CRITICAL) OTOMATİK CASHOUT ÇİFT-KREDİ (canlı: 216/223 fazla ödenmiş):
+--   ödeme 'status geçişi' yerine 2sn'lik zaman penceresine bağlıydı; cron 1sn
+--   olduğundan aynı otomatik kazanç 2-3 tick'te tekrar kredileniyordu → sembolik
+--   altın enflasyonu (para motoru = temiz laboratuvar önkoşulunu ihlal). Fix:
+--   krediyi kazandırma UPDATE'iyle CTE+RETURNING ile ATOMİK — yalnız o an
+--   placed→won olan satırlar, kullanıcı başına toplanıp TEK kez kredilenir.
+--   _aviator_tick + aviator_fire_crash ikisinde de.
+-- (CRITICAL) MANUEL CASHOUT ÇİFT-ÖDEME: aviator_cashout kilitsiz oku + status
+--   guard'sız settle. Fix: FOR UPDATE + korumalı geçiş (where id=.. and
+--   status='placed') + IF NOT FOUND raise → eşzamanlı 2 çağrı çift ödeyemez.
+-- (dahil) place_bet atomik-koşullu düşüş (TOCTOU); aviator_bets stake/payout
+--   bigint (0161 hizası); instacrash (cp<=1.00) her zaman KAYIP; anti-hile
+--   least(server_mult) (fazla ödeme yok); anon aviator_bets SELECT revoke.
+--
+-- Ertelendi (yol haritası): realtime aviator_bets O(oyuncu²) fan-out (FE+kanal),
+-- anonimleştirilmiş oyuncu-listesi view'ı, _aviator_current_multiplier/
+-- _aviator_crash_point IMMUTABLE→STABLE etiketi, FE optimistic overlay uzlaşımı.
+-- NOT: geçmiş çift-kredi bakiyeleri geri alınmadı (sembolik altın, test hesapları
+-- zaten yüklü) — düzeltme yalnız GELECEK enflasyonu durdurur.
+--
+-- KATMAN-1: test.aviator_math() (6 test: çarpan formülü, ödeme taşması + 3
+-- YAPISAL bekçi: çift-kredi/çift-ödeme kalıbına dönülemez) → run_all artık 73.
