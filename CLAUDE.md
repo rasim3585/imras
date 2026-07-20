@@ -253,14 +253,14 @@ Detay: DEVIR/ klasörü.
     düşüyor).
 
 ### KALİTE SİSTEMİ (Rasim kararı 2026-07-20: "3'ü de sırayla")
-- ✅ **Katman 1 — otomatik regresyon ağı (0160):** test.money_path (55) +
-  test.settle_flow (5); cron pickplay_selftest 04:20 → test.log. Para/settle
-  motoru kırmızı/yeşil bekçili. YENİ para fonksiyonu = önce test ekle.
-- ⏳ **Katman 2 — proaktif yüzey denetimi (Claude):** gerçek maça yapılan
-  4-ajanlık uçtan-uca denetimin (22 bulgu) aynısını sırayla ŞU yüzeylere koş:
-  (a) Aviator motor+cashout+realtime, (b) şans oyunları (Mines/Dice/Plinko/
-  Gates para yolu), (c) ayna/yargıç (deterministik sayılar + LLM), (d) auth+
-  profil+sosyal. Her denetim → düzeltmeler → test.money_path'e yeni assertion.
+- ✅ **Katman 1 — otomatik regresyon ağı (0160-0161):** test.money_path (55) +
+  test.settle_flow (5) + test.luck_math (7) = **67 test**; cron pickplay_selftest
+  04:20 → test.log. Para/settle/şans motoru kırmızı/yeşil bekçili. YENİ para
+  fonksiyonu = önce test ekle.
+- ⏳ **Katman 2 — proaktif yüzey denetimi (Claude, sırayla):**
+  ✅ gerçek maç (22 bulgu → 0159) · ✅ şans oyunları (14 bulgu → 0161:
+  TOCTOU+taşma+mines index) · ⏳ SIRADA: Aviator (motor+cashout+realtime) ·
+  ⏳ ayna/yargıç · ⏳ auth+profil+sosyal. Her denetim → düzelt → yeni test.
 - ⏳ **Katman 3 — insan tap-test:** DEVIR/QA-TAP-TEST-CHECKLIST.md hazır
   (Rasim + arkadaşlar). Katman 4 (ücretli QA) = launch sonrası trafikle.
 
