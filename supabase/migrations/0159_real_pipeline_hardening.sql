@@ -1,0 +1,27 @@
+-- 0159 (+0159b): GERÇEK MAÇ BORU HATTI UÇTAN UCA SERTLEŞTİRME (2026-07-20).
+-- 4 ajanlık uçtan-uca denetim (veri girişi/oran/settle/para-FE) → 22 doğrulanmış
+-- bulgu; Tier-1 para/settle + Tier-2 dayanıklılık MCP ile canlıya uygulandı.
+-- Tam gövdeler canlı DB'de. Tier-3 (ET display, canlı-tik UX, shared-goal
+-- kalibrasyonu, league_name, kırmızı kart) yol haritası T2/T3'e ertelendi.
+--
+-- (1) CRITICAL — Uzatma/penaltı golleri 90dk (FT) marketlerine sızıyordu:
+--     real_fixtures'a ft_home_score/ft_away_score EKLENDİ. _live_apply_events
+--     ham status ilk kez extra_time/et_*/penalties olunca GÜNCELLEMEDEN ÖNCEKİ
+--     (90dk regülasyon) skoru dondurur. settle_real_fixture FT marketlerini
+--     bu snapshot'tan çözer (uzatmasız maçta canlı skor; snapshot yoksa ve ET'ye
+--     gittiyse needs_review — tahmin yok). KANIT: _settle_outcome(draw,1,1)=won,
+--     (draw,2,1)=lost → snapshot olmadan beraberlik yanlış kaybederdi.
+-- (2) HIGH — Terminal status settle tetiklemiyordu (kupon kalıcı askıda):
+--     _live_apply_events artık finished/penalties/postponed/cancelled/abandoned
+--     settle çağırır; _reap'e TERMİNAL-SÜPÜRME dalı eklendi (settled_at null +
+--     kickoff geçmiş her terminal fikstür). 13 takılı fikstür temizlendi.
+-- (3) MONEY — Void bacak parlay'de 1.01 fazla çarpıyordu + tam-void kupon 'won'
+--     ödeniyordu: void = TAM 1.0; tam-void kupon = 'void' + temiz stake iadesi.
+-- (4) fixtures-list re-sync canlı maçın skor/dakika/status'unu EZİYORDU:
+--     _fixtures_upsert_page inprogress/penalties iken regresyon kalkanı (greatest).
+-- (5) collect zehir-hapı: _fixtures_collect/_leagues_collect content::jsonb
+--     per-satır safe-parse (tek bozuk BSD yanıtı tüm turu abort ediyordu).
+-- (6) lambda gözlemlenebilirlik: _tick_lambda net.http_post timeout 5s→20s
+--     (edge ~10-12s sürdüğünden log ebediyen kör kalıyordu).
+-- (7) cashout bayat-feed kalkanı: _cashout_value gerçek bacak, feed 10dk+ eskiyse
+--     donmuş skordan fiyatlamaz, kilitli çizgiye düşer.
