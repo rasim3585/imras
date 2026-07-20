@@ -253,14 +253,16 @@ Detay: DEVIR/ klasörü.
     düşüyor).
 
 ### KALİTE SİSTEMİ (Rasim kararı 2026-07-20: "3'ü de sırayla")
-- ✅ **Katman 1 — otomatik regresyon ağı (0160-0161):** test.money_path (55) +
-  test.settle_flow (5) + test.luck_math (7) = **67 test**; cron pickplay_selftest
-  04:20 → test.log. Para/settle/şans motoru kırmızı/yeşil bekçili. YENİ para
-  fonksiyonu = önce test ekle.
+- ✅ **Katman 1 — otomatik regresyon ağı (0160-0162):** test.money_path (55) +
+  settle_flow (5) + luck_math (7) + aviator_math (6) = **73 test**; cron
+  pickplay_selftest 04:20 → test.log. Para/settle/şans/aviator kırmızı/yeşil
+  bekçili. YENİ para fonksiyonu = önce test ekle.
 - ⏳ **Katman 2 — proaktif yüzey denetimi (Claude, sırayla):**
-  ✅ gerçek maç (22 bulgu → 0159) · ✅ şans oyunları (14 bulgu → 0161:
-  TOCTOU+taşma+mines index) · ⏳ SIRADA: Aviator (motor+cashout+realtime) ·
-  ⏳ ayna/yargıç · ⏳ auth+profil+sosyal. Her denetim → düzelt → yeni test.
+  ✅ gerçek maç (22 → 0159) · ✅ şans oyunları (14 → 0161: TOCTOU+taşma+index) ·
+  ✅ Aviator (14 → 0162: KRİTİK çift-kredi/çift-ödeme) · ⏳ SIRADA: ayna/yargıç ·
+  ⏳ auth+profil+sosyal. Her denetim → düzelt → yeni test.
+  AÇIK (aviator, düşük): realtime O(oyuncu²) fan-out + anonim oyuncu-view;
+  IMMUTABLE→STABLE; FE optimistic overlay uzlaşımı.
 - ⏳ **Katman 3 — insan tap-test:** DEVIR/QA-TAP-TEST-CHECKLIST.md hazır
   (Rasim + arkadaşlar). Katman 4 (ücretli QA) = launch sonrası trafikle.
 
