@@ -197,7 +197,11 @@ güvenlik süpürmesi (RLS/EXECUTE) · 0141 denetim · 0142 yoğunluk + i18n 8 d
 markets_cache (istek-başına hesap yasağı) · 0148-0149 Hakem v2 + hafıza ·
 0150 auth/kör-nokta dalgası (şifre sıfırlama, ErrorBoundary, humanizeError,
 RTL, i18n 675) · 0151 mines_active · 0152 hayalet set + pace · 0153-0156
-UYUYAN DÜNYA EKOSİSTEMİ (nabız, bekçi, tam kapsama, motor kapıları).
+UYUYAN DÜNYA EKOSİSTEMİ (nabız, bekçi, tam kapsama, motor kapıları) · 0157
+RLS initplan + FK indeks · 0158 gerçek canlı monotonik dakika + uyku istisnası
+· 0159 GERÇEK MAÇ UÇTAN UCA SERTLEŞTİRME (4-ajanlık denetim, 22 bulgu: FT 90dk
+snapshot=uzatma golü sızması, terminal settle, void iade, fixtures regresyon
+kalkanı, collect zehir-hapı, lambda timeout, cashout bayat-feed).
 
 **Kriz günlükleri:** 2026-07-16 get_bulletin timeout (kök: istek-başına
 Poisson; fix 0147) · 2026-07-17→19 disk-dolu 45 saat kesinti (kök: 1GB disk
@@ -235,6 +239,16 @@ Detay: DEVIR/ klasörü.
 10. `dice_roll` chance clamp canlı testi (FE 2-95; RPC sınırı ölçülmedi).
 11. Lig kapsaması: leagues sync 2 sayfa (100 lig) — fikstürdeki 0155
     zincirleme kalıbını leagues'e de uygula (eşleşmeyen lig 'Other' düşer).
+12b. **Gerçek maç denetimi Tier-3 (0159 ertelenenleri):** (a) uzatma DISPLAY:
+    _market_odds_ft_real 90'da tüm oranları null'lar — doğru (bahis kapalı) ama
+    watch ekranı 90-120 arası maçı göstermeli (real_fixture_watch_state canlı
+    kalsın); (b) açık kuponda gerçek bacak canlı tik/çarpı (MyCouponsScreen
+    get_live_state gerçek fikstür kolu — hep "soon"); (c) canlı kırmızı kart
+    yazımı (feed'de yok/live_incidents boş — önce feed alan araştır) → _red_factor
+    ölü; (d) shared-goal (lambda_shared hep 0 — bağımsız Poisson; kalibrasyon);
+    (e) league_name ingestion'da null (bsd_leagues join'ine bağlı); (f)
+    real_fixture_watch_state.live_odds argüman tutarsızlığı (5-arg, kırmızı/shared
+    düşüyor).
 
 ### T3 — ÜRÜN DERİNLİĞİ (Claude + kısa oturumlar)
 12. **match-preview'a gerçek maç dalı** (ana bahis yüzeyi AI önizlemesiz).
