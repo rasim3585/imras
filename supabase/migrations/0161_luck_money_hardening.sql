@@ -1,0 +1,26 @@
+-- 0161 (+b/c): ŞANS OYUNLARI PARA SERTLEŞTİRME — Katman-2 denetim yüzey 1
+-- (2026-07-20, 4-ajanlık uçtan-uca denetim → 14 doğrulanmış bulgu). Tam gövdeler
+-- canlı DB'de. Kalıcı çözümler:
+--
+-- (A) TOCTOU BAKİYE YARIŞI (HIGH): dice_roll/plinko_drop/slot_spin/mines_start
+--     kilitsiz 'oku-kontrol-et-sonra-düş' yapıyordu → paralel REST/rpc çağrıları
+--     (FE busy guard yalnız istemcide) bakiyeyi EKSİYE çekebiliyordu. Fix: tek
+--     atomik koşullu düşüş `update ... where gold_balance >= stake` + not-found raise.
+-- (B) INTEGER TAŞMASI: bet*mult int32'yi (2.1e9) aşınca ödeme HAM hataya dönüp
+--     kazananı reddediyordu — 6.5M test bakiyeleriyle GERÇEK risk. Fix:
+--     gold_balance + tüm ödeme/stake kolonları (dice/plinko/mines/slot + coupons
+--     stake/potential_win) bigint; RPC'lerde ::int→::bigint; _settle_ready_coupons
+--     ödeme ::bigint.
+-- (C) mines çift-başlatma yarışı (çift bahis/iki aktif oyun): partial unique index
+--     mines_one_active (user_id) where status='active' → 2. insert atomik patlar.
+-- (D) savunma derinliği: profiles CHECK(gold_balance >= 0).
+-- (E) grant hijyeni (0140): mines_start/reveal/cashout + slot_spin anon/public
+--     EXECUTE revoke; _mines_mult/_plinko_scale/_plinko_table PostgREST'ten kaldır;
+--     luck tablolarında anon/authenticated INSERT/UPDATE/DELETE/TRUNCATE revoke.
+--
+-- Ertelendi (yol haritası): provably-fair commit-reveal (şu an server-seed adil
+-- ama istemci-doğrulanamaz — FE 'provably fair' ifadesi yumuşatılabilir),
+-- slot_spins.tumbles=0 (cascade derinlik verisi).
+--
+-- KATMAN-1 GENİŞLETME: test.luck_math() (7 test: bigint taşma, mines çarpan
+-- tavanı, dice uç-çarpan, plinko RTP ~%97 ×3 risk) → run_all artık 67 test.
