@@ -225,8 +225,10 @@ Detay: DEVIR/ klasörü.
 ### T1 — LAUNCH HAFTASI (Claude)
 4. **Gerçek maç pazar adları i18n:** MARKET_NAMES/OUTCOME_LABELS provider'da
    İngilizce — provider key döndürsün, FE 8 dilde çevirsin.
-5. **client_error runbook:** ilk hafta her sabah
+5. **Sabah runbook** (ilk hafta her sabah): (a) client_error:
    `select event_type, payload, created_at from behavior_events where event_type='client_error' order by id desc limit 50;`
+   (b) self-test (0160): `select * from test.log where not ok order by id desc limit 5;`
+   (boş = para/settle motoru sağlıklı; satır varsa regresyon — report'a bak).
 6. Launch sonrası 24-48. saatte Reports kontrol (Micro'da RAM/IO seyri +
    uyuyan dünyanın boşta-sıfır kanıtı).
 
@@ -249,6 +251,18 @@ Detay: DEVIR/ klasörü.
     (e) league_name ingestion'da null (bsd_leagues join'ine bağlı); (f)
     real_fixture_watch_state.live_odds argüman tutarsızlığı (5-arg, kırmızı/shared
     düşüyor).
+
+### KALİTE SİSTEMİ (Rasim kararı 2026-07-20: "3'ü de sırayla")
+- ✅ **Katman 1 — otomatik regresyon ağı (0160):** test.money_path (55) +
+  test.settle_flow (5); cron pickplay_selftest 04:20 → test.log. Para/settle
+  motoru kırmızı/yeşil bekçili. YENİ para fonksiyonu = önce test ekle.
+- ⏳ **Katman 2 — proaktif yüzey denetimi (Claude):** gerçek maça yapılan
+  4-ajanlık uçtan-uca denetimin (22 bulgu) aynısını sırayla ŞU yüzeylere koş:
+  (a) Aviator motor+cashout+realtime, (b) şans oyunları (Mines/Dice/Plinko/
+  Gates para yolu), (c) ayna/yargıç (deterministik sayılar + LLM), (d) auth+
+  profil+sosyal. Her denetim → düzeltmeler → test.money_path'e yeni assertion.
+- ⏳ **Katman 3 — insan tap-test:** DEVIR/QA-TAP-TEST-CHECKLIST.md hazır
+  (Rasim + arkadaşlar). Katman 4 (ücretli QA) = launch sonrası trafikle.
 
 ### T3 — ÜRÜN DERİNLİĞİ (Claude + kısa oturumlar)
 12. **match-preview'a gerçek maç dalı** (ana bahis yüzeyi AI önizlemesiz).
