@@ -1,0 +1,26 @@
+-- 0158: gerçek maç canlı bahis — 3 üretim bug'ı (İspanya-Arjantin finali,
+-- 2026-07-19; MCP ile canlıya uygulandı). Tam gövdeler canlı DB'de.
+--
+-- (B) DAKİKA GERİ GİDİYORDU (77'->53', oranlar da geri düştü): _live_apply_events
+--     current_minute'ü BSD beslemesinden guard'sız yazıyordu. Bayat/sıra-dışı
+--     bir canlı anlık görüntü dakikayı geri çekti; oranlar dakikadan
+--     hesaplandığı için "reset" oldu. FIX: maç inprogress iken dakika GERİ giden
+--     frame BAYAT sayılır -> dakika+skor YOK SAYILIR (yalnız last_synced işaretlenir).
+--     Final durumlar (finished/penalties) her zaman uygulanır; skor yalnız taze
+--     frame'den yazılır (VAR düzeltmesi korunur, hayalet skor düşüşü engellenir).
+--
+-- (C) UZATMA DONUYOR + MAÇ SETTLE OLMUYOR (8 saat inprogress kaldı):
+--     _tick_live ve _reap 0156 uyuyan-dünya kapısıyla izleyen gidince duruyordu.
+--     FIX (aviator "açık tur varken uyuma" istisnasının analoğu):
+--     * _tick_live: AKTİF canlı maç (son 15dk sync'li inprogress/penalties)
+--       varken uyumaz — maç sonuna kadar akar, uzatma dahil.
+--     * _reap: settle bekleyen BAYAT maç (biten inprogress ya da oynanmamış
+--       notstarted) varken uyumaz — biten maçlar izleyensiz de settle olur.
+--     Kendini sınırlar: reap bitince inprogress kalmaz, dünya yine uyur.
+--
+-- Bir kerelik: takılı İspanya-Arjantin (0-0) elle finished+settle edildi (2 kupon).
+--
+-- NOT (Bug A, oran kalibrasyonu — DEĞİŞTİRİLMEDİ): 77' 0-0'da 6.56/1.32/6.56
+-- modelin dürüst geç-0-0 fiyatı (gol beklentisi düşük -> beraberlik baskın).
+-- "Reset" tamamen dakika regresyonunun (B) semptomuydu. Kalibrasyon görüşü
+-- ayrı iş: para motoru = Rasim kararı + kalibrasyon turu (yol haritası PARK).
