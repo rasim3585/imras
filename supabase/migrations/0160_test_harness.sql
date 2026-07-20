@@ -1,0 +1,15 @@
+-- 0160 (+0160b/c): OTOMATİK REGRESYON AĞI — Kalite Katman 1 (2026-07-20).
+-- Rasim kararı: "test ekibi kuralım — 3'ü de sırayla". Katman 1 = kod/motor
+-- otomatik testleri (en yüksek getiri, kök sorun: güvenlik ağı yoktu).
+--
+-- test schema'sı, salt-fonksiyon (immutable) testler — yan etki yok:
+-- * test.money_path()  : _settle_outcome (32 doğruluk satırı, FT bug bekçisi),
+--   _bsd_map_status (14 eşleme), _real_leg_decided (5), _market_odds_ft_real
+--   değişmezleri (3: 0-0 sağlıklı / 90dk null / geç-0-0 beraberlik favori). 55 test.
+-- * test.settle_flow() : sentetik maçı uzatmaya sokup _live_apply_events zincirini
+--   GERÇEK çalıştırır (FT snapshot + monotonik dakika kalkanı), asserter, savepoint
+--   + zorunlu rollback ile geri alır (üretime dokunmaz). 5 test.
+-- * test.run_all()     : ikisini koşar, test.log'a yazar.
+-- * cron pickplay_selftest 04:20 UTC: her gün koşar; kırmızıysa test.log'da görünür.
+--   Sabah runbook: select * from test.log where not ok order by id desc;
+-- İlk koşu: 60/60 yeşil. Tam gövdeler canlı DB'de.
