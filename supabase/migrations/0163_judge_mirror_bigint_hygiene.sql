@@ -1,0 +1,24 @@
+-- 0163: AYNA/YARGIÇ denetimi — Katman-2 yüzey 4 (12 bulgu, KRİTİK YOK — ayna
+-- yalnız-okuma ilkesi sağlam). Tier-1 düzeltmeler (gövdeler canlıda):
+--
+-- (#4 — 0161 REGRESYONUM) gold_balance/stake/payout bigint yaptım ama
+--   _coupon_judge_extras türetilmiş para değerlerini (v_bal, net toplamları,
+--   jcost, aviator/luck net) ::int'e çeviriyordu → 6.5M bakiye + parlay kazancı
+--   int32'yi aşınca 'integer out of range' TÜM coupon_review'i çökertip yargıç
+--   kartını kırardı. Fix: hepsi bigint. judge_verdicts.stake bigint.
+-- (#6) mirror_parallel/tilt/selfgap anon/public EXECUTE revoke (0140 hijyeni).
+--
+-- ERTELENEN (yol haritası — hepsi orta/düşük, para yolu ETKİSİZ):
+-- (#1 orta) Yargıç↔kupon eşlemesi bulanık sezgisel (15dk + |oran farkı|<0.015,
+--   gerçek FK yok) → yargıcın kendi karnesini yanlış etiketler; canlı: kuponların
+--   %73'ü çakışma bandında. Fix: coupons'a judge_verdict_id kolonu + oyna-anında
+--   damgala + FK ile eşle (FE + place akışı). ÜRÜNÜN KALBİ — launch sonrası öncelik.
+-- (#2 orta) coupon-judge kotası Sonnet başarısından ÖNCE tüketilir → geçici API
+--   hatası 20/gün hakkı sessizce yakar + retry her seferinde bir hak. Fix (edge):
+--   kotayı başarılı yanıttan SONRA al ya da hata yolunda telafi decrement.
+-- (#3 orta) mirror-coach kota YOK + istemci-kontrollü cache key. Fix: coach_msgs kotası.
+-- (#5 düşük) log_judge_verdict istemci sayılarına güvenir (self-only kozmetik).
+-- (#7 düşük) repo 0112/0114/0116 gövdeleri canlıdan sapmış (rebuild regresyon riski).
+-- (#8-12 düşük, edge) fact-sheet server-side yeniden türetilmiyor; JWT imza
+--   doğrulanmıyor (base64 decode); betting-ai atomik olmayan artış; Anthropic
+--   hata metni client'a detail'de sızıyor.

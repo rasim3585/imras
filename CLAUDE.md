@@ -259,8 +259,8 @@ Detay: DEVIR/ klasörü.
   bekçili. YENİ para fonksiyonu = önce test ekle.
 - ⏳ **Katman 2 — proaktif yüzey denetimi (Claude, sırayla):**
   ✅ gerçek maç (22 → 0159) · ✅ şans oyunları (14 → 0161: TOCTOU+taşma+index) ·
-  ✅ Aviator (14 → 0162: KRİTİK çift-kredi/çift-ödeme) · ⏳ SIRADA: ayna/yargıç ·
-  ⏳ auth+profil+sosyal. Her denetim → düzelt → yeni test.
+  ✅ Aviator (14 → 0162: KRİTİK çift-kredi/çift-ödeme) · ✅ ayna/yargıç (12,
+  kritik YOK — 0163 bigint regresyon + hijyen) · ⏳ SIRADA: auth+profil+sosyal. Her denetim → düzelt → yeni test.
   AÇIK (aviator, düşük): realtime O(oyuncu²) fan-out + anonim oyuncu-view;
   IMMUTABLE→STABLE; FE optimistic overlay uzlaşımı.
 - ⏳ **Katman 3 — insan tap-test:** DEVIR/QA-TAP-TEST-CHECKLIST.md hazır
